@@ -3,7 +3,7 @@
 # Mi aplicación de TFG
 
 ## Descripción
-[Breve descripción de tu app]
+
 
 ## Funcionalidades principales
 - [ ] Funcionalidad 1
