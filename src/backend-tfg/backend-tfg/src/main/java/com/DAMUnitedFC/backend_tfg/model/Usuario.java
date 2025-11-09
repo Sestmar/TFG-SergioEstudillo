@@ -8,7 +8,7 @@ import lombok.Data;
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idUsuario;
+    private Integer idUsuario;
 
     @Column(nullable = false, length = 50)
     private String nombre;
