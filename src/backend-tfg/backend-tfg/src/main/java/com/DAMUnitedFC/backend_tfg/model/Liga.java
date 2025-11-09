@@ -8,7 +8,8 @@ import lombok.Data;
 public class Liga {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer idLiga;
+    @Column(name = "idliga") // Nombre real en BD, NO idLiga
+    private Integer idliga;
 
     @Column(nullable = false, length = 50)
     private String nombre;

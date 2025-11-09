@@ -9,14 +9,15 @@ public class Categoria {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_categoria")     // Ajusta al nombre real
     private Integer idCategoria;
 
     @Column(nullable = false, length = 30)
     private String nombre;
 
-    @Column(nullable = false)
+    @Column(name = "edad_min", nullable = false)
     private Integer edadMin;
 
-    @Column(nullable = false)
+    @Column(name = "edad_max", nullable = false)
     private Integer edadMax;
 }

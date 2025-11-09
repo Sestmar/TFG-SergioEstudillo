@@ -10,25 +10,23 @@ public class Equipo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_equipo")         // Ajusta al nombre real
     private Integer idEquipo;
 
     @Column(nullable = false, length = 50)
     private String nombre;
 
-    @Column(nullable = false)
+    @Column(name = "fecha_creacion", nullable = false) // Ajusta el nombre real
     private Date fechaCreacion;
 
     @Column(length = 255)
     private String observaciones;
 
-    // Relación con Categoria
     @ManyToOne
     @JoinColumn(name = "id_categoria", nullable = false)
     private Categoria categoria;
 
-    // Relación con Liga
     @ManyToOne
     @JoinColumn(name = "id_liga", nullable = false)
     private Liga liga;
-
 }
