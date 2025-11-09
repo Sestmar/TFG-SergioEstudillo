@@ -2,33 +2,27 @@ package com.DAMUnitedFC.backend_tfg.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.sql.Date;
 
 @Entity
 @Data
-public class Equipo {
-
+public class Liga {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer idEquipo;
+    private Integer idLiga;
 
     @Column(nullable = false, length = 50)
     private String nombre;
 
-    @Column(nullable = false)
-    private Date fechaCreacion;
+    @Column(nullable = false, length = 15)
+    private String temporada;
 
-    @Column(length = 255)
+    @Column(length = 30)
+    private String nivel;
+
+    @Column(length = 100)
     private String observaciones;
 
-    // Relación con Categoria
     @ManyToOne
     @JoinColumn(name = "id_categoria", nullable = false)
     private Categoria categoria;
-
-    // Relación con Liga
-    @ManyToOne
-    @JoinColumn(name = "id_liga", nullable = false)
-    private Liga liga;
-
 }
