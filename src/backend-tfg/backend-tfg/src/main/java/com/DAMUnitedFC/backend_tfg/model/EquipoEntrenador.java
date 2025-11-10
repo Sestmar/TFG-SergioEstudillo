@@ -20,4 +20,7 @@ public class EquipoEntrenador {
     @MapsId("idEntrenador")
     @JoinColumn(name = "id_entrenador")
     private Entrenador entrenador;
+
+    @Column(name = "rol", nullable = false, length = 20)  // AÑADE ESTE CAMPO
+    private String rol;
 }

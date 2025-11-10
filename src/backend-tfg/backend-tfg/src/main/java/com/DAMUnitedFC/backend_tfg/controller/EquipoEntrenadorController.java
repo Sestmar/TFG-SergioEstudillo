@@ -36,6 +36,7 @@ public class EquipoEntrenadorController {
         ee.setId(id);
         ee.setEquipo(equipoRepo.findById(dto.getIdEquipo()).orElseThrow());
         ee.setEntrenador(entrenadorRepo.findById(dto.getIdEntrenador()).orElseThrow());
+        ee.setRol(dto.getRol());  // AÑADE ESTA LÍNEA
         return repo.save(ee);
     }
 

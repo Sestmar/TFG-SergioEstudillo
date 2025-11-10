@@ -6,4 +6,5 @@ import lombok.Data;
 public class EquipoEntrenadorDto {
     private Integer idEquipo;
     private Integer idEntrenador;
+    private String rol;
 }
