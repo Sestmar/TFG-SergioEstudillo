@@ -2,6 +2,7 @@ package com.DAMUnitedFC.backend_tfg.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.sql.Date;
 
 @Entity
 @Table(name = "entrenador")
@@ -21,4 +22,10 @@ public class Entrenador {
 
     @Column(name = "licencia", length = 50)
     private String licencia;
+
+    @Column(name = "telefono_contacto", length = 15)  // AÑADE ESTE CAMPO
+    private String telefonoContacto;
+
+    @Column(name = "fecha_alta", nullable = false)    // AÑADE ESTE CAMPO
+    private Date fechaAlta;
 }

@@ -5,6 +5,8 @@ import com.DAMUnitedFC.backend_tfg.model.Entrenador;
 import com.DAMUnitedFC.backend_tfg.repository.EntrenadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import org.springframework.web.bind.annotation.*;
+
+import java.sql.Date;
 import java.util.List;
 
 @RestController
@@ -35,6 +37,8 @@ public class EntrenadorController {
         e.setUsuario(usuarioRepo.findById(dto.getIdUsuario()).orElseThrow());
         e.setEspecialidad(dto.getEspecialidad());
         e.setLicencia(dto.getLicencia());
+        e.setTelefonoContacto(dto.getTelefonoContacto());
+        e.setFechaAlta(Date.valueOf(dto.getFechaAlta())); // AÑADE ESTA LÍNEA
         return repo.save(e);
     }
 
@@ -44,6 +48,8 @@ public class EntrenadorController {
         e.setUsuario(usuarioRepo.findById(dto.getIdUsuario()).orElseThrow());
         e.setEspecialidad(dto.getEspecialidad());
         e.setLicencia(dto.getLicencia());
+        e.setTelefonoContacto(dto.getTelefonoContacto());
+        e.setFechaAlta(Date.valueOf(dto.getFechaAlta())); // AÑADE ESTA LÍNEA
         return repo.save(e);
     }
 
