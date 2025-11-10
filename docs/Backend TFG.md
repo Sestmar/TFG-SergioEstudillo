@@ -1,301 +1,382 @@
-Backend TFG - Sergio Estudillo
-Documentación Técnica Backend (backend.md)
-Índice
-## Introducción
+# Documentación Técnica Backend — Spring Boot
+## TFG Club de Fútbol - Sergio Estudillo
 
-## Estructura del proyecto backend
+---
 
-### Explicación de carpetas: organización y propósito
+## Índice
 
-## Modelo de datos y relaciones
+1. [Resumen ejecutivo del backend](#resumen-ejecutivo-del-backend)
+2. [Arquitectura técnica y decisiones de diseño](#arquitectura-técnica-y-decisiones-de-diseño)
+3. [Estructura completa del proyecto](#estructura-completa-del-proyecto)
+4. [Modelo de datos: Entidades y relaciones](#modelo-de-datos-entidades-y-relaciones)
+5. [Patrón DTO: Justificación técnica y implementación](#patrón-dto-justificación-técnica-y-implementación)
+6. [Controladores REST: Implementación completa](#controladores-rest-implementación-completa)
+7. [Repositorios JPA: Acceso a datos](#repositorios-jpa-acceso-a-datos)
+8. [Configuración Spring Boot: application.properties y SecurityConfig](#configuración-spring-boot)
+9. [Tabla completa de endpoints implementados](#tabla-completa-de-endpoints-implementados)
+10. [Ejemplos JSON por entidad: Requests y Responses](#ejemplos-json-por-entidad)
+11. [Pruebas con Postman: Metodología y resultados](#pruebas-con-postman-metodología-y-resultados)
+12. [Problemas encontrados y soluciones aplicadas](#problemas-encontrados-y-soluciones-aplicadas)
+13. [Best practices, validación y manejo de errores](#best-practices-validación-y-manejo-de-errores)
+14. [Roadmap técnico y mejoras futuras](#roadmap-técnico-y-mejoras-futuras)
 
-### Equipo - Liga
+---
 
-### Equipo - Categoría
+## Resumen ejecutivo del backend
 
-### Liga - Categoría
+El backend del TFG Club de Fútbol ha sido desarrollado íntegramente sobre **Spring Boot 3.5.7** con Java 21/22, utilizando **Spring Data JPA** y **Hibernate** como ORM para gestionar la persistencia contra **MySQL 8.x**.
 
-### Usuario, Jugador, Entrenador y futuras entidades
+### Estado actual
+✅ **100% funcional y validado**  
+✅ **12 entidades principales** implementadas  
+✅ **9 controladores REST** completos con CRUD  
+✅ **3 relaciones ManyToMany** mediante tablas intermedias  
+✅ **DTOs robustos** para todas las relaciones ManyToOne  
+✅ **Pruebas exhaustivas** con Postman completadas  
 
-### Gestión avanzada de relaciones: DTOs
+---
 
-## Controladores, endpoints y ciclo CRUD
+## Arquitectura técnica y decisiones de diseño
 
-### Tabla-resumen de endpoints REST implementados
+### Patrón arquitectónico
 
-### Ejemplos de cada relación (JSON)
+El backend sigue una **arquitectura en capas clara y profesional**:
 
-## Pruebas e integración con Postman: ejemplos y trucos
+┌─────────────────────────────────────┐
+│ Controller (REST Endpoints) │ ← Capa de presentación/API
+├─────────────────────────────────────┤
+│ DTO (Data Transfer Objects) │ ← Capa de transporte
+├─────────────────────────────────────┤
+│ Repository (JPA Interfaces) │ ← Capa de acceso a datos
+├─────────────────────────────────────┤
+│ Model (JPA Entities) │ ← Capa de persistencia
+├─────────────────────────────────────┤
+│ Config (Security, CORS, Beans) │ ← Capa de configuración
+└─────────────────────────────────────┘
 
-## Validación, best practices, seguridad y errores comunes
 
-## Roadmap backend y tareas siguientes
+### Decisiones técnicas clave
 
-Introducción
-Esta documentación recoge toda la arquitectura, estructura técnica, patrón DTO, validación de relaciones y el ciclo completo de desarrollo backend para el TFG Club de Fútbol. El objetivo es que cualquier desarrollador pueda continuar, mejorar y mantener el backend siguiendo prácticas empresariales, robustas y fáciles de testear/manualizar.
+1. **DTOs obligatorios para relaciones**: Evita el problema de entidades transientes en Hibernate y asegura validación de FKs.
+2. **Inyección por constructor**: Facilita testing y cumple principios SOLID.
+3. **Rutas RESTful semánticas**: `/api/{entidad}` y `/api/{entidad}/{id}`.
+4. **Respuestas con objetos anidados completos**: Facilita consumo desde frontend sin necesidad de múltiples peticiones.
+5. **Validación en DB y en código**: `ddl-auto=validate` asegura coherencia entre modelo Java y esquema MySQL.
 
-Estructura del proyecto backend
-text
-src/
-├── backend-tfg/
-│   ├── src/main/java/com/DAMUnitedFC/backend_tfg/
-│   │   ├── controller/
-│   │   ├── dto/
-│   │   ├── model/
-│   │   ├── repository/
-│   │   └── config/
-│   └── resources/
-│       └── application.properties
-Explicación de carpetas: organización y propósito
-controller/
-Agrupa todos los endpoints REST. Cada entidad funcional tiene su propio controlador RESTful siguiendo la convención /api/[nombre]. Encapsula la lógica de entrada/salida hacia el exterior.
+---
 
-dto/
-Nueva carpeta, clave de robustez. Aquí cada DTO define los datos que viajan por red en POST/PUT. Las relaciones ManyToOne siempre se gestionan por ID, nunca anidando objetos.
-Ejemplo para equipos:
+## Estructura completa del proyecto
 
-java
-public class EquipoDto {
-    private String nombre;
-    private String fechaCreacion;
-    private String observaciones;
-    private Integer idCategoria;
-    private Integer idLiga;
+src/backend-tfg/
+├── src/main/java/com/DAMUnitedFC/backend_tfg/
+│ ├── controller/
+│ │ ├── UsuarioController.java
+│ │ ├── CategoriaController.java
+│ │ ├── LigaController.java
+│ │ ├── EquipoController.java
+│ │ ├── JugadorController.java
+│ │ ├── EntrenadorController.java
+│ │ ├── SolicitudInscripcionController.java
+│ │ ├── ConvocatoriaController.java
+│ │ ├── IncidenciaController.java
+│ │ ├── JugadorEquipoController.java
+│ │ ├── ConvocatoriaJugadorController.java
+│ │ └── EquipoEntrenadorController.java
+│ │
+│ ├── dto/
+│ │ ├── LigaDto.java
+│ │ ├── EquipoDto.java
+│ │ ├── JugadorDto.java
+│ │ ├── EntrenadorDto.java
+│ │ ├── SolicitudInscripcionDto.java
+│ │ ├── ConvocatoriaDto.java
+│ │ ├── IncidenciaDto.java
+│ │ ├── JugadorEquipoDto.java
+│ │ ├── ConvocatoriaJugadorDto.java
+│ │ └── EquipoEntrenadorDto.java
+│ │
+│ ├── model/
+│ │ ├── Usuario.java
+│ │ ├── Categoria.java
+│ │ ├── Liga.java
+│ │ ├── Equipo.java
+│ │ ├── Jugador.java
+│ │ ├── Entrenador.java
+│ │ ├── SolicitudInscripcion.java
+│ │ ├── Convocatoria.java
+│ │ ├── Incidencia.java
+│ │ ├── JugadorEquipo.java + JugadorEquipoId.java
+│ │ ├── ConvocatoriaJugador.java + ConvocatoriaJugadorId.java
+│ │ └── EquipoEntrenador.java + EquipoEntrenadorId.java
+│ │
+│ ├── repository/
+│ │ ├── UsuarioRepository.java
+│ │ ├── CategoriaRepository.java
+│ │ ├── LigaRepository.java
+│ │ ├── EquipoRepository.java
+│ │ ├── JugadorRepository.java
+│ │ ├── EntrenadorRepository.java
+│ │ ├── SolicitudInscripcionRepository.java
+│ │ ├── ConvocatoriaRepository.java
+│ │ ├── IncidenciaRepository.java
+│ │ ├── JugadorEquipoRepository.java
+│ │ ├── ConvocatoriaJugadorRepository.java
+│ │ └── EquipoEntrenadorRepository.java
+│ │
+│ ├── config/
+│ │ └── SecurityConfig.java
+│ │
+│ └── BackendTfgApplication.java
+│
+└── src/main/resources/
+└── application.properties
+
+
+### Explicación de cada capa
+
+#### **controller/**
+Expone endpoints REST. Cada controlador maneja una entidad específica y sigue el patrón CRUD completo. Usa `@RestController` y `@RequestMapping` para definir rutas.
+
+#### **dto/**
+**Clave de la robustez del sistema.** Cada DTO representa los datos que viajan en POST/PUT para entidades con relaciones FK. Solo contiene IDs de entidades relacionadas, nunca objetos anidados.
+
+#### **model/**
+Entidades JPA que mapean 1:1 con las tablas MySQL. Usan anotaciones `@Entity`, `@Table`, `@ManyToOne`, `@OneToMany`, `@Embedded` según corresponda.
+
+#### **repository/**
+Interfaces que extienden `JpaRepository<Entidad, TipoID>`. Spring Data JPA genera automáticamente las implementaciones CRUD.
+
+#### **config/**
+Configuración de seguridad (temporalmente deshabilitada para desarrollo), beans personalizados y CORS si fuera necesario.
+
+---
+
+## Modelo de datos: Entidades y relaciones
+
+### Entidades principales implementadas
+
+#### 1. Usuario
+@Entity
+public class Usuario {
+@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+private Integer idUsuario;
+private String nombre;
+private String apellidos;
+@Column(unique = true, nullable = false)
+private String email;
+private String passwordHash;
+private String rol;
+private Date fechaAlta;
+private String telefono;
+private String direccion;
 }
-model/
-Define la estructura física de cada tabla en la base de datos. Cada entidad mapea exactamente a la tabla en SQL, usando @Entity, @Id, @ManyToOne, etc.
 
-repository/
-Interfaces extendiendo JpaRepository, permitiendo acceso, CRUD y paginaciones.
 
-config/
-Configuraciones técnicas (seguridad, beans, CORS...).
-
-Modelo de datos y relaciones
-Equipo - Liga
-Un equipo pertenece a una liga.
-
-Relación en DB: id_liga en equipo.
-
-Implementación:
-
-DTO: Solo se permite "idLiga": 3
-
-Controlador: Busca la liga por id antes del save.
-
-Equipo - Categoría
-Un equipo pertenece a una categoría (por edad).
-
-DTO: "idCategoria": 5
-
-En la base de datos, FK id_categoria en equipo.
-
-Liga - Categoría
-Cada liga está ligada a una categoría (N equipos pueden competir en la misma categoría/edad).
-
-DTO Liga: "idCategoria": 5, y el backend valida que exista antes del save.
-
-Usuario, Jugador, Entrenador y futuras entidades
-Por arquitectura, todas las relaciones importantes (usuario-jugador, equipo-entrenador, etc) seguirán el mismo patrón de DTO-referencia por id y validación business logic.
-
-Gestión avanzada de relaciones: DTOs
-¿Por qué usamos DTO?
-Evita errores de entidades transientes en Hibernate, obliga a validar que la FK existe antes de cualquier alta/modificación, asegura la integridad y desacopla el modelo de los datos de transporte.
-
-Patrón de uso:
-
-POST/PUT siempre reciben el id de la entidad referenciada (ejemplo: equipo recibe idLiga e idCategoria).
-
-El controlador busca la entidad y la asigna como objeto JPA gestionado.
-
-Ejemplo de implementación en controller:
-
-java
-@PostMapping
-public Equipo crearEquipo(@RequestBody EquipoDto equipoDto) {
-    Liga liga = ligaRepository.findById(equipoDto.getIdLiga())
-        .orElseThrow(() -> new RuntimeException("Liga no encontrada"));
-    Categoria categoria = categoriaRepository.findById(equipoDto.getIdCategoria())
-        .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
-    Equipo equipo = new Equipo();
-    equipo.setNombre(equipoDto.getNombre());
-    equipo.setFechaCreacion(Date.valueOf(equipoDto.getFechaCreacion()));
-    equipo.setObservaciones(equipoDto.getObservaciones());
-    equipo.setLiga(liga);
-    equipo.setCategoria(categoria);
-    return equipoRepository.save(equipo);
+#### 2. Categoria
+@Entity
+public class Categoria {
+@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+@Column(name = "id_categoria")
+private Integer idCategoria;
+private String nombre;
+private Integer edadMin;
+private Integer edadMax;
 }
-Controladores, endpoints y ciclo CRUD
-Estructura típica
-java
-@RestController
-@RequestMapping("/api/equipos")
-public class EquipoController {
-    // GetAll, GetById, Post (DTO), Put (DTO), Delete...
+
+
+#### 3. Liga
+@Entity
+public class Liga {
+@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+private Integer idliga;
+private String nombre;
+private String temporada;
+private String nivel;
+private String observaciones;
+
+@ManyToOne
+@JoinColumn(name = "id_categoria", nullable = false)
+private Categoria categoria;
 }
-Endpoints robustos
-Para Liga:
 
-GET /api/ligas: lista todas las ligas.
 
-GET /api/ligas/{id}: detalles de una liga.
+#### 4. Equipo
+@Entity
+public class Equipo {
+@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+@Column(name = "id_equipo")
+private Integer idEquipo;
+private String nombre;
+private Date fechaCreacion;
+private String observaciones;
 
-POST /api/ligas: alta vía LigaDto (referencia idCategoria).
+@ManyToOne
+@JoinColumn(name = "id_categoria", nullable = false)
+private Categoria categoria;
 
-PUT /api/ligas/{id}: edita una liga vía LigaDto.
-
-DELETE /api/ligas/{id}: borra la liga.
-
-Para Equipo:
-
-GET /api/equipos
-
-GET /api/equipos/{id}
-
-POST /api/equipos: alta vía EquipoDto (referencia idCategoria, idLiga).
-
-PUT /api/equipos/{id}: edit con EquipoDto.
-
-DELETE /api/equipos/{id}
-
-Para Categoría:
-
-GET /api/categorias
-
-GET /api/categorias/{id}
-
-POST /api/categorias
-
-PUT /api/categorias/{id}
-
-DELETE /api/categorias/{id}
-
-Tabla-resumen de endpoints REST implementados
-Entidad	Endpoint	Método HTTP	Body / Parámetros	Respuesta
-Liga	/api/ligas	GET	-	array de ligas
-Liga	/api/ligas/{id}	GET	-	liga (con categoria anidada)
-Liga	/api/ligas	POST	LigaDto (nombre, temporada, ..., idCategoria)	liga creada
-Liga	/api/ligas/{id}	PUT	LigaDto	liga actualizada
-Liga	/api/ligas/{id}	DELETE	-	204 / OK
-Equipo	/api/equipos	GET	-	array de equipos
-Equipo	/api/equipos/{id}	GET	-	equipo (con liga, categoria)
-Equipo	/api/equipos	POST	EquipoDto (nombre, ..., idCategoria, idLiga)	equipo creado
-Equipo	/api/equipos/{id}	PUT	EquipoDto	equipo actualizado
-Equipo	/api/equipos/{id}	DELETE	-	204 / OK
-Categoría	/api/categorias	GET	-	array de categorías
-Categoría	/api/categorias/{id}	GET	-	categoría unica
-Categoría	/api/categorias	POST	{nombre, edadMin, edadMax}	categoria creada
-Categoría	/api/categorias/{id}	PUT	{nombre, edadMin, edadMax}	categoria actualizada
-Categoría	/api/categorias/{id}	DELETE	-	204 / OK
-Ejemplos de cada relación (JSON)
-Crear liga asociada a una categoría existente
-
-json
-{
-    "nombre": "Liga Cadete A",
-    "temporada": "2025/2026",
-    "nivel": "Preferente",
-    "observaciones": "",
-    "idCategoria": 5
+@ManyToOne
+@JoinColumn(name = "id_liga", nullable = false)
+private Liga liga;
 }
-Respuesta:
 
-json
-{
-    "idliga": 2,
-    "nombre": "Liga Cadete A",
-    "temporada": "2025/2026",
-    "nivel": "Preferente",
-    "observaciones": "",
-    "categoria": {
-        "idCategoria": 5,
-        "nombre": "Cadete",
-        "edadMin": 14,
-        "edadMax": 15
-    }
+
+#### 5. Jugador
+@Entity
+public class Jugador {
+@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+@Column(name = "id_jugador")
+private Integer idJugador;
+
+@ManyToOne
+@JoinColumn(name = "id_usuario", nullable = false)
+private Usuario usuario;
+
+private Date fechaNacimiento;
+private String posicion;
+private Integer dorsal;
+private String estado;
+private String telefonoContacto;
+private String direccion;
+private Date fechaAlta;
+private Date fechaBaja;
+private String observaciones;
+private Integer equipoPrincipal;
 }
-Crear equipo ligado a una liga y una categoría
 
-json
-{
-    "nombre": "Cadete B",
-    "fechaCreacion": "2025-11-10",
-    "observaciones": "Equipo cadete segundo nivel",
-    "idCategoria": 5,
-    "idLiga": 2
+
+#### 6. Entrenador
+@Entity
+@Table(name = "entrenador")
+public class Entrenador {
+@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+@Column(name = "id_entrenador")
+private Integer idEntrenador;
+
+@ManyToOne
+@JoinColumn(name = "id_usuario", nullable = false)
+private Usuario usuario;
+
+private String especialidad;
+private String licencia;
+private String telefonoContacto;
+private Date fechaAlta;
 }
-Respuesta:
 
-json
-{
-    "idEquipo": 24,
-    "nombre": "Cadete B",
-    "fechaCreacion": "2025-11-10",
-    "observaciones": "Equipo cadete segundo nivel",
-    "categoria": {
-        "idCategoria": 5,
-        "nombre": "Cadete",
-        "edadMin": 14,
-        "edadMax": 15
-    },
-    "liga": {
-        "idliga": 2,
-        "nombre": "Liga Cadete A",
-        "temporada": "2025/2026",
-        "nivel": "Preferente",
-        "observaciones": "",
-        "categoria": {
-            "idCategoria": 5,
-            "nombre": "Cadete",
-            "edadMin": 14,
-            "edadMax": 15
-        }
-    }
+
+#### 7. SolicitudInscripcion
+@Entity
+public class SolicitudInscripcion {
+@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+@Column(name = "id_solicitud")
+private Integer idSolicitud;
+
+@ManyToOne
+@JoinColumn(name = "id_usuario", nullable = false)
+private Usuario usuario;
+
+@ManyToOne
+@JoinColumn(name = "id_jugador")
+private Jugador jugador; // null hasta aprobar
+
+private Date fechaSolicitud;
+private String estado; // pendiente/aceptada/rechazada
+private String motivoRechazo;
 }
-Crear categoría nueva
 
-json
-{
-    "nombre": "Benjamín",
-    "edadMin": 8,
-    "edadMax": 9
+
+#### 8. Convocatoria
+@Entity
+public class Convocatoria {
+@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+@Column(name = "id_convocatoria")
+private Integer idConvocatoria;
+
+@ManyToOne
+@JoinColumn(name = "id_equipo", nullable = false)
+private Equipo equipo;
+
+private Timestamp fechaEvento;
+private String tipo;
+private String observaciones;
 }
-Pruebas e integración con Postman: ejemplos y trucos
-Todos los endpoints han sido validados con colecciones de pruebas Postman.
 
-En cada POST o PUT con relaciones, se debe indicar el id de la entidad referenciada (nunca objeto anidado sin id).
 
-Validar error-handling: si el id referenciado no existe se devuelve error 400/404 con mensaje comprensible.
+#### 9. Incidencia
+@Entity
+public class Incidencia {
+@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+@Column(name = "id_incidencia")
+private Integer idIncidencia;
 
-Recomendado: guardar respuestas y documentos de ejemplos para pruebas E2E futuro Frontend.
+@ManyToOne
+@JoinColumn(name = "id_jugador")
+private Jugador jugador;
 
-Validación, best practices, seguridad y errores comunes
-Validación obligatoria
-Controller debe hacer siempre .findById().orElseThrow() antes de cualquier save/update.
+@ManyToOne
+@JoinColumn(name = "id_usuario")
+private Usuario usuario;
 
-DTO obligatorio en operaciones con relaciones.
+private Date fechaReporte;
+private String tipo;
+private String estado;
+private String descripcion;
+}
 
-Solo se aceptan ids válidos (no nulos, no inventados).
 
-Seguridad
-Durante desarrollo, seguridad abierta total (permitAll); preparado para seguridad JWT al ampliar frontend.
+### Relaciones ManyToMany (tablas intermedias)
 
-Errores comunes evitados
-Entidad transiente (objeto anidado en vez de id FK): resuelto con DTO.
+#### JugadorEquipo
+@Entity
+@Table(name = "jugador_equipo")
+public class JugadorEquipo {
+@EmbeddedId
+private JugadorEquipoId id; // Clave compuesta
 
-Error 500 al POST/PUT: casi siempre por IDs erróneos, mal paso a DTO o no encontrar entidades en repositorio.
+@ManyToOne
+@MapsId("idJugador")
+@JoinColumn(name = "id_jugador")
+private Jugador jugador;
 
-Respuestas claras y consistentes (anidado siempre con objetos completos, nunca solo ids en la respuesta).
+@ManyToOne
+@MapsId("idEquipo")
+@JoinColumn(name = "id_equipo")
+private Equipo equipo;
 
-Roadmap backend y tareas siguientes
-Modularización de lógica de negocio en servicios.
+private String observacion;
+}
 
-Nuevos endpoints para jugador, incidencia, partido, estadísticas.
 
-Búsqueda combinada y consultas avanzadas (por liga, por categoría…).
+#### ConvocatoriaJugador
+@Entity
+@Table(name = "convocatoria_jugador")
+public class ConvocatoriaJugador {
+@EmbeddedId
+private ConvocatoriaJugadorId id;
 
-Implementación de seguridad real (autenticación y roles).
+@ManyToOne
+@MapsId("idConvocatoria")
+@JoinColumn(name = "id_convocatoria")
+private Convocatoria convocatoria;
 
-Integración Swagger/OpenAPI y testing automático.
+@ManyToOne
+@MapsId("idJugador")
+@JoinColumn(name = "id_jugador")
+private Jugador jugador;
+}
 
-Integración con Frontend y despliegue en producción.
+
+#### EquipoEntrenador
+@Entity
+@Table(name = "equipo_entrenador")
+public class EquipoEntrenador {
+@EmbeddedId
+private EquipoEntrenadorId id;
+
+@ManyToOne
+@MapsId("idEquipo")
+@JoinColumn(name = "id_equipo")
+private Equipo equipo;
+
+@ManyToOne
+@MapsI
+
