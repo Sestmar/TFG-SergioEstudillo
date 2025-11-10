@@ -111,3 +111,103 @@ Este proyecto constituye una solución profesional y escalable para la gestión 
 
 ## Estructura del Repositorio y Organización del Código
 
+/
+├── docs/
+│ ├── diagrama-er.png
+│ └── Documentacion-TFG-Sergio-Estudillo.pdf
+├── src/
+│ └── backend-tfg/
+│ ├── src/main/java/com/DAMUnitedFC/backend_tfg/
+│ │ ├── controller/ # Controladores REST
+│ │ ├── dto/ # Data Transfer Objects (robustez en relaciones)
+│ │ ├── model/ # Entidades JPA
+│ │ ├── repository/ # Interfaces JpaRepository
+│ │ └── config/ # Configuración Spring/Seguridad
+│ └── resources/application.properties
+├── backend.md # Documentación técnica completa del backend
+├── README.md
+├── .gitignore
+└── planificacion.txt
+
+
+### Descripción de carpetas
+
+- **controller/**: Rutas y lógica REST completa (GET, POST, PUT, DELETE).
+- **dto/**: DTOs usados en endpoints POST y PUT para controlar relaciones ManyToOne y validación de FKs.
+- **model/**: Entidades JPA que reflejan la estructura real de la base de datos.
+- **repository/**: Interfaces JpaRepository para acceso a datos.
+- **config/**: Configuración personalizada (seguridad, CORS, beans).
+
+---
+
+## Backend - Spring Boot
+
+### Arquitectura, Convenciones y Estándares
+
+- Arquitectura en capas (controller, dto, repository, model, config).
+- Uso sistemático de entidades, controladores REST y DTOs.
+- Rutas RESTful robustas: `/api/usuarios`, `/api/equipos/{id}`, `/api/ligas`, etc.
+- **Todas las relaciones ManyToOne aseguradas usando DTOs** (nunca objetos anidados sin id en POST/PUT).
+- Inyección de dependencias por constructor.
+
+### Implementación Profesional: Código y Lógica
+
+**Patrón DTO para relaciones:**
+- Insertar o actualizar equipos, ligas, etc. siempre vía DTO: `{ "idCategoria": 5, "idLiga": 2, ... }` en el body.
+- El controlador busca la entidad por id y la asigna antes de `save()`.
+
+
+**Ejemplo de petición POST:**
+
+{
+"nombre": "Cadete B",
+"fechaCreacion": "2025-11-10",
+"observaciones": "Equipo cadete segundo nivel",
+"idCategoria": 5,
+"idLiga": 2
+}
+
+
+En las respuestas, los objetos de liga y categoría se muestran completamente anidados.
+
+### Seguridad y Acceso API REST
+
+- Acceso abierto temporalmente en desarrollo (`SecurityConfig` con `permitAll()`).
+- Preparado para activar autenticación JWT y roles específicos en producción.
+
+### Validación y Pruebas
+
+- **Pruebas exhaustivas con Postman:** validados todos los endpoints CRUD de todas las entidades.
+- **Flujo completo validado:** Usuario → SolicitudInscripcion → Jugador → Equipo → Convocatoria.
+- Monitorización SQL (`spring.jpa.show-sql=true`).
+- Validación JPA (`ddl-auto=validate`).
+- Integridad verificada en todas las relaciones ManyToOne y ManyToMany.
+
+### Documentación y Buenas Prácticas
+
+- README.md y backend.md actualizados con toda la información técnica.
+- Manejo robusto de errores en endpoints y validación previa de ids.
+- Código limpio, comentado y siguiendo convenciones Spring Boot profesionales.
+
+---
+
+## Roadmap: Siguientes pasos y evolución prevista
+
+- ✅ **Backend completamente funcional** (Fase 1 completada)
+- 🔄 Integración frontend Angular/Ionic
+- Endpoints avanzados: filtrado, búsquedas combinadas, gestión de roles
+- Seguridad completa con autenticación JWT
+- Pruebas unitarias/integración (JUnit)
+- Documentación OpenAPI/Swagger automática
+- CI/CD y despliegue en producción
+
+---
+
+## Autor y contacto
+
+**Sergio Estudillo**  
+Repositorio GitHub: [sestmar/TFG-SergioEstudillo](https://github.com/sestmar/TFG-SergioEstudillo)
+
+---
+
+*Documentación viva y profesional. Para documentación técnica detallada del backend, consulta `backend.md`.*
