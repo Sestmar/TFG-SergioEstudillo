@@ -1,8 +1,9 @@
 package com.DAMUnitedFC.backend_tfg.controller;
 
 import com.DAMUnitedFC.backend_tfg.dto.JugadorDto;
-import com.DAMUnitedFC.backend_tfg.model.*;
-import com.DAMUnitedFC.backend_tfg.repository.*;
+import com.DAMUnitedFC.backend_tfg.model.Jugador;
+import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
+import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import org.springframework.web.bind.annotation.*;
 import java.sql.Date;
 import java.util.List;
@@ -20,7 +21,14 @@ public class JugadorController {
     }
 
     @GetMapping
-    public List<Jugador> listar() { return repo.findAll(); }
+    public List<Jugador> listar() {
+        return repo.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Jugador obtener(@PathVariable Integer id) {
+        return repo.findById(id).orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+    }
 
     @PostMapping
     public Jugador crear(@RequestBody JugadorDto dto) {
@@ -39,5 +47,25 @@ public class JugadorController {
         return repo.save(j);
     }
 
-    // Añade métodos PUT y DELETE siguiendo este patrón
+    @PutMapping("/{id}")
+    public Jugador actualizar(@PathVariable Integer id, @RequestBody JugadorDto dto) {
+        Jugador j = repo.findById(id).orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+        j.setUsuario(usuarioRepo.findById(dto.getIdUsuario()).orElseThrow());
+        j.setFechaNacimiento(Date.valueOf(dto.getFechaNacimiento()));
+        j.setPosicion(dto.getPosicion());
+        j.setDorsal(dto.getDorsal());
+        j.setEstado(dto.getEstado());
+        j.setTelefonoContacto(dto.getTelefonoContacto());
+        j.setDireccion(dto.getDireccion());
+        j.setFechaAlta(Date.valueOf(dto.getFechaAlta()));
+        j.setFechaBaja(dto.getFechaBaja() != null ? Date.valueOf(dto.getFechaBaja()) : null);
+        j.setObservaciones(dto.getObservaciones());
+        j.setEquipoPrincipal(dto.getEquipoPrincipal());
+        return repo.save(j);
+    }
+
+    @DeleteMapping("/{id}")
+    public void borrar(@PathVariable Integer id) {
+        repo.deleteById(id);
+    }
 }
