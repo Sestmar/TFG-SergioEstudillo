@@ -1,0 +1,72 @@
+<ion-content class="auth-content">
+  <div class="auth-container">
+    <div class="auth-header">
+      <div class="logo-container">
+        <ion-icon name="football" class="logo-icon"></ion-icon>
+      </div>
+      <h1 class="app-title">Club de Fútbol Pro</h1>
+      <p class="app-subtitle">Gestión deportiva profesional</p>
+    </div>
+
+    <div class="auth-form-container">
+      <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="auth-form">
+        <ion-list class="form-list">
+          <ion-item class="form-item">
+            <ion-icon name="person" slot="start" class="input-icon"></ion-icon>
+            <ion-input
+              formControlName="username"
+              type="text"
+              placeholder="Nombre de usuario"
+              class="auth-input"
+              [class.error]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched"
+            ></ion-input>
+          </ion-item>
+          <ion-note *ngIf="usernameError && loginForm.get('username')?.touched" color="danger" class="error-note">
+            {{ usernameError }}
+          </ion-note>
+
+          <ion-item class="form-item">
+            <ion-icon name="lock-closed" slot="start" class="input-icon"></ion-icon>
+            <ion-input
+              formControlName="password"
+              [type]="showPassword ? 'text' : 'password'"
+              placeholder="Contraseña"
+              class="auth-input"
+              [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+            ></ion-input>
+            <ion-button
+              fill="clear"
+              slot="end"
+              (click)="togglePasswordVisibility()"
+              class="password-toggle"
+            >
+              <ion-icon [name]="showPassword ? 'eye-off' : 'eye'"></ion-icon>
+            </ion-button>
+          </ion-item>
+          <ion-note *ngIf="passwordError && loginForm.get('password')?.touched" color="danger" class="error-note">
+            {{ passwordError }}
+          </ion-note>
+        </ion-list>
+
+        <ion-button
+          type="submit"
+          expand="block"
+          class="auth-button"
+          [disabled]="loginForm.invalid || isLoading"
+        >
+          <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!isLoading">Iniciar Sesión</span>
+        </ion-button>
+      </form>
+
+      <div class="auth-links">
+        <ion-button fill="clear" class="link-button" (click)="goToRegister()">
+          ¿No tienes cuenta? Regístrate
+        </ion-button>
+        <ion-button fill="clear" class="link-button" (click)="goToForgotPassword()">
+          ¿Olvidaste tu contraseña?
+        </ion-button>
+      </div>
+    </div>
+  </div>
+</ion-content>

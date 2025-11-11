@@ -1,0 +1,27 @@
+<ion-card class="dashboard-card">
+  <ion-card-content class="card-content">
+    <div class="card-header">
+      <div class="card-icon-container" [style.background]="'var(--ion-color-' + color + ')'">
+        <ion-icon [name]="icon" class="card-icon"></ion-icon>
+      </div>
+      
+      <div class="card-info">
+        <h3 class="card-title">{{ title }}</h3>
+        <div class="card-value-container">
+          <span class="card-value">{{ value }}</span>
+          <div *ngIf="trend !== 'neutral'" class="trend-indicator">
+            <ion-icon 
+              [name]="getTrendIcon()" 
+              [color]="getTrendColor()"
+              class="trend-icon"
+            ></ion-icon>
+            <span [class]="'trend-text trend-' + getTrendColor()">
+              {{ trendValue }}
+            </span>
+          </div>
+        </div>
+        <p *ngIf="subtitle" class="card-subtitle">{{ subtitle }}</p>
+      </div>
+    </div>
+  </ion-card-content>
+</ion-card>

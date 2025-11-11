@@ -1,0 +1,208 @@
+<ion-content class="user-dashboard">
+  <!-- Header con información del usuario -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="user-info">
+        <ion-avatar class="user-avatar">
+          <img [src]="currentUser?.fotoUrl || 'assets/images/default-avatar.png'" 
+               [alt]="currentUser?.nombre || 'Usuario'">
+          <div class="avatar-overlay">
+            <ion-icon name="shirt-outline"></ion-icon>
+          </div>
+        </ion-avatar>
+        <div class="user-details">
+          <h1 class="user-name">¡Hola, {{currentUser?.nombre || 'Fan'}}!</h1>
+          <p class="user-role">Aficionado del Club</p>
+        </div>
+      </div>
+      
+      <!-- Equipo favorito -->
+      <div class="favorite-team" *ngIf="favoriteTeam">
+        <div class="team-card">
+          <img [src]="getTeamLogo(favoriteTeam.id)" 
+               [alt]="favoriteTeam.nombre" 
+               class="team-logo"
+               (error)="$event.target.src='assets/images/default-team.png'">
+          <h3 class="team-name">{{favoriteTeam.nombre}}</h3>
+          <p class="team-category">{{favoriteTeam.categoria}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="dashboard-content">
+    
+    <!-- Estadísticas del equipo favorito -->
+    <div class="stats-section" *ngIf="favoriteTeam">
+      <h2 class="section-title">
+        <ion-icon name="stats-chart-outline"></ion-icon>
+        Rendimiento del Equipo
+      </h2>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">{{stats.totalMatches}}</div>
+          <div class="stat-label">Partidos</div>
+        </div>
+        <div class="stat-card victory">
+          <div class="stat-value">{{stats.wins}}</div>
+          <div class="stat-label">Victorias</div>
+        </div>
+        <div class="stat-card draw">
+          <div class="stat-value">{{stats.draws}}</div>
+          <div class="stat-label">Empates</div>
+        </div>
+        <div class="stat-card defeat">
+          <div class="stat-value">{{stats.losses}}</div>
+          <div class="stat-label">Derrotas</div>
+        </div>
+      </div>
+      
+      <div class="goals-stats">
+        <div class="goals-item">
+          <ion-icon name="football-outline" class="goals-icon"></ion-icon>
+          <span class="goals-number">{{stats.goalsFor}}</span>
+          <span class="goals-label">Goles a favor</span>
+        </div>
+        <div class="goals-item">
+          <ion-icon name="shield-outline" class="goals-icon"></ion-icon>
+          <span class="goals-number">{{stats.goalsAgainst}}</span>
+          <span class="goals-label">Goles en contra</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Próximos partidos -->
+    <div class="matches-section">
+      <h2 class="section-title">
+        <ion-icon name="calendar-outline"></ion-icon>
+        Próximos Partidos
+      </h2>
+      
+      <div class="matches-list" *ngIf="nextMatches.length > 0; else noMatches">
+        <div class="match-card" *ngFor="let match of nextMatches; trackBy: trackByMatchId">
+          <div class="match-date">
+            <div class="date-info">
+              <span class="match-day">{{match.fechaHora | date:'dd'}}</span>
+              <span class="match-month">{{match.fechaHora | date:'MMM'}}</span>
+            </div>
+            <div class="match-status">{{getMatchStatus(match)}}</div>
+          </div>
+          
+          <div class="match-teams">
+            <div class="team-info">
+              <img [src]="getTeamLogo(match.equipoLocalId)" 
+                   class="team-logo-small"
+                   (error)="$event.target.src='assets/images/default-team.png'">
+              <span class="team-name">{{match.equipoLocal}}</span>
+            </div>
+            <div class="match-versus">VS</div>
+            <div class="team-info">
+              <img [src]="getTeamLogo(match.equipoVisitanteId)" 
+                   class="team-logo-small"
+                   (error)="$event.target.src='assets/images/default-team.png'">
+              <span class="team-name">{{match.equipoVisitante}}</span>
+            </div>
+          </div>
+          
+          <div class="match-info">
+            <span class="match-time">{{match.fechaHora | date:'HH:mm'}}</span>
+            <span class="match-location">{{match.ubicacion}}</span>
+          </div>
+        </div>
+      </div>
+      
+      <ng-template #noMatches>
+        <div class="empty-state">
+          <ion-icon name="calendar-clear-outline"></ion-icon>
+          <p>No hay partidos programados próximamente</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Tabla de posiciones -->
+    <div class="standings-section">
+      <h2 class="section-title">
+        <ion-icon name="trophy-outline"></ion-icon>
+        Tabla de Posiciones
+      </h2>
+      
+      <div class="standings-table">
+        <div class="standings-header">
+          <span class="position-header">#</span>
+          <span class="team-header">Equipo</span>
+          <span class="points-header">Pts</span>
+        </div>
+        
+        <div class="standings-row" 
+             *ngFor="let team of teamStandings; let i = index"
+             [class.favorite-team-row]="team.id === favoriteTeam?.id">
+          <div class="position">{{i + 1}}</div>
+          <div class="team-info-row">
+            <img [src]="getTeamLogo(team.id)" 
+                 class="team-logo-tiny"
+                 (error)="$event.target.src='assets/images/default-team.png'">
+            <span class="team-name">{{team.nombre}}</span>
+          </div>
+          <div class="points">{{team.puntos}}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Noticias recientes -->
+    <div class="news-section">
+      <h2 class="section-title">
+        <ion-icon name="newspaper-outline"></ion-icon>
+        Noticias del Club
+      </h2>
+      
+      <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
+      
+      <div class="news-list" *ngIf="recentNews.length > 0; else noNews">
+        <div class="news-card" *ngFor="let news of recentNews; trackBy: trackByNewsId">
+          <div class="news-image" *ngIf="news.imagenUrl">
+            <img [src]="news.imagenUrl" [alt]="news.titulo">
+          </div>
+          
+          <div class="news-content">
+            <div class="news-meta">
+              <span class="news-date">{{news.fechaPublicacion | date:'dd MMM yyyy'}}</span>
+              <span class="news-category">{{news.categoria}}</span>
+            </div>
+            
+            <h3 class="news-title">{{news.titulo}}</h3>
+            <p class="news-excerpt">{{news.resumen}}</p>
+            
+            <div class="news-actions">
+              <ion-button fill="clear" size="small" class="read-more">
+                Leer más
+                <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+        </div>
+        
+        <ion-infinite-scroll (ionInfinite)="loadMoreNews($event)">
+          <ion-infinite-scroll-content></ion-infinite-scroll-content>
+        </ion-infinite-scroll>
+      </div>
+      
+      <ng-template #noNews>
+        <div class="empty-state">
+          <ion-icon name="newspaper-outline"></ion-icon>
+          <p>No hay noticias disponibles</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Botón flotante para cambiar equipo favorito -->
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button color="primary" (click)="changeFavoriteTeam()">
+      <ion-icon name="heart-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

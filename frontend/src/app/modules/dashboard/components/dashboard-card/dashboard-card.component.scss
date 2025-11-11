@@ -1,0 +1,130 @@
+.dashboard-card {
+  margin: 10px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .card-content {
+    padding: 20px;
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+
+      .card-icon-container {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        .card-icon {
+          font-size: 24px;
+          color: white;
+        }
+      }
+
+      .card-info {
+        flex: 1;
+        min-width: 0;
+
+        .card-title {
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: var(--ion-color-medium);
+          margin: 0 0 8px 0;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .card-value-container {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 8px;
+
+          .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--ion-color-dark);
+            line-height: 1;
+          }
+
+          .trend-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            .trend-icon {
+              font-size: 16px;
+            }
+
+            .trend-text {
+              font-size: 0.8rem;
+              font-weight: 500;
+
+              &.trend-success {
+                color: var(--ion-color-success);
+              }
+
+              &.trend-danger {
+                color: var(--ion-color-danger);
+              }
+
+              &.trend-medium {
+                color: var(--ion-color-medium);
+              }
+            }
+          }
+        }
+
+        .card-subtitle {
+          font-size: 0.85rem;
+          color: var(--ion-color-medium);
+          margin: 0;
+          line-height: 1.4;
+        }
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 480px) {
+  .dashboard-card {
+    margin: 8px;
+
+    .card-content {
+      padding: 16px;
+
+      .card-header {
+        gap: 12px;
+
+        .card-icon-container {
+          width: 40px;
+          height: 40px;
+
+          .card-icon {
+            font-size: 20px;
+          }
+        }
+
+        .card-info {
+          .card-value-container {
+            .card-value {
+              font-size: 1.5rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}

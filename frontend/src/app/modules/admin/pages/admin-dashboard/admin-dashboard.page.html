@@ -1,0 +1,447 @@
+<ion-content class="admin-dashboard">
+  <!-- Header del administrador -->
+  <div class="admin-header">
+    <div class="header-content">
+      <div class="admin-info">
+        <ion-avatar class="admin-avatar">
+          <img [src]="currentUser?.fotoUrl || 'assets/images/default-avatar.png'" 
+               [alt]="currentUser?.nombre || 'Admin'">
+          <div class="admin-badge">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+          </div>
+        </ion-avatar>
+        <div class="admin-details">
+          <h1 class="admin-name">Panel de Administración</h1>
+          <p class="admin-role">{{currentUser?.nombre || 'Administrador'}}</p>
+        </div>
+      </div>
+      
+      <!-- Estado del sistema -->
+      <div class="system-status">
+        <div class="status-item" [class.online]="systemInfo.serverStatus === 'online'">
+          <ion-icon name="server-outline"></ion-icon>
+          <span>Servidor</span>
+        </div>
+        <div class="status-item" [class.connected]="systemInfo.databaseStatus === 'connected'">
+          <ion-icon name="hardware-chip-outline"></ion-icon>
+          <span>Base de Datos</span>
+        </div>
+        <div class="status-item">
+          <ion-icon name="timer-outline"></ion-icon>
+          <span>{{systemInfo.lastBackup | date:'short'}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="dashboard-content">
+    
+    <!-- Estadísticas generales -->
+    <div class="stats-overview">
+      <h2 class="section-title">
+        <ion-icon name="stats-chart-outline"></ion-icon>
+        Vista General del Sistema
+      </h2>
+      
+      <div class="stats-grid">
+        <div class="stat-card users">
+          <div class="stat-header">
+            <ion-icon name="people-outline"></ion-icon>
+            <span class="stat-trend up">+12%</span>
+          </div>
+          <div class="stat-value">{{stats.totalUsers}}</div>
+          <div class="stat-label">Usuarios Totales</div>
+          <div class="stat-subtitle">{{stats.activeUsers}} activos</div>
+        </div>
+        
+        <div class="stat-card teams">
+          <div class="stat-header">
+            <ion-icon name="shield-outline"></ion-icon>
+            <span class="stat-trend up">+5%</span>
+          </div>
+          <div class="stat-value">{{stats.totalTeams}}</div>
+          <div class="stat-label">Equipos</div>
+          <div class="stat-subtitle">{{stats.activeTeams}} activos</div>
+        </div>
+        
+        <div class="stat-card matches">
+          <div class="stat-header">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <span class="stat-trend up">+8%</span>
+          </div>
+          <div class="stat-value">{{stats.totalMatches}}</div>
+          <div class="stat-label">Partidos</div>
+          <div class="stat-subtitle">{{stats.upcomingMatches}} próximos</div>
+        </div>
+        
+        <div class="stat-card requests">
+          <div class="stat-header">
+            <ion-icon name="notifications-outline"></ion-icon>
+            <span class="stat-trend down">-3</span>
+          </div>
+          <div class="stat-value">{{stats.pendingRequests}}</div>
+          <div class="stat-label">Solicitudes</div>
+          <div class="stat-subtitle">Pendientes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos y análisis -->
+    <div class="analytics-section">
+      <h2 class="section-title">
+        <ion-icon name="analytics-outline"></ion-icon>
+        Análisis del Sistema
+      </h2>
+      
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3 class="chart-title">Crecimiento de Usuarios</h3>
+          <div class="chart-container" *ngIf="userGrowthData.length > 0">
+            <canvas id="userGrowthChart"></canvas>
+          </div>
+          <div class="chart-empty" *ngIf="userGrowthData.length === 0">
+            <ion-icon name="trending-up-outline"></ion-icon>
+            <p>Cargando datos...</p>
+          </div>
+        </div>
+        
+        <div class="chart-card">
+          <h3 class="chart-title">Actividad de Partidos</h3>
+          <div class="chart-container" *ngIf="matchActivityData.length > 0">
+            <canvas id="matchActivityChart"></canvas>
+          </div>
+          <div class="chart-empty" *ngIf="matchActivityData.length === 0">
+            <ion-icon name="calendar-number-outline"></ion-icon>
+            <p>Cargando datos...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gestión rápida -->
+    <div class="quick-management">
+      <h2 class="section-title">
+        <ion-icon name="speedometer-outline"></ion-icon>
+        Gestión Rápida
+      </h2>
+      
+      <div class="quick-actions">
+        <button class="action-btn user" (click)="createNewUser()">
+          <ion-icon name="person-add-outline"></ion-icon>
+          <span>Nuevo Usuario</span>
+        </button>
+        
+        <button class="action-btn team" (click)="createNewTeam()">
+          <ion-icon name="shield-outline"></ion-icon>
+          <span>Nuevo Equipo</span>
+        </button>
+        
+        <button class="action-btn match" (click)="scheduleMatch()">
+          <ion-icon name="calendar-outline"></ion-icon>
+          <span>Programar Partido</span>
+        </button>
+        
+        <button class="action-btn report" (click)="generateReport()">
+          <ion-icon name="document-text-outline"></ion-icon>
+          <span>Generar Reporte</span>
+        </button>
+        
+        <button class="action-btn backup" (click)="backupSystem()">
+          <ion-icon name="archive-outline"></ion-icon>
+          <span>Respaldar Sistema</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Usuarios recientes -->
+    <div class="recent-users-section">
+      <h2 class="section-title">
+        <ion-icon name="people-outline"></ion-icon>
+        Usuarios Recientes
+      </h2>
+      
+      <div class="users-list" *ngIf="recentUsers.length > 0; else noUsers">
+        <div class="user-card" *ngFor="let user of recentUsers; trackBy: trackByUserId">
+          <div class="user-info">
+            <ion-avatar class="user-avatar-small">
+              <img [src]="user.fotoUrl || 'assets/images/default-avatar.png'" 
+                   [alt]="user.nombre">
+            </ion-avatar>
+            <div class="user-details">
+              <h4 class="user-name">{{user.nombre}} {{user.apellido}}</h4>
+              <p class="user-email">{{user.email}}</p>
+              <div class="user-meta">
+                <ion-badge [color]="getRoleColor(user.rol)" class="user-role">
+                  {{user.rol}}
+                </ion-badge>
+                <ion-badge [color]="getStatusColor(user.estado)" class="user-status">
+                  {{user.estado}}
+                </ion-badge>
+              </div>
+            </div>
+          </div>
+          
+          <div class="user-actions">
+            <ion-button fill="clear" size="small" (click)="openUserModal(user)">
+              <ion-icon name="eye-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      </div>
+      
+      <ng-template #noUsers>
+        <div class="empty-state">
+          <ion-icon name="people-outline"></ion-icon>
+          <p>No hay usuarios recientes</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Equipos recientes -->
+    <div class="recent-teams-section">
+      <h2 class="section-title">
+        <ion-icon name="shield-outline"></ion-icon>
+        Equipos Recientes
+      </h2>
+      
+      <div class="teams-list" *ngIf="recentTeams.length > 0; else noTeams">
+        <div class="team-card" *ngFor="let team of recentTeams; trackBy: trackByTeamId">
+          <div class="team-info">
+            <img [src]="'assets/images/teams/' + team.id + '-logo.png'" 
+                 [alt]="team.nombre" 
+                 class="team-logo-medium"
+                 (error)="$event.target.src='assets/images/default-team.png'">
+            <div class="team-details">
+              <h4 class="team-name">{{team.nombre}}</h4>
+              <p class="team-category">{{team.categoria}}</p>
+              <div class="team-meta">
+                <span class="team-players">{{team.jugadores?.length || 0}} jugadores</span>
+                <ion-badge [color]="getStatusColor(team.estado)" class="team-status">
+                  {{team.estado}}
+                </ion-badge>
+              </div>
+            </div>
+          </div>
+          
+          <div class="team-actions">
+            <ion-button fill="clear" size="small" (click)="openTeamModal(team)">
+              <ion-icon name="eye-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      </div>
+      
+      <ng-template #noTeams>
+        <div class="empty-state">
+          <ion-icon name="shield-outline"></ion-icon>
+          <p>No hay equipos recientes</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Actividad reciente -->
+    <div class="recent-activity-section">
+      <h2 class="section-title">
+        <ion-icon name="time-outline"></ion-icon>
+        Actividad Reciente
+      </h2>
+      
+      <div class="activity-list" *ngIf="recentActivity.length > 0; else noActivity">
+        <div class="activity-item" *ngFor="let activity of recentActivity">
+          <div class="activity-icon">
+            <ion-icon [name]="getActivityIcon(activity.tipo)"></ion-icon>
+          </div>
+          
+          <div class="activity-content">
+            <h4 class="activity-title">{{activity.titulo}}</h4>
+            <p class="activity-description">{{activity.descripcion}}</p>
+            <span class="activity-time">{{formatActivityTime(activity.fecha)}}</span>
+          </div>
+          
+          <div class="activity-type">
+            <ion-badge color="primary">{{activity.tipo}}</ion-badge>
+          </div>
+        </div>
+      </div>
+      
+      <ng-template #noActivity>
+        <div class="empty-state">
+          <ion-icon name="time-outline"></ion-icon>
+          <p>No hay actividad reciente</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Información del sistema -->
+    <div class="system-info-section">
+      <h2 class="section-title">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        Información del Sistema
+      </h2>
+      
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-header">
+            <ion-icon name="hardware-chip-outline"></ion-icon>
+            <h4>Recursos del Sistema</h4>
+          </div>
+          <div class="info-content">
+            <div class="info-item">
+              <span class="info-label">Memoria</span>
+              <span class="info-value">{{systemInfo.memoryUsage}}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Almacenamiento</span>
+              <span class="info-value">{{systemInfo.storageUsed}}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-header">
+            <ion-icon name="git-network-outline"></ion-icon>
+            <h4>Conectividad</h4>
+          </div>
+          <div class="info-content">
+            <div class="info-item">
+              <span class="info-label">Servidor</span>
+              <span class="info-value status-online">{{systemInfo.serverStatus}}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Base de Datos</span>
+              <span class="info-value status-connected">{{systemInfo.databaseStatus}}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-header">
+            <ion-icon name="code-outline"></ion-icon>
+            <h4>Versión</h4>
+          </div>
+          <div class="info-content">
+            <div class="info-item">
+              <span class="info-label">Aplicación</span>
+              <span class="info-value">v{{systemInfo.version}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de usuario -->
+  <ion-modal #userModal [isOpen]="!!selectedUser">
+    <ng-template>
+      <div class="modal-content" *ngIf="selectedUser">
+        <div class="modal-header">
+          <h2>Detalles del Usuario</h2>
+          <ion-button fill="clear" (click)="closeModal('user')">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="user-profile">
+            <ion-avatar class="modal-avatar">
+              <img [src]="selectedUser.fotoUrl || 'assets/images/default-avatar.png'" 
+                   [alt]="selectedUser.nombre">
+            </ion-avatar>
+            
+            <h3>{{selectedUser.nombre}} {{selectedUser.apellido}}</h3>
+            <p>{{selectedUser.email}}</p>
+            
+            <div class="user-details-grid">
+              <div class="detail-item">
+                <span class="detail-label">Rol</span>
+                <ion-badge [color]="getRoleColor(selectedUser.rol)">
+                  {{selectedUser.rol}}
+                </ion-badge>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Estado</span>
+                <ion-badge [color]="getStatusColor(selectedUser.estado)">
+                  {{selectedUser.estado}}
+                </ion-badge>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Fecha de Registro</span>
+                <span class="detail-value">{{selectedUser.fechaRegistro | date:'medium'}}</span>
+              </div>
+              
+              <div class="detail-item" *ngIf="selectedUser.ultimoAcceso">
+                <span class="detail-label">Último Acceso</span>
+                <span class="detail-value">{{selectedUser.ultimoAcceso | date:'medium'}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <ion-button expand="block" color="primary">
+            Editar Usuario
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Modal de equipo -->
+  <ion-modal #teamModal [isOpen]="!!selectedTeam">
+    <ng-template>
+      <div class="modal-content" *ngIf="selectedTeam">
+        <div class="modal-header">
+          <h2>Detalles del Equipo</h2>
+          <ion-button fill="clear" (click)="closeModal('team')">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="team-profile">
+            <img [src]="'assets/images/teams/' + selectedTeam.id + '-logo.png'" 
+                 [alt]="selectedTeam.nombre" 
+                 class="modal-team-logo"
+                 (error)="$event.target.src='assets/images/default-team.png'">
+            
+            <h3>{{selectedTeam.nombre}}</h3>
+            <p>{{selectedTeam.categoria}}</p>
+            
+            <div class="team-details-grid">
+              <div class="detail-item">
+                <span class="detail-label">Estado</span>
+                <ion-badge [color]="getStatusColor(selectedTeam.estado)">
+                  {{selectedTeam.estado}}
+                </ion-badge>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Jugadores</span>
+                <span class="detail-value">{{selectedTeam.jugadores?.length || 0}}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Entrenador</span>
+                <span class="detail-value">{{selectedTeam.entrenador?.nombre || 'Sin asignar'}}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Fecha de Creación</span>
+                <span class="detail-value">{{selectedTeam.fechaCreacion | date:'medium'}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <ion-button expand="block" color="primary">
+            Editar Equipo
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+</ion-content>

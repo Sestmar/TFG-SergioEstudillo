@@ -1,0 +1,54 @@
+<section class="hero-section">
+  <div class="hero-background">
+    <div class="hero-overlay"></div>
+  </div>
+  
+  <div class="hero-content">
+    <div class="hero-text">
+      <h1 class="hero-title">
+        Bienvenido a<br>
+        <span class="highlight">Club de Fútbol Pro</span>
+      </h1>
+      <p class="hero-subtitle">
+        La plataforma definitiva para la gestión deportiva profesional. 
+        Únete a nuestros equipos y lleva tu pasión por el fútbol al siguiente nivel.
+      </p>
+      
+      <div class="hero-actions">
+        <ion-button 
+          size="large" 
+          class="cta-button primary"
+          (click)="onRegisterClick()"
+        >
+          <ion-icon name="person-add" slot="start"></ion-icon>
+          Regístrate Ahora
+        </ion-button>
+        
+        <ion-button 
+          size="large" 
+          fill="outline" 
+          class="cta-button secondary"
+          (click)="onLoginClick()"
+        >
+          <ion-icon name="log-in" slot="start"></ion-icon>
+          Iniciar Sesión
+        </ion-button>
+      </div>
+    </div>
+    
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-number">15+</div>
+        <div class="stat-label">Equipos</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">200+</div>
+        <div class="stat-label">Jugadores</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">50+</div>
+        <div class="stat-label">Títulos</div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,314 @@
+<ion-header class="player-header">
+  <ion-toolbar color="primary">
+    <ion-title>Panel de Jugador</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="navigateTo('/profile')">
+        <ion-icon name="person-circle" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-button (click)="navigateTo('/notifications')">
+        <ion-icon name="notifications" slot="icon-only"></ion-icon>
+        <ion-badge color="danger" *ngIf="stats.pendingConfirmations > 0">
+          {{ stats.pendingConfirmations }}
+        </ion-badge>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="player-dashboard-content">
+  <!-- Hero Section del Jugador -->
+  <section class="player-hero" *ngIf="currentPlayer">
+    <div class="hero-background">
+      <div class="hero-overlay">
+        <div class="container">
+          <div class="player-info-card">
+            <div class="player-avatar">
+              <div class="avatar-placeholder" *ngIf="!currentPlayer.usuario.fotoPerfil">
+                <i class="fas fa-user-tie"></i>
+              </div>
+              <img 
+                *ngIf="currentPlayer.usuario.fotoPerfil" 
+                [src]="currentPlayer.usuario.fotoPerfil" 
+                [alt]="currentPlayer.usuario.nombre"
+              >
+              <div class="player-number" *ngIf="currentPlayer.dorsal">
+                {{ currentPlayer.dorsal }}
+              </div>
+            </div>
+            
+            <div class="player-details">
+              <h1 class="player-name">
+                {{ currentPlayer.usuario.nombre }} {{ currentPlayer.usuario.apellidos }}
+              </h1>
+              <div class="player-meta">
+                <span class="position-badge">
+                  <i class="fas fa-futbol"></i>
+                  {{ getPlayerPosition() }}
+                </span>
+                <span class="age-badge">
+                  <i class="fas fa-birthday-cake"></i>
+                  {{ getPlayerAge() }} años
+                </span>
+                <span class="status-badge" [class.available]="currentPlayer.disponible">
+                  <i [class]="currentPlayer.disponible ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                  {{ currentPlayer.disponible ? 'Disponible' : 'No Disponible' }}
+                </span>
+              </div>
+              
+              <div class="team-info" *ngIf="currentTeam">
+                <div class="team-badge">
+                  <i class="fas fa-shield-alt"></i>
+                  <span>{{ currentTeam.nombre }}</span>
+                </div>
+                <div class="category-badge">
+                  <i class="fas fa-medal"></i>
+                  <span>{{ currentTeam.categoria.nombre }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Estadísticas del Jugador -->
+  <section class="stats-section">
+    <div class="container">
+      <h2 class="section-title">Mi Rendimiento</h2>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ stats.totalConvocations }}</span>
+            <span class="stat-label">Convocatorias Totales</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ stats.upcomingConvocations }}</span>
+            <span class="stat-label">Próximas</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ stats.pendingConfirmations }}</span>
+            <span class="stat-label">Pendientes</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-percentage"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ stats.attendanceRate }}%</span>
+            <span class="stat-label">Asistencia</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Acciones Rápidas -->
+  <section class="actions-section">
+    <div class="container">
+      <h2 class="section-title">Acciones Rápidas</h2>
+      
+      <div class="actions-grid">
+        <ion-card 
+          class="action-card" 
+          *ngFor="let action of quickActions"
+          (click)="navigateTo(action.route)"
+        >
+          <div class="action-icon" [style.background]="'var(--ion-color-' + action.color + ')'">
+            <ion-icon [name]="action.icon"></ion-icon>
+          </div>
+          <ion-card-header>
+            <ion-card-title>{{ action.title }}</ion-card-title>
+            <ion-card-subtitle>{{ action.description }}</ion-card-subtitle>
+          </ion-card-header>
+        </ion-card>
+      </div>
+    </div>
+  </section>
+
+  <!-- Próximas Convocatorias -->
+  <section class="convocations-section" *ngIf="upcomingConvocations.length > 0">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Próximas Convocatorias</h2>
+        <ion-button fill="clear" (click)="navigateTo('/convocations')">
+          Ver todas
+          <ion-icon name="arrow-forward" slot="end"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <div class="convocations-list">
+        <ion-card class="convocation-card" *ngFor="let convocation of upcomingConvocations">
+          <ion-card-header>
+            <div class="convocation-header">
+              <div class="convocation-type" [color]="getConvocationTypeColor(convocation.tipo)">
+                <ion-icon name="football"></ion-icon>
+                <span>{{ convocation.tipo }}</span>
+              </div>
+              <ion-badge [color]="getAttendanceStatusColor(getPlayerAttendanceStatus(convocation))">
+                {{ getAttendanceStatusText(getPlayerAttendanceStatus(convocation)) }}
+              </ion-badge>
+            </div>
+            <ion-card-title>{{ convocation.titulo }}</ion-card-title>
+            <ion-card-subtitle>
+              <i class="fas fa-map-marker-alt"></i>
+              {{ convocation.lugar }}
+            </ion-card-subtitle>
+          </ion-card-header>
+          
+          <ion-card-content>
+            <div class="convocation-details">
+              <div class="date-time">
+                <i class="fas fa-calendar-alt"></i>
+                {{ formatConvocationDate(convocation.fechaHoraInicio) }}
+              </div>
+              <div class="duration">
+                <i class="fas fa-clock"></i>
+                {{ getDuration(convocation.fechaHoraInicio, convocation.fechaHoraFin) }}
+              </div>
+            </div>
+            
+            <div class="convocation-actions" *ngIf="getPlayerAttendanceStatus(convocation) === 'PENDIENTE'">
+              <ion-button 
+                size="small" 
+                color="success"
+                (click)="confirmAttendance(convocation.id); $event.stopPropagation()"
+              >
+                <ion-icon name="checkmark" slot="start"></ion-icon>
+                Confirmar
+              </ion-button>
+              <ion-button 
+                size="small" 
+                color="danger"
+                (click)="rejectAttendance(convocation.id); $event.stopPropagation()"
+              >
+                <ion-icon name="close" slot="start"></ion-icon>
+                Rechazar
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
+  </section>
+
+  <!-- Estadísticas Detalladas -->
+  <section class="detailed-stats-section" *ngIf="playerStats">
+    <div class="container">
+      <h2 class="section-title">Estadísticas de Temporada</h2>
+      
+      <ion-card class="stats-card">
+        <ion-card-header>
+          <ion-card-title>Rendimiento Actual</ion-card-title>
+        </ion-card-header>
+        
+        <ion-card-content>
+          <div class="stats-grid-detailed">
+            <div class="stat-item">
+              <i class="fas fa-running"></i>
+              <span class="stat-value">{{ playerStats.partidosTotales }}</span>
+              <span class="stat-label">Partidos Jugados</span>
+            </div>
+            
+            <div class="stat-item">
+              <i class="fas fa-futbol"></i>
+              <span class="stat-value">{{ playerStats.golesTotales }}</span>
+              <span class="stat-label">Goles</span>
+            </div>
+            
+            <div class="stat-item">
+              <i class="fas fa-hand-paper"></i>
+              <span class="stat-value">{{ playerStats.asistenciasTotales }}</span>
+              <span class="stat-label">Asistencias</span>
+            </div>
+            
+            <div class="stat-item">
+              <i class="fas fa-stopwatch"></i>
+              <span class="stat-value">{{ playerStats.minutosJugados }}</span>
+              <span class="stat-label">Minutos</span>
+            </div>
+            
+            <div class="stat-item">
+              <i class="fas fa-star"></i>
+              <span class="stat-value">{{ playerStats.valoracionMedia }}</span>
+              <span class="stat-label">Valoración Media</span>
+            </div>
+            
+            <div class="stat-item">
+              <i class="fas fa-calendar-check"></i>
+              <span class="stat-value">{{ playerStats.temporadasJugadas }}</span>
+              <span class="stat-label">Temporadas</span>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </section>
+
+  <!-- Información del Equipo -->
+  <section class="team-section" *ngIf="currentTeam">
+    <div class="container">
+      <h2 class="section-title">Mi Equipo</h2>
+      
+      <ion-card class="team-card">
+        <ion-card-header>
+          <div class="team-header">
+            <div class="team-shield">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <div>
+              <ion-card-title>{{ currentTeam.nombre }}</ion-card-title>
+              <ion-card-subtitle>{{ currentTeam.categoria.nombre }}</ion-card-subtitle>
+            </div>
+          </div>
+        </ion-card-header>
+        
+        <ion-card-content>
+          <div class="team-details">
+            <div class="team-stat">
+              <i class="fas fa-users"></i>
+              <span>{{ currentTeam.jugadores?.length || 0 }} jugadores</span>
+            </div>
+            <div class="team-stat">
+              <i class="fas fa-trophy"></i>
+              <span>{{ currentTeam.liga?.nombre || 'Sin liga asignada' }}</span>
+            </div>
+            <div class="team-stat" *ngIf="currentTeam.estadisticas">
+              <i class="fas fa-chart-line"></i>
+              <span>{{ currentTeam.estadisticas.posicionLiga }}º posición</span>
+            </div>
+          </div>
+          
+          <div class="team-actions">
+            <ion-button 
+              expand="block" 
+              color="primary"
+              (click)="navigateTo('/teams/' + currentTeam.id)"
+            >
+              <ion-icon name="information-circle" slot="start"></ion-icon>
+              Ver Detalles del Equipo
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </section>
+</ion-content>

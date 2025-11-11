@@ -1,0 +1,176 @@
+<ion-content class="login-futbolero-content">
+  <!-- Animación de fondo con partículas -->
+  <div class="background-animation">
+    <div class="particle" *ngFor="let particle of backgroundAnimation.particles"
+         [ngStyle]="getParticleStyle(particle)">
+      <i class="fas fa-futbol"></i>
+    </div>
+  </div>
+
+  <!-- Overlay oscuro -->
+  <div class="overlay"></div>
+
+  <!-- Contenido principal -->
+  <div class="login-container">
+    <!-- Header con estadio -->
+    <div class="login-header">
+      <div class="stadium-background">
+        <div class="stadium-overlay">
+          <div class="header-content">
+            <div class="logo-section">
+              <div class="logo-icon">
+                <i class="fas fa-futbol"></i>
+              </div>
+              <div class="logo-text">
+                <h1 class="app-title">Club de Fútbol Pro</h1>
+                <p class="app-subtitle">Sistema de Gestión Deportiva</p>
+              </div>
+            </div>
+            
+            <!-- Información del partido -->
+            <div class="match-info">
+              <div class="match-card">
+                <div class="team home-team">
+                  <div class="team-logo">
+                    <i class="fas fa-shield-alt"></i>
+                  </div>
+                  <span>Equipo Local</span>
+                </div>
+                <div class="vs">VS</div>
+                <div class="team away-team">
+                  <div class="team-logo">
+                    <i class="fas fa-shield-alt"></i>
+                  </div>
+                  <span>Equipo Visitante</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario de login -->
+    <div class="login-form-section">
+      <div class="form-container">
+        <div class="form-header">
+          <h2 class="form-title">Acceso al Estadio</h2>
+          <p class="form-subtitle">Ingresa tus credenciales para acceder al sistema</p>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="login-form">
+          <!-- Campo de usuario -->
+          <div class="form-group">
+            <div class="input-container">
+              <div class="input-icon">
+                <i class="fas fa-user-tie"></i>
+              </div>
+              <input
+                formControlName="username"
+                type="text"
+                placeholder="Nombre de usuario o email"
+                class="form-input"
+                [class.error]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched"
+              />
+              <div class="input-decoration">
+                <i class="fas fa-futbol"></i>
+              </div>
+            </div>
+            <div class="error-message" *ngIf="usernameError && loginForm.get('username')?.touched">
+              <i class="fas fa-exclamation-triangle"></i>
+              {{ usernameError }}
+            </div>
+          </div>
+
+          <!-- Campo de contraseña -->
+          <div class="form-group">
+            <div class="input-container">
+              <div class="input-icon">
+                <i class="fas fa-key"></i>
+              </div>
+              <input
+                formControlName="password"
+                [type]="showPassword ? 'text' : 'password'"
+                placeholder="Contraseña"
+                class="form-input"
+                [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                (click)="togglePasswordVisibility()"
+              >
+                <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+              <div class="input-decoration">
+                <i class="fas fa-futbol"></i>
+              </div>
+            </div>
+            <div class="error-message" *ngIf="passwordError && loginForm.get('password')?.touched">
+              <i class="fas fa-exclamation-triangle"></i>
+              {{ passwordError }}
+            </div>
+          </div>
+
+          <!-- Opciones adicionales -->
+          <div class="form-options">
+            <label class="checkbox-container">
+              <input type="checkbox" formControlName="rememberMe">
+              <span class="checkmark"></span>
+              <span class="checkbox-label">Recordarme</span>
+            </label>
+            
+            <a class="forgot-password-link" (click)="goToForgotPassword()">
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
+
+          <!-- Botón de login -->
+          <button
+            type="submit"
+            class="login-button"
+            [disabled]="loginForm.invalid || isLoading"
+          >
+            <div class="button-content">
+              <i class="fas fa-futbol" *ngIf="!isLoading"></i>
+              <ion-spinner name="crescent" *ngIf="isLoading"></ion-spinner>
+              <span>{{ isLoading ? 'Ingresando...' : 'Ingresar al Estadio' }}</span>
+            </div>
+          </button>
+        </form>
+
+        <!-- Enlace a registro -->
+        <div class="register-link">
+          <p>¿Nuevo en el club?</p>
+          <a (click)="goToRegister()" class="register-button">
+            <i class="fas fa-user-plus"></i>
+            Registrarse como jugador
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="login-info">
+      <div class="info-cards">
+        <div class="info-card">
+          <i class="fas fa-trophy"></i>
+          <h3>Campeones</h3>
+          <p>15 títulos en la última década</p>
+        </div>
+        
+        <div class="info-card">
+          <i class="fas fa-users"></i>
+          <h3>200+ Jugadores</h3>
+          <p>En todas las categorías</p>
+        </div>
+        
+        <div class="info-card">
+          <i class="fas fa-calendar-alt"></i>
+          <h3>Próximo Partido</h3>
+          <p>Sábado 16:00 hs</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>

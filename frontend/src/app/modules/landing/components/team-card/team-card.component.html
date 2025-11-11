@@ -1,0 +1,55 @@
+<ion-card 
+  class="team-card" 
+  [style.background]="getTeamBackground()"
+  [style.color]="getTeamTextColor()"
+  (click)="onCardClick()"
+>
+  <div class="team-card-content">
+    <div class="team-header">
+      <div class="team-shield">
+        <ion-icon name="shield" class="shield-icon"></ion-icon>
+      </div>
+      <div class="team-info">
+        <h3 class="team-name">{{ team?.nombre }}</h3>
+        <p class="team-category">{{ team?.categoria?.nombre }}</p>
+        <p class="team-league">{{ team?.liga?.nombre }}</p>
+      </div>
+    </div>
+
+    <div class="team-stats" *ngIf="showStats && hasStats()">
+      <div class="stat-row">
+        <div class="stat-item">
+          <span class="stat-value">{{ getFormattedPosition() }}</span>
+          <span class="stat-label">Posición</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ team?.estadisticas?.puntos || 0 }}</span>
+          <span class="stat-label">Puntos</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ team?.estadisticas?.partidosJugados || 0 }}</span>
+          <span class="stat-label">Jugados</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="team-players" *ngIf="team?.jugadores?.length">
+      <div class="players-count">
+        <ion-icon name="people" class="players-icon"></ion-icon>
+        <span>{{ team.jugadores.length }} jugadores</span>
+      </div>
+    </div>
+
+    <div class="team-actions">
+      <ion-button 
+        fill="clear" 
+        size="small"
+        class="view-button"
+        [style.color]="getTeamTextColor()"
+      >
+        Ver Detalles
+        <ion-icon name="arrow-forward" slot="end"></ion-icon>
+      </ion-button>
+    </div>
+  </div>
+</ion-card>

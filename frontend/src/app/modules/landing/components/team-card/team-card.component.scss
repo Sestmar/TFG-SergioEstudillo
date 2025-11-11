@@ -1,0 +1,166 @@
+.team-card {
+  margin: 10px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .team-card-content {
+    padding: 20px;
+
+    .team-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+
+      .team-shield {
+        width: 60px;
+        height: 60px;
+        background: rgba(white, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+
+        .shield-icon {
+          font-size: 32px;
+          color: white;
+        }
+      }
+
+      .team-info {
+        flex: 1;
+
+        .team-name {
+          font-size: 1.3rem;
+          font-weight: 600;
+          margin: 0 0 4px 0;
+          line-height: 1.2;
+        }
+
+        .team-category {
+          font-size: 0.9rem;
+          opacity: 0.9;
+          margin: 0 0 2px 0;
+        }
+
+        .team-league {
+          font-size: 0.8rem;
+          opacity: 0.7;
+          margin: 0;
+        }
+      }
+    }
+
+    .team-stats {
+      margin: 16px 0;
+      padding: 16px;
+      background: rgba(white, 0.1);
+      border-radius: 8px;
+
+      .stat-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+
+        .stat-item {
+          text-align: center;
+          flex: 1;
+
+          .stat-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+          }
+
+          .stat-label {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+        }
+      }
+    }
+
+    .team-players {
+      margin: 16px 0;
+
+      .players-count {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        opacity: 0.9;
+
+        .players-icon {
+          font-size: 18px;
+        }
+      }
+    }
+
+    .team-actions {
+      margin-top: 16px;
+      text-align: right;
+
+      .view-button {
+        --padding-start: 0;
+        --padding-end: 0;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: none;
+
+        ion-icon {
+          margin-left: 4px;
+        }
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 480px) {
+  .team-card {
+    margin: 8px;
+
+    .team-card-content {
+      padding: 16px;
+
+      .team-header {
+        .team-shield {
+          width: 50px;
+          height: 50px;
+          margin-right: 12px;
+
+          .shield-icon {
+            font-size: 28px;
+          }
+        }
+
+        .team-info {
+          .team-name {
+            font-size: 1.1rem;
+          }
+        }
+      }
+
+      .team-stats {
+        .stat-row {
+          .stat-item {
+            .stat-value {
+              font-size: 1.3rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}
