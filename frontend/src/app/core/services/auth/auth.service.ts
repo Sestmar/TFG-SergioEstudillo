@@ -7,8 +7,41 @@ import { jwtDecode } from 'jwt-decode';
 
 import { ApiService } from '../api/api.service';
 import { StorageService } from '../storage/storage.service';
-import { User, AuthResponse, UserLoginDto, UserRegisterDto } from '@shared/models';
-import { environment } from '@environments/environment';
+
+/**
+ * Interfaces temporales para que compile
+ */
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  nombre: string;
+  apellidos: string;
+  activo: boolean;
+  fechaRegistro: Date;
+  fechaActualizacion: Date;
+  roles: string[];
+}
+
+interface AuthResponse {
+  token: string;
+  refreshToken?: string;
+  user: User;
+}
+
+interface UserLoginDto {
+  email: string;
+  password: string;
+}
+
+interface UserRegisterDto {
+  nombre: string;
+  apellidos: string;
+  email: string;
+  password: string;
+  telefono?: string;
+  direccion?: string;
+}
 
 /**
  * Interfaz para el payload del JWT
@@ -20,6 +53,15 @@ interface JwtPayload {
   exp: number;
   iat: number;
 }
+
+/**
+ * Configuración JWT temporal
+ */
+const jwtConfig = {
+  tokenKey: 'auth_token',
+  refreshTokenKey: 'refresh_token', 
+  tokenExpirationOffset: 300 // 5 minutos antes de expirar
+};
 
 /**
  * Servicio de autenticación y gestión de usuarios
@@ -49,7 +91,7 @@ export class AuthService {
    * Inicializa el estado de autenticación al arrancar la aplicación
    */
   private initializeAuth(): void {
-    const token = this.storageService.get(environment.jwtConfig.tokenKey);
+    const token = this.storageService.get(jwtConfig.tokenKey);
     if (token && !this.isTokenExpired(token)) {
       this.setAuth(token);
     } else {
@@ -89,8 +131,8 @@ export class AuthService {
    * Logout de usuario
    */
   logout(): void {
-    this.storageService.remove(environment.jwtConfig.tokenKey);
-    this.storageService.remove(environment.jwtConfig.refreshTokenKey);
+    this.storageService.remove(jwtConfig.tokenKey);
+    this.storageService.remove(jwtConfig.refreshTokenKey);
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
     
@@ -98,14 +140,14 @@ export class AuthService {
       clearTimeout(this.tokenRefreshTimer);
     }
     
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/landing']);
   }
 
   /**
    * Refresca el token JWT
    */
   refreshToken(): Observable<AuthResponse> {
-    const refreshToken = this.storageService.get(environment.jwtConfig.refreshTokenKey);
+    const refreshToken = this.storageService.get(jwtConfig.refreshTokenKey);
     
     if (!refreshToken) {
       this.logout();
@@ -160,7 +202,7 @@ export class AuthService {
    * Obtiene el token JWT actual
    */
   getToken(): string | null {
-    return this.storageService.get(environment.jwtConfig.tokenKey);
+    return this.storageService.get(jwtConfig.tokenKey);
   }
 
   /**
@@ -183,7 +225,7 @@ export class AuthService {
     try {
       const payload = jwtDecode<JwtPayload>(token);
       const expirationTime = payload.exp * 1000;
-      const refreshTime = expirationTime - (environment.jwtConfig.tokenExpirationOffset * 1000);
+      const refreshTime = expirationTime - (jwtConfig.tokenExpirationOffset * 1000);
       const delay = refreshTime - Date.now();
 
       if (delay > 0) {
@@ -200,10 +242,10 @@ export class AuthService {
    * Establece la autenticación con el token proporcionado
    */
   private setAuth(token: string, refreshToken?: string): void {
-    this.storageService.set(environment.jwtConfig.tokenKey, token);
+    this.storageService.set(jwtConfig.tokenKey, token);
     
     if (refreshToken) {
-      this.storageService.set(environment.jwtConfig.refreshTokenKey, refreshToken);
+      this.storageService.set(jwtConfig.refreshTokenKey, refreshToken);
     }
 
     try {

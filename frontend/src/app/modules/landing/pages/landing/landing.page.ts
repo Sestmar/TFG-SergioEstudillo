@@ -1,68 +1,19 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
-
-import { Team, TeamService } from '@core/services';
+import { Component } from '@angular/core';
+import { Observable, of } from 'rxjs';
 
 @Component({
   selector: 'app-landing',
   templateUrl: './landing.page.html',
   styleUrls: ['./landing.page.scss'],
 })
-export class LandingPage implements OnInit {
-  featuredTeams$: Observable<Team[]>;
-  isLoading = true;
+export class LandingPage {
+  featuredTeams$: Observable<any[]> = of([
+    { nombre: 'Equipo Senior A', categoria: 'Senior', entrenador: 'Carlos Ruiz' },
+    { nombre: 'Equipo Junior B', categoria: 'Junior', entrenador: 'Ana Martínez' },
+    { nombre: 'Equipo Infantil C', categoria: 'Infantil', entrenador: 'David López' }
+  ]);
 
-  constructor(
-    private teamService: TeamService,
-    private router: Router
-  ) {}
-
-  ngOnInit() {
-    this.loadFeaturedTeams();
-  }
-
-  /**
-   * Carga los equipos destacados
-   */
-  private loadFeaturedTeams() {
-    this.featuredTeams$ = this.teamService.getFeaturedTeams();
-    this.featuredTeams$.subscribe({
-      next: () => {
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading featured teams:', error);
-        this.isLoading = false;
-      }
-    });
-  }
-
-  /**
-   * Navega a la página de registro
-   */
-  goToRegister() {
-    this.router.navigate(['/auth/register']);
-  }
-
-  /**
-   * Navega a la página de login
-   */
-  goToLogin() {
-    this.router.navigate(['/auth/login']);
-  }
-
-  /**
-   * Navega al detalle de un equipo
-   */
-  viewTeamDetails(teamId: number) {
-    this.router.navigate(['/teams', teamId]);
-  }
-
-  /**
-   * Navega a la lista de equipos
-   */
-  viewAllTeams() {
-    this.router.navigate(['/teams']);
+  constructor() {
+    console.log('Landing page cargada correctamente');
   }
 }

@@ -78,9 +78,7 @@ export class ErrorInterceptor implements HttpInterceptor {
   private getValidationErrorMessage(error: HttpErrorResponse): string {
     if (error.error?.errors) {
       const errors = error.error.errors;
-      const messages = Object.values(errors).flat() as string[];
-      return messages.join('. ') || 'Error de validación';
-    }
+      const messages = (Object.values(errors) as any[]).reduce((acc, val) => acc.concat(val), []) as string[];    }
     
     if (error.error?.message) {
       return error.error.message;

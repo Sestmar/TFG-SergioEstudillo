@@ -5,8 +5,6 @@ import { RouterModule } from '@angular/router';
 
 import { LandingPage } from './pages/landing/landing.page';
 import { TeamCardComponent } from './components/team-card/team-card.component';
-import { HeroSectionComponent } from './components/hero-section/hero-section.component';
-import { FeaturesSectionComponent } from './components/features-section/features-section.component';
 
 @NgModule({
   imports: [
@@ -21,9 +19,7 @@ import { FeaturesSectionComponent } from './components/features-section/features
   ],
   declarations: [
     LandingPage,
-    TeamCardComponent,
-    HeroSectionComponent,
-    FeaturesSectionComponent
+    TeamCardComponent
   ]
 })
 export class LandingPageModule {}
