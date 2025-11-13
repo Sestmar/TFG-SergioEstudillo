@@ -1,55 +1,32 @@
+<!-- 
+  Este HTML está arreglado para:
+  1. Llamar a onCardClick() (que existe)
+  2. Usar la VARIABLE 'teamBackgroundStyle' (que no causa bucle)
+  3. Usar el @Input() 'showStats' (que existe)
+-->
 <ion-card 
+  (click)="onCardClick()" 
+  button="true" 
   class="team-card" 
-  [style.background]="getTeamBackground()"
-  [style.color]="getTeamTextColor()"
-  (click)="onCardClick()"
->
-  <div class="team-card-content">
-    <div class="team-header">
-      <div class="team-shield">
-        <ion-icon name="shield" class="shield-icon"></ion-icon>
-      </div>
-      <div class="team-info">
-        <h3 class="team-name">{{ team?.nombre }}</h3>
-        <p class="team-category">{{ team?.categoria?.nombre }}</p>
-        <p class="team-league">{{ team?.liga?.nombre }}</p>
-      </div>
-    </div>
-
-    <div class="team-stats" *ngIf="showStats && hasStats()">
-      <div class="stat-row">
-        <div class="stat-item">
-          <span class="stat-value">{{ getFormattedPosition() }}</span>
-          <span class="stat-label">Posición</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">{{ team?.estadisticas?.puntos || 0 }}</span>
-          <span class="stat-label">Puntos</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">{{ team?.estadisticas?.partidosJugados || 0 }}</span>
-          <span class="stat-label">Jugados</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="team-players" *ngIf="team?.jugadores?.length">
-      <div class="players-count">
-        <ion-icon name="people" class="players-icon"></ion-icon>
-        <span>{{ team.jugadores.length }} jugadores</span>
-      </div>
-    </div>
-
-    <div class="team-actions">
-      <ion-button 
-        fill="clear" 
-        size="small"
-        class="view-button"
-        [style.color]="getTeamTextColor()"
-      >
-        Ver Detalles
-        <ion-icon name="arrow-forward" slot="end"></ion-icon>
-      </ion-button>
-    </div>
+  *ngIf="team">
+  
+  <!-- ¡AQUÍ ESTÁ EL ARREGLO! -->
+  <!-- Ya no llama a una función, lee la variable 'teamBackgroundStyle' -->
+  <div 
+    class="team-card-background" 
+    [style.background]="teamBackgroundStyle">
   </div>
+  
+  <ion-card-header>
+    <ion-card-title>{{ team.nombre }}</ion-card-title>
+    <ion-card-subtitle>{{ team.categoria }}</ion-card-subtitle>
+  </ion-card-header>
+  
+  <ion-card-content *ngIf="showStats">
+    <ion-item lines="none" class="stat-item">
+      <ion-icon name="person-outline" slot="start" color="primary"></ion-icon>
+      <ion-label>Entrenador: {{ team.entrenador || 'N/A' }}</ion-label>
+    </ion-item>
+  </ion-card-content>
+
 </ion-card>

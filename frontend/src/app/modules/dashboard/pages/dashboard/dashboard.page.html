@@ -1,161 +1,70 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>Dashboard</ion-title>
+  <ion-toolbar color="primary">
+    <!-- El título se carga cuando el usuario (user) existe -->
+    <ion-title *ngIf="currentUser$ | async as user">
+      Bienvenido, {{ user.nombre }}
+    </ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="navigateTo('/profile')">
-        <ion-icon name="person-circle" slot="icon-only"></ion-icon>
+      <!-- El botón de Logout llama a la función onLogout() del TS -->
+      <ion-button (click)="onLogout()">
+        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="dashboard-content">
-  <!-- Welcome Section -->
-  <div class="welcome-section" *ngIf="currentUser$ | async as user">
-    <div class="welcome-container">
-      <div class="welcome-avatar">
-        <ion-icon name="person-circle" class="avatar-icon"></ion-icon>
-      </div>
-      <div class="welcome-text">
-        <h1 class="welcome-title">
-          ¡Hola, {{ user.nombre }}!
-        </h1>
-        <p class="welcome-subtitle">
-          Bienvenido a tu panel de control
-        </p>
-      </div>
-    </div>
+<ion-content class="ion-padding" [fullscreen]="true">
+  <!-- Solo mostramos el contenido si el usuario está cargado -->
+  <div *ngIf="currentUser$ | async as user">
+    <h1 class="ion-padding-start">Panel de Control</h1>
+    
+    <ion-grid>
+      <ion-row>
+        
+        <!-- Tarjeta 1: Mi Perfil -->
+        <ion-col size="12" size-md="4">
+          <!-- (cardClick) llama a la función goToProfile() del TS -->
+          <app-dashboard-card
+            title="Mi Perfil"
+            icon="person-circle-outline"
+            description="Edita tu información personal."
+            color="secondary"
+            (cardClick)="goToProfile()">
+          </app-dashboard-card>
+        </ion-col>
+
+        <!-- Tarjeta 2: Equipos -->
+        <ion-col size="12" size-md="4">
+           <!-- (cardClick) llama a la función goToTeams() del TS -->
+          <app-dashboard-card
+            title="Equipos"
+            icon="shield-outline"
+            description="Ver todos los equipos del club."
+            color="primary"
+            (cardClick)="goToTeams()">
+          </Vapp-dashboard-card>
+        </ion-col>
+
+        <!-- Tarjeta 3: Convocatorias -->
+        <ion-col size="12" size-md="4">
+           <!-- (cardClick) llama a la función goToConvocations() del TS -->
+          <app-dashboard-card
+            title="Mis Convocatorias"
+            icon="calendar-outline"
+            description="Próximos partidos y entrenamientos."
+            color="tertiary"
+            (cardClick)="goToConvocations()">
+          </app-dashboard-card>
+        </ion-col>
+        
+      </ion-row>
+    </ion-grid>
   </div>
 
-  <!-- Stats Cards -->
-  <section class="stats-section">
-    <div class="stats-container">
-      <app-dashboard-card
-        title="Equipos"
-        [value]="stats.totalTeams"
-        icon="shield"
-        color="primary"
-        subtitle="Equipos activos"
-      ></app-dashboard-card>
-      
-      <app-dashboard-card
-        title="Convocatorias"
-        [value]="stats.upcomingConvocations"
-        icon="calendar"
-        color="secondary"
-        subtitle="Próximas 7 días"
-      ></app-dashboard-card>
-      
-      <app-dashboard-card
-        *ngIf="userRole$ | async as role"
-        [title]="role === 'ADMIN' ? 'Solicitudes' : 'Mis Convocatorias'"
-        [value]="role === 'ADMIN' ? stats.pendingRequests : stats.upcomingConvocations"
-        [icon]="role === 'ADMIN' ? 'document-text' : 'calendar'"
-        color="tertiary"
-        [subtitle]="role === 'ADMIN' ? 'Pendientes de revisión' : 'Pendientes de confirmación'"
-      ></app-dashboard-card>
-      
-      <app-dashboard-card
-        *ngIf="userRole$ | async as role"
-        [title]="role === 'ADMIN' ? 'Jugadores' : 'Compañeros'"
-        [value]="stats.totalPlayers"
-        icon="people"
-        color="success"
-        subtitle="En el club"
-      ></app-dashboard-card>
-    </div>
-  </section>
-
-  <!-- Quick Actions -->
-  <section class="actions-section">
-    <div class="section-container">
-      <h2 class="section-title">Acciones Rápidas</h2>
-      
-      <div class="actions-grid" *ngIf="userRole$ | async as role">
-        <ion-button
-          *ngFor="let action of getFilteredQuickActions(role)"
-          class="action-button"
-          [color]="action.color"
-          (click)="navigateTo(action.route)"
-          expand="block"
-        >
-          <ion-icon [name]="action.icon" slot="start"></ion-icon>
-          {{ action.title }}
-        </ion-button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Recent Activity -->
-  <section class="activity-section">
-    <div class="section-container">
-      <h2 class="section-title">Actividad Reciente</h2>
-      
-      <!-- Convocatorias Recientes -->
-      <div class="activity-card" *ngIf="recentConvocations.length > 0">
-        <ion-card-header>
-          <ion-card-title>
-            <ion-icon name="calendar" slot="start"></ion-icon>
-            Próximas Convocatorias
-          </ion-card-title>
-        </ion-card-header>
-        
-        <ion-list>
-          <ion-item *ngFor="let convocation of recentConvocations">
-            <ion-icon name="football" slot="start" color="primary"></ion-icon>
-            <ion-label>
-              <h3>{{ convocation.titulo }}</h3>
-              <p>{{ convocation.equipo?.nombre }}</p>
-              <p class="date-text">{{ formatConvocationDate(convocation.fechaHoraInicio) }}</p>
-            </ion-label>
-            <ion-badge color="primary" slot="end">
-              {{ convocation.tipo }}
-            </ion-badge>
-          </ion-item>
-        </ion-list>
-        
-        <ion-button 
-          fill="clear" 
-          class="view-all-button"
-          (click)="navigateTo('/convocations')"
-        >
-          Ver todas las convocatorias
-          <ion-icon name="arrow-forward" slot="end"></ion-icon>
-        </ion-button>
-      </div>
-
-      <!-- Solicitudes Recientes (solo admin) -->
-      <div class="activity-card" *ngIf="recentRequests.length > 0">
-        <ion-card-header>
-          <ion-card-title>
-            <ion-icon name="document-text" slot="start"></ion-icon>
-            Solicitudes Pendientes
-          </ion-card-title>
-        </ion-card-header>
-        
-        <ion-list>
-          <ion-item *ngFor="let request of recentRequests">
-            <ion-icon name="person" slot="start" color="tertiary"></ion-icon>
-            <ion-label>
-              <h3>{{ request.usuario?.nombre }} {{ request.usuario?.apellidos }}</h3>
-              <p>{{ request.datosJugador?.posicionPreferida }}</p>
-              <p class="date-text">{{ request.fechaSolicitud | date:'short' }}</p>
-            </ion-label>
-            <ion-badge [color]="getRequestStatusInfo(request.estado).color" slot="end">
-              {{ getRequestStatusInfo(request.estado).text }}
-            </ion-badge>
-          </ion-item>
-        </ion-list>
-        
-        <ion-button 
-          fill="clear" 
-          class="view-all-button"
-          (click)="navigateTo('/requests')"
-        >
-          Gestionar solicitudes
-          <ion-icon name="arrow-forward" slot="end"></ion-icon>
-        </ion-button>
-      </div>
-    </div>
-  </section>
+  <!-- Estado de Carga (mientras currentUser$ es null) -->
+  <div *ngIf="!(currentUser$ | async)" class="ion-text-center ion-padding-top">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando datos del usuario...</p>
+  </div>
+  
 </ion-content>

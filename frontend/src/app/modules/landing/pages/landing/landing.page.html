@@ -18,6 +18,7 @@
       <div class="teams-container">
         <ion-spinner *ngIf="isLoading" name="crescent" class="loading-spinner"></ion-spinner>
         
+       <!--
         <div *ngIf="!isLoading" class="teams-grid">
           <app-team-card
             *ngFor="let team of (featuredTeams$ | async)"
@@ -26,6 +27,7 @@
             (cardClick)="viewTeamDetails($event)"
           ></app-team-card>
         </div>
+        -->
 
         <div class="section-actions">
           <ion-button 
