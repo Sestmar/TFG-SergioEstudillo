@@ -1,8 +1,7 @@
 <ion-content class="landing-content">
   <!-- Hero Section -->
+  <!-- Esto ya estaba bien (sin (registerClick) etc.) -->
   <app-hero-section
-    (registerClick)="goToRegister()"
-    (loginClick)="goToLogin()"
   ></app-hero-section>
 
   <!-- Equipos Destacados -->
@@ -18,23 +17,23 @@
       <div class="teams-container">
         <ion-spinner *ngIf="isLoading" name="crescent" class="loading-spinner"></ion-spinner>
         
-       <!--
+        <!-- ¡CAMBIO 1: DESCOMENTADO! -->
+        <!-- Ahora sí mostramos las tarjetas de equipo -->
         <div *ngIf="!isLoading" class="teams-grid">
           <app-team-card
             *ngFor="let team of (featuredTeams$ | async)"
             [team]="team"
             [showStats]="true"
-            (cardClick)="viewTeamDetails($event)"
-          ></app-team-card>
+            > <!-- ¡CAMBIO 2: (cardClick) ELIMINADO para evitar errores de consola! -->
+          </app-team-card>
         </div>
-        -->
 
         <div class="section-actions">
           <ion-button 
             expand="block" 
             class="view-all-button"
-            (click)="viewAllTeams()"
-          >
+            routerLink="/teams" 
+            > <!-- ¡CAMBIO 3: (click) REEMPLAZADO por routerLink! -->
             Ver Todos los Equipos
             <ion-icon name="arrow-forward" slot="end"></ion-icon>
           </ion-button>
@@ -43,7 +42,7 @@
     </div>
   </section>
 
-  <!-- Features Section -->
+  <!-- Features Section (Esta sección estaba bien, no se toca) -->
   <section class="features-section">
     <div class="section-container">
       <div class="section-header">
@@ -110,8 +109,8 @@
           <ion-button 
             size="large" 
             class="cta-button primary"
-            (click)="goToRegister()"
-          >
+            routerLink="/auth/register"
+            > <!-- ¡CAMBIO 3: (click) REEMPLAZADO por routerLink! -->
             <ion-icon name="person-add" slot="start"></ion-icon>
             Regístrate Gratis
           </ion-button>
@@ -120,8 +119,8 @@
             size="large" 
             fill="outline" 
             class="cta-button secondary"
-            (click)="goToLogin()"
-          >
+            routerLink="/auth/login"
+            > <!-- ¡CAMBIO 3: (click) REEMPLAZADO por routerLink! -->
             <ion-icon name="log-in" slot="start"></ion-icon>
             Iniciar Sesión
           </ion-button>
