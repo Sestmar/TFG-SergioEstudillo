@@ -14,13 +14,13 @@
         Únete a nuestros equipos y lleva tu pasión por el fútbol al siguiente nivel.
       </p>
       
-      <!-- ... (resto de tu hero-content) ... -->
       <div class="hero-actions">
         <ion-button 
           size="large" 
           class="cta-button primary"
-          routerLink="/auth/register"  
-          ><!-- ¡CAMBIO AQUÍ! (quitamos el click) -->
+          routerLink="/auth/register"
+          routerDirection="forward"
+          ><!-- ¡ARREGLO AQUÍ! -->
           <ion-icon name="person-add" slot="start"></ion-icon>
           Regístrate Ahora
         </ion-button>
@@ -30,7 +30,8 @@
           fill="outline" 
           class="cta-button secondary"
           routerLink="/auth/login"
-          ><!-- ¡CAMBIO AQUÍ! (quitamos el click) -->
+          routerDirection="forward"
+          ><!-- ¡ARREGLO AQUÍ! -->
           <ion-icon name="log-in" slot="start"></ion-icon>
           Iniciar Sesión
         </ion-button>

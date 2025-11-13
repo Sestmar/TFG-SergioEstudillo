@@ -64,9 +64,14 @@
               <ion-icon name="shield-checkmark-outline" slot="start" aria-hidden="true"></ion-icon>
               <ion-input label="Confirmar Contraseña" labelPlacement="stacked" type="password" formControlName="confirmPassword" required></ion-input>
             </ion-item>
+            
+            <!-- 
+              Estas dos 'div' ahora están cerradas correctamente.
+            -->
             <div *ngIf="confirmPassword?.errors?.['required'] && (confirmPassword?.dirty || confirmPassword?.touched)" class="validation-error">
               <span>Debes confirmar la contraseña.</span>
             </div>
+            
             <div *ngIf="registerForm.errors?.['passwordMismatch'] && (confirmPassword?.dirty || confirmPassword?.touched)" class="validation-error">
               <span>Las contraseñas no coinciden.</span>
             </div>
@@ -82,7 +87,7 @@
             <p>¿Ya tienes cuenta? <a routerLink="/auth/login">Inicia sesión</a></p>
           </div>
 
-        </col>
+        </ion-col>
       </ion-row>
     </ion-grid>
   </div>

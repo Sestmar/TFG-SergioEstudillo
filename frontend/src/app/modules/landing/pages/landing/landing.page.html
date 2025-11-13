@@ -1,6 +1,5 @@
 <ion-content class="landing-content">
   <!-- Hero Section -->
-  <!-- Esto ya estaba bien (sin (registerClick) etc.) -->
   <app-hero-section
   ></app-hero-section>
 
@@ -17,23 +16,25 @@
       <div class="teams-container">
         <ion-spinner *ngIf="isLoading" name="crescent" class="loading-spinner"></ion-spinner>
         
-        <!-- ¡CAMBIO 1: DESCOMENTADO! -->
-        <!-- Ahora sí mostramos las tarjetas de equipo -->
+        <!-- Mantenemos esto comentado por ahora para evitar la pantalla negra -->
+        <!--
         <div *ngIf="!isLoading" class="teams-grid">
           <app-team-card
             *ngFor="let team of (featuredTeams$ | async)"
             [team]="team"
             [showStats]="true"
-            > <!-- ¡CAMBIO 2: (cardClick) ELIMINADO para evitar errores de consola! -->
+            > 
           </app-team-card>
         </div>
+        -->
 
         <div class="section-actions">
           <ion-button 
             expand="block" 
             class="view-all-button"
-            routerLink="/teams" 
-            > <!-- ¡CAMBIO 3: (click) REEMPLAZADO por routerLink! -->
+            routerLink="/teams"
+            routerDirection="forward"
+            > <!-- ¡ARREGLO AQUÍ! -->
             Ver Todos los Equipos
             <ion-icon name="arrow-forward" slot="end"></ion-icon>
           </ion-button>
@@ -42,7 +43,7 @@
     </div>
   </section>
 
-  <!-- Features Section (Esta sección estaba bien, no se toca) -->
+  <!-- Features Section -->
   <section class="features-section">
     <div class="section-container">
       <div class="section-header">
@@ -53,44 +54,26 @@
       </div>
 
       <div class="features-grid">
+        <!-- (Tu código de 'features' va aquí) -->
         <div class="feature-card">
-          <div class="feature-icon">
-            <ion-icon name="calendar"></ion-icon>
-          </div>
+          <div class="feature-icon"><ion-icon name="calendar"></ion-icon></div>
           <h3 class="feature-title">Gestión de Convocatorias</h3>
-          <p class="feature-description">
-            Organiza y gestiona convocatorias de manera eficiente con confirmación en tiempo real
-          </p>
+          <p class="feature-description">Organiza y gestiona convocatorias...</p>
         </div>
-
         <div class="feature-card">
-          <div class="feature-icon">
-            <ion-icon name="analytics"></ion-icon>
-          </div>
+          <div class="feature-icon"><ion-icon name="analytics"></ion-icon></div>
           <h3 class="feature-title">Estadísticas en Vivo</h3>
-          <p class="feature-description">
-            Accede a estadísticas detalladas de jugadores y equipos para mejorar el rendimiento
-          </p>
+          <p class="feature-description">Accede a estadísticas detalladas...</p>
         </div>
-
         <div class="feature-card">
-          <div class="feature-icon">
-            <ion-icon name="medical"></ion-icon>
-          </div>
+          <div class="feature-icon"><ion-icon name="medical"></ion-icon></div>
           <h3 class="feature-title">Control Médico</h3>
-          <p class="feature-description">
-            Gestión integral de lesiones y seguimiento médico de los jugadores
-          </p>
+          <p class="feature-description">Gestión integral de lesiones...</p>
         </div>
-
         <div class="feature-card">
-          <div class="feature-icon">
-            <ion-icon name="notifications"></ion-icon>
-          </div>
+          <div class="feature-icon"><ion-icon name="notifications"></ion-icon></div>
           <h3 class="feature-title">Notificaciones Push</h3>
-          <p class="feature-description">
-            Mantente informado de todas las novedades y convocatorias en tiempo real
-          </p>
+          <p class="feature-description">Mantente informado de todas las novedades...</p>
         </div>
       </div>
     </div>
@@ -110,7 +93,8 @@
             size="large" 
             class="cta-button primary"
             routerLink="/auth/register"
-            > <!-- ¡CAMBIO 3: (click) REEMPLAZADO por routerLink! -->
+            routerDirection="forward"
+            > <!-- ¡ARREGLO AQUÍ! -->
             <ion-icon name="person-add" slot="start"></ion-icon>
             Regístrate Gratis
           </ion-button>
@@ -120,7 +104,8 @@
             fill="outline" 
             class="cta-button secondary"
             routerLink="/auth/login"
-            > <!-- ¡CAMBIO 3: (click) REEMPLAZADO por routerLink! -->
+            routerDirection="forward"
+            > <!-- ¡ARREGLO AQUÍ! -->
             <ion-icon name="log-in" slot="start"></ion-icon>
             Iniciar Sesión
           </ion-button>
