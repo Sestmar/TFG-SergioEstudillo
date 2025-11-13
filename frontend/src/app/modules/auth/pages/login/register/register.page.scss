@@ -1,0 +1,52 @@
+/* Estilos para la página de registro.
+  Se pueden compartir con login.page.scss si se mueven a un archivo global.
+*/
+
+.auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.auth-icon {
+  font-size: 4rem; // Icono grande
+  margin-bottom: 0.5rem;
+}
+
+/* Estilo para los campos de entrada */
+.auth-item {
+  border-radius: 8px;
+  --background: var(--ion-color-light, #f4f5f7);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+/* Efecto visual al enfocar un campo */
+.auth-item.item-interactive.ion-focused {
+  --background: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Mensajes de error de validación */
+.validation-error {
+  color: var(--ion-color-danger);
+  font-size: 0.8rem;
+  padding-left: 1rem; // Alinear con el texto del input
+  margin-top: -0.75rem; // Acercar al campo
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+/* Botón de envío */
+ion-button[type="submit"] {
+  --border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Enlace inferior (a login) */
+a {
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--ion-color-primary);
+}

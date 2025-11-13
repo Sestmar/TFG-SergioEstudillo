@@ -4,7 +4,6 @@ import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 
 import { AuthService, NotificationService } from '@core/services';
-import { UserLoginDto } from '@shared/models';
 
 @Component({
   selector: 'app-login-futbolero',
@@ -29,7 +28,7 @@ export class LoginFutboleroPage implements OnInit {
     private notificationService: NotificationService
   ) {
     this.loginForm = this.fb.group({
-      username: ['', [Validators.required, Validators.minLength(3)]],
+      email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       rememberMe: [false]
     });
@@ -98,12 +97,13 @@ export class LoginFutboleroPage implements OnInit {
     this.isLoading = true;
     
     try {
-      const credentials: UserLoginDto = {
-        username: this.loginForm.value.username,
-        password: this.loginForm.value.password
-      };
-      
-      await this.notificationService.showLoading('Ingresando al estadio...');
+    // Definimos el DTO aquí, ya no lo importamos
+    const credentials = {
+      email: this.loginForm.value.email, // <-- CAMBIA 'username'
+      password: this.loginForm.value.password
+    };
+    
+    await this.notificationService.showLoading('Ingresando al estadio...');
       
       this.authService.login(credentials).subscribe({
         next: async (user) => {
@@ -188,18 +188,18 @@ export class LoginFutboleroPage implements OnInit {
   }
 
   /**
-   * Obtiene los mensajes de error para el campo username
+   * Obtiene los mensajes de error para el campo email
    */
-  get usernameError(): string {
-    const control = this.loginForm.get('username');
-    if (control?.hasError('required')) {
-      return 'El nombre de usuario es requerido';
-    }
-    if (control?.hasError('minlength')) {
-      return 'El nombre de usuario debe tener al menos 3 caracteres';
-    }
-    return '';
+  get emailError(): string { // <-- CAMBIA 'usernameError'
+  const control = this.loginForm.get('email'); // <-- CAMBIA 'username'
+  if (control?.hasError('required')) {
+    return 'El email es requerido'; // <-- CAMBIA 'nombre de usuario'
   }
+  if (control?.hasError('email')) { // <-- AÑADE ESTO
+    return 'El formato del email no es válido';
+  }
+  return '';
+}
 
   /**
    * Obtiene los mensajes de error para el campo password
