@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
+import { catchError } from 'rxjs/operators';
 
 /**
  * Servicio centralizado para peticiones HTTP
@@ -11,7 +10,11 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root'
 })
 export class ApiService {
-  private apiUrl = environment.apiUrl;
+
+  // =================================================================
+  // ===           CORRECCIÓN CLAVE: URL explícita                 ===
+  // =================================================================
+  private readonly apiUrl = 'http://localhost:8080/api';
 
   constructor(private http: HttpClient) {}
 
@@ -22,7 +25,8 @@ export class ApiService {
     const options = {
       params: new HttpParams({ fromObject: params })
     };
-    return this.http.get<T>(`${this.apiUrl}/${endpoint}`, options).pipe(
+    // El endpoint ahora empieza con "/"
+    return this.http.get<T>(`${this.apiUrl}${endpoint}`, options).pipe(
       catchError(this.handleError)
     );
   }
@@ -31,20 +35,16 @@ export class ApiService {
    * POST request
    */
   post<T>(endpoint: string, data: any): Observable<T> {
-    return this.http.post<T>(`${this.apiUrl}/${endpoint}`, data).pipe(
+    return this.http.post<T>(`${this.apiUrl}${endpoint}`, data).pipe(
       catchError(this.handleError)
     );
   }
 
   /**
    * PUT request
-   * --- ¡ESTA ES LA CORRECCIÓN! ---
-   * La firma ahora es (endpoint, data).
-   * Asumimos que el ID ya va en el endpoint (ej: "jugadores/1")
-   * Esto arregla los 20 errores "Expected 3 arguments, but got 2".
    */
   put<T>(endpoint: string, data: any): Observable<T> {
-    return this.http.put<T>(`${this.apiUrl}/${endpoint}`, data).pipe(
+    return this.http.put<T>(`${this.apiUrl}${endpoint}`, data).pipe(
       catchError(this.handleError)
     );
   }
@@ -53,7 +53,7 @@ export class ApiService {
    * DELETE request
    */
   delete<T>(endpoint: string): Observable<T> {
-    return this.http.delete<T>(`${this.apiUrl}/${endpoint}`).pipe(
+    return this.http.delete<T>(`${this.apiUrl}${endpoint}`).pipe(
       catchError(this.handleError)
     );
   }
@@ -63,7 +63,6 @@ export class ApiService {
    */
   private handleError(error: HttpErrorResponse) {
     console.error('ApiService Error:', error);
-    // Puedes añadir tu NotificationService aquí si quieres
     return throwError(() => error);
   }
 }

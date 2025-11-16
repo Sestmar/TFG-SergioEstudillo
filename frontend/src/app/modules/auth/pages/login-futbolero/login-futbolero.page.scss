@@ -3,6 +3,7 @@
   position: relative;
   overflow: hidden;
 
+
   // Animación de fondo con partículas
   .background-animation {
     position: absolute;
@@ -12,6 +13,7 @@
     bottom: 0;
     z-index: 1;
     pointer-events: none;
+
 
     .particle {
       position: absolute;
@@ -24,16 +26,19 @@
       }
     }
 
+
     @keyframes float {
       0%, 100% { transform: translateY(0px); }
       50% { transform: translateY(-20px); }
     }
+
 
     @keyframes spin {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
   }
+
 
   // Overlay oscuro
   .overlay {
@@ -46,6 +51,7 @@
     z-index: 2;
   }
 
+
   // Contenedor principal
   .login-container {
     position: relative;
@@ -55,11 +61,13 @@
     flex-direction: column;
   }
 
+
   // Header con estadio
   .login-header {
     position: relative;
     height: 40vh;
     overflow: hidden;
+
 
     .stadium-background {
       position: absolute;
@@ -81,6 +89,7 @@
       }
     }
 
+
     .stadium-overlay {
       position: absolute;
       top: 0;
@@ -93,6 +102,7 @@
       padding: 2rem;
     }
 
+
     .header-content {
       width: 100%;
       display: flex;
@@ -100,10 +110,12 @@
       align-items: flex-end;
       color: white;
 
+
       .logo-section {
         display: flex;
         align-items: center;
         gap: 1rem;
+
 
         .logo-icon {
           width: 60px;
@@ -115,11 +127,13 @@
           justify-content: center;
           backdrop-filter: blur(10px);
 
+
           i {
             font-size: 2rem;
             color: #f59e0b;
           }
         }
+
 
         .logo-text {
           .app-title {
@@ -128,6 +142,7 @@
             margin: 0;
           }
 
+
           .app-subtitle {
             font-size: 1rem;
             margin: 0;
@@ -135,6 +150,7 @@
           }
         }
       }
+
 
       .match-info {
         .match-card {
@@ -146,11 +162,13 @@
           align-items: center;
           gap: 1rem;
 
+
           .team {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 0.5rem;
+
 
             .team-logo {
               width: 30px;
@@ -161,17 +179,20 @@
               align-items: center;
               justify-content: center;
 
+
               i {
                 font-size: 1rem;
                 color: white;
               }
             }
 
+
             span {
               font-size: 0.8rem;
               font-weight: 500;
             }
           }
+
 
           .vs {
             font-size: 1.2rem;
@@ -183,6 +204,7 @@
     }
   }
 
+
   // Sección del formulario
   .login-form-section {
     flex: 1;
@@ -190,6 +212,7 @@
     align-items: center;
     justify-content: center;
     padding: 2rem;
+
 
     .form-container {
       background: rgba(255, 255, 255, 0.95);
@@ -200,52 +223,62 @@
       max-width: 450px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 
+
       .form-header {
         text-align: center;
         margin-bottom: 2rem;
 
+
         .form-title {
           font-size: 2rem;
           font-weight: 700;
-          color: var(--primary-color);
+          color: #1e3a8a; // Color primario oscuro para el título
           margin: 0 0 0.5rem 0;
         }
 
+
         .form-subtitle {
-          color: var(--text-color);
+          color: #6c757d; // Color de texto gris oscuro
           margin: 0;
           opacity: 0.8;
         }
       }
 
+
       .login-form {
         .form-group {
           margin-bottom: 1.5rem;
+
 
           .input-container {
             position: relative;
             display: flex;
             align-items: center;
-            background: var(--light-color);
+            // Quitamos el fondo para usar el del form-container
+            background: #f1f1f1; 
             border-radius: 15px;
             border: 2px solid transparent;
             transition: all 0.3s ease;
 
+
             &:focus-within {
-              border-color: var(--primary-color);
+              border-color: #1e3a8a;
               box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
             }
 
+
             &.error {
-              border-color: var(--danger-color);
+              border-color: #eb445a;
             }
+
 
             .input-icon {
               padding: 0 1rem;
-              color: var(--primary-color);
+              color: #1e3a8a;
               display: flex;
               align-items: center;
             }
+
 
             .form-input {
               flex: 1;
@@ -254,23 +287,25 @@
               padding: 1rem;
               font-size: 1rem;
               outline: none;
-              color: var(--dark-color);
+              color: #212529; // << --- CAMBIO CLAVE: Color de texto oscuro
 
               &::placeholder {
-                color: var(--text-color);
+                color: #6c757d; // << --- CAMBIO CLAVE: Color de placeholder gris
                 opacity: 0.6;
               }
             }
+
 
             .password-toggle {
               background: none;
               border: none;
               padding: 0 1rem;
-              color: var(--primary-color);
+              color: #1e3a8a;
               cursor: pointer;
               display: flex;
               align-items: center;
             }
+
 
             .input-decoration {
               position: absolute;
@@ -281,16 +316,18 @@
             }
           }
 
+
           .error-message {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            color: var(--danger-color);
+            color: #eb445a;
             font-size: 0.8rem;
             margin-top: 0.5rem;
             padding-left: 1rem;
           }
         }
+
 
         .form-options {
           display: flex;
@@ -298,25 +335,29 @@
           align-items: center;
           margin-bottom: 2rem;
 
+
           .checkbox-container {
             display: flex;
             align-items: center;
             cursor: pointer;
 
+
             input[type="checkbox"] {
               display: none;
             }
 
+
             .checkmark {
               width: 20px;
               height: 20px;
-              border: 2px solid var(--primary-color);
+              border: 2px solid #1e3a8a;
               border-radius: 4px;
               margin-right: 0.5rem;
               display: flex;
               align-items: center;
               justify-content: center;
               transition: all 0.3s ease;
+
 
               &::after {
                 content: '✓';
@@ -327,22 +368,26 @@
               }
             }
 
+
             input[type="checkbox"]:checked + .checkmark {
-              background: var(--primary-color);
+              background: #1e3a8a;
+
 
               &::after {
                 opacity: 1;
               }
             }
 
+
             .checkbox-label {
               font-size: 0.9rem;
-              color: var(--text-color);
+              color: #6c757d; // << --- CAMBIO CLAVE: Color de texto gris
             }
           }
 
+
           .forgot-password-link {
-            color: var(--primary-color);
+            color: #1e3a8a;
             font-size: 0.9rem;
             text-decoration: none;
             cursor: pointer;
@@ -353,9 +398,10 @@
           }
         }
 
+
         .login-button {
           width: 100%;
-          background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+          background: linear-gradient(135deg, #1e3a8a, #059669);
           color: white;
           border: none;
           border-radius: 15px;
@@ -367,15 +413,18 @@
           position: relative;
           overflow: hidden;
 
+
           &:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(30, 58, 138, 0.3);
           }
 
+
           &:disabled {
             opacity: 0.6;
             cursor: not-allowed;
           }
+
 
           .button-content {
             display: flex;
@@ -383,11 +432,13 @@
             justify-content: center;
             gap: 0.5rem;
 
+
             ion-spinner {
               width: 20px;
               height: 20px;
             }
           }
+
 
           // Efecto de brillo
           &::before {
@@ -401,10 +452,12 @@
             transition: left 0.5s;
           }
 
+
           &:hover:not(:disabled)::before {
             left: 100%;
           }
         }
+
 
         .register-link {
           text-align: center;
@@ -412,16 +465,18 @@
           padding-top: 2rem;
           border-top: 1px solid #e5e7eb;
 
+
           p {
-            color: var(--text-color);
+            color: #6c757d;
             margin-bottom: 1rem;
           }
+
 
           .register-button {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            color: var(--primary-color);
+            color: #1e3a8a;
             text-decoration: none;
             font-weight: 600;
             cursor: pointer;
@@ -434,6 +489,7 @@
       }
     }
 
+
     // Información adicional
     .login-info {
       padding: 2rem;
@@ -445,6 +501,7 @@
         max-width: 800px;
         margin: 0 auto;
 
+
         .info-card {
           background: rgba(255, 255, 255, 0.1);
           backdrop-filter: blur(10px);
@@ -454,17 +511,20 @@
           color: white;
           border: 1px solid rgba(255, 255, 255, 0.2);
 
+
           i {
             font-size: 2rem;
             color: #f59e0b;
             margin-bottom: 1rem;
           }
 
+
           h3 {
             font-size: 1.2rem;
             font-weight: 600;
             margin: 0 0 0.5rem 0;
           }
+
 
           p {
             margin: 0;
@@ -477,19 +537,23 @@
   }
 }
 
+
 // Responsive
 @media (max-width: 768px) {
   .login-futbolero-content {
     .login-header {
       height: 30vh;
 
+
       .stadium-overlay {
         padding: 1rem;
+
 
         .header-content {
           flex-direction: column;
           align-items: center;
           gap: 1rem;
+
 
           .match-info {
             .match-card {
@@ -502,13 +566,16 @@
       }
     }
 
+
     .login-form-section {
       padding: 1rem;
+
 
       .form-container {
         padding: 1.5rem;
       }
     }
+
 
     .login-info {
       .info-cards {
@@ -517,6 +584,7 @@
     }
   }
 }
+
 
 @media (max-width: 480px) {
   .login-futbolero-content {
@@ -528,10 +596,12 @@
               width: 50px;
               height: 50px;
 
+
               i {
                 font-size: 1.5rem;
               }
             }
+
 
             .logo-text {
               .app-title {

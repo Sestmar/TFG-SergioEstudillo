@@ -1,91 +1,89 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs/operators';
-// Tus servicios, que funcionan
-import { AuthService } from 'src/app/core/services/auth/auth.service';
-import { NotificationService } from 'src/app/core/services/notification/notification.service'; 
+import { Subject } from 'rxjs';
+import { takeUntil, finalize } from 'rxjs/operators';
+
+import { AuthService } from '../../../../core/services/auth/auth.service';
+import { NotificationService } from '../../../../core/services/notification/notification.service';
+import { UserRegisterDto } from '../../../../shared/models/models';
 
 @Component({
   selector: 'app-register',
   templateUrl: './register.page.html',
   styleUrls: ['./register.page.scss'],
 })
-export class RegisterPage implements OnInit { // <-- Esto exporta la clase que tu módulo necesita
+export class RegisterPage implements OnInit, OnDestroy {
 
-  registerForm!: FormGroup;
+  registerForm: FormGroup;
   isLoading = false;
+
+  private destroyed$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
-    private auth: AuthService,
-    private notification: NotificationService, // Usamos tu servicio (como en login-futbolero)
+    private authService: AuthService,
+    private notificationService: NotificationService,
     private router: Router
-  ) {}
-
-  ngOnInit() {
-    // Este formulario coincide con el 'UserRegisterDto' de tu auth.service.ts
+  ) {
     this.registerForm = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(3)]],
-      apellidos: ['', [Validators.required]], // Tu DTO lo tiene
+      apellidos: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
-      telefono: [''], // Opcional (Tu DTO lo tiene)
-      direccion: [''], // Opcional (Tu DTO lo tiene)
       password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]]
-    }, {
-      validators: this.passwordMatchValidator
-    });
+      confirmPassword: ['', Validators.required]
+    }, { validators: this.passwordMatchValidator });
   }
 
-  // Validador para confirmar contraseña
-  passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
-    const password = control.get('password');
-    const confirmPassword = control.get('confirmPassword');
+  ngOnInit(): void {}
+
+  /**
+   * Validador personalizado para asegurar que las contraseñas coinciden.
+   */
+  passwordMatchValidator(form: FormGroup) {
+    const password = form.get('password');
+    const confirmPassword = form.get('confirmPassword');
     return password && confirmPassword && password.value === confirmPassword.value 
       ? null 
       : { passwordMismatch: true };
   }
 
-  async onRegister() {
+  /**
+   * Maneja el envío del formulario de registro.
+   */
+  async onRegister(): Promise<void> {
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
       return;
     }
 
     this.isLoading = true;
-    // Usamos el mismo patrón de loading que tu login-futbolero
-    await this.notification.showLoading('Creando cuenta...');
+    await this.notificationService.showLoading('Creando tu cuenta...');
 
-    // Creamos el DTO que tu auth.service.ts espera
-    const { confirmPassword, ...registerDto } = this.registerForm.value;
+    const { confirmPassword, ...userData } = this.registerForm.value;
+    const userToRegister: UserRegisterDto = userData;
 
-    this.auth.register(registerDto).pipe( // registerDto coincide con UserRegisterDto
+    this.authService.register(userToRegister).pipe(
+      takeUntil(this.destroyed$),
       finalize(async () => {
         this.isLoading = false;
-        await this.notification.hideLoading(); // Ocultamos el loading
+        await this.notificationService.hideLoading();
       })
     ).subscribe({
-      next: (usuario) => {
-        // Tu servicio de registro (según el código que me pasaste)
-        // no loguea automáticamente, solo registra.
-        this.notification.showSuccess(`¡Registro completado, ${usuario.nombre}! Ya puedes iniciar sesión.`);
-        this.router.navigate(['/auth/login']); // Lo mandamos a login
+      next: () => {
+        this.notificationService.showSuccess('¡Registro completado! Ahora puedes iniciar sesión.');
+        this.router.navigate(['/auth/login']);
       },
-      error: (err) => {
-        console.error('Error en registro:', err);
-        const msg = (err.status === 409 || (err.error?.message && err.error.message.includes('Duplicate')))
-          ? 'El email ya está en uso.'
-          : 'Error al crear la cuenta.';
-        this.notification.showError(msg); // Usamos tu servicio
+      error: (error) => {
+        console.error('Error en el registro:', error);
+        const errorMessage = error.error?.message || 'Ha ocurrido un error. Por favor, inténtalo de nuevo.';
+        this.notificationService.showError(errorMessage);
       }
     });
   }
 
-  // Getters para el HTML
-  get nombre() { return this.registerForm.get('nombre'); }
-  get apellidos() { return this.registerForm.get('apellidos'); }
-  get email() { return this.registerForm.get('email'); }
-  get password() { return this.registerForm.get('password'); }
-  get confirmPassword() { return this.registerForm.get('confirmPassword'); }
+  ngOnDestroy(): void {
+    this.destroyed$.next();
+    this.destroyed$.complete();
+  }
 }

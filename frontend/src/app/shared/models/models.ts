@@ -1,6 +1,7 @@
 // Este archivo único define todas las interfaces y enums
 // Esto soluciona todos los errores "Cannot find name '...'"
 
+
 // --- ENUMS (Tipos) ---
 
 export type PlayerPosition =
@@ -19,22 +20,37 @@ export type PlayerPosition =
 export type IncidentType = 'LESION' | 'SANCION' | 'BLOQUEO' | 'OTRO';
 export type RequestStatus = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'CANCELADA';
 export type ConvocationType = 'ENTRENAMIENTO' | 'PARTIDO' | 'AMISTOSO';
-export type ConvocationStatus = 'PENDIENTE' | 'CONFIRMADA' | 'RECHAZADA'; // Lo pedía tu log
+export type ConvocationStatus = 'PENDIENTE' | 'CONFIRMADA' | 'RECHAZADA';
 
-// --- INTERFACES PRINCIPALES ---
 
+// =================================================================
+// ===           INTERFACES RELACIONADAS CON AUTH                ===
+// =================================================================
+
+// --- INTERFAZ PRINCIPAL DE USUARIO ---
 export interface User {
-  id: number;
-  username: string;
+  idUsuario: number; 
+  username?: string;
   email: string;
   nombre: string;
   apellidos: string;
-  activo: boolean;
-  fechaRegistro: Date;
-  fechaActualizacion: Date;
+  activo?: boolean;
+  fechaRegistro?: Date;
+  fechaActualizacion?: Date;
   roles: string[];
+  passwordHash: string;
+  rol: string;
+  fechaAlta: Date;
+  telefono?: string;
+  direccion?: string;
 }
-// DTOs de User
+
+// --- DTOS DE AUTENTICACIÓN ---
+export interface UserLoginDto {
+  email: string;
+  password: string;
+}
+
 export interface UserRegisterDto {
   nombre: string;
   apellidos: string;
@@ -42,24 +58,50 @@ export interface UserRegisterDto {
   password: string;
   telefono?: string;
 }
+
+// =======================================================
+// ===           INTERFAZ AÑADIDA QUE FALTABA          ===
+// =======================================================
 export interface UserUpdateDto {
   nombre?: string;
   apellidos?: string;
   email?: string;
   telefono?: string;
+  direccion?: string;
 }
+// =======================================================
+
+// --- RESPUESTA DE AUTENTICACIÓN ---
+export interface AuthResponse {
+  token: string;
+  refreshToken?: string;
+  user: User;
+}
+
+// --- PAYLOAD DEL TOKEN JWT ---
+export interface JwtPayload {
+  sub: string;
+  username: string;
+  roles: string[];
+  exp: number;
+  iat: number;
+}
+
+
+// =================================================================
+// ===      EL RESTO DE TUS INTERFACES (SIN CAMBIOS)             ===
+// =================================================================
 
 export interface Team {
   id: number;
   nombre: string;
-  categoria: Category; // Arreglado
-  liga: Liga; // Arreglado
+  categoria: Category;
+  liga: Liga;
   entrenadorPrincipal?: Coach;
   entrenadorAsistente?: Coach;
   jugadores: Player[];
   activo: boolean;
 }
-// Interfaces de Team
 export interface Category {
   id: number;
   nombre: string;
@@ -79,11 +121,9 @@ export interface Player {
   activo: boolean;
   lesionado: boolean;
 }
-// DTOs de Player
 export interface PlayerCreateDto {
   userId: number;
   posicionPrimaria: PlayerPosition;
-  // ... más campos
 }
 
 export interface Coach {
@@ -105,18 +145,15 @@ export interface Convocation {
   entrenadorPrincipal: Coach;
   jugadoresConvocados: { jugador: Player, estado: ConvocationStatus }[];
 }
-// DTOs de Convocation
 export interface ConvocationCreateDto {
   equipoId: number;
   titulo: string;
-  // ... más campos
 }
 export interface UpdateAttendanceDto {
   convocationId: number;
   playerId: number;
   status: ConvocationStatus;
 }
-
 
 export interface Incident {
   id: number;
