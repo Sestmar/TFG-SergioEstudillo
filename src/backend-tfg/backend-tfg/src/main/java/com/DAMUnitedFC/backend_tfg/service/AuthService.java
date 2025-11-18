@@ -1,8 +1,10 @@
 package com.DAMUnitedFC.backend_tfg.service;
 
-import com.DAMUnitedFC.backend_tfg.dto.RegistroUsuario; // <-- CAMBIO: Importamos tu DTO
+import com.DAMUnitedFC.backend_tfg.dto.RegistroUsuario;
 import com.DAMUnitedFC.backend_tfg.model.Usuario;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
+import com.DAMUnitedFC.backend_tfg.security.CustomUserDetails;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,29 +19,28 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // ===> CAMBIO CLAVE: El método ahora recibe tu DTO 'RegistroUsuario' <===
     public Usuario registerNewUser(RegistroUsuario registroDto) {
-        // 1. Comprobar si el email ya existe
         if (usuarioRepository.findByEmail(registroDto.getEmail()).isPresent()) {
             throw new RuntimeException("Error: El email ya está registrado.");
         }
-
-        // 2. Crear la entidad Usuario a partir del DTO
         Usuario newUser = new Usuario();
         newUser.setNombre(registroDto.getNombre());
         newUser.setApellidos(registroDto.getApellidos());
         newUser.setEmail(registroDto.getEmail());
-
-        // ===> LA SOLUCIÓN FINAL: Leemos la contraseña del DTO y la hasheamos <===
         newUser.setPasswordHash(passwordEncoder.encode(registroDto.getPassword()));
-
-        // 3. Asignar valores por defecto
         newUser.setRol("JUGADOR");
         long millis = System.currentTimeMillis();
         newUser.setFechaAlta(new java.sql.Date(millis));
-        newUser.setTelefono(registroDto.getTelefono()); // Añadimos el teléfono que viene en el DTO
-
-        // 4. Guardar y devolver la nueva entidad
+        newUser.setTelefono(registroDto.getTelefono());
         return usuarioRepository.save(newUser);
+    }
+
+    public UserDetails authenticateUser(String email, String password) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email no encontrado"));
+        if (!passwordEncoder.matches(password, usuario.getPasswordHash())) {
+            throw new RuntimeException("Contraseña incorrecta");
+        }
+        return new CustomUserDetails(usuario);
     }
 }
