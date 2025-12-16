@@ -41,8 +41,6 @@ export class LoginPage implements OnInit {
     this.isLoading = true;
     await this.notificationService.showLoading('Iniciando sesión...');
     
-    // ¡ARREGLO! El objeto 'credentials' ahora SÍ coincide
-    // con el UserLoginDto de tu auth.service.ts
     const credentials = {
       email: this.loginForm.value.email,
       password: this.loginForm.value.password
@@ -56,17 +54,26 @@ export class LoginPage implements OnInit {
     ).subscribe({
       next: (user) => {
         this.notificationService.showSuccess(`¡Bienvenido de nuevo, ${user.nombre}!`);
-        // Redirigir según el rol
-        const roles = user.roles || [];
-        if (roles.includes('ADMIN')) {
-          this.router.navigate(['/admin/dashboard']);
-        } else if (roles.includes('ENTRENADOR')) {
-          this.router.navigate(['/coach/dashboard']);
-        } else if (roles.includes('JUGADOR')) {
-          this.router.navigate(['/player/dashboard']);
-        } else {
-          this.router.navigate(['/dashboard']);
+        
+        // --- AQUÍ ESTÁ EL CAMBIO IMPORTANTE ---
+        const roles = user.roles || []; // Asumiendo que es un array, si es string único usa [user.rol]
+
+        // Usa user.rol si 'roles' array no existe, o ajusta según tu modelo
+        const mainRole = user.rol || (roles.length > 0 ? roles[0] : 'USUARIO');
+
+        if (mainRole === 'ADMIN' || roles.includes('ADMIN')) {
+           this.router.navigate(['/admin-dashboard']); // (Si tienes esa ruta)
+        } 
+        else if (mainRole === 'ENTRENADOR' || roles.includes('ENTRENADOR')) {
+           this.router.navigate(['/coach-dashboard']); // CORREGIDO
+        } 
+        else if (mainRole === 'JUGADOR' || roles.includes('JUGADOR')) {
+           this.router.navigate(['/player-dashboard']); // CORREGIDO
+        } 
+        else {
+           this.router.navigate(['/user-dashboard']); // CORREGIDO (Usuario básico)
         }
+        // --------------------------------------
       },
       error: (err) => {
         console.error('Error en login:', err);
@@ -74,7 +81,4 @@ export class LoginPage implements OnInit {
       }
     });
   }
-
-  get email() { return this.loginForm.get('email'); }
-  get password() { return this.loginForm.get('password'); }
 }

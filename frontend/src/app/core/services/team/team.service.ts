@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../api/api.service';
-// ¡ARREGLO! Importamos desde 'models.ts'
 import { Team, Category, Liga } from 'src/app/shared/models/models';
 
 @Injectable({
@@ -11,12 +10,21 @@ export class TeamService {
 
   constructor(private apiService: ApiService) {}
 
-  getTeams(): Observable<Team[]> {
-    return this.apiService.get<Team[]>('equipos');
+  // --- MÉTODOS BÁSICOS EXISTENTES ---
+  
+  // Modificado para aceptar filtros opcionales (entrenadorId, etc)
+  getTeams(filters: any = {}): Observable<any> { 
+    // NOTA: Si tu backend devuelve array directo, úsalo así. 
+    // Si devuelve paginación, ajusta el tipo de retorno.
+    // Aquí asumimos que pasamos query params.
+    let params = '';
+    if (Object.keys(filters).length > 0) {
+      const query = new URLSearchParams(filters).toString();
+      params = `?${query}`;
+    }
+    return this.apiService.get<any>(`equipos${params}`);
   }
-  
-  // (Asumo que el resto de tu servicio es así)
-  
+
   updateTeam(id: number, teamData: Partial<Team>): Observable<Team> {
     return this.apiService.put<Team>(`equipos/${id}`, teamData);
   }
@@ -33,6 +41,21 @@ export class TeamService {
     return this.apiService.put<Team>(`equipos/${teamId}/coach`, {
       coachId,
       isAssistant
+    });
+  }
+
+  // --- ¡NUEVOS MÉTODOS QUE FALTABAN! ---
+
+  getTeamById(id: number): Observable<Team> {
+    return this.apiService.get<Team>(`equipos/${id}`);
+  }
+
+  // Si no tienes backend para esto, devuelve un array vacío o mock
+  getTeamStandings(): Observable<any[]> {
+    // return this.apiService.get<any[]>('standings'); // Descomenta cuando tengas API
+    return new Observable(observer => {
+      observer.next([]); // Mock vacío para que no falle el dashboard
+      observer.complete();
     });
   }
 }

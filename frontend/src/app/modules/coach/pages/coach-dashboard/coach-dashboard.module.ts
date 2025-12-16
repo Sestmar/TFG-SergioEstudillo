@@ -4,36 +4,22 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule, Routes } from '@angular/router';
 
-// Components
-import { UserDashboardPage } from './pages/user-dashboard/user-dashboard.page';
-
-// Services
-import { UserService } from '../../core/services/user/user.service';
+import { CoachDashboardPage } from './coach-dashboard.page';
 
 const routes: Routes = [
   {
-    path: 'dashboard',
-    component: UserDashboardPage
-  },
-  {
     path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full'
+    component: CoachDashboardPage
   }
 ];
 
 @NgModule({
-  declarations: [
-    UserDashboardPage
-  ],
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
     RouterModule.forChild(routes)
   ],
-  providers: [
-    UserService
-  ]
+  declarations: [CoachDashboardPage]
 })
-export class UserModule {}
+export class CoachDashboardPageModule {}

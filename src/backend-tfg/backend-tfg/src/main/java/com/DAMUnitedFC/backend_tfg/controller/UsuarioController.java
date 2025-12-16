@@ -11,6 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+// importaciones para el endpoint /me
+import org.springframework.security.core.Authentication;
+
+// otras importaciones
 import java.util.List;
 import java.util.Map;
 
@@ -52,5 +56,21 @@ public class UsuarioController {
     @GetMapping("/users")
     public List<Usuario> getAllUsuarios() {
         return usuarioRepository.findAll();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyself(Authentication authentication) {
+        try {
+            // 'authentication' tiene los datos del usuario logueado gracias al JwtFilter
+            String email = authentication.getName();
+
+            Usuario user = usuarioRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            // Devolvemos el usuario completo (con su rol)
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+        }
     }
 }

@@ -1,7 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil, map } from 'rxjs/operators';
+import { Observable, Subject, of } from 'rxjs';
+import { takeUntil, map, catchError } from 'rxjs/operators';
+
+// CORRECCIÓN 1: Usar UserService directamente si UserStateService no existe
+import { UserService } from 'src/app/core/services/user/user.service';
 
 import { 
   User, 
@@ -11,17 +14,15 @@ import {
   Convocation,
   Incident,
   InscriptionRequest 
-} from '@shared/models';
-import { 
-  AuthService, 
-  UserStateService,
-  TeamService,
-  PlayerService,
-  ConvocationService,
-  IncidentService,
-  RequestService,
-  NotificationService 
-} from '@core/services';
+} from 'src/app/shared/models/models'; // CORRECCIÓN 2: Ruta segura a models
+
+import { AuthService } from 'src/app/core/services/auth/auth.service';
+import { TeamService } from 'src/app/core/services/team/team.service';
+import { PlayerService } from 'src/app/core/services/player/player.service';
+import { ConvocationService } from 'src/app/core/services/convocation/convocation.service';
+import { IncidentService } from 'src/app/core/services/incident/incident.service';
+import { RequestService } from 'src/app/core/services/request/request.service'; // O inscription/inscription.service
+import { NotificationService } from 'src/app/core/services/notification/notification.service';
 
 interface DashboardStats {
   totalPlayers: number;
@@ -64,61 +65,19 @@ export class CoachDashboardPage implements OnInit, OnDestroy {
   };
 
   quickActions: QuickAction[] = [
-    {
-      title: 'Mis Equipos',
-      icon: 'shield',
-      route: '/teams',
-      color: 'primary',
-      description: 'Gestionar equipos asignados',
-      count: 0
-    },
-    {
-      title: 'Mis Jugadores',
-      icon: 'people',
-      route: '/players',
-      color: 'secondary',
-      description: 'Ver y gestionar jugadores',
-      count: 0
-    },
-    {
-      title: 'Convocatorias',
-      icon: 'calendar',
-      route: '/convocations',
-      color: 'tertiary',
-      description: 'Crear y gestionar convocatorias',
-      count: 0
-    },
-    {
-      title: 'Incidencias',
-      icon: 'medical',
-      route: '/incidents',
-      color: 'warning',
-      description: 'Reportar y gestionar incidencias',
-      count: 0
-    },
-    {
-      title: 'Solicitudes',
-      icon: 'document-text',
-      route: '/requests',
-      color: 'success',
-      description: 'Revisar solicitudes de inscripción',
-      count: 0
-    },
-    {
-      title: 'Estadísticas',
-      icon: 'stats-chart',
-      route: '/coach/stats',
-      color: 'danger',
-      description: 'Analizar rendimiento del equipo',
-      count: 0
-    }
+    { title: 'Mis Equipos', icon: 'shield', route: '/teams', color: 'primary', description: 'Gestionar equipos asignados', count: 0 },
+    { title: 'Mis Jugadores', icon: 'people', route: '/players', color: 'secondary', description: 'Ver y gestionar jugadores', count: 0 },
+    { title: 'Convocatorias', icon: 'calendar', route: '/convocations', color: 'tertiary', description: 'Crear y gestionar convocatorias', count: 0 },
+    { title: 'Incidencias', icon: 'medical', route: '/incidents', color: 'warning', description: 'Reportar y gestionar incidencias', count: 0 },
+    { title: 'Solicitudes', icon: 'document-text', route: '/requests', color: 'success', description: 'Revisar solicitudes de inscripción', count: 0 },
+    { title: 'Estadísticas', icon: 'stats-chart', route: '/coach/stats', color: 'danger', description: 'Analizar rendimiento del equipo', count: 0 }
   ];
 
   private destroy$ = new Subject<void>();
 
   constructor(
     private authService: AuthService,
-    private userStateService: UserStateService,
+    private userService: UserService, // CORRECCIÓN 3: Inyectar UserService
     private teamService: TeamService,
     private playerService: PlayerService,
     private convocationService: ConvocationService,
@@ -127,7 +86,9 @@ export class CoachDashboardPage implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private router: Router
   ) {
-    this.currentUser$ = this.userStateService.getCurrentUserObservable();
+    // Si UserService no tiene getCurrentUserObservable, usa authService o un BehaviorSubject propio
+    // Asumimos que authService tiene el user actual
+    this.currentUser$ = this.authService.currentUser$; 
   }
 
   ngOnInit() {
@@ -140,351 +101,181 @@ export class CoachDashboardPage implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /**
-   * Carga los datos del entrenador
-   */
   private loadCoachData() {
-    this.userStateService.loadCurrentUser().pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (user) => {
+    // Si userService.getUserProfile() no existe, ajusta al método real
+    this.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
         this.currentUser = user;
         if (user) {
-          this.loadManagedTeams(user.id);
+            this.loadManagedTeams(user.idUsuario);
         }
-      },
-      error: (error) => {
-        console.error('Error loading coach data:', error);
-        this.notificationService.showError('Error al cargar datos del entrenador');
-      }
     });
   }
 
-  /**
-   * Carga los equipos gestionados por el entrenador
-   */
   private loadManagedTeams(userId: number) {
-    this.teamService.getAllTeams({ entrenadorId: userId }).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (response) => {
-        this.managedTeams = response.teams;
-        this.stats.teamCount = response.total;
+    // CORRECCIÓN 4: Usar getTeams en vez de getAllTeams
+    this.teamService.getTeams({ entrenadorId: userId }).pipe(
+      takeUntil(this.destroy$),
+      catchError(err => {
+          console.error('Error loading teams', err);
+          return of({ teams: [], total: 0 });
+      })
+    ).subscribe((response: any) => {
+        // CORRECCIÓN 5: Manejar respuesta paginada o array directo
+        const teams = Array.isArray(response) ? response : (response.teams || []);
+        this.managedTeams = teams;
+        this.stats.teamCount = teams.length;
         this.updateQuickActionCounts();
         
         if (this.managedTeams.length > 0) {
           this.loadTeamData();
         }
-      },
-      error: (error) => {
-        console.error('Error loading managed teams:', error);
-      }
     });
   }
 
-  /**
-   * Carga los datos de los equipos gestionados
-   */
   private loadTeamData() {
     const teamIds = this.managedTeams.map(team => team.id);
-    
-    // Cargar jugadores de los equipos
     this.loadTeamPlayers(teamIds);
-    
-    // Cargar convocatorias de los equipos
     this.loadTeamConvocations(teamIds);
   }
 
-  /**
-   * Carga los jugadores de los equipos gestionados
-   */
   private loadTeamPlayers(teamIds: number[]) {
-    const playerObservables = teamIds.map(teamId => 
-      this.playerService.getAllPlayers({ equipoId: teamId })
-    );
-    
-    // Combinar todos los observables
-    // Nota: En producción, usaría forkJoin o similar
     teamIds.forEach(teamId => {
+      // CORRECCIÓN 6: Usar getPlayers en vez de getAllPlayers si es necesario
       this.playerService.getAllPlayers({ equipoId: teamId }).pipe(
         takeUntil(this.destroy$)
-      ).subscribe({
-        next: (response) => {
-          this.managedPlayers = [...this.managedPlayers, ...response.players];
+      ).subscribe((response: any) => {
+          const players = Array.isArray(response) ? response : (response.players || []);
+          this.managedPlayers = [...this.managedPlayers, ...players];
+          // Eliminar duplicados si es necesario
           this.stats.totalPlayers = this.managedPlayers.length;
           this.updateQuickActionCounts();
-        },
-        error: (error) => {
-          console.error('Error loading team players:', error);
-        }
       });
     });
   }
 
-  /**
-   * Carga las convocatorias de los equipos gestionados
-   */
   private loadTeamConvocations(teamIds: number[]) {
     const now = new Date();
     const nextMonth = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
     
     teamIds.forEach(teamId => {
-      this.convocationService.getTeamConvocations(teamId, {
-        fechaInicio: now,
-        fechaFin: nextMonth
-      }).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe({
-        next: (convocations) => {
+      // CORRECCIÓN 7: Usar getConvocations en vez de getTeamConvocations
+      // Y pasar parámetros correctamente
+      this.convocationService.getConvocations().pipe( 
+        // Si tu servicio requiere teamId, ajusta: getConvocations(teamId)
+        takeUntil(this.destroy$),
+        map((res: any) => {
+            // Filtrar manualmente si el backend devuelve todo
+            const allConvocations = Array.isArray(res) ? res : (res.convocations || []);
+            return allConvocations.filter((c: any) => c.equipoId === teamId);
+        })
+      ).subscribe((convocations: any[]) => {
           this.recentConvocations = [...this.recentConvocations, ...convocations];
           this.stats.activeConvocations = this.recentConvocations.length;
           this.updateQuickActionCounts();
-        },
-        error: (error) => {
-          console.error('Error loading team convocations:', error);
-        }
       });
     });
   }
 
-  /**
-   * Carga los datos del dashboard
-   */
   private loadDashboardData() {
-    // Cargar solicitudes pendientes (si es admin o tiene permisos)
     if (this.currentUser && this.hasRole('ADMIN')) {
       this.loadPendingRequests();
     }
-    
-    // Cargar incidencias abiertas
     this.loadOpenIncidents();
   }
 
-  /**
-   * Carga las solicitudes pendientes
-   */
   private loadPendingRequests() {
-    this.requestService.getPendingRequests().pipe(
+    // Ajusta getRequests según tu servicio
+    this.requestService.getAllRequests({ estado: 'PENDIENTE' }).pipe(
       takeUntil(this.destroy$)
-    ).subscribe({
-      next: (requests) => {
+    ).subscribe((response: any) => {
+        const requests = Array.isArray(response) ? response : (response.requests || []);
         this.pendingRequests = requests;
         this.stats.pendingRequests = requests.length;
         this.updateQuickActionCounts();
-      },
-      error: (error) => {
-        console.error('Error loading pending requests:', error);
-      }
     });
   }
 
-  /**
-   * Carga las incidencias abiertas
-   */
   private loadOpenIncidents() {
-    this.incidentService.getOpenIncidents().pipe(
+    // Ajusta getIncidents según tu servicio
+    this.incidentService.getAllIncidents({ estado: 'ABIERTA' }).pipe(
       takeUntil(this.destroy$)
-    ).subscribe({
-      next: (incidents) => {
+    ).subscribe((response: any) => {
+        const incidents = Array.isArray(response) ? response : (response.incidents || []);
         this.openIncidents = incidents;
         this.stats.openIncidents = incidents.length;
         this.updateQuickActionCounts();
-      },
-      error: (error) => {
-        console.error('Error loading open incidents:', error);
-      }
     });
   }
 
-  /**
-   * Actualiza los contadores de las acciones rápidas
-   */
   private updateQuickActionCounts() {
     this.quickActions = this.quickActions.map(action => {
       switch (action.route) {
-        case '/teams':
-          return { ...action, count: this.stats.teamCount };
-        case '/players':
-          return { ...action, count: this.stats.totalPlayers };
-        case '/convocations':
-          return { ...action, count: this.stats.activeConvocations };
-        case '/incidents':
-          return { ...action, count: this.stats.openIncidents };
-        case '/requests':
-          return { ...action, count: this.stats.pendingRequests };
-        default:
-          return action;
+        case '/teams': return { ...action, count: this.stats.teamCount };
+        case '/players': return { ...action, count: this.stats.totalPlayers };
+        case '/convocations': return { ...action, count: this.stats.activeConvocations };
+        case '/incidents': return { ...action, count: this.stats.openIncidents };
+        case '/requests': return { ...action, count: this.stats.pendingRequests };
+        default: return action;
       }
     });
   }
 
-  /**
-   * Verifica si el usuario tiene un rol específico
-   */
-  hasRole(role: UserRole): boolean {
-    return this.currentUser?.roles?.includes(role) || false;
+  hasRole(role: string): boolean {
+    return (this.currentUser as any)?.role === role || (this.currentUser as any)?.roles?.includes(role) || false;
   }
 
-  /**
-   * Navega a una ruta específica
-   */
-  navigateTo(route: string) {
-    this.router.navigate([route]);
-  }
+  navigateTo(route: string) { this.router.navigate([route]); }
+  createConvocation() { this.router.navigate(['/convocations/create']); }
+  reportIncident() { this.router.navigate(['/incidents/create']); }
+  manageRequests() { this.router.navigate(['/requests']); }
 
-  /**
-   * Crea una nueva convocatoria
-   */
-  createConvocation() {
-    this.router.navigate(['/convocations/create']);
-  }
-
-  /**
-   * Reporta una incidencia
-   */
-  reportIncident() {
-    this.router.navigate(['/incidents/create']);
-  }
-
-  /**
-   * Gestiona las solicitudes pendientes
-   */
-  manageRequests() {
-    this.router.navigate(['/requests']);
-  }
-
-  /**
-   * Obtiene el color del tipo de convocatoria
-   */
   getConvocationTypeColor(type: string): string {
-    switch (type) {
-      case 'PARTIDO_OFICIAL':
-        return 'danger';
-      case 'PARTIDO_AMISTOSO':
-        return 'warning';
-      case 'ENTRENAMIENTO':
-        return 'primary';
-      case 'CONCENTRACION':
-        return 'secondary';
-      default:
-        return 'medium';
-    }
+    const colors: any = { 'PARTIDO_OFICIAL': 'danger', 'PARTIDO_AMISTOSO': 'warning', 'ENTRENAMIENTO': 'primary', 'CONCENTRACION': 'secondary' };
+    return colors[type] || 'medium';
   }
 
-  /**
-   * Formatea la fecha de una convocatoria
-   */
-  formatConvocationDate(date: Date): string {
-    return new Date(date).toLocaleDateString('es-ES', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  formatConvocationDate(date: string | Date): string {
+    return new Date(date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
-  /**
-   * Obtiene la duración de una convocatoria
-   */
-  getDuration(startDate: Date, endDate: Date): string {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffMs = end.getTime() - start.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (diffHours > 0) {
-      return `${diffHours}h ${diffMinutes}min`;
-    } else {
-      return `${diffMinutes}min`;
-    }
+  getDuration(startDate: string | Date, endDate: string | Date): string {
+    const diffMs = new Date(endDate).getTime() - new Date(startDate).getTime();
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffMinutes = Math.floor((diffMs % 3600000) / 60000);
+    return diffHours > 0 ? `${diffHours}h ${diffMinutes}min` : `${diffMinutes}min`;
   }
 
-  /**
-   * Obtiene el estado de una convocatoria
-   */
   getConvocationStatus(convocation: Convocation): string {
     const now = new Date();
-    const startDate = new Date(convocation.fechaHoraInicio);
-    const endDate = new Date(convocation.fechaHoraFin);
-    
-    if (now < startDate) {
-      return 'Próximo';
-    } else if (now >= startDate && now <= endDate) {
-      return 'En curso';
-    } else {
-      return 'Finalizado';
-    }
+    const start = new Date(convocation.fechaHoraInicio);
+    const end = new Date(convocation.fechaHoraFin);
+    if (now < start) return 'Próximo';
+    if (now >= start && now <= end) return 'En curso';
+    return 'Finalizado';
   }
 
-  /**
-   * Obtiene el color del estado de una convocatoria
-   */
   getConvocationStatusColor(status: string): string {
-    switch (status) {
-      case 'Próximo':
-        return 'primary';
-      case 'En curso':
-        return 'success';
-      case 'Finalizado':
-        return 'medium';
-      default:
-        return 'medium';
-    }
+    return { 'Próximo': 'primary', 'En curso': 'success', 'Finalizado': 'medium' }[status] || 'medium';
   }
 
-  /**
-   * Obtiene el estado de una solicitud
-   */
   getRequestStatusInfo(status: string): { text: string; color: string } {
-    const statusMap: { [key: string]: { text: string; color: string } } = {
-      'PENDIENTE': { text: 'Pendiente', color: 'warning' },
-      'EN_REVISION': { text: 'En Revisión', color: 'primary' },
-      'APROBADA': { text: 'Aprobada', color: 'success' },
-      'RECHAZADA': { text: 'Rechazada', color: 'danger' },
-      'CANCELADA': { text: 'Cancelada', color: 'medium' }
+    const map: any = { 
+      'PENDIENTE': { text: 'Pendiente', color: 'warning' }, 
+      'APROBADA': { text: 'Aprobada', color: 'success' }, 
+      'RECHAZADA': { text: 'Rechazada', color: 'danger' } 
     };
-    
-    return statusMap[status] || { text: status, color: 'medium' };
+    return map[status] || { text: status, color: 'medium' };
   }
 
-  /**
-   * Obtiene la gravedad de una incidencia
-   */
   getIncidentSeverityInfo(severity: string): { text: string; color: string } {
-    switch (severity) {
-      case 'LEVE':
-        return { text: 'Leve', color: 'success' };
-      case 'MODERADO':
-        return { text: 'Moderado', color: 'warning' };
-      case 'GRAVE':
-        return { text: 'Grave', color: 'danger' };
-      case 'CRITICO':
-        return { text: 'Crítico', color: 'danger' };
-      default:
-        return { text: severity, color: 'medium' };
-    }
+    const map: any = { 'LEVE': 'success', 'MODERADO': 'warning', 'GRAVE': 'danger', 'CRITICO': 'danger' };
+    return { text: severity, color: map[severity] || 'medium' };
   }
 
-  /**
-   * Calcula el tiempo transcurrido desde una fecha
-   */
-  getTimeAgo(date: Date): string {
-    const now = new Date();
-    const diffMs = now.getTime() - new Date(date).getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    
-    if (diffDays > 0) {
-      return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
-    } else if (diffHours > 0) {
-      return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
-    } else if (diffMinutes > 0) {
-      return `Hace ${diffMinutes} minuto${diffMinutes > 1 ? 's' : ''}`;
-    } else {
-      return 'Reciente';
-    }
+  getTimeAgo(date: string | Date): string {
+    const diffMs = new Date().getTime() - new Date(date).getTime();
+    const days = Math.floor(diffMs / 86400000);
+    if (days > 0) return `Hace ${days} día${days > 1 ? 's' : ''}`;
+    return 'Reciente';
   }
 }

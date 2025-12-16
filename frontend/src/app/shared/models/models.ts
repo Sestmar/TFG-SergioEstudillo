@@ -43,6 +43,7 @@ export interface User {
   fechaAlta: Date;
   telefono?: string;
   direccion?: string;
+  equipoFavoritoId?: number;
 }
 
 // --- DTOS DE AUTENTICACIÓN ---
@@ -86,6 +87,7 @@ export interface JwtPayload {
   exp: number;
   iat: number;
 }
+
 
 
 // =================================================================
@@ -180,3 +182,37 @@ export interface InscriptionRequest {
   mensaje?: string;
   motivoRechazo?: string;
 }
+
+export interface Match {
+    id: number;
+    fechaHora: string;
+    equipoLocalId: number;
+    equipoVisitanteId: number;
+    golesLocal?: number;
+    golesVisitante?: number;
+    resultado?: string; // 'V', 'E', 'D'
+    estado: string;
+    lugar: string;
+    tipo: string;
+}
+
+export interface News {
+    id: number;
+    titulo: string;
+    contenido: string;
+    fechaPublicacion: string;
+    imagenUrl?: string;
+    autorId: number;
+    categoria: string;
+}
+
+export interface PlayerStats {
+    partidosJugados: number;
+    goles: number;
+    asistencias: number;
+    tarjetasAmarillas: number;
+    tarjetasRojas: number;
+    minutosJugados: number;
+}
+
+export type UserRole = 'ADMIN' | 'ENTRENADOR' | 'JUGADOR' | 'PADRE';
