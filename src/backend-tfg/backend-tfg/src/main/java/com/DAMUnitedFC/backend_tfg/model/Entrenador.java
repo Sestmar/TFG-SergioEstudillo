@@ -28,4 +28,7 @@ public class Entrenador {
 
     @Column(name = "fecha_alta", nullable = false)    // AÑADE ESTE CAMPO
     private Date fechaAlta;
+
+    @Column(name = "foto_url")
+    private String fotoUrl;
 }

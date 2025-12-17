@@ -22,6 +22,9 @@ public class Equipo {
     @Column(length = 255)
     private String observaciones;
 
+    @Column(name = "foto_url")
+    private String fotoUrl;
+
     @ManyToOne
     @JoinColumn(name = "id_categoria", nullable = false)
     private Categoria categoria;

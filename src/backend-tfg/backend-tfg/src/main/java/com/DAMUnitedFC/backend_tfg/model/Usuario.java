@@ -35,6 +35,9 @@ public class Usuario implements UserDetails { // AÑADIDO: implements UserDetail
     @Column(nullable = false)
     private java.sql.Date fechaAlta;
 
+    @Column(name = "foto_url")
+    private String fotoUrl;
+
     private String telefono;
     private String direccion;
 

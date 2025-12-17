@@ -46,4 +46,7 @@ public class Jugador {
 
     @Column(name = "equipo_principal")
     private Integer equipoPrincipal; // FK directa, o haz ManyToOne si quieres objeto Equipo
+
+    @Column(name = "foto_url")
+    private String fotoUrl;
 }
