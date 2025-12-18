@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 /**
- * Servicio de almacenamiento para gestionar localStorage y sessionStorage
+ * Servicio de almacenamiento para gestionar localStorage
  * Proporciona métodos seguros para guardar y recuperar datos
  */
 @Injectable({
@@ -9,6 +9,7 @@ import { Injectable } from '@angular/core';
 })
 export class StorageService {
   private isStorageAvailable: boolean;
+  private readonly TOKEN_KEY = 'auth_token'; // Clave fija para el token
 
   constructor() {
     this.isStorageAvailable = this.checkStorageAvailability();
@@ -28,14 +29,49 @@ export class StorageService {
     }
   }
 
+  // ==========================================
+  // === MÉTODOS ESPECIALES PARA EL TOKEN ===
+  // ==========================================
+
   /**
-   * Guarda un valor en localStorage
+   * Guarda el token SIN comillas (texto plano)
+   * IMPORTANTE: Usar este método para el token JWT
+   */
+  setToken(token: string): void {
+    if (!this.isStorageAvailable) return;
+    try {
+      localStorage.setItem(this.TOKEN_KEY, token);
+    } catch (error) {
+      console.error('Error guardando token:', error);
+    }
+  }
+
+  /**
+   * Recupera el token limpio
+   */
+  getToken(): string | null {
+    if (!this.isStorageAvailable) return null;
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  /**
+   * Elimina solo el token
+   */
+  removeToken(): void {
+    if (!this.isStorageAvailable) return;
+    localStorage.removeItem(this.TOKEN_KEY);
+  }
+
+  // ==========================================
+  // === MÉTODOS GENÉRICOS (Para objetos) ===
+  // ==========================================
+
+  /**
+   * Guarda un valor serializado (JSON)
+   * Úsalo para guardar objetos de usuario, preferencias, etc.
    */
   set(key: string, value: any): boolean {
-    if (!this.isStorageAvailable) {
-      console.warn('localStorage no está disponible');
-      return false;
-    }
+    if (!this.isStorageAvailable) return false;
 
     try {
       const serializedValue = JSON.stringify(value);
@@ -48,12 +84,10 @@ export class StorageService {
   }
 
   /**
-   * Recupera un valor de localStorage
+   * Recupera un valor serializado
    */
   get(key: string): any {
-    if (!this.isStorageAvailable) {
-      return null;
-    }
+    if (!this.isStorageAvailable) return null;
 
     try {
       const value = localStorage.getItem(key);
@@ -63,18 +97,15 @@ export class StorageService {
       return JSON.parse(value);
     } catch (error) {
       console.error('Error leyendo de localStorage:', error);
-      this.remove(key);
       return null;
     }
   }
 
   /**
-   * Elimina un valor de localStorage
+   * Elimina un valor específico
    */
   remove(key: string): boolean {
-    if (!this.isStorageAvailable) {
-      return false;
-    }
+    if (!this.isStorageAvailable) return false;
 
     try {
       localStorage.removeItem(key);
@@ -89,9 +120,7 @@ export class StorageService {
    * Limpia todo localStorage
    */
   clear(): boolean {
-    if (!this.isStorageAvailable) {
-      return false;
-    }
+    if (!this.isStorageAvailable) return false;
 
     try {
       localStorage.clear();
@@ -102,79 +131,16 @@ export class StorageService {
     }
   }
 
-  /**
-   * Obtiene todas las claves de localStorage
-   */
   keys(): string[] {
-    if (!this.isStorageAvailable) {
-      return [];
-    }
-
+    if (!this.isStorageAvailable) return [];
     try {
       return Object.keys(localStorage);
     } catch (error) {
-      console.error('Error obteniendo claves de localStorage:', error);
       return [];
     }
   }
 
-  /**
-   * Verifica si una clave existe en localStorage
-   */
   exists(key: string): boolean {
     return this.get(key) !== null;
-  }
-
-  /**
-   * Obtiene el tamaño total de localStorage en bytes
-   */
-  getSize(): number {
-    if (!this.isStorageAvailable) {
-      return 0;
-    }
-
-    try {
-      return new Blob(Object.values(localStorage)).size;
-    } catch (error) {
-      console.error('Error calculando tamaño de localStorage:', error);
-      return 0;
-    }
-  }
-
-  /**
-   * Guarda un valor con expiración en localStorage
-   */
-  setWithExpiry(key: string, value: any, ttlMinutes: number): boolean {
-    const item = {
-      value: value,
-      expiry: Date.now() + (ttlMinutes * 60 * 1000)
-    };
-    return this.set(key, item);
-  }
-
-  /**
-   * Recupera un valor con verificación de expiración
-   */
-  getWithExpiry(key: string): any {
-    const itemStr = localStorage.getItem(key);
-    
-    if (!itemStr) {
-      return null;
-    }
-
-    try {
-      const item = JSON.parse(itemStr);
-      
-      if (Date.now() > item.expiry) {
-        this.remove(key);
-        return null;
-      }
-      
-      return item.value;
-    } catch (error) {
-      console.error('Error leyendo item con expiración:', error);
-      this.remove(key);
-      return null;
-    }
   }
 }

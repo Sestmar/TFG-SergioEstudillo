@@ -1,36 +1,54 @@
 import { Injectable } from '@angular/core';
-import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { AuthService } from '../services/auth/auth.service';
+import {
+  HttpRequest,
+  HttpHandler,
+  HttpEvent,
+  HttpInterceptor,
+  HttpErrorResponse
+} from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { Router } from '@angular/router';
 
-/**
- * Configuración JWT temporal
- */
-const jwtConfig = {
-  tokenKey: 'auth_token',
-  refreshTokenKey: 'refresh_token'
-};
+// NOTA: Eliminamos la importación de AuthService para evitar la Dependencia Circular
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  
-  constructor(private authService: AuthService) {}
+
+  constructor(private router: Router) {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    // Obtener el token actual
-    const authToken = this.authService.getToken();
     
-    // Si hay token, clonar la request y añadir el header Authorization
-    if (authToken) {
-      const authReq = request.clone({
+    // 1. Obtener el token directamente del localStorage
+    // Esto evita tener que inyectar AuthService y rompe el ciclo infinito
+    const token = localStorage.getItem('auth_token');
+
+    let authReq = request;
+
+    // 2. Si hay token, clonar la petición e inyectar el Header
+    if (token) {
+      authReq = request.clone({
         setHeaders: {
-          Authorization: `Bearer ${authToken}`
+          Authorization: `Bearer ${token}`
         }
       });
-      return next.handle(authReq);
     }
-    
-    // Si no hay token, continuar con la request original
-    return next.handle(request);
+
+    // 3. Pasar la petición y manejar errores de autenticación (401)
+    return next.handle(authReq).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          // Si el token es inválido o expiró:
+          console.warn('Sesión expirada o no autorizada. Redirigiendo al login...');
+          
+          // Limpiamos el token manualmente
+          localStorage.removeItem('auth_token');
+          
+          // Redirigimos al login
+          this.router.navigate(['/auth/login']);
+        }
+        return throwError(() => error);
+      })
+    );
   }
 }

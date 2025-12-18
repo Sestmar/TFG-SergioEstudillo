@@ -30,6 +30,11 @@
               <span *ngIf="nombre?.errors?.['required']">El nombre es requerido.</span>
             </div>
 
+            <ion-item class="ion-margin-bottom">
+              <ion-label position="stacked">Foto de Perfil / Escudo</ion-label>
+              <ion-input type="file" accept="image/*" (change)="onFileSelected($event)"></ion-input>
+            </ion-item>
+            
             <!-- Campo Apellidos -->
             <ion-item lines="full" class="ion-margin-bottom auth-item">
               <ion-icon name="people-outline" slot="start" aria-hidden="true"></ion-icon>

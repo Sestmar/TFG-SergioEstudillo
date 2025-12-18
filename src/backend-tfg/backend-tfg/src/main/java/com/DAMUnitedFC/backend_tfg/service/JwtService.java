@@ -16,7 +16,10 @@ import java.util.function.Function;
 public class JwtService {
 
     @Value("${application.security.jwt.secret-key}")
-    private String SECRET_KEY;
+    private String secretKey;
+
+    @Value("${application.security.jwt.expiration}")
+    private long jwtExpiration;
 
     // 1. Obtener el username del token
     public String extractUsername(String token) {
@@ -29,13 +32,17 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    // 3. Generar el token (Sintaxis actualizada para v0.12.3)
+    // 3. Generar el token (Usando la expiración configurada)
     public String generateToken(UserDetails userDetails) {
+        return buildToken(userDetails, jwtExpiration);
+    }
+
+    private String buildToken(UserDetails userDetails, long expiration) {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 horas
-                .signWith(getSignInKey(), Jwts.SIG.HS256) // Cambio importante aquí
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSignInKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -53,18 +60,18 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    // 5. Parsear el token para leer los datos (Sintaxis actualizada)
+    // 5. Parsear el token para leer los datos
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .verifyWith(getSignInKey()) // Antes era setSigningKey
-                .build()                    // Nuevo paso obligatorio
-                .parseSignedClaims(token)   // Antes era parseClaimsJws
-                .getPayload();              // Antes era getBody
+                .verifyWith(getSignInKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
-    // 6. Método auxiliar para decodificar la clave secreta (Nuevo y obligatorio)
+    // 6. Decodificar la clave secreta
     private SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

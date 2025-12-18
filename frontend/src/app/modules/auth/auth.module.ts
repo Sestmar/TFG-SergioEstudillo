@@ -5,7 +5,6 @@ import { IonicModule } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 
 import { LoginPage } from './pages/login/login.page';
-import { LoginFutboleroPage } from './pages/login-futbolero/login-futbolero.page';
 import { RegisterPage } from './pages/register/register.page';
 import { ForgotPasswordPage } from './pages/forgot-password/forgot-password.page';
 import { ResetPasswordPage } from './pages/reset-password/reset-password.page';
@@ -20,12 +19,8 @@ import { AuthFormComponent } from './components/auth-form/auth-form.component';
     IonicModule,
     RouterModule.forChild([
       {
-        path: 'login',
-        component: LoginFutboleroPage // Nuevo login futbolero por defecto
-      },
-      {
-        path: 'login-classic',
-        component: LoginPage // Login clásico como opción alternativa
+        path: 'login', // ✅ CORREGIDO: Debe llamarse 'login' para que el botón de la Landing funcione
+        component: LoginPage
       },
       {
         path: 'register',
@@ -38,12 +33,16 @@ import { AuthFormComponent } from './components/auth-form/auth-form.component';
       {
         path: 'reset-password',
         component: ResetPasswordPage
+      },
+      {
+        path: '', // ✅ AÑADIDO: Si entras a /auth, te lleva directo al login
+        redirectTo: 'login',
+        pathMatch: 'full'
       }
     ])
   ],
   declarations: [
     LoginPage,
-    LoginFutboleroPage,
     RegisterPage,
     ForgotPasswordPage,
     ResetPasswordPage,

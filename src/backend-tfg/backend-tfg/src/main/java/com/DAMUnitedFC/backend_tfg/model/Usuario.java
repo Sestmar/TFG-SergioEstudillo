@@ -1,5 +1,6 @@
 package com.DAMUnitedFC.backend_tfg.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,7 +12,7 @@ import java.util.List;
 
 @Entity
 @Data
-public class Usuario implements UserDetails { // AÑADIDO: implements UserDetails
+public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,6 +28,7 @@ public class Usuario implements UserDetails { // AÑADIDO: implements UserDetail
     private String email;
 
     @Column(nullable = false)
+    @JsonIgnore // ✅ EVITA que la contraseña viaje al frontend (Seguridad + Evita error)
     private String passwordHash;
 
     @Column(nullable = false, length = 20)
@@ -42,41 +44,48 @@ public class Usuario implements UserDetails { // AÑADIDO: implements UserDetail
     private String direccion;
 
     // --- MÉTODOS DE SEGURIDAD (UserDetails) ---
+    // Añadimos @JsonIgnore a todos para que no ensucien el JSON ni rompan la serialización
 
     @Override
+    @JsonIgnore // ✅ Ignoramos esto porque el frontend ya tiene el campo "rol"
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Convierte el texto de tu BD (ej: "ENTRENADOR") en un objeto de autoridad
-        // Si tu rol puede ser null, deberíamos controlarlo, pero has puesto nullable=false :)
+        if (this.rol == null) return List.of(); // Protección contra nulos
         return List.of(new SimpleGrantedAuthority("ROLE_" + this.rol));
     }
 
     @Override
+    @JsonIgnore // ✅ Ya ignoramos el campo passwordHash arriba
     public String getPassword() {
-        return this.passwordHash; // Spring usa este campo para validar la contraseña
+        return this.passwordHash;
     }
 
     @Override
+    @JsonIgnore // ✅ El frontend ya tiene el campo "email"
     public String getUsername() {
-        return this.email; // Spring usa el email como identificador único
+        return this.email;
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonExpired() {
-        return true; // La cuenta nunca caduca
+        return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonLocked() {
-        return true; // La cuenta nunca se bloquea
+        return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isCredentialsNonExpired() {
-        return true; // Las credenciales no caducan
+        return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isEnabled() {
-        return true; // El usuario siempre está activo
+        return true;
     }
 }

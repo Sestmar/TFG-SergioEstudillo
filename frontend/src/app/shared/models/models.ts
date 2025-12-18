@@ -2,8 +2,9 @@
 // Esto soluciona todos los errores "Cannot find name '...'"
 
 
-// --- ENUMS (Tipos) ---
+// src/app/shared/models/models.ts
 
+// --- ENUMS (Tipos) ---
 export type PlayerPosition =
   | 'PORTERO'
   | 'DEFENSA_CENTRAL'
@@ -22,28 +23,28 @@ export type RequestStatus = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'CANCELADA'
 export type ConvocationType = 'ENTRENAMIENTO' | 'PARTIDO' | 'AMISTOSO';
 export type ConvocationStatus = 'PENDIENTE' | 'CONFIRMADA' | 'RECHAZADA';
 
-
 // =================================================================
 // ===           INTERFACES RELACIONADAS CON AUTH                ===
 // =================================================================
 
 // --- INTERFAZ PRINCIPAL DE USUARIO ---
 export interface User {
-  idUsuario: number; 
-  username?: string;
+  idUsuario: number;
+  username?: string; // Opcional, solemos usar email
   email: string;
   nombre: string;
   apellidos: string;
   activo?: boolean;
   fechaRegistro?: Date;
   fechaActualizacion?: Date;
-  roles: string[];
-  passwordHash: string;
+  roles?: string[]; // Opcional, a veces viene solo 'rol'
+  passwordHash?: string; // No se suele enviar al frontend por seguridad
   rol: string;
-  fechaAlta: Date;
+  fechaAlta?: Date;
   telefono?: string;
   direccion?: string;
   equipoFavoritoId?: number;
+  fotoUrl?: string; // ✅ NUEVO: Sincronizado con Backend NeonDB
 }
 
 // --- DTOS DE AUTENTICACIÓN ---
@@ -60,38 +61,33 @@ export interface UserRegisterDto {
   telefono?: string;
 }
 
-// =======================================================
-// ===           INTERFAZ AÑADIDA QUE FALTABA          ===
-// =======================================================
 export interface UserUpdateDto {
   nombre?: string;
   apellidos?: string;
   email?: string;
   telefono?: string;
   direccion?: string;
+  fotoUrl?: string; // ✅ Permite actualizar la foto
 }
-// =======================================================
 
 // --- RESPUESTA DE AUTENTICACIÓN ---
 export interface AuthResponse {
   token: string;
-  refreshToken?: string;
-  user: User;
+  refreshToken?: string; // Opcional, backend v1 no lo envía aún
+  user?: User; // Opcional, lo obtenemos tras el login si no viene
 }
 
 // --- PAYLOAD DEL TOKEN JWT ---
 export interface JwtPayload {
-  sub: string;
-  username: string;
-  roles: string[];
+  sub: string; // Suele ser el email
+  username?: string;
+  roles?: string[];
   exp: number;
   iat: number;
 }
 
-
-
 // =================================================================
-// ===      EL RESTO DE TUS INTERFACES (SIN CAMBIOS)             ===
+// ===               RESTO DE INTERFACES                         ===
 // =================================================================
 
 export interface Team {
@@ -103,11 +99,14 @@ export interface Team {
   entrenadorAsistente?: Coach;
   jugadores: Player[];
   activo: boolean;
+  fotoUrl?: string; // ✅ NUEVO: Escudo del equipo
 }
+
 export interface Category {
   id: number;
   nombre: string;
 }
+
 export interface Liga {
   id: number;
   nombre: string;
@@ -122,7 +121,9 @@ export interface Player {
   dorsal?: number;
   activo: boolean;
   lesionado: boolean;
+  fotoUrl?: string; // ✅ NUEVO: Foto específica de jugador
 }
+
 export interface PlayerCreateDto {
   userId: number;
   posicionPrimaria: PlayerPosition;
@@ -147,10 +148,12 @@ export interface Convocation {
   entrenadorPrincipal: Coach;
   jugadoresConvocados: { jugador: Player, estado: ConvocationStatus }[];
 }
+
 export interface ConvocationCreateDto {
   equipoId: number;
   titulo: string;
 }
+
 export interface UpdateAttendanceDto {
   convocationId: number;
   playerId: number;
@@ -184,35 +187,35 @@ export interface InscriptionRequest {
 }
 
 export interface Match {
-    id: number;
-    fechaHora: string;
-    equipoLocalId: number;
-    equipoVisitanteId: number;
-    golesLocal?: number;
-    golesVisitante?: number;
-    resultado?: string; // 'V', 'E', 'D'
-    estado: string;
-    lugar: string;
-    tipo: string;
+  id: number;
+  fechaHora: string;
+  equipoLocalId: number;
+  equipoVisitanteId: number;
+  golesLocal?: number;
+  golesVisitante?: number;
+  resultado?: string; 
+  estado: string;
+  lugar: string;
+  tipo: string;
 }
 
 export interface News {
-    id: number;
-    titulo: string;
-    contenido: string;
-    fechaPublicacion: string;
-    imagenUrl?: string;
-    autorId: number;
-    categoria: string;
+  id: number;
+  titulo: string;
+  contenido: string;
+  fechaPublicacion: string;
+  imagenUrl?: string;
+  autorId: number;
+  categoria: string;
 }
 
 export interface PlayerStats {
-    partidosJugados: number;
-    goles: number;
-    asistencias: number;
-    tarjetasAmarillas: number;
-    tarjetasRojas: number;
-    minutosJugados: number;
+  partidosJugados: number;
+  goles: number;
+  asistencias: number;
+  tarjetasAmarillas: number;
+  tarjetasRojas: number;
+  minutosJugados: number;
 }
 
 export type UserRole = 'ADMIN' | 'ENTRENADOR' | 'JUGADOR' | 'PADRE';

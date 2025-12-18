@@ -36,10 +36,16 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // Login y Register públicos
-                        .requestMatchers("/uploads/**").permitAll()  // FOTOS PÚBLICAS (Importante para las imágenes)
-                        .requestMatchers("/api/**").authenticated()  // Resto de la API protegida
-                        .anyRequest().permitAll() // Swagger
+                        // 1. ENDPOINTS PÚBLICOS (Sin Token)
+                        .requestMatchers("/api/auth/**").permitAll()   // Login y Registro
+                        .requestMatchers("/api/media/**").permitAll()  // ✅ NUEVO: Permite subir fotos al registrarse
+                        .requestMatchers("/uploads/**").permitAll()    // ✅ Permite VER las fotos subidas
+
+                        // 2. ENDPOINTS PROTEGIDOS (Requieren Token)
+                        .requestMatchers("/api/**").authenticated()    // Todo lo demás bajo /api requiere login
+
+                        // 3. OTROS (Swagger, etc.)
+                        .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -49,14 +55,18 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permite puertos típicos de Frontend (Angular 4200, React 5173/3000)
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:5173", "http://localhost:3000"));
+        // Permite puertos típicos de Frontend (Angular 4200, React 5173/3000, Ionic 8100)
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:4200",
+                "http://localhost:8100",
+                "http://localhost:5173"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Aplicamos CORS globalmente (/**) para que incluya /uploads y /api
+        // Aplicamos CORS globalmente (/**) para que incluya /uploads, /api y /media
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
@@ -82,8 +92,6 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        // CORREGIDO: Eliminado el cast erróneo.
-        // Como Usuario implementa UserDetails, esto funciona directo.
         return username -> usuarioRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
     }

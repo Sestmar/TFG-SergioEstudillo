@@ -1,13 +1,19 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, tap, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { tap, catchError, switchMap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
 
-import { ApiService } from '../api/api.service';
-import { StorageService } from '../storage/storage.service';
-// ¡Ahora este import es la única fuente de la verdad para los modelos!
-import { User, AuthResponse, UserLoginDto, UserRegisterDto, JwtPayload } from '../../../shared/models/models';
+// ✅ IMPORTS ABSOLUTOS
+import { ApiService } from 'src/app/core/services/api/api.service';
+import { StorageService } from 'src/app/core/services/storage/storage.service';
+import { 
+  User, 
+  AuthResponse, 
+  UserLoginDto, 
+  UserRegisterDto, 
+  JwtPayload 
+} from 'src/app/shared/models/models';
 
 const jwtConfig = {
   tokenKey: 'auth_token',
@@ -36,23 +42,37 @@ export class AuthService {
   }
 
   private initializeAuth(): void {
-    const token = this.storageService.get(jwtConfig.tokenKey);
+    // ✅ CORREGIDO: Usamos el método específico para recuperar el token limpio
+    const token = this.storageService.getToken(); 
+    
     if (token && !this.isTokenExpired(token)) {
       this.setAuth(token);
+      // Intentamos recuperar los datos completos del usuario al recargar
+      this.getCurrentUser().subscribe({
+        error: () => {
+           console.warn('Sesión inválida al inicio, cerrando sesión.');
+           this.logout(); 
+        }
+      });
     } else {
-      this.logout();
+      // ✅ CORREGIDO
+      this.storageService.removeToken();
     }
   }
 
+  /**
+   * LOGIN
+   */
   login(credentials: UserLoginDto): Observable<User> {
     return this.apiService.post<AuthResponse>('/auth/login', credentials).pipe(
       tap(response => {
         this.setAuth(response.token, response.refreshToken);
       }),
-      map(response => response.user),
+      // Una vez tenemos token, pedimos los datos del usuario
+      switchMap(() => this.getCurrentUser()),
       catchError(error => {
         console.error('Login error:', error);
-        throw error;
+        return throwError(() => error);
       })
     );
   }
@@ -61,40 +81,41 @@ export class AuthService {
     return this.apiService.post<User>('/auth/register', userData).pipe(
       catchError(error => {
         console.error('Registration error:', error);
-        throw error;
+        return throwError(() => error);
       })
     );
   }
 
   logout(): void {
-    this.storageService.remove(jwtConfig.tokenKey);
-    this.storageService.remove(jwtConfig.refreshTokenKey);
+    // ✅ CORREGIDO: Limpieza específica
+    this.storageService.removeToken();
+    this.storageService.remove(jwtConfig.refreshTokenKey); // El refresh sí usa el método genérico si lo guardaste así
+    
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
     if (this.tokenRefreshTimer) {
       clearTimeout(this.tokenRefreshTimer);
     }
-    this.router.navigate(['/landing']);
+    this.router.navigate(['/auth/login']);
   }
   
   private setAuth(token: string, refreshToken?: string): void {
-    this.storageService.set(jwtConfig.tokenKey, token);
+    // ✅ CRÍTICO: Usar setToken para guardar sin comillas
+    this.storageService.setToken(token);
+    
     if (refreshToken) {
       this.storageService.set(jwtConfig.refreshTokenKey, refreshToken);
     }
     try {
       const payload = jwtDecode<JwtPayload>(token);
       
-      // Mapeo desde el payload del token a un objeto User parcial
-      const user: Partial<User> = { 
-        idUsuario: parseInt(payload.sub, 10), 
-        nombre: payload.username,
+      const userPartial: Partial<User> = { 
         email: payload.sub,
-        roles: payload.roles,
-        rol: payload.roles[0] || 'JUGADOR',
       };
       
-      this.currentUserSubject.next(user as User);
+      const currentUser = this.currentUserSubject.value;
+      this.currentUserSubject.next({ ...currentUser, ...userPartial } as User);
+      
       this.isAuthenticatedSubject.next(true);
       this.scheduleTokenRefresh(token);
     } catch (error) {
@@ -106,42 +127,47 @@ export class AuthService {
   refreshToken(): Observable<AuthResponse> {
     const refreshToken = this.storageService.get(jwtConfig.refreshTokenKey);
     if (!refreshToken) {
-      this.logout();
-      throw new Error('No refresh token available');
+      return throwError(() => new Error('No refresh token available'));
     }
     return this.apiService.post<AuthResponse>('/auth/refresh', { refreshToken }).pipe(
       tap(response => this.setAuth(response.token, response.refreshToken)),
       catchError(error => {
         console.error('Token refresh error:', error);
         this.logout();
-        throw error;
+        return throwError(() => error);
       })
     );
   }
 
   getCurrentUser(): Observable<User> {
-    const currentUser = this.currentUserSubject.value;
-    if (currentUser) {
-      return of(currentUser);
-    }
-    // Este endpoint puede que necesites crearlo en el backend
-    return this.apiService.get<User>('/users/me').pipe(
-      tap(user => this.currentUserSubject.next(user))
+    // ✅ CORREGIDO: La ruta debe coincidir con tu UsuarioController ("/api/auth/me")
+    return this.apiService.get<User>('/auth/me').pipe(
+      tap(user => {
+        this.currentUserSubject.next(user);
+        this.isAuthenticatedSubject.next(true);
+      })
     );
+  }
+
+  requestPasswordReset(email: string): Observable<void> {
+    return this.apiService.post<void>('/auth/forgot-password', { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<void> {
+    return this.apiService.post<void>('/auth/reset-password', { token, newPassword });
   }
 
   hasRole(role: string): boolean {
     const user = this.currentUserSubject.value;
-    return user?.roles?.includes(role) || false;
-  }
-
-  hasAnyRole(roles: string[]): boolean {
-    const user = this.currentUserSubject.value;
-    return user?.roles?.some(role => roles.includes(role)) || false;
+    if (user?.roles && Array.isArray(user.roles)) {
+      return user.roles.includes(role);
+    }
+    return user?.rol === role;
   }
 
   getToken(): string | null {
-    return this.storageService.get(jwtConfig.tokenKey);
+    // ✅ CORREGIDO
+    return this.storageService.getToken();
   }
 
   isTokenExpired(token: string): boolean {
@@ -162,20 +188,15 @@ export class AuthService {
       const delay = refreshTime - Date.now();
 
       if (delay > 0) {
+        if (this.tokenRefreshTimer) clearTimeout(this.tokenRefreshTimer);
         this.tokenRefreshTimer = setTimeout(() => {
-          this.refreshToken().subscribe();
+          this.refreshToken().subscribe({
+            error: () => console.warn('Auto-refresh token failed')
+          });
         }, delay);
       }
     } catch (error) {
       console.error('Error scheduling token refresh:', error);
     }
-  }
-
-  requestPasswordReset(email: string): Observable<void> {
-    return this.apiService.post<void>('/auth/forgot-password', { email });
-  }
-
-  resetPassword(token: string, newPassword: string): Observable<void> {
-    return this.apiService.post<void>('/auth/reset-password', { token, newPassword });
   }
 }
