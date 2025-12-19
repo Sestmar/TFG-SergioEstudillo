@@ -75,7 +75,9 @@ PROYECTO-TFG/
 │   ├── Backend.md                     # Manual Técnico del Backend
 │   └── ...
 └── README.md                          # Este archivo
-Backend: Spring Boot & NeonDB
+
+## Backend: Spring Boot & NeonDB
+
 El backend actúa como una API REST pura. Gracias a la migración a NeonDB, el backend es agnóstico del entorno de despliegue.
 
 Funcionalidades Clave Implementadas
@@ -93,92 +95,104 @@ POST     /api/media/upload   JWT          Subida de imágenes al servidor
 GET      /api/equipos        JWT          Listado de equipos del club
 POST     /api/solicitudes    JWT          Inscripción de nuevos jugadores
 
-Frontend: Angular & Ionic
-(En fase de integración con el nuevo backend Cloud).
+## Frontend: Angular & Ionic
+Integrado completamente con el backend Cloud.
 
-Arquitectura Modular
-El frontend está diseñado con módulos Lazy Loaded para optimizar el rendimiento:
+##Arquitectura Modular
+El frontend utiliza módulos Lazy Loaded y una estrategia de Rutas Planas para la navegación post-login:
 
-AuthModule: Login y Registro.
+    - AuthModule: Login y Registro.
 
-DashboardModule: Vista principal según rol.
+    - DashboardModule: Redirección inteligente según rol.
 
-AdminModule: Gestión integral (solo administradores).
+    - AdminModule: Gestión integral (Ruta: /admin-dashboard).
 
-Coach/PlayerModule: Vistas específicas por rol.
+    - CoachModule: Gestión de equipos (Ruta: /coach-dashboard).
 
-Servicios Core (Preparados)
-AuthService: Gestionará el token JWT y el estado del usuario.
+    - PlayerModule: Vista de jugador (Ruta: /player-dashboard).
 
-Interceptor: Inyectará automáticamente el token Bearer en cada petición HTTP hacia el backend.
+## Servicios Core (Actualizados v4.1)
 
-Seguridad y Autenticación JWT
-La seguridad ha sido una prioridad máxima en el desarrollo.
+    - AuthService: Consume /auth/me y gestiona la redirección.
 
-Encriptación: Las contraseñas se almacenan hasheadas con BCrypt.
+    - StorageService: CRÍTICO: Guarda el token como String puro (sin JSON.stringify) para evitar SignatureException.
 
-Stateless: No se usan cookies de sesión. Todo se valida mediante el token.
+    - Interceptor: Inyecta el token Bearer en cabeceras HTTP.
 
-Roles: El sistema distingue entre ADMIN, ENTRENADOR y JUGADOR (preparado en el modelo de datos).
+    - Convención de URLs: environment.ts sin barra final; servicios añaden la barra inicial (ej: /jugadores).
 
-CORS: Configuración permisiva para desarrollo (localhost:4200, localhost:8100) permitiendo el intercambio de recursos cruzados, vital para la app móvil.
+## Seguridad y Autenticación JWT
+La seguridad ha sido una prioridad máxima y se ha estabilizado en la v4.1.
 
-Integración y Flujos de Datos
+    - Encriptación: Las contraseñas se almacenan hasheadas con BCrypt.
+
+    - Stateless: No se usan cookies de sesión. Todo se valida mediante token JWT.
+
+    - Corrección de Firma: El frontend envía el token limpio, sin comillas extra, permitiendo que el backend valide la firma correctamente.
+
+    - Roles: El sistema distingue entre ADMIN, ENTRENADOR y JUGADOR.
+
+    - CORS: Configuración permisiva para desarrollo (localhost:4200, localhost:8100) y soporte de métodos OPTIONS/POST/GET/PUT/DELETE.
+
+## Integración y Flujos de Datos
 Flujo de Login Típico
-Frontend: Usuario envía credenciales.
 
-Backend: AuthController recibe petición.
+    - Frontend: Usuario envía credenciales en LoginPage.
 
-Database: AuthenticationManager verifica hash en NeonDB.
+    - Backend: AuthController valida y devuelve { "token": "ey..." }.
 
-Security: Si es correcto, JwtService firma un token válido por 24h.
+    - Frontend: StorageService guarda el token tal cual (Raw String).
 
-Frontend: Recibe token y lo guarda en localStorage.
+    - Frontend: AuthService llama inmediatamente a /api/auth/me.
 
-Flujo de Acceso a Datos (ej: Ver Equipos)
-Frontend: Interceptor añade Authorization: Bearer <token>.
+    - Frontend: Según el rol recibido en la respuesta, redirige al dashboard correspondiente.
 
-Backend: JwtAuthenticationFilter valida la firma del token.
+## Flujo de Acceso a Datos
 
-Backend: Si es válido, EquipoController consulta a NeonDB y devuelve JSON.
+    - Frontend: Interceptor añade Authorization: Bearer <token_string>.
 
-Frontend: Muestra la lista de equipos.
+    - Backend: JwtAuthenticationFilter valida la firma del token (ahora exitoso tras corrección de formato).
 
-Guía de Instalación y Despliegue
+    - Backend: Valida roles y permisos.
+
+    - Backend: Devuelve JSON limpio (sin campos sensibles ignorados).
+
+## Guía de Instalación y Despliegue
 Gracias a la arquitectura Cloud, la puesta en marcha es inmediata.
 
 Requisitos
-Java 22 JDK
 
-Node.js 18+ (para el frontend)
+    - Java 22 JDK
 
-IntelliJ IDEA (recomendado)
+    - Node.js 18+ (para el frontend)
 
-Conexión a Internet (Imprescindible para conectar con NeonDB)
+    - IntelliJ IDEA (recomendado)
 
-Pasos para Ejecutar (Backend)
-Clonar el repositorio.
+    - Conexión a Internet (Imprescindible para conectar con NeonDB)
 
-Abrir la carpeta src/backend-tfg en IntelliJ IDEA.
+## Pasos para Ejecutar (Backend)
 
-Permitir que Maven descargue las dependencias.
+    1. Clonar el repositorio.
 
-Ejecutar la clase principal BackendTfgApplication.
+    2. Abrir la carpeta src/backend-tfg en IntelliJ IDEA.
 
-Nota: No es necesario instalar PostgreSQL localmente.
+    3. Permitir que Maven descargue las dependencias.
+
+    4. Ejecutar la clase principal BackendTfgApplication.
 
 Acceder a la documentación: http://localhost:8080/swagger-ui/index.html.
 
-Pasos para Ejecutar (Frontend)
-Abrir terminal en src/frontend-tfg.
+## Pasos para Ejecutar (Frontend)
 
-Ejecutar npm install.
+    1. Abrir terminal en src/frontend-tfg.
 
-Ejecutar ng serve.
+    2. Ejecutar npm install.
 
-Autor y contacto
-Sergio Estudillo Estudiante de 2º DAM (Desarrollo de Aplicaciones Multiplataforma)
+    3. Ejecutar ng serve.
 
-Proyecto: TFG Gestión Deportiva - Curso 2024/2025
+Acceder a http://localhost:8100.
 
-Documentación generada tras la migración completa a Cloud PostgreSQL - Versión 4.0
+## Autor y contacto
+Sergio Estudillo - Estudiante de 2º DAM (Desarrollo de Aplicaciones Multiplataforma) Proyecto: TFG Gestión Deportiva - Curso 2024/2025
+
+Documentación actualizada a la Versión 4.1 - Integración Completada
