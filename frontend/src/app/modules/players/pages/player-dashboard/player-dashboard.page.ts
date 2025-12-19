@@ -1,17 +1,19 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable, Subject, of } from 'rxjs';
+import { takeUntil, finalize, catchError } from 'rxjs/operators';
 
-// Imports de Modelos (Ruta absoluta segura)
+// Imports de Modelos
 import { User, Player, Team, Convocation, PlayerStats } from 'src/app/shared/models/models';
 
-// Imports de Servicios (Rutas absolutas individuales)
+// Imports de Servicios
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { UserService } from 'src/app/core/services/user/user.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { ConvocationService } from 'src/app/core/services/convocation/convocation.service';
 import { NotificationService } from 'src/app/core/services/notification/notification.service';
+// ✅ NUEVO IMPORT
+import { TeamService } from 'src/app/core/services/team/team.service';
 
 interface DashboardStats {
   totalConvocations: number;
@@ -37,6 +39,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   currentUser$: Observable<User | null>;
   currentPlayer: Player | null = null;
   currentTeam: Team | null = null;
+  loading: boolean = true;
   
   stats: DashboardStats = {
     totalConvocations: 0,
@@ -50,10 +53,10 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   playerStats: PlayerStats | null = null;
   
   quickActions: QuickAction[] = [
-    { title: 'Mis Convocatorias', icon: 'calendar', route: '/convocations', color: 'primary', description: 'Ver y confirmar convocatorias' },
-    { title: 'Mi Equipo', icon: 'shield', route: '/teams', color: 'secondary', description: 'Información del equipo' },
-    { title: 'Mi Perfil', icon: 'person', route: '/profile', color: 'tertiary', description: 'Editar perfil deportivo' },
-    { title: 'Estadísticas', icon: 'stats-chart', route: '/player/stats', color: 'success', description: 'Ver estadísticas personales' }
+    { title: 'Convocatorias', icon: 'calendar', route: '/convocations', color: 'primary', description: 'Gestionar asistencia' },
+    { title: 'Mi Equipo', icon: 'shield', route: '/teams', color: 'secondary', description: 'Ver plantilla' },
+    { title: 'Mi Perfil', icon: 'person', route: '/profile', color: 'tertiary', description: 'Datos personales' },
+    { title: 'Estadísticas', icon: 'bar-chart', route: '/player/stats', color: 'success', description: 'Rendimiento' }
   ];
 
   private destroy$ = new Subject<void>();
@@ -62,6 +65,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     private authService: AuthService,
     private userService: UserService,
     private playerService: PlayerService,
+    private teamService: TeamService, // ✅ INYECCIÓN DEL SERVICIO DE EQUIPOS
     private convocationService: ConvocationService,
     private notificationService: NotificationService,
     private router: Router
@@ -79,65 +83,89 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   }
 
   private loadPlayerData() {
+    this.loading = true;
     this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe({
       next: (user) => {
         if (user) {
-          // Usamos id o idUsuario según tu modelo
-          this.loadPlayerProfile(user.idUsuario); 
+          const userId = (user as any).id || (user as any).idUsuario; 
+          this.loadPlayerProfile(userId); 
+        } else {
+          this.loading = false;
         }
       },
       error: (error) => {
         console.error('Error loading user data:', error);
         this.notificationService.showError('Error al cargar datos del usuario');
+        this.loading = false;
       }
     });
   }
 
   private loadPlayerProfile(userId: number) {
-    // Usamos getPlayers con filtro
     this.playerService.getAllPlayers({ usuarioId: userId }).pipe(
-      takeUntil(this.destroy$)
+      takeUntil(this.destroy$),
+      catchError(err => {
+        console.error('Error cargando perfil:', err);
+        return of([]); 
+      }),
+      finalize(() => this.loading = false)
     ).subscribe({
       next: (response: any) => {
-        // Soporte robusto para respuesta
         const players = Array.isArray(response) ? response : (response.players || response.data || []);
         
         if (players && players.length > 0) {
           this.currentPlayer = players[0];
-          this.currentTeam = this.currentPlayer?.equipoActual || null;
+          
+          // --- LÓGICA DE RESOLUCIÓN DE EQUIPO ---
+          const playerAny = this.currentPlayer as any;
+          
+          if (playerAny.equipo) {
+            // Caso A: El backend envió el objeto completo
+            this.currentTeam = playerAny.equipo;
+          } else if (playerAny.equipoActual) {
+            // Caso B: Variante de nombre
+            this.currentTeam = playerAny.equipoActual;
+          } else if (playerAny.equipoPrincipal) {
+            // ✅ Caso C: Solo tenemos el ID (23). Buscamos el nombre.
+            this.teamService.getTeamById(playerAny.equipoPrincipal).subscribe({
+              next: (team) => {
+                this.currentTeam = team;
+                console.log('Nombre de equipo resuelto:', team.nombre);
+              },
+              error: (err) => console.error('No se pudo resolver el nombre del equipo', err)
+            });
+          }
+          // --------------------------------------
+
           if (this.currentPlayer) {
-            this.loadPlayerStats(this.currentPlayer.id);
-            this.loadPlayerConvocations(this.currentPlayer.id); // Cargamos convocatorias aquí
+            const playerId = (this.currentPlayer as any).idJugador || this.currentPlayer.id;
+            this.loadPlayerStats(playerId);
+            this.loadPlayerConvocations(playerId);
           }
         }
-      },
-      error: (error) => console.error('Error loading player profile:', error)
+      }
     });
   }
 
   private loadPlayerStats(playerId: number) {
-    // Si getStats no existe, usa getPlayerStats. Casteamos a any para evitar bloqueos
     const service: any = this.playerService;
     const method = service.getStats || service.getPlayerStats;
     
     if (method) {
         method.call(service, playerId).pipe(takeUntil(this.destroy$)).subscribe({
-        next: (stats: PlayerStats) => this.playerStats = stats,
-        error: (error: any) => console.error('Error loading stats:', error)
+          next: (stats: PlayerStats) => this.playerStats = stats,
+          error: (err: any) => console.log('Stats no disponibles aún')
         });
     }
   }
 
-  private loadPlayerConvocations(playerId: number) { // Cambiado para recibir playerId en vez de userId
-    // Usamos getConvocations y filtramos si es necesario
+  private loadPlayerConvocations(playerId: number) { 
     this.convocationService.getConvocations().pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: (response: any) => {
         let allConvocations = Array.isArray(response) ? response : (response.convocations || response.data || []);
         
-        // Filtramos las convocatorias donde está este jugador
-        // Esto depende de cómo sea tu API, si ya filtra por usuarioId genial, si no, filtramos aquí
         const playerConvocations = allConvocations.filter((c: any) => 
             c.jugadoresConvocados?.some((jc: any) => jc.jugadorId === playerId || jc.jugador?.id === playerId)
         );
@@ -163,20 +191,22 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     this.stats.totalConvocations = convocations.length;
     this.stats.upcomingConvocations = this.upcomingConvocations.length;
     
-    // Convocatorias pendientes de confirmar
     this.stats.pendingConfirmations = convocations.filter(conv => {
-      const convokedPlayer = conv.jugadoresConvocados?.find(jc => jc.jugador.id === this.currentPlayer?.id);
-      // Casting a any para evitar el error de 'estadoAsistencia'
+      const playerId = this.currentPlayer ? (this.currentPlayer as any).idJugador || this.currentPlayer.id : 0;
+      const convokedPlayer = conv.jugadoresConvocados?.find((jc: any) => 
+        (jc.jugadorId === playerId) || (jc.jugador && jc.jugador.id === playerId)
+      );
       return convokedPlayer && (convokedPlayer as any).estadoAsistencia === 'PENDIENTE';
     }).length;
 
-    // Asistencia
     const confirmedConvocations = convocations.filter(conv => {
-      const convokedPlayer = conv.jugadoresConvocados?.find(jc => jc.jugador.id === this.currentPlayer?.id);
+      const playerId = this.currentPlayer ? (this.currentPlayer as any).idJugador || this.currentPlayer.id : 0;
+      const convokedPlayer = conv.jugadoresConvocados?.find((jc: any) => 
+        (jc.jugadorId === playerId) || (jc.jugador && jc.jugador.id === playerId)
+      );
       return convokedPlayer && (convokedPlayer as any).estadoAsistencia === 'CONFIRMADO';
     }).length;
     
-    // Calculamos tasa sobre convocatorias pasadas solamente para que sea real
     const pastConvocations = convocations.filter(c => new Date(c.fechaHoraFin) < now).length;
     
     this.stats.attendanceRate = pastConvocations > 0 
@@ -188,27 +218,65 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     this.router.navigate([route]);
   }
 
-  // Métodos auxiliares de vista
+  // --- Métodos Auxiliares de Vista ---
+
+  getPlayerAge(): number {
+    const player: any = this.currentPlayer;
+    if (!player?.fechaNacimiento) return 0;
+    
+    const birth = new Date(player.fechaNacimiento);
+    const ageDifMs = Date.now() - birth.getTime();
+    const ageDate = new Date(ageDifMs);
+    return Math.abs(ageDate.getUTCFullYear() - 1970);
+  }
+
+  getPlayerPosition(): string {
+    const player: any = this.currentPlayer;
+    return player?.posicion || 'Sin Posición';
+  }
+
+  isPlayerAvailable(): boolean {
+    const player: any = this.currentPlayer;
+    // Comprobamos 'estado' (ACTIVO) o 'disponible' (true)
+    return player?.estado === 'ACTIVO' || player?.disponible === true;
+  }
+  
   getDuration(start: string | Date, end: string | Date): string {
     const diff = new Date(end).getTime() - new Date(start).getTime();
     const hours = Math.floor(diff / 3600000);
-    return `${hours}h`;
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
   }
   
   getConvocationTypeColor(type: string): string {
-      const map: any = { 'PARTIDO': 'success', 'ENTRENAMIENTO': 'primary' };
+      const map: any = { 'PARTIDO': 'success', 'ENTRENAMIENTO': 'primary', 'EVENTO': 'warning' };
       return map[type] || 'medium';
   }
   
   formatConvocationDate(date: string | Date): string {
-      return new Date(date).toLocaleDateString();
+      return new Date(date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' });
   }
   
-  getConvocationStatus(conv: Convocation): string {
-      return 'Activo'; // Simplificado
+  getPlayerAttendanceStatus(convocation: Convocation): string {
+    if (!this.currentPlayer) return 'DESCONOCIDO';
+    const playerId = (this.currentPlayer as any).idJugador || this.currentPlayer.id;
+    
+    const jc = convocation.jugadoresConvocados?.find((j: any) => 
+      j.jugadorId === playerId || (j.jugador && j.jugador.id === playerId)
+    );
+    return jc ? (jc as any).estadoAsistencia : 'NO_CONVOCADO';
   }
-  
-  getConvocationStatusColor(status: string): string {
-      return 'primary';
+
+  getAttendanceStatusColor(status: string): string {
+    const map: any = { 'CONFIRMADO': 'success', 'RECHAZADO': 'danger', 'PENDIENTE': 'warning' };
+    return map[status] || 'medium';
   }
+
+  getAttendanceStatusText(status: string): string {
+    const map: any = { 'CONFIRMADO': 'Asistiré', 'RECHAZADO': 'No voy', 'PENDIENTE': 'Pendiente' };
+    return map[status] || status;
+  }
+
+  confirmAttendance(id: number) { console.log('Confirmar', id); }
+  rejectAttendance(id: number) { console.log('Rechazar', id); }
 }

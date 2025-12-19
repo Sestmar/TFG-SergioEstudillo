@@ -1,708 +1,359 @@
-.player-dashboard-content {
-  --background: var(--ion-color-light);
+// Variables locales para el tema Modern Sport
+:host {
+  --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+  --dark-bg: #f3f4f6;
+  --card-bg: #ffffff;
+  --text-main: #111827;
+  --text-muted: #6b7280;
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
 
-  .player-header {
-    ion-toolbar {
-      --background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 100%);
-      
-      ion-title {
-        color: white;
-        font-weight: 600;
-      }
-      
-      ion-button {
-        color: white;
-      }
+.dashboard-bg {
+  --background: var(--dark-bg);
+}
+
+.loading-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  color: var(--text-muted);
+}
+
+.main-container {
+  padding-bottom: 2rem;
+}
+
+// 1. HERO SECTION
+.hero-section {
+  position: relative;
+  background: var(--primary-gradient);
+  padding: 4rem 1.5rem 6rem 1.5rem; // Extra padding bottom for curve
+  color: white;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+
+    .welcome-text {
+      span { font-size: 0.9rem; opacity: 0.9; }
+      h2 { margin: 0; font-size: 1.8rem; font-weight: 700; }
     }
-  }
 
-  // Hero section del jugador
-  .player-hero {
-    position: relative;
-    height: 40vh;
-    overflow: hidden;
+    .notification-badge {
+      position: relative;
+      background: rgba(255,255,255,0.2);
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+      transition: transform 0.2s;
 
-    .hero-background {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 50%, var(--ion-color-tertiary) 100%);
-      
-      &::before {
-        content: '';
+      &:active { transform: scale(0.95); }
+
+      .dot {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.2)"/><path d="M 50 5 L 50 95 M 5 50 L 95 50" stroke="rgba(255,255,255,0.1)" stroke-width="1"/><path d="M 20 20 Q 50 30 80 20 Q 50 10 20 20" fill="rgba(255,255,255,0.1)"/><path d="M 20 80 Q 50 70 80 80 Q 50 90 20 80" fill="rgba(255,255,255,0.1)"/></svg>') center/cover;
-        opacity: 0.3;
-      }
-    }
-
-    .hero-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 100%);
-      display: flex;
-      align-items: flex-end;
-      padding: 2rem 1rem;
-    }
-
-    .player-info-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      padding: 1.5rem;
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-
-      .player-avatar {
-        position: relative;
-        width: 80px;
-        height: 80px;
-        flex-shrink: 0;
-
-        .avatar-placeholder,
-        img {
-          width: 100%;
-          height: 100%;
-          border-radius: 50%;
-          object-fit: cover;
-          border: 3px solid var(--ion-color-primary);
-        }
-
-        .avatar-placeholder {
-          background: var(--ion-color-light);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--ion-color-primary);
-          font-size: 2rem;
-        }
-
-        .player-number {
-          position: absolute;
-          bottom: -5px;
-          right: -5px;
-          width: 30px;
-          height: 30px;
-          background: var(--ion-color-warning);
-          color: var(--ion-color-dark);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 700;
-          font-size: 0.9rem;
-          border: 2px solid white;
-        }
-      }
-
-      .player-details {
-        flex: 1;
-
-        .player-name {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: var(--ion-color-dark);
-          margin: 0 0 0.5rem 0;
-        }
-
-        .player-meta {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-
-          .position-badge,
-          .age-badge,
-          .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            
-            i {
-              font-size: 0.9rem;
-            }
-          }
-
-          .position-badge {
-            background: var(--ion-color-primary);
-            color: white;
-          }
-
-          .age-badge {
-            background: var(--ion-color-secondary);
-            color: white;
-          }
-
-          .status-badge {
-            background: var(--ion-color-medium);
-            color: white;
-            
-            &.available {
-              background: var(--ion-color-success);
-            }
-          }
-        }
-
-        .team-info {
-          display: flex;
-          gap: 0.5rem;
-          flex-wrap: wrap;
-
-          .team-badge,
-          .category-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            padding: 0.3rem 0.8rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            background: var(--ion-color-light);
-            color: var(--ion-color-dark);
-            border: 1px solid var(--ion-color-medium);
-
-            i {
-              color: var(--ion-color-primary);
-            }
-          }
-        }
+        top: 10px;
+        right: 10px;
+        width: 8px;
+        height: 8px;
+        background: #ef4444;
+        border-radius: 50%;
+        border: 1px solid white;
       }
     }
   }
 
-  // Secciones de contenido
-  .section {
-    padding: 2rem 1rem;
+  // Tarjeta de Jugador estilo Cristal
+  .player-card-glass {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
 
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .section-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--ion-color-dark);
-      margin: 0 0 2rem 0;
-      text-align: center;
-    }
-  }
-
-  // Sección de estadísticas
-  .stats-section {
-    background: white;
-    margin: 1rem 0;
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-
-      .stat-card {
-        background: var(--ion-color-light);
-        border-radius: 15px;
-        padding: 1.5rem;
-        text-align: center;
-        border: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
-
-        &:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-icon {
-          width: 50px;
-          height: 50px;
-          background: var(--ion-color-primary);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 1rem;
-
-          i {
-            font-size: 1.5rem;
-            color: white;
-          }
-        }
-
-        .stat-content {
-          .stat-number {
-            display: block;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--ion-color-primary);
-            margin-bottom: 0.5rem;
-          }
-
-          .stat-label {
-            color: var(--ion-color-medium);
-            font-size: 0.9rem;
-            font-weight: 500;
-          }
-        }
+    .avatar-container {
+      position: relative;
+      img {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        border: 3px solid rgba(255,255,255,0.8);
+        object-fit: cover;
+      }
+      .dorsal-badge {
+        position: absolute;
+        bottom: -5px;
+        right: -5px;
+        background: #fbbf24;
+        color: #111;
+        font-weight: 800;
+        font-size: 0.8rem;
+        padding: 2px 6px;
+        border-radius: 8px;
+        border: 2px solid white;
       }
     }
-  }
 
-  // Sección de acciones
-  .actions-section {
-    background: var(--ion-color-light);
-
-    .actions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-
-      .action-card {
-        margin: 0;
-        border-radius: 15px;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
-        cursor: pointer;
-
-        &:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        }
-
-        .action-icon {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 1.5rem auto 1rem;
-
-          ion-icon {
-            font-size: 2rem;
-            color: white;
-          }
-        }
-
-        ion-card-header {
-          text-align: center;
+    .info-container {
+      h3 { margin: 0 0 5px 0; font-size: 1.2rem; font-weight: 600; }
+      .badges {
+        display: flex;
+        gap: 0.5rem;
+        .badge {
+          font-size: 0.75rem;
+          padding: 4px 10px;
+          border-radius: 20px;
+          background: rgba(255,255,255,0.2);
           
-          ion-card-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--ion-color-dark);
-            margin-bottom: 0.5rem;
-          }
-
-          ion-card-subtitle {
-            color: var(--ion-color-medium);
-            font-size: 0.9rem;
-          }
+          &.active { background: #10b981; }
         }
       }
     }
   }
 
-  // Sección de convocatorias
-  .convocations-section {
-    background: white;
+  // Forma SVG curva abajo
+  .custom-shape-divider-bottom-16789 {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    line-height: 0;
+    transform: rotate(180deg);
+    
+    svg {
+      position: relative;
+      display: block;
+      width: calc(100% + 1.3px);
+      height: 60px;
+    }
+    .shape-fill { fill: var(--dark-bg); }
+  }
+}
 
-    .section-header {
+// 2. STATS ROW (Pills)
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1rem;
+  margin-top: -30px; // Pull up over the hero
+  position: relative;
+  z-index: 10;
+  gap: 0.5rem;
+
+  .stat-pill {
+    flex: 1;
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: 0.8rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+
+    .icon-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
-
-      .section-title {
-        margin: 0;
-      }
+      justify-content: center;
+      color: white;
+      font-size: 1.1rem;
+      margin-bottom: 5px;
+      
+      &.primary-gradient { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+      &.warning-gradient { background: linear-gradient(135deg, #f59e0b, #d97706); }
+      &.success-gradient { background: linear-gradient(135deg, #10b981, #059669); }
     }
 
-    .convocations-list {
+    .data {
+      .value { display: block; font-weight: 800; font-size: 1.1rem; color: var(--text-main); line-height: 1.2; }
+      .label { font-size: 0.7rem; color: var(--text-muted); }
+    }
+  }
+}
+
+// Global Section Titles
+.section-title {
+  padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+  h4 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #374151; }
+}
+
+.section-header {
+  padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  h4 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #374151; }
+  .see-all { font-size: 0.85rem; color: #3b82f6; font-weight: 600; }
+}
+
+// 3. ACTIONS GRID
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 0.5rem 1.5rem;
+
+  .action-card {
+    background: var(--card-bg);
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+
+    &:active { transform: scale(0.98); }
+
+    .icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    // Colors variants
+    &.primary .icon-box { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    &.secondary .icon-box { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    &.tertiary .icon-box { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+    &.success .icon-box { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+  }
+}
+
+// 4. CONVOCATION TICKET
+.convocations-list {
+  padding: 0.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .convocation-ticket {
+    display: flex;
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    border-left: 4px solid #3b82f6;
+
+    &.is-match { border-left-color: #10b981; } // Green for matches
+
+    .left-side {
+      background: #f8fafc;
+      padding: 1rem 0.8rem;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px dashed #e2e8f0;
+      min-width: 70px;
 
-      .convocation-card {
-        margin: 0;
-        border-radius: 15px;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
-        cursor: pointer;
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        ion-card-header {
-          .convocation-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-
-            .convocation-type {
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-              padding: 0.3rem 0.8rem;
-              border-radius: 20px;
-              font-size: 0.8rem;
-              font-weight: 600;
-
-              ion-icon {
-                font-size: 1rem;
-              }
-            }
-          }
-
-          ion-card-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--ion-color-dark);
-            margin-bottom: 0.5rem;
-          }
-
-          ion-card-subtitle {
-            color: var(--ion-color-medium);
-            font-size: 0.9rem;
-
-            i {
-              margin-right: 0.5rem;
-              color: var(--ion-color-primary);
-            }
-          }
-        }
-
-        ion-card-content {
-          .convocation-details {
-            display: flex;
-            gap: 1.5rem;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            color: var(--ion-color-medium);
-
-            .date-time,
-            .duration {
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-
-              i {
-                color: var(--ion-color-primary);
-              }
-            }
-          }
-
-          .convocation-actions {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: flex-end;
-          }
-        }
-      }
+      .day { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
+      .month { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-top: -2px; }
     }
-  }
 
-  // Estadísticas detalladas
-  .detailed-stats-section {
-    background: var(--ion-color-light);
-
-    .stats-card {
-      margin: 0;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 1px solid #e5e7eb;
-
-      ion-card-content {
-        .stats-grid-detailed {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-          gap: 1.5rem;
-
-          .stat-item {
-            text-align: center;
-            padding: 1rem;
-            background: white;
-            border-radius: 15px;
-            border: 1px solid #e5e7eb;
-
-            i {
-              font-size: 1.5rem;
-              color: var(--ion-color-primary);
-              margin-bottom: 0.5rem;
-            }
-
-            .stat-value {
-              display: block;
-              font-size: 1.8rem;
-              font-weight: 700;
-              color: var(--ion-color-dark);
-              margin-bottom: 0.3rem;
-            }
-
-            .stat-label {
-              font-size: 0.8rem;
-              color: var(--ion-color-medium);
-              font-weight: 500;
-            }
-          }
+    .right-side {
+      flex: 1;
+      padding: 1rem;
+      
+      .header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        
+        .type-badge {
+          font-size: 0.65rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: #3b82f6;
+          &.success { color: #10b981; }
+          &.warning { color: #f59e0b; }
         }
-      }
-    }
-  }
-
-  // Información del equipo
-  .team-section {
-    background: white;
-
-    .team-card {
-      margin: 0;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 1px solid #e5e7eb;
-
-      ion-card-header {
-        .team-header {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-
-          .team-shield {
-            width: 50px;
-            height: 50px;
-            background: var(--ion-color-primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            i {
-              font-size: 1.5rem;
-              color: white;
-            }
-          }
-        }
+        .time { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
       }
 
-      ion-card-content {
-        .team-details {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-          gap: 1rem;
-          margin-bottom: 1.5rem;
+      .title { margin: 0 0 5px 0; font-size: 1rem; font-weight: 700; color: var(--text-main); }
+      .location { margin: 0; font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
 
-          .team-stat {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.8rem;
-            background: var(--ion-color-light);
-            border-radius: 10px;
-            font-size: 0.9rem;
-
-            i {
-              color: var(--ion-color-primary);
-            }
-          }
+      .actions-row {
+        margin-top: 10px;
+        display: flex;
+        gap: 0.5rem;
+        
+        button {
+          flex: 1;
+          border: none;
+          padding: 6px 0;
+          border-radius: 6px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          
+          &.btn-confirm { background: #10b981; color: white; }
+          &.btn-reject { background: #fee2e2; color: #ef4444; }
         }
-
-        .team-actions {
-          ion-button {
-            --border-radius: 10px;
-            font-weight: 600;
-          }
-        }
+      }
+      
+      .status-badge-row {
+          margin-top: 8px;
+          text-align: right;
       }
     }
   }
 }
 
-// Responsive
-@media (max-width: 768px) {
-  .player-dashboard-content {
-    .player-hero {
-      height: 35vh;
+// 5. DETAILED STATS
+.detailed-stats-card {
+  margin: 0.5rem 1.5rem;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  text-align: center;
+  background-image: linear-gradient(to right, #f8fafc 1px, transparent 1px);
+  background-size: 25% 100%;
 
-      .hero-overlay {
-        padding: 1rem;
-
-        .player-info-card {
-          flex-direction: column;
-          text-align: center;
-          gap: 1rem;
-
-          .player-details {
-            .player-name {
-              font-size: 1.3rem;
-            }
-
-            .player-meta {
-              justify-content: center;
-            }
-          }
-        }
-      }
-    }
-
-    .section {
-      padding: 1.5rem 1rem;
-
-      .section-title {
-        font-size: 1.5rem;
-      }
-    }
-
-    .stats-section {
-      .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-
-        .stat-card {
-          padding: 1rem;
-
-          .stat-icon {
-            width: 40px;
-            height: 40px;
-
-            i {
-              font-size: 1.2rem;
-            }
-          }
-
-          .stat-content {
-            .stat-number {
-              font-size: 1.5rem;
-            }
-          }
-        }
-      }
-    }
-
-    .actions-section {
-      .actions-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .detailed-stats-section {
-      .stats-card {
-        ion-card-content {
-          .stats-grid-detailed {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-
-            .stat-item {
-              padding: 0.8rem;
-
-              .stat-value {
-                font-size: 1.5rem;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .player-dashboard-content {
-    .player-hero {
-      height: 30vh;
-
-      .hero-overlay {
-        .player-info-card {
-          padding: 1rem;
-
-          .player-avatar {
-            width: 60px;
-            height: 60px;
-
-            .player-number {
-              width: 25px;
-              height: 25px;
-              font-size: 0.8rem;
-            }
-          }
-
-          .player-details {
-            .player-name {
-              font-size: 1.1rem;
-            }
-
-            .player-meta {
-              flex-direction: column;
-              align-items: center;
-              gap: 0.3rem;
-
-              .position-badge,
-              .age-badge,
-              .status-badge {
-                font-size: 0.7rem;
-                padding: 0.2rem 0.6rem;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    .stats-section {
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .convocations-section {
-      .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-      }
-
-      .convocations-list {
-        .convocation-card {
-          ion-card-content {
-            .convocation-details {
-              flex-direction: column;
-              gap: 0.5rem;
-            }
-
-            .convocation-actions {
-              flex-direction: column;
-            }
-          }
-        }
-      }
-    }
-
-    .detailed-stats-section {
-      .stats-card {
-        ion-card-content {
-          .stats-grid-detailed {
-            grid-template-columns: 1fr;
-          }
-        }
-      }
-    }
+  .stat-item {
+    .val { display: block; font-size: 1.2rem; font-weight: 800; color: var(--text-main); }
+    .lbl { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
   }
 }

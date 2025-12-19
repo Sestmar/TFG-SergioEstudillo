@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { ApiService } from '../api/api.service';
-import { Team, Category, Liga } from 'src/app/shared/models/models';
+import { Team } from 'src/app/shared/models/models';
 
 @Injectable({
   providedIn: 'root'
@@ -10,52 +10,49 @@ export class TeamService {
 
   constructor(private apiService: ApiService) {}
 
-  // --- MÉTODOS BÁSICOS EXISTENTES ---
-  
-  // Modificado para aceptar filtros opcionales (entrenadorId, etc)
+  // --- MÉTODOS DE LECTURA ---
+
+  // Obtener lista de equipos (con filtros opcionales)
   getTeams(filters: any = {}): Observable<any> { 
-    // NOTA: Si tu backend devuelve array directo, úsalo así. 
-    // Si devuelve paginación, ajusta el tipo de retorno.
-    // Aquí asumimos que pasamos query params.
     let params = '';
     if (Object.keys(filters).length > 0) {
       const query = new URLSearchParams(filters).toString();
       params = `?${query}`;
     }
-    return this.apiService.get<any>(`equipos${params}`);
+    // ✅ FIX: Slash Rule (barra inicial)
+    return this.apiService.get<any>(`/equipos${params}`);
   }
 
+  // ✅ NUEVO: Obtener un equipo por su ID (Crucial para ver el nombre "Primer Equipo" en vez de "23")
+  getTeamById(id: number): Observable<Team> {
+    return this.apiService.get<Team>(`/equipos/${id}`);
+  }
+
+  // --- MÉTODOS DE GESTIÓN (ADMIN) ---
+
   updateTeam(id: number, teamData: Partial<Team>): Observable<Team> {
-    return this.apiService.put<Team>(`equipos/${id}`, teamData);
+    return this.apiService.put<Team>(`/equipos/${id}`, teamData);
   }
 
   deactivateTeam(id: number): Observable<void> {
-    return this.apiService.put<void>(`equipos/${id}/deactivate`, {});
+    return this.apiService.put<void>(`/equipos/${id}/deactivate`, {});
   }
   
   activateTeam(id: number): Observable<void> {
-    return this.apiService.put<void>(`equipos/${id}/activate`, {});
+    return this.apiService.put<void>(`/equipos/${id}/activate`, {});
   }
   
   assignCoach(teamId: number, coachId: number, isAssistant: boolean): Observable<Team> {
-    return this.apiService.put<Team>(`equipos/${teamId}/coach`, {
+    return this.apiService.put<Team>(`/equipos/${teamId}/coach`, {
       coachId,
       isAssistant
     });
   }
 
-  // --- ¡NUEVOS MÉTODOS QUE FALTABAN! ---
+  // --- MÉTODOS DE ESTADÍSTICAS ---
 
-  getTeamById(id: number): Observable<Team> {
-    return this.apiService.get<Team>(`equipos/${id}`);
-  }
-
-  // Si no tienes backend para esto, devuelve un array vacío o mock
+  // Mock para clasificación (se implementará más adelante)
   getTeamStandings(): Observable<any[]> {
-    // return this.apiService.get<any[]>('standings'); // Descomenta cuando tengas API
-    return new Observable(observer => {
-      observer.next([]); // Mock vacío para que no falle el dashboard
-      observer.complete();
-    });
+    return of([]); 
   }
 }
