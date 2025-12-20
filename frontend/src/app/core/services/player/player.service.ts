@@ -12,7 +12,6 @@ export class PlayerService {
 
   constructor(private apiService: ApiService) {}
 
-  // ✅ CORREGIDO: Añadida la barra '/' al principio ('/jugadores')
   getPlayers(params?: { 
     equipoId?: number; 
     usuarioId?: number;
@@ -29,22 +28,18 @@ export class PlayerService {
     return this.getPlayers(params);
   }
 
-  // ✅ CORREGIDO: Añadida la barra '/'
   getPlayerById(id: number): Observable<Player> {
     return this.apiService.get<Player>(`/jugadores/${id}`);
   }
 
-  // ✅ CORREGIDO: Añadida la barra '/'
   createPlayer(playerData: PlayerCreateDto): Observable<Player> {
     return this.apiService.post<Player>('/jugadores', playerData);
   }
 
-  // ✅ CORREGIDO: Añadida la barra '/'
   updatePlayer(id: number, playerData: Partial<Player>): Observable<Player> {
     return this.apiService.put<Player>(`/jugadores/${id}`, playerData);
   }
 
-  // ✅ CORREGIDO: Añadida la barra '/'
   assignToTeam(playerId: number, teamId: number, dorsal?: number): Observable<Player> {
     return this.apiService.put<Player>(`/jugadores/${playerId}/team`, {
       teamId,
@@ -52,14 +47,12 @@ export class PlayerService {
     });
   }
 
-  // ✅ CORREGIDO: Añadida la barra '/'
   updateAvailability(playerId: number, disponible: boolean): Observable<Player> {
     return this.apiService.put<Player>(`/jugadores/${playerId}/availability`, {
       disponible
     });
   }
 
-  // ✅ CORREGIDO: Añadida la barra '/'
   reportInjury(playerId: number, lesionado: boolean, descripcion?: string): Observable<Player> {
     return this.apiService.put<Player>(`/jugadores/${playerId}/injury`, {
       lesionado,
@@ -67,21 +60,19 @@ export class PlayerService {
     });
   }
   
-  // ✅ CORREGIDO: Añadida la barra '/'
   getStats(playerId: number): Observable<any> {
     return this.apiService.get<any>(`/jugadores/${playerId}/stats`);
   }
 
+  // ✅ Este es el método que usa tu dashboard ahora
   getPlayerStats(playerId: number): Observable<any> {
     return this.getStats(playerId);
   }
 
-  // ✅ CORREGIDO: Añadida la barra '/'
   getPlayerHistory(playerId: number): Observable<any> {
     return this.apiService.get<any>(`/jugadores/${playerId}/history`);
   }
 
-  // ✅ CORREGIDO: Añadida la barra '/'
   searchPlayers(term: string, params?: { page?: number; size?: number }): Observable<{ players: Player[]; total: number }> {
     return this.apiService.get<{ players: Player[]; total: number }>('/jugadores/search', {
       term,
@@ -89,7 +80,6 @@ export class PlayerService {
     });
   }
 
-  // ✅ CORREGIDO: Añadida la barra '/'
   getAvailablePlayers(teamId?: number): Observable<Player[]> {
     return this.apiService.get<Player[]>('/jugadores/available', {
       teamId

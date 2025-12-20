@@ -34,16 +34,23 @@ const routes: Routes = [
     loadChildren: () => import('./modules/coach/pages/coach-dashboard/coach-dashboard.module').then(m => m.CoachDashboardPageModule)
   },
 
-  // ✅ NUEVA RUTA CORREGIDA: Apunta a la carpeta 'convocations' directamente
+  // RUTA CREAR CONVOCATORIA
   {
     path: 'convocations/create',
     loadChildren: () => import('./modules/coach/pages/convocations/create-convocation.module').then( m => m.CreateConvocationPageModule)
   },
 
-  // ✅ RUTA DE DETALLE (Con parámetro ID)
+  // RUTA DE DETALLE (Con parámetro ID)
   {
-    path: 'convocations/:id', // Los dos puntos ':' indican que es un parámetro
+    path: 'convocations/:id',
     loadChildren: () => import('./modules/coach/pages/convocations/convocation-details/convocation-details.module').then( m => m.ConvocationDetailsPageModule)
+  },
+
+  // ✅ RUTA GESTIONAR PLANTILLA
+  // Al corregir el archivo my-team.module.ts, este error desaparecerá.
+  {
+    path: 'coach/my-team',
+    loadChildren: () => import('./modules/coach/pages/my-team/my-team.module').then( m => m.MyTeamPageModule)
   },
 
   // COMODÍN (Siempre al final)

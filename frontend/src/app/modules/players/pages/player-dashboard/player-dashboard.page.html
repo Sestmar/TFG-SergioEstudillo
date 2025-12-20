@@ -22,7 +22,11 @@
 
         <div class="player-card-glass">
           <div class="avatar-container">
-            <img [src]="currentPlayer.usuario.fotoPerfil || 'assets/img/default-avatar.png'" alt="Avatar">
+            <img 
+              [src]="currentPlayer.usuario.fotoPerfil" 
+              onError="this.src='https://ui-avatars.com/api/?name=User&background=random&color=fff&size=128'" 
+              alt="Avatar"
+            >
             <div class="dorsal-badge" *ngIf="currentPlayer.dorsal">#{{ currentPlayer.dorsal }}</div>
           </div>
           <div class="info-container">
@@ -109,7 +113,8 @@
               {{ (conv.fechaHoraInicio || conv.fechaEvento) | date:'HH:mm' }}
             </span>
           </div>
-          <h3 class="title">{{ conv.titulo || 'Evento de Equipo' }}</h3> <p class="location">
+          <h3 class="title">{{ conv.titulo || 'Evento de Equipo' }}</h3> 
+          <p class="location">
             <ion-icon name="location-outline"></ion-icon>
             {{ conv.lugar || 'Ubicación por confirmar' }}
           </p>

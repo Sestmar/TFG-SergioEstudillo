@@ -5,6 +5,7 @@ import com.DAMUnitedFC.backend_tfg.model.Jugador;
 import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import org.springframework.web.bind.annotation.*;
+import com.DAMUnitedFC.backend_tfg.dto.EstadisticasJugadorDto;
 import java.sql.Date;
 import java.util.List;
 
@@ -67,5 +68,14 @@ public class JugadorController {
     @DeleteMapping("/{id}")
     public void borrar(@PathVariable Integer id) {
         repo.deleteById(id);
+    }
+
+    // ✅ NUEVO ENDPOINT: Estadísticas del Jugador
+    @GetMapping("/{id}/stats")
+    public EstadisticasJugadorDto obtenerEstadisticas(@PathVariable Integer id) {
+        // TODO: En el futuro, aquí conectaremos con un servicio que calcule goles reales.
+        // Por ahora, devolvemos 0 para que el Frontend no de error 404.
+
+        return new EstadisticasJugadorDto(0, 0, 0, 0);
     }
 }

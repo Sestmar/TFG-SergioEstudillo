@@ -50,6 +50,7 @@
     </div>
 
     <div class="actions-grid">
+      
       <div class="action-card main-action" (click)="navigateTo('/convocations/create')">
         <div class="icon-box">
           <ion-icon name="add"></ion-icon>
@@ -60,12 +61,29 @@
         </div>
       </div>
 
-      <div class="action-card" *ngFor="let action of quickActions.slice(1)" (click)="navigateTo(action.route)" [ngClass]="action.color">
-        <div class="icon-circle">
-          <ion-icon [name]="action.icon"></ion-icon>
+      <div class="action-card" (click)="navigateTo('/coach/my-team')">
+        <div class="icon-circle" style="background: #e0f2fe; color: #0284c7;">
+          <ion-icon name="people"></ion-icon>
         </div>
-        <span class="action-title">{{ action.title }}</span>
+        <span class="action-title">Gestionar Plantilla</span>
       </div>
+
+      <div class="action-card">
+        <div class="icon-circle" style="background: #f3e8ff; color: #9333ea;">
+          <ion-icon name="calendar"></ion-icon>
+        </div>
+        <span class="action-title">Planificación</span>
+        <ion-badge color="medium" style="position: absolute; top: 5px; right: 5px; font-size: 0.6rem; opacity: 0.7;">WIP</ion-badge>
+      </div>
+
+      <div class="action-card">
+        <div class="icon-circle" style="background: #ffedd5; color: #ea580c;">
+          <ion-icon name="medkit"></ion-icon>
+        </div>
+        <span class="action-title">Incidencias</span>
+        <ion-badge color="medium" style="position: absolute; top: 5px; right: 5px; font-size: 0.6rem; opacity: 0.7;">WIP</ion-badge>
+      </div>
+
     </div>
 
     <div class="section-header" *ngIf="upcomingEvents.length > 0">
