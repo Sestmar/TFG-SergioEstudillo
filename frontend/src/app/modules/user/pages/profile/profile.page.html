@@ -1,0 +1,88 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Mi Perfil</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="saveProfile()">
+        <ion-icon name="checkmark" slot="start"></ion-icon>
+        Guardar
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-profile">
+
+  <div class="loading-state" *ngIf="loading">
+    <ion-spinner></ion-spinner>
+  </div>
+
+  <div class="content-wrapper" *ngIf="!loading && currentUser">
+    
+    <div class="profile-header">
+      <div class="avatar-wrapper">
+        <img [src]="currentUser.fotoPerfil || 'https://ui-avatars.com/api/?name=' + currentUser.nombre + '&background=random&size=128'" alt="Avatar">
+        <div class="camera-btn">
+          <ion-icon name="camera"></ion-icon>
+        </div>
+      </div>
+      <h2>{{ currentUser.nombre }} {{ currentUser.apellidos }}</h2>
+      <p>{{ currentUser.email }}</p>
+    </div>
+
+    <div class="section-card locked">
+      <h3>
+        <ion-icon name="football"></ion-icon> Ficha Deportiva
+        <ion-badge color="medium">Solo Míster</ion-badge>
+      </h3>
+      
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">Dorsal</span>
+          <span class="value">#{{ playerData?.dorsal || '?' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Posición</span>
+          <span class="value">{{ (playerData?.posicion || 'Sin asignar') | titlecase }}</span>
+        </div>
+        <div class="info-item full">
+          <span class="label">Equipo Actual</span>
+          <span class="value">{{ (playerData?.equipoActual?.nombre || playerData?.equipo?.nombre || 'Sin Equipo Asignado') }}</span>
+        </div>
+        <div class="info-item full">
+          <span class="label">Estado</span>
+          <ion-badge [color]="playerData?.estado === 'ACTIVO' ? 'success' : 'danger'">
+            {{ playerData?.estado || 'Desconocido' }}
+          </ion-badge>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card editable">
+      <h3>
+        <ion-icon name="person"></ion-icon> Datos Personales
+      </h3>
+
+      <ion-list lines="none">
+        
+        <ion-item class="input-item">
+          <ion-label position="stacked">Teléfono de Contacto</ion-label>
+          <ion-input [(ngModel)]="editForm.telefono" placeholder="+34 600 000 000"></ion-input>
+          <ion-icon name="call-outline" slot="end" class="input-icon"></ion-icon>
+        </ion-item>
+
+        <ion-item class="input-item">
+          <ion-label position="stacked">Dirección / Ciudad</ion-label>
+          <ion-input [(ngModel)]="editForm.direccion" placeholder="Ej: Madrid, España"></ion-input>
+          <ion-icon name="location-outline" slot="end" class="input-icon"></ion-icon>
+        </ion-item>
+
+      </ion-list>
+    </div>
+
+  </div>
+</ion-content>

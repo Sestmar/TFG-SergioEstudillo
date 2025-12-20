@@ -53,6 +53,12 @@ const routes: Routes = [
     loadChildren: () => import('./modules/coach/pages/my-team/my-team.module').then( m => m.MyTeamPageModule)
   },
 
+  // ✅ RUTA DE PERFIL (Para todos los usuarios)
+  {
+    path: 'profile',
+    loadChildren: () => import('./modules/user/pages/profile/profile.module').then( m => m.ProfilePageModule)
+  },
+
   // COMODÍN (Siempre al final)
   { path: '**', redirectTo: 'landing' }
 ];
