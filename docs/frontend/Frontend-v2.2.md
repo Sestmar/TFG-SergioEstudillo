@@ -433,6 +433,34 @@ export class AuthInterceptor implements HttpInterceptor {
     );
   }
 }
+
+### 4.x ConvocationService (Mapeo entre Ionic y DTOs de Spring Boot)
+
+**Responsabilidades:**
+
+- Encapsular toda la lógica de comunicación con `/api/convocatorias`.
+- Traducir los datos del formulario de Ionic (reactive forms) a los DTOs esperados por el backend.
+- Normalizar formatos de fecha y construir un campo de observaciones coherente.
+
+**Puntos clave de implementación:**
+
+- Recibe fechas en formato ISO (`ion-datetime`) y las transforma al formato que espera el backend (por ejemplo, `LocalDateTime` o timestamp en milisegundos) antes de enviar el JSON [web:9][web:22].
+- Aplica una lógica de enriquecimiento del campo `observaciones`, concatenando:
+  - Título del evento.
+  - Lugar del partido/entrenamiento.
+  - Información adicional relevante.
+- Gestiona tanto la creación de **Partidos** como de **Entrenamientos** mediante un único DTO adaptable en el backend.
+
+// Ejemplo esquemático (simplificado)
+createConvocatoria(formValue: ConvocatoriaFormValue): Observable<ConvocatoriaDTO> {
+const payload: ConvocatoriaDTO = {
+tipo: formValue.tipo, // PARTIDO | ENTRENAMIENTO
+equipoId: formValue.equipoId,
+fechaHora: new Date(formValue.fechaIso).toISOString(), // normalizado
+observaciones: ${formValue.titulo} - ${formValue.lugar} - ${formValue.nota || ''}.trim()
+};
+return this.http.post<ConvocatoriaDTO>(${this.apiUrl}/convocatorias, payload);
+}
 ```
 
 #### Registro del Interceptor en app.module.ts
@@ -568,10 +596,44 @@ const routes: Routes = [
 
 | Módulo | Ruta Base | Rol | Descripción |
 |--------|-----------|-----|-------------|
-| **auth** | `/auth/login` | Público | Login y Registro |
-| **admin** | `/admin-dashboard` | ADMIN | Gestión total (Club, Usuarios, Equipos, Pagos) |
-| **coach** | `/coach-dashboard` | ENTRENADOR | Gestión técnica (Alineaciones, Entrenamientos) |
-| **player** | `/player-dashboard` | JUGADOR | Vista personal (Estadísticas, Convocatorias) |
+| **auth** | `/auth/login` | Público | Login y Registro. |
+| **admin** | `/admin-dashboard` | ADMIN | Gestión total (Club, Usuarios, Equipos, Pagos). |
+| **coach** | `/coach-dashboard` | ENTRENADOR | Gestión técnica del equipo asignado, creación de convocatorias y acceso a estadísticas básicas. |
+| **player** | `/player-dashboard` | JUGADOR | Vista personal centrada en el equipo: lista todas las convocatorias del equipo, con detalle por evento. |
+
+---
+
+### 6.3 Coach Module (Gestión de Entrenador y Convocatorias)
+
+**CoachDashboard**:
+
+- Carga dinámicamente el equipo asignado al entrenador en base a la relación SQL entre entrenador y equipo (N:M a nivel de permisos, aunque el dashboard se centra en el equipo “activo”).
+- Muestra estadísticas básicas del equipo: número de jugadores, número de partidos/convocatorias, accesos rápidos a fichas y entrenamientos.
+
+**Pantalla “Crear Convocatoria”**:
+
+- Formulario reactivo con Angular/Ionic para crear **Partidos** o **Entrenamientos**.
+- Usa `ion-datetime` (formato ISO 8601) como entrada y adapta el valor antes de enviarlo al backend, convirtiendo el ISO string a un tipo compatible (timestamp/LocalDateTime) en el DTO de Spring Boot [web:9][web:22].
+- Antes del envío al endpoint `/api/convocatorias`, el servicio mapea:
+  - Tipo (PARTIDO/ENTRENAMIENTO).
+  - Fecha/hora (normalizando zona horaria/ISO).
+  - Observaciones enriquecidas concatenando título y lugar para mejorar la trazabilidad.
+
+---
+
+### 6.4 Player Module (Dashboard centrado en Equipo)
+
+**Lógica de visualización (Team-First):**
+
+- El Dashboard de jugador ya no depende de que exista un registro explícito en la tabla de unión `convocatoria_jugador`.
+- En su lugar, consume las convocatorias filtradas por el `equipoId` del jugador.
+- De esta forma, cualquier convocatoria creada por el entrenador para ese equipo aparece automáticamente en la vista del jugador.
+
+**UI y estados de asistencia:**
+
+- Se han eliminado los botones de “Confirmar” / “Rechazar” en la UI.
+- El estado por defecto de cada entrada es **“Convocado”** (color azul), lo que simplifica la UX y reduce la lógica de estado.
+- Cada convocatoria incluye un botón “Ver detalles” para mostrar información ampliada (tipo, fecha/hora, observaciones, lugar).
 
 ---
 

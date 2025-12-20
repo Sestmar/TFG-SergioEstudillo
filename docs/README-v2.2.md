@@ -22,25 +22,29 @@
 
 ### Funcionalidades Principales
 
-- ✅ **Autenticación JWT Stateless** - Login, Registro y Autorización por roles
-- ✅ **Gestión de Usuarios** - Admin, Entrenador, Jugador con permisos granulares
-- ✅ **CRUD de Equipos y Jugadores** - Gestión integral de plantillas
-- ✅ **Sistema Multimedia** - Avatares y escudos almacenados en servidor
-- ✅ **API REST Documentada** - Swagger UI interactivo
-- ✅ **Dashboard Reactivo** - Redirección inteligente por rol
+- ✅ **Autenticación JWT Stateless** - Login, Registro y Autorización por roles.
+- ✅ **Gestión de Usuarios** - Admin, Entrenador, Jugador con permisos granulares.
+- ✅ **CRUD de Equipos y Jugadores** - Gestión integral de plantillas.
+- ✅ **Sistema Multimedia** - Avatares y escudos almacenados en servidor.
+- ✅ **API REST Documentada** - Swagger UI interactivo.
+- ✅ **Dashboard Reactivo** - Redirección inteligente por rol.
+- ✅ **Gestión de Entrenadores** - Asignación N:M Entrenador–Equipo y carga dinámica del equipo en el CoachDashboard.
+- ✅ **Módulo de Convocatorias** - Creación de partidos y entrenamientos desde el rol Entrenador, con formulario reactivo y adaptación de fechas de formato ISO (Ionic) a timestamp/fecha válida para Spring Boot antes de llamar a `/api/convocatorias` [web:9][web:22].
+- ✅ **Panel de Jugador centrado en Equipo** - El Dashboard de jugador muestra automáticamente todas las convocatorias asociadas al equipo del jugador (Team-First), sin requerir registros explícitos en `convocatoria_jugador`.
+- ✅ **Visualización Simplificada de Convocatorias** - Estado por defecto “Convocado” (azul) y acceso a los detalles de la convocatoria, eliminando la lógica de confirmación/rechazo en el frontend.
 
 ---
 
-## Estado Actual (v4.1)
+## Estado Actual (v4.2 - Fase 2 Completada)
 
 | Componente | Estado | Fecha | Notas |
 |------------|--------|-------|-------|
-| **Backend (Spring Boot 3)** | ✅ Finalizado | 19/12/2025 | API REST robusta, JWT integrado, NeonDB operacional |
-| **Frontend (Angular/Ionic)** | ✅ Integrado | 19/12/2025 | Login funcional, Dashboards por rol, Interceptor JWT activo |
-| **Base de Datos (NeonDB)** | ✅ Activa | 19/12/2025 | PostgreSQL 16+, 12 entidades, relaciones normalizadas |
-| **Seguridad JWT** | ✅ Estable | 19/12/2025 | Token limpio (sin JSON.stringify), firma validada correctamente |
-| **Documentación API** | ✅ Completa | 19/12/2025 | Swagger UI en `/swagger-ui/index.html` |
-| **Datos de Prueba** | 🔄 En Progreso | 19/12/2025 | **Siguiente paso: Poblar equipos y jugadores reales** |
+| **Backend (Spring Boot 3)** | ✅ Finalizado | 20/12/2025 | API REST robusta, JWT integrado, NeonDB operacional. |
+| **Frontend (Angular/Ionic)** | ✅ Integrado | 20/12/2025 | Dashboards por rol, gestión de convocatorias y lógica Coach/Player completadas. |
+| **Base de Datos (NeonDB)** | ✅ Activa | 20/12/2025 | PostgreSQL 16+, 12+ entidades, relación N:M Entrenador–Equipo asumida para permisos. |
+| **Seguridad JWT** | ✅ Estable | 19/12/2025 | Token limpio (sin JSON.stringify), firma validada correctamente. |
+| **Documentación API** | ✅ Completa | 19/12/2025 | Swagger UI en `/swagger-ui/index.html`. |
+| **Gestión de Convocatorias** | ✅ Fase 2 completada | 20/12/2025 | Creación desde Coach, consumo automático en Player por equipo. |
 
 ---
 
