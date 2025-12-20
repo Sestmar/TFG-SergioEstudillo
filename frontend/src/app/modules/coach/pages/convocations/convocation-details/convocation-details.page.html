@@ -1,0 +1,80 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Detalles del Evento</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="details-bg">
+
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner color="primary"></ion-spinner>
+  </div>
+
+  <div class="content-wrapper" *ngIf="!loading && convocation">
+    
+    <div class="match-card">
+      <div class="match-type" [ngClass]="convocation.tipo === 'PARTIDO' ? 'is-match' : 'is-training'">
+        {{ convocation.tipo }}
+      </div>
+      
+      <h1 class="match-title">{{ convocation.titulo || convocation.observaciones }}</h1>
+      
+      <div class="match-info-grid">
+        <div class="info-item">
+          <ion-icon name="calendar-outline"></ion-icon>
+          <span>{{ (convocation.fechaHoraInicio || convocation.fechaEvento) | date:'EEEE, d MMMM' }}</span>
+        </div>
+        <div class="info-item">
+          <ion-icon name="time-outline"></ion-icon>
+          <span>{{ (convocation.fechaHoraInicio || convocation.fechaEvento) | date:'HH:mm' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" (click)="openMaps()">
+      <div class="icon-side location">
+        <ion-icon name="location"></ion-icon>
+      </div>
+      <div class="text-side">
+        <h3>Ubicación</h3>
+        <p>{{ convocation.lugar || 'Ubicación por confirmar' }}</p>
+        <span class="link-text">Ver en mapa</span>
+      </div>
+      <ion-icon name="chevron-forward" class="arrow"></ion-icon>
+    </div>
+
+    <div class="section-card">
+      <div class="icon-side notes">
+        <ion-icon name="document-text"></ion-icon>
+      </div>
+      <div class="text-side">
+        <h3>Notas del Míster</h3>
+        <p>{{ convocation.observaciones || 'Sin observaciones adicionales.' }}</p>
+      </div>
+    </div>
+
+    <div class="convocados-section">
+      <h3>Plantilla Convocada</h3>
+      
+      <div class="players-grid" *ngIf="convocation.jugadoresConvocados?.length > 0; else emptyState">
+        <div class="player-chip" *ngFor="let jc of convocation.jugadoresConvocados">
+          <div class="avatar">{{ jc.jugador?.usuario?.nombre?.charAt(0) }}</div>
+          <span>{{ jc.jugador?.usuario?.nombre }}</span>
+        </div>
+      </div>
+
+      <ng-template #emptyState>
+        <div class="empty-list">
+          <ion-icon name="people-outline"></ion-icon>
+          <p>Toda la plantilla está convocada por defecto.</p>
+        </div>
+      </ng-template>
+    </div>
+
+  </div>
+</ion-content>

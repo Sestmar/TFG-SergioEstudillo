@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApiService } from '../api/api.service';
 import { Convocation } from 'src/app/shared/models/models';
 
@@ -10,49 +11,56 @@ export class ConvocationService {
 
   constructor(private apiService: ApiService) {}
 
-  /**
-   * Helper privado para convertir formato ISO de JS al formato Timestamp de Java/SQL
-   * Entrada: "2025-12-21T21:00:00.000Z"
-   * Salida:  "2025-12-21 21:00:00"
-   */
   private formatJavaDate(isoDate: string): string {
     if (!isoDate) return '';
-    // Reemplazamos la 'T' por espacio y quitamos los milisegundos (.000Z)
     return isoDate.replace('T', ' ').substring(0, 19);
   }
 
-  // Obtener todas
+  // --- OBTENER TODAS (Con Adaptador de ID) ---
   getConvocations(): Observable<Convocation[]> { 
-    return this.apiService.get<Convocation[]>('/convocatorias');
+    // CORRECCIÓN AQUÍ: Usamos <any> en lugar de <any[]> para permitir verificar .data
+    return this.apiService.get<any>('/convocatorias').pipe(
+      map(response => {
+        // 1. Asegurar que es un array. 
+        // Ahora TypeScript no se quejará de 'response.data' porque response es 'any'
+        const list = Array.isArray(response) ? response : (response.data || []);
+        
+        // 2. Normalizar cada objeto (Backend Java -> Frontend Angular)
+        return list.map((item: any) => ({
+          ...item,
+          // 🛠️ TRUCO: Si el backend manda 'idConvocatoria', lo usamos como 'id'
+          id: item.id || item.idConvocatoria, 
+          
+          // Aseguramos que titulo exista (si viene en observaciones)
+          titulo: item.titulo || (item.observaciones ? item.observaciones.split(' - ')[0] : 'Evento')
+        }));
+      })
+    );
   }
 
-  // Obtener una
+  // --- OBTENER UNA (Con Adaptador de ID) ---
   getConvocationById(id: number): Observable<Convocation> {
-    return this.apiService.get<Convocation>(`/convocatorias/${id}`);
+    return this.apiService.get<any>(`/convocatorias/${id}`).pipe(
+      map((item: any) => ({
+        ...item,
+        id: item.id || item.idConvocatoria,
+        titulo: item.titulo || (item.observaciones ? item.observaciones.split(' - ')[0] : 'Evento')
+      }))
+    );
   }
 
-  // CREAR (Aquí aplicamos la corrección)
+  // CREAR
   createConvocation(frontendData: any): Observable<Convocation> {
-    
-    // 1. Mapeamos los datos para que coincidan con tu DTO de Java
     const backendPayload = {
-      idEquipo: frontendData.equipoId, // Frontend usa 'equipoId', Backend 'idEquipo'
-      
-      // 2. CORRECCIÓN DE FECHA: Usamos la función helper
+      idEquipo: frontendData.equipoId,
       fechaEvento: this.formatJavaDate(frontendData.fechaHoraInicio),
-      
       tipo: frontendData.tipo,
-      
-      // 3. Concatenamos Título y Lugar en observaciones porque el backend no tiene esos campos
       observaciones: `${frontendData.titulo} - ${frontendData.lugar}` 
     };
-
-    console.log('Enviando al backend:', backendPayload); // Para depurar en consola
-
     return this.apiService.post<Convocation>('/convocatorias', backendPayload);
   }
 
-  // ACTUALIZAR (También aplicamos la corrección)
+  // ACTUALIZAR
   updateConvocation(id: number, frontendData: any): Observable<Convocation> {
     const backendPayload = {
       idEquipo: frontendData.equipoId,
@@ -68,7 +76,7 @@ export class ConvocationService {
     return this.apiService.delete<void>(`/convocatorias/${id}`);
   }
 
-  // Asistencia (Mock/Pendiente)
+  // ASISTENCIA
   updateAttendance(data: any): Observable<any> {
     return this.apiService.post<any>('/convocatoria-jugador', data);
   }

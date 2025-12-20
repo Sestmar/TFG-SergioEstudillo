@@ -40,6 +40,12 @@ const routes: Routes = [
     loadChildren: () => import('./modules/coach/pages/convocations/create-convocation.module').then( m => m.CreateConvocationPageModule)
   },
 
+  // ✅ RUTA DE DETALLE (Con parámetro ID)
+  {
+    path: 'convocations/:id', // Los dos puntos ':' indican que es un parámetro
+    loadChildren: () => import('./modules/coach/pages/convocations/convocation-details/convocation-details.module').then( m => m.ConvocationDetailsPageModule)
+  },
+
   // COMODÍN (Siempre al final)
   { path: '**', redirectTo: 'landing' }
 ];
