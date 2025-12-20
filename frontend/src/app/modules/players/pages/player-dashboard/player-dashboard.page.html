@@ -96,8 +96,8 @@
     <div class="convocations-list">
       <div class="convocation-ticket" *ngFor="let conv of upcomingConvocations" [ngClass]="{'is-match': conv.tipo === 'PARTIDO'}">
         <div class="left-side">
-          <span class="day">{{ conv.fechaHoraInicio | date:'dd' }}</span>
-          <span class="month">{{ conv.fechaHoraInicio | date:'MMM' | uppercase }}</span>
+          <span class="day">{{ (conv.fechaHoraInicio || conv.fechaEvento) | date:'dd' }}</span>
+          <span class="month">{{ (conv.fechaHoraInicio || conv.fechaEvento) | date:'MMM' | uppercase }}</span>
         </div>
         <div class="right-side">
           <div class="header">
@@ -106,21 +106,28 @@
             </span>
             <span class="time">
               <ion-icon name="time-outline"></ion-icon>
-              {{ conv.fechaHoraInicio | date:'HH:mm' }}
+              {{ (conv.fechaHoraInicio || conv.fechaEvento) | date:'HH:mm' }}
             </span>
           </div>
-          <h3 class="title">{{ conv.titulo }}</h3>
-          <p class="location">
+          <h3 class="title">{{ conv.titulo || 'Evento de Equipo' }}</h3> <p class="location">
             <ion-icon name="location-outline"></ion-icon>
-            {{ conv.lugar }}
+            {{ conv.lugar || 'Ubicación por confirmar' }}
           </p>
           
-          <div class="actions-row" *ngIf="getPlayerAttendanceStatus(conv) === 'PENDIENTE'">
-            <button class="btn-confirm" (click)="confirmAttendance(conv.id); $event.stopPropagation()">Confirmar</button>
-            <button class="btn-reject" (click)="rejectAttendance(conv.id); $event.stopPropagation()">No Voy</button>
+          <div class="actions-row">
+            <ion-button 
+              expand="block" 
+              fill="outline" 
+              size="small" 
+              class="btn-details"
+              (click)="navigateTo('/convocations/' + conv.id); $event.stopPropagation()"
+            >
+              Ver Detalles
+              <ion-icon name="arrow-forward" slot="end"></ion-icon>
+            </ion-button>
           </div>
           
-          <div class="status-badge-row" *ngIf="getPlayerAttendanceStatus(conv) !== 'PENDIENTE'">
+          <div class="status-badge-row">
              <ion-badge [color]="getAttendanceStatusColor(getPlayerAttendanceStatus(conv))">
                {{ getAttendanceStatusText(getPlayerAttendanceStatus(conv)) }}
              </ion-badge>

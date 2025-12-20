@@ -3,33 +3,44 @@ import { RouterModule, Routes } from '@angular/router';
 
 const routes: Routes = [
   { path: '', redirectTo: 'landing', pathMatch: 'full' },
+  
+  // LANDING
   { 
     path: 'landing', 
     loadChildren: () => import('./modules/landing/landing.module').then(m => m.LandingPageModule) 
   },
+  
+  // AUTENTICACIÓN
   { 
     path: 'auth', 
     loadChildren: () => import('./modules/auth/auth.module').then(m => m.AuthModule) 
   },
   
-  // USUARIO (Usa el UserModule que ya tenías)
+  // USUARIO
   {
     path: 'user-dashboard',
     loadChildren: () => import('./modules/user/user.module').then(m => m.UserModule)
   },
 
-  // JUGADOR (Usa el módulo nuevo que acabas de crear)
+  // JUGADOR
   {
     path: 'player-dashboard',
     loadChildren: () => import('./modules/players/pages/player-dashboard/player-dashboard.module').then(m => m.PlayerDashboardPageModule)
   },
 
-  // ENTRENADOR (Usa el módulo nuevo que acabas de crear)
+  // ENTRENADOR
   {
     path: 'coach-dashboard',
     loadChildren: () => import('./modules/coach/pages/coach-dashboard/coach-dashboard.module').then(m => m.CoachDashboardPageModule)
   },
 
+  // ✅ NUEVA RUTA CORREGIDA: Apunta a la carpeta 'convocations' directamente
+  {
+    path: 'convocations/create',
+    loadChildren: () => import('./modules/coach/pages/convocations/create-convocation.module').then( m => m.CreateConvocationPageModule)
+  },
+
+  // COMODÍN (Siempre al final)
   { path: '**', redirectTo: 'landing' }
 ];
 

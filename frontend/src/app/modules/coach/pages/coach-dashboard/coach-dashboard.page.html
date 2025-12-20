@@ -1,486 +1,99 @@
-<ion-header class="coach-header">
-  <ion-toolbar color="primary">
-    <ion-title>Panel de Entrenador</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="navigateTo('/profile')">
-        <ion-icon name="person-circle" slot="icon-only"></ion-icon>
-      </ion-button>
-      <ion-button (click)="navigateTo('/notifications')">
-        <ion-icon name="notifications" slot="icon-only"></ion-icon>
-        <ion-badge color="danger" *ngIf="(stats.pendingRequests + stats.openIncidents) > 0">
-          {{ stats.pendingRequests + stats.openIncidents }}
-        </ion-badge>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true" class="coach-bg">
+  
+  <div *ngIf="loading" class="loading-state">
+    <ion-spinner color="secondary"></ion-spinner>
+  </div>
 
-<ion-content class="coach-dashboard-content">
-  <!-- Hero Section del Entrenador -->
-  <section class="coach-hero" *ngIf="currentUser">
-    <div class="hero-background">
-      <div class="hero-overlay">
-        <div class="container">
-          <div class="coach-info-card">
-            <div class="coach-avatar">
-              <div class="avatar-placeholder" *ngIf="!currentUser.fotoPerfil">
-                <i class="fas fa-user-tie"></i>
-              </div>
-              <img 
-                *ngIf="currentUser.fotoPerfil" 
-                [src]="currentUser.fotoPerfil" 
-                [alt]="currentUser.nombre"
-              >
-              <div class="coach-badge">
-                <i class="fas fa-whistle"></i>
-              </div>
-            </div>
-            
-            <div class="coach-details">
-              <h1 class="coach-name">
-                {{ currentUser.nombre }} {{ currentUser.apellidos }}
-              </h1>
-              <div class="coach-meta">
-                <span class="role-badge">
-                  <i class="fas fa-crown"></i>
-                  Entrenador Principal
-                </span>
-                <span class="teams-badge" *ngIf="stats.teamCount > 0">
-                  <i class="fas fa-shield-alt"></i>
-                  {{ stats.teamCount }} Equipo{{ stats.teamCount > 1 ? 's' : '' }}
-                </span>
-              </div>
-              
-              <div class="coach-stats-mini">
-                <div class="stat-item">
-                  <span class="stat-number">{{ stats.totalPlayers }}</span>
-                  <span class="stat-label">Jugadores</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-number">{{ stats.activeConvocations }}</span>
-                  <span class="stat-label">Convocatorias</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-number">{{ stats.openIncidents }}</span>
-                  <span class="stat-label">Incidencias</span>
-                </div>
-              </div>
-            </div>
-          </div>
+  <div class="main-content" *ngIf="!loading">
+    
+    <div class="header-section">
+      <div class="user-info">
+        <span class="greeting">{{ getGreeting() }}, Míster</span>
+        <h1 *ngIf="currentUser$ | async as user">{{ user.nombre }}</h1>
+      </div>
+      <div class="avatar-circle">
+        <img src="https://ui-avatars.com/api/?name=Mister+Coach&background=0f766e&color=fff&size=128" alt="Mister">
+      </div>
+    </div>
+
+    <div class="team-summary-card" *ngIf="managedTeam">
+      <div class="card-bg-icon"><ion-icon name="shield"></ion-icon></div>
+      <div class="team-info">
+        <span class="label">Tu Equipo</span>
+        <h2>{{ managedTeam.nombre }}</h2>
+        <span class="category">{{ managedTeam.categoria?.nombre || 'Categoría Senior' }}</span>
+      </div>
+      <div class="team-stats">
+        <div class="stat">
+          <span class="num">{{ stats.squadSize }}</span>
+          <span class="lbl">Jugadores</span>
+        </div>
+        <div class="stat">
+          <span class="num">{{ stats.matches }}</span>
+          <span class="lbl">Partidos</span>
+        </div>
+        <div class="stat">
+          <span class="num">{{ stats.trainings }}</span>
+          <span class="lbl">Entrenos</span>
         </div>
       </div>
     </div>
-  </section>
 
-  <!-- Estadísticas del Entrenador -->
-  <section class="stats-section">
-    <div class="container">
-      <h2 class="section-title">Panel de Control</h2>
-      
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-users"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-number">{{ stats.totalPlayers }}</span>
-            <span class="stat-label">Jugadores a Cargo</span>
-          </div>
+    <div class="no-team-card" *ngIf="!managedTeam">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <h3>Sin asignación detectada</h3>
+      <p>Parece que no tienes equipo asignado o hubo un error cargándolo.</p>
+    </div>
+
+    <div class="section-header">
+      <h3>Gestión Rápida</h3>
+    </div>
+
+    <div class="actions-grid">
+      <div class="action-card main-action" (click)="navigateTo('/convocations/create')">
+        <div class="icon-box">
+          <ion-icon name="add"></ion-icon>
         </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-calendar-alt"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-number">{{ stats.activeConvocations }}</span>
-            <span class="stat-label">Convocatorias Activas</span>
-          </div>
-        </div>
-        
-        <div class="stat-card" *ngIf="hasRole('ADMIN')">
-          <div class="stat-icon">
-            <i class="fas fa-file-alt"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-number">{{ stats.pendingRequests }}</span>
-            <span class="stat-label">Solicitudes Pendientes</span>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-exclamation-triangle"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-number">{{ stats.openIncidents }}</span>
-            <span class="stat-label">Incidencias Abiertas</span>
-          </div>
+        <div class="text-box">
+          <span class="title">Nueva Convocatoria</span>
+          <span class="desc">Crear partido o entrenamiento</span>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- Acciones Rápidas -->
-  <section class="actions-section">
-    <div class="container">
-      <h2 class="section-title">Herramientas de Entrenador</h2>
-      
-      <div class="actions-grid">
-        <ion-card 
-          class="action-card" 
-          *ngFor="let action of quickActions"
-          (click)="navigateTo(action.route)"
-          [class.disabled]="action.count === 0 && action.route !== '/teams' && action.route !== '/convocations'"
-        >
-          <div class="action-header">
-            <div class="action-icon" [style.background]="'var(--ion-color-' + action.color + ')'">
-              <ion-icon [name]="action.icon"></ion-icon>
-            </div>
-            <div class="action-badge" *ngIf="action.count !== undefined && action.count > 0">
-              <ion-badge [color]="action.color">{{ action.count }}</ion-badge>
-            </div>
-          </div>
-          
-          <ion-card-header>
-            <ion-card-title>{{ action.title }}</ion-card-title>
-            <ion-card-subtitle>{{ action.description }}</ion-card-subtitle>
-          </ion-card-header>
-        </ion-card>
+      <div class="action-card" *ngFor="let action of quickActions.slice(1)" (click)="navigateTo(action.route)" [ngClass]="action.color">
+        <div class="icon-circle">
+          <ion-icon [name]="action.icon"></ion-icon>
+        </div>
+        <span class="action-title">{{ action.title }}</span>
       </div>
     </div>
-  </section>
 
-  <!-- Acciones Rápidas Principales -->
-  <section class="quick-actions-section">
-    <div class="container">
-      <div class="quick-actions-grid">
-        <ion-button 
-          expand="block" 
-          class="quick-action-btn primary"
-          (click)="createConvocation()"
-        >
-          <div class="btn-content">
-            <i class="fas fa-calendar-plus"></i>
-            <div>
-              <span class="btn-title">Crear Convocatoria</span>
-              <span class="btn-subtitle">Nueva convocatoria para tu equipo</span>
-            </div>
-          </div>
-        </ion-button>
-        
-        <ion-button 
-          expand="block" 
-          class="quick-action-btn secondary"
-          (click)="reportIncident()"
-        >
-          <div class="btn-content">
-            <i class="fas fa-first-aid"></i>
-            <div>
-              <span class="btn-title">Reportar Incidencia</span>
-              <span class="btn-subtitle">Registrar lesión o incidente</span>
-            </div>
-          </div>
-        </ion-button>
-        
-        <ion-button 
-          *ngIf="hasRole('ADMIN') && stats.pendingRequests > 0"
-          expand="block" 
-          class="quick-action-btn tertiary"
-          (click)="manageRequests()"
-        >
-          <div class="btn-content">
-            <i class="fas fa-clipboard-check"></i>
-            <div>
-              <span class="btn-title">Gestionar Solicitudes</span>
-              <span class="btn-subtitle">{{ stats.pendingRequests }} solicitudes pendientes</span>
-            </div>
-          </div>
-        </ion-button>
-      </div>
+    <div class="section-header" *ngIf="upcomingEvents.length > 0">
+      <h3>Agenda Semanal</h3>
+      <span class="link" (click)="navigateTo('/calendar')">Ver todo</span>
     </div>
-  </section>
 
-  <!-- Próximas Convocatorias -->
-  <section class="convocations-section" *ngIf="recentConvocations.length > 0">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Próximas Convocatorias</h2>
-        <ion-button fill="clear" (click)="navigateTo('/convocations')">
-          Gestionar todas
-          <ion-icon name="arrow-forward" slot="end"></ion-icon>
-        </ion-button>
-      </div>
-      
-      <div class="convocations-list">
-        <ion-card class="convocation-card" *ngFor="let convocation of recentConvocations">
-          <ion-card-header>
-            <div class="convocation-header">
-              <div class="convocation-type" [color]="getConvocationTypeColor(convocation.tipo)">
-                <ion-icon name="football"></ion-icon>
-                <span>{{ convocation.tipo }}</span>
-              </div>
-              <div class="convocation-status">
-                <ion-badge [color]="getConvocationStatusColor(getConvocationStatus(convocation))">
-                  {{ getConvocationStatus(convocation) }}
-                </ion-badge>
-                <span class="convocation-date">{{ formatConvocationDate(convocation.fechaHoraInicio) }}</span>
-              </div>
-            </div>
-            <ion-card-title>{{ convocation.titulo }}</ion-card-title>
-            <ion-card-subtitle>
-              <i class="fas fa-map-marker-alt"></i>
-              {{ convocation.lugar }}
-              <span class="team-name" *ngIf="convocation.equipo">• {{ convocation.equipo.nombre }}</span>
-            </ion-card-subtitle>
-          </ion-card-header>
-          
-          <ion-card-content>
-            <div class="convocation-stats">
-              <div class="stat">
-                <i class="fas fa-users"></i>
-                <span>{{ convocation.jugadoresConvocados?.length || 0 }} convocados</span>
-              </div>
-              <div class="stat">
-                <i class="fas fa-clock"></i>
-                <span>{{ getDuration(convocation.fechaHoraInicio, convocation.fechaHoraFin) }}</span>
-              </div>
-            </div>
-            
-            <div class="convocation-actions">
-              <ion-button 
-                size="small" 
-                fill="outline"
-                (click)="editConvocation(convocation.id); $event.stopPropagation()"
-              >
-                <ion-icon name="create" slot="start"></ion-icon>
-                Editar
-              </ion-button>
-              <ion-button 
-                size="small" 
-                color="success"
-                (click)="viewConvocationDetails(convocation.id); $event.stopPropagation()"
-              >
-                <ion-icon name="eye" slot="start"></ion-icon>
-                Ver Detalles
-              </ion-button>
-            </div>
-          </ion-card-content>
-        </ion-card>
+    <div class="events-list">
+      <div class="event-item" *ngFor="let event of upcomingEvents">
+        <div class="date-badge">
+          <span class="day">{{ event.fechaHoraInicio | date:'dd' }}</span>
+          <span class="month">{{ event.fechaHoraInicio | date:'MMM' }}</span>
+        </div>
+        <div class="event-details">
+          <span class="type" [ngClass]="getEventTypeColor(event.tipo)">{{ event.tipo }}</span>
+          <h4>{{ event.titulo }}</h4>
+          <span class="time"><ion-icon name="time-outline"></ion-icon> {{ event.fechaHoraInicio | date:'HH:mm' }}</span>
+        </div>
+        <div class="arrow">
+          <ion-icon name="chevron-forward"></ion-icon>
+        </div>
       </div>
     </div>
-  </section>
+    
+    <div class="empty-events" *ngIf="upcomingEvents.length === 0 && managedTeam">
+        <p>No hay eventos próximos.</p>
+        <ion-button fill="outline" size="small" (click)="navigateTo('/convocations/create')">Crear uno</ion-button>
+    </div>
 
-  <!-- Solicitudes Pendientes (Admin) -->
-  <section class="requests-section" *ngIf="hasRole('ADMIN') && pendingRequests.length > 0">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Solicitudes Pendientes</h2>
-        <ion-button fill="clear" (click)="navigateTo('/requests')">
-          Gestionar todas
-          <ion-icon name="arrow-forward" slot="end"></ion-icon>
-        </ion-button>
-      </div>
-      
-      <div class="requests-list">
-        <ion-card class="request-card" *ngFor="let request of pendingRequests.slice(0, 5)">
-          <ion-card-header>
-            <div class="request-header">
-              <div class="requester-info">
-                <h3 class="requester-name">
-                  {{ request.usuario?.nombre }} {{ request.usuario?.apellidos }}
-                </h3>
-                <p class="requester-username">@{{ request.usuario?.username }}</p>
-              </div>
-              <div class="request-status">
-                <ion-badge [color]="getRequestStatusInfo(request.estado).color">
-                  {{ getRequestStatusInfo(request.estado).text }}
-                </ion-badge>
-                <span class="request-time">{{ getTimeAgo(request.fechaSolicitud) }}</span>
-              </div>
-            </div>
-          </ion-card-header>
-          
-          <ion-card-content>
-            <div class="request-details">
-              <div class="detail-item">
-                <i class="fas fa-futbol"></i>
-                <span>Posición: {{ request.datosJugador?.posicionPreferida || 'No especificada' }}</span>
-              </div>
-              <div class="detail-item">
-                <i class="fas fa-calendar"></i>
-                <span>Experiencia: {{ request.datosJugador?.anosExperiencia || 0 }} años</span>
-              </div>
-              <div class="detail-item" *ngIf="request.mensajeSolicitud">
-                <i class="fas fa-comment"></i>
-                <span>{{ request.mensajeSolicitud }}</span>
-              </div>
-            </div>
-            
-            <div class="request-actions">
-              <ion-button 
-                size="small" 
-                color="success"
-                (click)="approveRequest(request.id); $event.stopPropagation()"
-              >
-                <ion-icon name="checkmark" slot="start"></ion-icon>
-                Aprobar
-              </ion-button>
-              <ion-button 
-                size="small" 
-                color="danger"
-                (click)="rejectRequest(request.id); $event.stopPropagation()"
-              >
-                <ion-icon name="close" slot="start"></ion-icon>
-                Rechazar
-              </ion-button>
-              <ion-button 
-                size="small" 
-                fill="outline"
-                (click)="viewRequestDetails(request.id); $event.stopPropagation()"
-              >
-                <ion-icon name="eye" slot="start"></ion-icon>
-                Ver
-              </ion-button>
-            </div>
-          </ion-card-content>
-        </ion-card>
-      </div>
-    </div>
-  </section>
-
-  <!-- Incidencias Recientes -->
-  <section class="incidents-section" *ngIf="openIncidents.length > 0">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Incidencias Abiertas</h2>
-        <ion-button fill="clear" (click)="navigateTo('/incidents')">
-          Gestionar todas
-          <ion-icon name="arrow-forward" slot="end"></ion-icon>
-        </ion-button>
-      </div>
-      
-      <div class="incidents-list">
-        <ion-card class="incident-card" *ngFor="let incident of openIncidents.slice(0, 5)">
-          <ion-card-header>
-            <div class="incident-header">
-              <div class="incident-type">
-                <i [class]="getIncidentIcon(incident.tipo)"></i>
-                <span>{{ incident.titulo }}</span>
-              </div>
-              <div class="incident-priority">
-                <ion-badge [color]="getIncidentSeverityInfo(incident.gravedad).color">
-                  {{ getIncidentSeverityInfo(incident.gravedad).text }}
-                </ion-badge>
-                <span class="incident-time">{{ getTimeAgo(incident.fechaOcurrencia) }}</span>
-              </div>
-            </div>
-          </ion-card-header>
-          
-          <ion-card-content>
-            <div class="incident-details">
-              <div class="detail-item" *ngIf="incident.jugadorAfectado">
-                <i class="fas fa-user-injured"></i>
-                <span>Jugador: {{ incident.jugadorAfectado.usuario.nombre }} {{ incident.jugadorAfectado.usuario.apellidos }}</span>
-              </div>
-              <div class="detail-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>Lugar: {{ incident.lugar }}</span>
-              </div>
-              <div class="detail-item" *ngIf="incident.equipo">
-                <i class="fas fa-shield-alt"></i>
-                <span>Equipo: {{ incident.equipo.nombre }}</span>
-              </div>
-            </div>
-            
-            <p class="incident-description">{{ incident.descripcion }}</p>
-            
-            <div class="incident-actions">
-              <ion-button 
-                size="small" 
-                fill="outline"
-                (click)="viewIncidentDetails(incident.id); $event.stopPropagation()"
-              >
-                <ion-icon name="eye" slot="start"></ion-icon>
-                Ver Detalles
-              </ion-button>
-              <ion-button 
-                size="small" 
-                color="success"
-                (click)="closeIncident(incident.id); $event.stopPropagation()"
-              >
-                <ion-icon name="checkmark" slot="start"></ion-icon>
-                Cerrar
-              </ion-button>
-            </div>
-          </ion-card-content>
-        </ion-card>
-      </div>
-    </div>
-  </section>
-
-  <!-- Mis Equipos -->
-  <section class="teams-section" *ngIf="managedTeams.length > 0">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Mis Equipos</h2>
-        <ion-button fill="clear" (click)="navigateTo('/teams')">
-          Ver todos
-          <ion-icon name="arrow-forward" slot="end"></ion-icon>
-        </ion-button>
-      </div>
-      
-      <div class="teams-grid">
-        <ion-card class="team-card" *ngFor="let team of managedTeams">
-          <ion-card-header>
-            <div class="team-header">
-              <div class="team-shield">
-                <i class="fas fa-shield-alt"></i>
-              </div>
-              <div>
-                <ion-card-title>{{ team.nombre }}</ion-card-title>
-                <ion-card-subtitle>{{ team.categoria.nombre }} • {{ team.liga?.nombre || 'Sin liga' }}</ion-card-subtitle>
-              </div>
-            </div>
-          </ion-card-header>
-          
-          <ion-card-content>
-            <div class="team-stats">
-              <div class="stat">
-                <i class="fas fa-users"></i>
-                <span>{{ team.jugadores?.length || 0 }} jugadores</span>
-              </div>
-              <div class="stat" *ngIf="team.estadisticas">
-                <i class="fas fa-trophy"></i>
-                <span>{{ team.estadisticas.posicionLiga }}º posición</span>
-              </div>
-              <div class="stat">
-                <i class="fas fa-calendar-check"></i>
-                <span>{{ getTeamConvocationsCount(team.id) }} convocatorias</span>
-              </div>
-            </div>
-            
-            <div class="team-actions">
-              <ion-button 
-                size="small" 
-                fill="outline"
-                (click)="viewTeamDetails(team.id); $event.stopPropagation()"
-              >
-                <ion-icon name="eye" slot="start"></ion-icon>
-                Ver
-              </ion-button>
-              <ion-button 
-                size="small" 
-                color="primary"
-                (click)="createTeamConvocation(team.id); $event.stopPropagation()"
-              >
-                <ion-icon name="add" slot="start"></ion-icon>
-                Convocar
-              </ion-button>
-            </div>
-          </ion-card-content>
-        </ion-card>
-      </div>
-    </div>
-  </section>
+  </div>
 </ion-content>

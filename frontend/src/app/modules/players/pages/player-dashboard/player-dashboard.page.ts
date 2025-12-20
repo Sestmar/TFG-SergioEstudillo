@@ -12,7 +12,6 @@ import { UserService } from 'src/app/core/services/user/user.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { ConvocationService } from 'src/app/core/services/convocation/convocation.service';
 import { NotificationService } from 'src/app/core/services/notification/notification.service';
-// ✅ NUEVO IMPORT
 import { TeamService } from 'src/app/core/services/team/team.service';
 
 interface DashboardStats {
@@ -53,7 +52,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   playerStats: PlayerStats | null = null;
   
   quickActions: QuickAction[] = [
-    { title: 'Convocatorias', icon: 'calendar', route: '/convocations', color: 'primary', description: 'Gestionar asistencia' },
+    { title: 'Convocatorias', icon: 'calendar', route: '/convocations', color: 'primary', description: 'Ver agenda' },
     { title: 'Mi Equipo', icon: 'shield', route: '/teams', color: 'secondary', description: 'Ver plantilla' },
     { title: 'Mi Perfil', icon: 'person', route: '/profile', color: 'tertiary', description: 'Datos personales' },
     { title: 'Estadísticas', icon: 'bar-chart', route: '/player/stats', color: 'success', description: 'Rendimiento' }
@@ -65,7 +64,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     private authService: AuthService,
     private userService: UserService,
     private playerService: PlayerService,
-    private teamService: TeamService, // ✅ INYECCIÓN DEL SERVICIO DE EQUIPOS
+    private teamService: TeamService, 
     private convocationService: ConvocationService,
     private notificationService: NotificationService,
     private router: Router
@@ -95,7 +94,6 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading user data:', error);
-        this.notificationService.showError('Error al cargar datos del usuario');
         this.loading = false;
       }
     });
@@ -116,35 +114,40 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
         if (players && players.length > 0) {
           this.currentPlayer = players[0];
           
-          // --- LÓGICA DE RESOLUCIÓN DE EQUIPO ---
+          // --- LÓGICA DE EQUIPO ---
           const playerAny = this.currentPlayer as any;
           
           if (playerAny.equipo) {
-            // Caso A: El backend envió el objeto completo
             this.currentTeam = playerAny.equipo;
           } else if (playerAny.equipoActual) {
-            // Caso B: Variante de nombre
             this.currentTeam = playerAny.equipoActual;
-          } else if (playerAny.equipoPrincipal) {
-            // ✅ Caso C: Solo tenemos el ID (23). Buscamos el nombre.
+          } 
+          else if (playerAny.equipoPrincipal) {
             this.teamService.getTeamById(playerAny.equipoPrincipal).subscribe({
               next: (team) => {
                 this.currentTeam = team;
-                console.log('Nombre de equipo resuelto:', team.nombre);
+                this.loadDataAfterTeamLoaded();
               },
-              error: (err) => console.error('No se pudo resolver el nombre del equipo', err)
+              error: (err) => {
+                console.error('No se pudo cargar info del equipo', err);
+                this.loadDataAfterTeamLoaded();
+              }
             });
+            return;
           }
-          // --------------------------------------
 
-          if (this.currentPlayer) {
-            const playerId = (this.currentPlayer as any).idJugador || this.currentPlayer.id;
-            this.loadPlayerStats(playerId);
-            this.loadPlayerConvocations(playerId);
-          }
+          this.loadDataAfterTeamLoaded();
         }
       }
     });
+  }
+
+  private loadDataAfterTeamLoaded() {
+    if (this.currentPlayer) {
+      const playerId = (this.currentPlayer as any).idJugador || this.currentPlayer.id;
+      this.loadPlayerStats(playerId);
+      this.loadPlayerConvocations(playerId);
+    }
   }
 
   private loadPlayerStats(playerId: number) {
@@ -166,9 +169,19 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
       next: (response: any) => {
         let allConvocations = Array.isArray(response) ? response : (response.convocations || response.data || []);
         
-        const playerConvocations = allConvocations.filter((c: any) => 
-            c.jugadoresConvocados?.some((jc: any) => jc.jugadorId === playerId || jc.jugador?.id === playerId)
-        );
+        const playerConvocations = allConvocations.filter((c: any) => {
+            const isExplicitlyInvited = c.jugadoresConvocados?.some((jc: any) => 
+              jc.jugadorId === playerId || (jc.jugador && jc.jugador.id === playerId)
+            );
+
+            const isTeamMatch = this.currentTeam && (
+              (c.equipo && c.equipo.idEquipo === this.currentTeam.id) || 
+              (c.idEquipo === this.currentTeam.id) ||
+              (c.equipo === this.currentTeam.id)
+            );
+
+            return isExplicitlyInvited || isTeamMatch;
+        });
         
         this.processConvocations(playerConvocations);
       },
@@ -179,35 +192,38 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   processConvocations(convocations: Convocation[]) {
     const now = new Date();
     
+    // Función helper para normalizar fechas (acepta fechaHoraInicio o fechaEvento)
+    const getDate = (c: any) => new Date(c.fechaHoraInicio || c.fechaEvento);
+
     this.upcomingConvocations = convocations.filter(conv => {
-      const convDate = new Date(conv.fechaHoraInicio);
+      const convDate = getDate(conv);
       return convDate >= now;
-    }).sort((a, b) => new Date(a.fechaHoraInicio).getTime() - new Date(b.fechaHoraInicio).getTime()).slice(0, 5);
+    }).sort((a, b) => {
+      return getDate(a).getTime() - getDate(b).getTime();
+    }).slice(0, 5);
 
     this.recentConvocations = convocations
-        .sort((a, b) => new Date(b.fechaHoraInicio).getTime() - new Date(a.fechaHoraInicio).getTime())
+        .sort((a, b) => {
+           return getDate(b).getTime() - getDate(a).getTime();
+        })
         .slice(0, 10);
 
     this.stats.totalConvocations = convocations.length;
     this.stats.upcomingConvocations = this.upcomingConvocations.length;
     
     this.stats.pendingConfirmations = convocations.filter(conv => {
-      const playerId = this.currentPlayer ? (this.currentPlayer as any).idJugador || this.currentPlayer.id : 0;
-      const convokedPlayer = conv.jugadoresConvocados?.find((jc: any) => 
-        (jc.jugadorId === playerId) || (jc.jugador && jc.jugador.id === playerId)
-      );
-      return convokedPlayer && (convokedPlayer as any).estadoAsistencia === 'PENDIENTE';
+      const status = this.getPlayerAttendanceStatus(conv);
+      // Solo cuenta como "pendiente" de acción si realmente queremos que confirme
+      // En este nuevo modelo "Convocado", quizás solo queremos contar los "No Vistos"
+      // Pero por ahora lo dejamos en 0 para no estresar al jugador
+      return false; 
     }).length;
 
     const confirmedConvocations = convocations.filter(conv => {
-      const playerId = this.currentPlayer ? (this.currentPlayer as any).idJugador || this.currentPlayer.id : 0;
-      const convokedPlayer = conv.jugadoresConvocados?.find((jc: any) => 
-        (jc.jugadorId === playerId) || (jc.jugador && jc.jugador.id === playerId)
-      );
-      return convokedPlayer && (convokedPlayer as any).estadoAsistencia === 'CONFIRMADO';
+       return this.getPlayerAttendanceStatus(conv) === 'CONFIRMADO';
     }).length;
     
-    const pastConvocations = convocations.filter(c => new Date(c.fechaHoraFin) < now).length;
+    const pastConvocations = convocations.length - this.upcomingConvocations.length;
     
     this.stats.attendanceRate = pastConvocations > 0 
       ? Math.round((confirmedConvocations / pastConvocations) * 100)
@@ -218,16 +234,13 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     this.router.navigate([route]);
   }
 
-  // --- Métodos Auxiliares de Vista ---
+  // --- Helpers ---
 
   getPlayerAge(): number {
     const player: any = this.currentPlayer;
     if (!player?.fechaNacimiento) return 0;
-    
     const birth = new Date(player.fechaNacimiento);
-    const ageDifMs = Date.now() - birth.getTime();
-    const ageDate = new Date(ageDifMs);
-    return Math.abs(ageDate.getUTCFullYear() - 1970);
+    return Math.abs(new Date(Date.now() - birth.getTime()).getUTCFullYear() - 1970);
   }
 
   getPlayerPosition(): string {
@@ -237,15 +250,11 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
 
   isPlayerAvailable(): boolean {
     const player: any = this.currentPlayer;
-    // Comprobamos 'estado' (ACTIVO) o 'disponible' (true)
     return player?.estado === 'ACTIVO' || player?.disponible === true;
   }
   
-  getDuration(start: string | Date, end: string | Date): string {
-    const diff = new Date(end).getTime() - new Date(start).getTime();
-    const hours = Math.floor(diff / 3600000);
-    const minutes = Math.floor((diff % 3600000) / 60000);
-    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+  getDuration(conv: any): string {
+    return "2h"; 
   }
   
   getConvocationTypeColor(type: string): string {
@@ -253,8 +262,9 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
       return map[type] || 'medium';
   }
   
-  formatConvocationDate(date: string | Date): string {
-      return new Date(date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' });
+  formatConvocationDate(dateInput: string | Date): string {
+      if (!dateInput) return 'Fecha pendiente';
+      return new Date(dateInput).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' });
   }
   
   getPlayerAttendanceStatus(convocation: Convocation): string {
@@ -264,19 +274,29 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     const jc = convocation.jugadoresConvocados?.find((j: any) => 
       j.jugadorId === playerId || (j.jugador && j.jugador.id === playerId)
     );
-    return jc ? (jc as any).estadoAsistencia : 'NO_CONVOCADO';
+    
+    return jc ? (jc as any).estadoAsistencia : 'PENDIENTE';
   }
 
+  // --- LÓGICA DE ESTADOS CAMBIADA ---
+
   getAttendanceStatusColor(status: string): string {
-    const map: any = { 'CONFIRMADO': 'success', 'RECHAZADO': 'danger', 'PENDIENTE': 'warning' };
-    return map[status] || 'medium';
+    // Si es Pendiente o No_Convocado (implícito), es azul (Primary) porque es una convocatoria estándar
+    if (status === 'PENDIENTE' || status === 'NO_CONVOCADO') return 'primary';
+    
+    const map: any = { 'CONFIRMADO': 'success', 'RECHAZADO': 'danger' };
+    return map[status] || 'primary';
   }
 
   getAttendanceStatusText(status: string): string {
-    const map: any = { 'CONFIRMADO': 'Asistiré', 'RECHAZADO': 'No voy', 'PENDIENTE': 'Pendiente' };
-    return map[status] || status;
+    // Texto más profesional
+    if (status === 'PENDIENTE' || status === 'NO_CONVOCADO') return 'Convocado';
+    
+    const map: any = { 'CONFIRMADO': 'Asistiré', 'RECHAZADO': 'Baja' };
+    return map[status] || 'Convocado';
   }
 
+  // Métodos placeholder (ya no se usan en el HTML pero se dejan por si acaso)
   confirmAttendance(id: number) { console.log('Confirmar', id); }
   rejectAttendance(id: number) { console.log('Rechazar', id); }
 }

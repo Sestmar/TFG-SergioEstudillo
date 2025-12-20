@@ -1,1069 +1,246 @@
-.coach-dashboard-content {
-  --background: var(--ion-color-light);
+// Variables Tema Entrenador
+:host {
+  --coach-primary: #0f766e; // Teal 700
+  --coach-secondary: #14b8a6; // Teal 500
+  --bg-color: #f8fafc;
+  --card-white: #ffffff;
+  --text-dark: #1e293b;
+  --text-muted: #64748b;
+}
 
-  .coach-header {
-    ion-toolbar {
-      --background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 100%);
-      
-      ion-title {
-        color: white;
-        font-weight: 600;
-      }
-      
-      ion-button {
-        color: white;
-      }
-    }
+.coach-bg {
+  --background: var(--bg-color);
+}
+
+.loading-state {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.main-content {
+  padding: 2rem 1.5rem 4rem 1.5rem;
+}
+
+// HEADER
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  .user-info {
+    .greeting { display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 4px; }
+    h1 { margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--text-dark); }
   }
 
-  // Hero section del entrenador
-  .coach-hero {
+  .avatar-circle {
+    img {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      border: 2px solid var(--coach-secondary);
+      padding: 2px;
+      object-fit: cover;
+    }
+  }
+}
+
+// TEAM CARD (Featured)
+.team-summary-card {
+  background: linear-gradient(135deg, var(--coach-primary) 0%, #115e59 100%);
+  border-radius: 24px;
+  padding: 1.5rem;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(15, 118, 110, 0.4);
+  margin-bottom: 2rem;
+
+  .card-bg-icon {
+    position: absolute;
+    right: -20px;
+    top: -20px;
+    font-size: 10rem;
+    opacity: 0.1;
+    color: white;
+    transform: rotate(15deg);
+  }
+
+  .team-info {
     position: relative;
-    height: 35vh;
-    overflow: hidden;
+    z-index: 2;
+    margin-bottom: 1.5rem;
+    .label { font-size: 0.8rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+    h2 { margin: 5px 0; font-size: 1.6rem; font-weight: 700; }
+    .category { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; }
+  }
 
-    .hero-background {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 50%, var(--ion-color-tertiary) 100%);
+  .team-stats {
+    display: flex;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 2;
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      .num { font-size: 1.4rem; font-weight: 800; }
+      .lbl { font-size: 0.75rem; opacity: 0.8; }
+    }
+  }
+}
+
+.no-team-card {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 1.5rem;
+  border-radius: 16px;
+  text-align: center;
+  margin-bottom: 2rem;
+  border: 1px solid #fecaca;
+  
+  ion-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  h3 { margin: 0; font-weight: 700; }
+  p { margin: 5px 0 0; font-size: 0.9rem; }
+}
+
+// SECTIONS
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+  h3 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-dark); }
+  .link { color: var(--coach-secondary); font-size: 0.9rem; font-weight: 600; }
+}
+
+// ACTIONS GRID
+.actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  // Main Action (Full Width)
+  .action-card.main-action {
+    grid-column: span 2;
+    background: white;
+    padding: 1rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+    
+    .icon-box {
+      background: var(--coach-primary);
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.5rem;
+    }
+    
+    .text-box {
+      display: flex;
+      flex-direction: column;
+      .title { font-weight: 700; color: var(--text-dark); }
+      .desc { font-size: 0.8rem; color: var(--text-muted); }
+    }
+
+    &:active { transform: scale(0.98); background: #f1f5f9; }
+  }
+
+  // Small Actions
+  .action-card:not(.main-action) {
+    background: white;
+    padding: 1.2rem;
+    border-radius: 16px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    transition: transform 0.2s;
+
+    &:active { transform: scale(0.98); }
+
+    .icon-circle {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.2)"/><path d="M 50 5 L 50 95 M 5 50 L 95 50" stroke="rgba(255,255,255,0.1)" stroke-width="1"/><path d="M 20 20 Q 50 30 80 20 Q 50 10 20 20" fill="rgba(255,255,255,0.1)"/><path d="M 20 80 Q 50 70 80 80 Q 50 90 20 80" fill="rgba(255,255,255,0.1)"/></svg>') center/cover;
-        opacity: 0.3;
-      }
+      ion-icon { font-size: 1.5rem; color: var(--text-muted); }
     }
 
-    .hero-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 100%);
-      display: flex;
-      align-items: flex-end;
-      padding: 2rem 1rem;
-    }
+    .action-title { font-size: 0.9rem; font-weight: 600; color: var(--text-dark); }
 
-    .coach-info-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      padding: 1.5rem;
-      width: 100%;
-      max-width: 700px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-
-      .coach-avatar {
-        position: relative;
-        width: 80px;
-        height: 80px;
-        flex-shrink: 0;
-
-        .avatar-placeholder,
-        img {
-          width: 100%;
-          height: 100%;
-          border-radius: 50%;
-          object-fit: cover;
-          border: 3px solid var(--ion-color-primary);
-        }
-
-        .avatar-placeholder {
-          background: var(--ion-color-light);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--ion-color-primary);
-          font-size: 2rem;
-        }
-
-        .coach-badge {
-          position: absolute;
-          bottom: -5px;
-          right: -5px;
-          width: 30px;
-          height: 30px;
-          background: var(--ion-color-warning);
-          color: var(--ion-color-dark);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.8rem;
-          border: 2px solid white;
-        }
-      }
-
-      .coach-details {
-        flex: 1;
-
-        .coach-name {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: var(--ion-color-dark);
-          margin: 0 0 0.5rem 0;
-        }
-
-        .coach-meta {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-
-          .role-badge,
-          .teams-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            
-            i {
-              font-size: 0.9rem;
-            }
-          }
-
-          .role-badge {
-            background: var(--ion-color-warning);
-            color: var(--ion-color-dark);
-          }
-
-          .teams-badge {
-            background: var(--ion-color-secondary);
-            color: white;
-          }
-        }
-
-        .coach-stats-mini {
-          display: flex;
-          gap: 1.5rem;
-
-          .stat-item {
-            text-align: center;
-
-            .stat-number {
-              display: block;
-              font-size: 1.2rem;
-              font-weight: 700;
-              color: var(--ion-color-primary);
-              margin-bottom: 0.2rem;
-            }
-
-            .stat-label {
-              font-size: 0.7rem;
-              color: var(--ion-color-medium);
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            }
-          }
-        }
-      }
-    }
+    &.secondary .icon-circle ion-icon { color: #3b82f6; }
+    &.tertiary .icon-circle ion-icon { color: #8b5cf6; }
+    &.warning .icon-circle ion-icon { color: #f59e0b; }
   }
+}
 
-  // Secciones de contenido
-  .section {
-    padding: 2rem 1rem;
+// EVENTS LIST
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
 
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+  .event-item {
+    background: white;
+    border-radius: 16px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid #e2e8f0;
 
-    .section-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--ion-color-dark);
-      margin: 0 0 2rem 0;
+    .date-badge {
+      background: #f1f5f9;
+      border-radius: 12px;
+      padding: 0.5rem 0.8rem;
       text-align: center;
+      min-width: 60px;
+      .day { display: block; font-weight: 800; font-size: 1.1rem; color: var(--text-dark); }
+      .month { display: block; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); }
     }
-  }
 
-  // Sección de estadísticas
-  .stats-section {
-    background: white;
-    margin: 1rem 0;
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-
-      .stat-card {
-        background: var(--ion-color-light);
-        border-radius: 15px;
-        padding: 1.5rem;
-        text-align: center;
-        border: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
-
-        &:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-icon {
-          width: 50px;
-          height: 50px;
-          background: var(--ion-color-primary);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 1rem;
-
-          i {
-            font-size: 1.5rem;
-            color: white;
-          }
-        }
-
-        .stat-content {
-          .stat-number {
-            display: block;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--ion-color-primary);
-            margin-bottom: 0.5rem;
-          }
-
-          .stat-label {
-            color: var(--ion-color-medium);
-            font-size: 0.9rem;
-            font-weight: 500;
-          }
-        }
+    .event-details {
+      flex: 1;
+      .type { 
+        font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        &.success { color: #10b981; }
+        &.primary { color: #3b82f6; }
       }
-    }
-  }
-
-  // Sección de acciones
-  .actions-section {
-    background: var(--ion-color-light);
-
-    .actions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-
-      .action-card {
-        margin: 0;
-        border-radius: 15px;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        position: relative;
-
-        &:hover:not(.disabled) {
-          transform: translateY(-5px);
-          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        }
-
-        &.disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .action-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          padding: 1.5rem 1.5rem 0;
-          
-          .action-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-
-            ion-icon {
-              font-size: 2rem;
-              color: white;
-            }
-          }
-
-          .action-badge {
-            ion-badge {
-              font-size: 0.8rem;
-              font-weight: 600;
-              padding: 0.2rem 0.6rem;
-            }
-          }
-        }
-
-        ion-card-header {
-          text-align: left;
-          padding: 0 1.5rem 1.5rem;
-          
-          ion-card-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--ion-color-dark);
-            margin-bottom: 0.5rem;
-          }
-
-          ion-card-subtitle {
-            color: var(--ion-color-medium);
-            font-size: 0.9rem;
-            line-height: 1.4;
-          }
-        }
-      }
-    }
-  }
-
-  // Acciones rápidas principales
-  .quick-actions-section {
-    background: white;
-    padding: 3rem 1rem;
-
-    .quick-actions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-
-      .quick-action-btn {
-        --border-radius: 20px;
-        --padding-start: 1.5rem;
-        --padding-end: 1.5rem;
-        --padding-top: 1rem;
-        --padding-bottom: 1rem;
-        height: auto;
-        font-weight: 600;
-        text-transform: none;
-        transition: all 0.3s ease;
-
-        &:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-        }
-
-        &.primary {
-          --background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
-        }
-
-        &.secondary {
-          --background: linear-gradient(135deg, var(--ion-color-secondary), var(--ion-color-tertiary));
-        }
-
-        &.tertiary {
-          --background: linear-gradient(135deg, var(--ion-color-tertiary), var(--ion-color-warning));
-        }
-
-        .btn-content {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          text-align: left;
-
-          i {
-            font-size: 2rem;
-            opacity: 0.9;
-          }
-
-          .btn-title {
-            display: block;
-            font-size: 1.1rem;
-            margin-bottom: 0.2rem;
-          }
-
-          .btn-subtitle {
-            display: block;
-            font-size: 0.9rem;
-            opacity: 0.9;
-            font-weight: 400;
-          }
-        }
-      }
-    }
-  }
-
-  // Sección de convocatorias
-  .convocations-section {
-    background: var(--ion-color-light);
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-
-      .section-title {
-        margin: 0;
-      }
+      h4 { margin: 2px 0; font-size: 1rem; font-weight: 600; }
+      .time { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
     }
 
-    .convocations-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-
-      .convocation-card {
-        margin: 0;
-        border-radius: 15px;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
-        cursor: pointer;
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        ion-card-header {
-          .convocation-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-
-            .convocation-type {
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-              padding: 0.3rem 0.8rem;
-              border-radius: 20px;
-              font-size: 0.8rem;
-              font-weight: 600;
-
-              ion-icon {
-                font-size: 1rem;
-              }
-            }
-
-            .convocation-status {
-              display: flex;
-              flex-direction: column;
-              align-items: flex-end;
-              gap: 0.3rem;
-
-              .convocation-date {
-                font-size: 0.8rem;
-                color: var(--ion-color-medium);
-              }
-            }
-          }
-
-          ion-card-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--ion-color-dark);
-            margin-bottom: 0.5rem;
-          }
-
-          ion-card-subtitle {
-            color: var(--ion-color-medium);
-            font-size: 0.9rem;
-
-            i {
-              margin-right: 0.5rem;
-              color: var(--ion-color-primary);
-            }
-
-            .team-name {
-              color: var(--ion-color-secondary);
-              font-weight: 500;
-            }
-          }
-        }
-
-        ion-card-content {
-          .convocation-stats {
-            display: flex;
-            gap: 1.5rem;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            color: var(--ion-color-medium);
-
-            .stat {
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-
-              i {
-                color: var(--ion-color-primary);
-              }
-            }
-          }
-
-          .convocation-actions {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: flex-end;
-          }
-        }
-      }
-    }
-  }
-
-  // Solicitudes pendientes
-  .requests-section {
-    background: white;
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-
-      .section-title {
-        margin: 0;
-      }
-    }
-
-    .requests-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-
-      .request-card {
-        margin: 0;
-        border-radius: 15px;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
-        cursor: pointer;
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        ion-card-header {
-          .request-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-
-            .requester-info {
-              .requester-name {
-                font-size: 1.1rem;
-                font-weight: 600;
-                color: var(--ion-color-dark);
-                margin: 0 0 0.2rem 0;
-              }
-
-              .requester-username {
-                color: var(--ion-color-medium);
-                font-size: 0.9rem;
-                margin: 0;
-              }
-            }
-
-            .request-status {
-              display: flex;
-              flex-direction: column;
-              align-items: flex-end;
-              gap: 0.3rem;
-
-              .request-time {
-                font-size: 0.8rem;
-                color: var(--ion-color-medium);
-              }
-            }
-          }
-        }
-
-        ion-card-content {
-          .request-details {
-            margin-bottom: 1rem;
-
-            .detail-item {
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-              margin-bottom: 0.5rem;
-              font-size: 0.9rem;
-              color: var(--ion-color-medium);
-
-              i {
-                color: var(--ion-color-primary);
-                width: 16px;
-              }
-            }
-          }
-
-          .request-actions {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: flex-end;
-          }
-        }
-      }
-    }
-  }
-
-  // Incidencias
-  .incidents-section {
-    background: var(--ion-color-light);
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-
-      .section-title {
-        margin: 0;
-      }
-    }
-
-    .incidents-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-
-      .incident-card {
-        margin: 0;
-        border-radius: 15px;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
-        cursor: pointer;
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        ion-card-header {
-          .incident-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-
-            .incident-type {
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-              font-weight: 600;
-              color: var(--ion-color-dark);
-
-              i {
-                color: var(--ion-color-danger);
-              }
-            }
-
-            .incident-priority {
-              display: flex;
-              flex-direction: column;
-              align-items: flex-end;
-              gap: 0.3rem;
-
-              .incident-time {
-                font-size: 0.8rem;
-                color: var(--ion-color-medium);
-              }
-            }
-          }
-        }
-
-        ion-card-content {
-          .incident-details {
-            margin-bottom: 1rem;
-
-            .detail-item {
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-              margin-bottom: 0.5rem;
-              font-size: 0.9rem;
-              color: var(--ion-color-medium);
-
-              i {
-                color: var(--ion-color-danger);
-                width: 16px;
-              }
-            }
-          }
-
-          .incident-description {
-            margin-bottom: 1rem;
-            color: var(--ion-color-dark);
-            line-height: 1.5;
-          }
-
-          .incident-actions {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: flex-end;
-          }
-        }
-      }
-    }
-  }
-
-  // Equipos gestionados
-  .teams-section {
-    background: white;
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-
-      .section-title {
-        margin: 0;
-      }
-    }
-
-    .teams-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-
-      .team-card {
-        margin: 0;
-        border-radius: 15px;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
-        cursor: pointer;
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        ion-card-header {
-          .team-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-
-            .team-shield {
-              width: 50px;
-              height: 50px;
-              background: var(--ion-color-primary);
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-
-              i {
-                font-size: 1.5rem;
-                color: white;
-              }
-            }
-          }
-        }
-
-        ion-card-content {
-          .team-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-
-            .stat {
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-              padding: 0.8rem;
-              background: var(--ion-color-light);
-              border-radius: 10px;
-              font-size: 0.9rem;
-
-              i {
-                color: var(--ion-color-primary);
-              }
-            }
-          }
-
-          .team-actions {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: flex-end;
-          }
-        }
-      }
-    }
+    .arrow { color: #cbd5e1; }
   }
 }
 
-// Responsive
-@media (max-width: 768px) {
-  .coach-dashboard-content {
-    .coach-hero {
-      height: 30vh;
-
-      .hero-overlay {
-        padding: 1rem;
-
-        .coach-info-card {
-          flex-direction: column;
-          text-align: center;
-          gap: 1rem;
-
-          .coach-details {
-            .coach-name {
-              font-size: 1.3rem;
-            }
-
-            .coach-meta {
-              justify-content: center;
-            }
-
-            .coach-stats-mini {
-              justify-content: center;
-            }
-          }
-        }
-      }
-    }
-
-    .section {
-      padding: 1.5rem 1rem;
-
-      .section-title {
-        font-size: 1.5rem;
-      }
-    }
-
-    .stats-section {
-      .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-
-        .stat-card {
-          padding: 1rem;
-
-          .stat-icon {
-            width: 40px;
-            height: 40px;
-
-            i {
-              font-size: 1.2rem;
-            }
-          }
-
-          .stat-content {
-            .stat-number {
-              font-size: 1.5rem;
-            }
-          }
-        }
-      }
-    }
-
-    .actions-section {
-      .actions-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .quick-actions-section {
-      .quick-actions-grid {
-        grid-template-columns: 1fr;
-
-        .quick-action-btn {
-          .btn-content {
-            i {
-              font-size: 1.5rem;
-            }
-
-            .btn-title {
-              font-size: 1rem;
-            }
-
-            .btn-subtitle {
-              font-size: 0.8rem;
-            }
-          }
-        }
-      }
-    }
-
-    .convocations-section {
-      .convocations-list {
-        .convocation-card {
-          ion-card-content {
-            .convocation-stats {
-              flex-direction: column;
-              gap: 0.5rem;
-            }
-
-            .convocation-actions {
-              flex-direction: column;
-            }
-          }
-        }
-      }
-    }
-
-    .requests-section {
-      .requests-list {
-        .request-card {
-          ion-card-content {
-            .request-actions {
-              flex-direction: column;
-            }
-          }
-        }
-      }
-    }
-
-    .incidents-section {
-      .incidents-list {
-        .incident-card {
-          ion-card-content {
-            .incident-actions {
-              flex-direction: column;
-            }
-          }
-        }
-      }
-    }
-
-    .teams-section {
-      .teams-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .coach-dashboard-content {
-    .coach-hero {
-      height: 25vh;
-
-      .hero-overlay {
-        .coach-info-card {
-          padding: 1rem;
-
-          .coach-avatar {
-            width: 60px;
-            height: 60px;
-
-            .coach-badge {
-              width: 25px;
-              height: 25px;
-              font-size: 0.7rem;
-            }
-          }
-
-          .coach-details {
-            .coach-name {
-              font-size: 1.1rem;
-            }
-
-            .coach-meta {
-              flex-direction: column;
-              align-items: center;
-              gap: 0.3rem;
-
-              .role-badge,
-              .teams-badge {
-                font-size: 0.7rem;
-                padding: 0.2rem 0.6rem;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    .stats-section {
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .convocations-section {
-      .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-      }
-
-      .convocations-list {
-        .convocation-card {
-          ion-card-header {
-            .convocation-header {
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 0.5rem;
-
-              .convocation-status {
-                align-items: flex-start;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    .requests-section {
-      .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-      }
-
-      .requests-list {
-        .request-card {
-          ion-card-header {
-            .request-header {
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 0.5rem;
-
-              .request-status {
-                align-items: flex-start;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    .incidents-section {
-      .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-      }
-
-      .incidents-list {
-        .incident-card {
-          ion-card-header {
-            .incident-header {
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 0.5rem;
-
-              .incident-priority {
-                align-items: flex-start;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+.empty-events {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+    background: white;
+    border-radius: 16px;
+    border: 1px dashed #e2e8f0;
+    
+    p { margin-bottom: 1rem; }
 }

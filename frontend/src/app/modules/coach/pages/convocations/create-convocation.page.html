@@ -1,0 +1,61 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/coach-dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Nueva Convocatoria</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding bg-light">
+  <form [formGroup]="convocationForm" (ngSubmit)="onSubmit()">
+    
+    <ion-card class="form-card">
+      <ion-card-content>
+        <ion-segment formControlName="tipo" mode="ios">
+          <ion-segment-button value="PARTIDO">
+            <ion-label>Partido</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="ENTRENAMIENTO">
+            <ion-label>Entreno</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="form-card">
+      <ion-card-content>
+        <ion-item lines="inset" class="mb-2">
+          <ion-label position="stacked">Título / Rival</ion-label>
+          <ion-input formControlName="titulo" placeholder="Ej: Final vs Rayo"></ion-input>
+        </ion-item>
+        
+        <ion-item lines="inset">
+          <ion-label position="stacked">Lugar</ion-label>
+          <ion-input formControlName="lugar" placeholder="Ej: Campo Municipal"></ion-input>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="form-card">
+      <ion-card-content>
+        <ion-item lines="inset" class="mb-2">
+          <ion-label position="stacked">Inicio</ion-label>
+          <ion-input type="datetime-local" formControlName="fechaInicio"></ion-input>
+        </ion-item>
+        <ion-item lines="inset">
+          <ion-label position="stacked">Fin</ion-label>
+          <ion-input type="datetime-local" formControlName="fechaFin"></ion-input>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="ion-padding">
+      <ion-button expand="block" type="submit" [disabled]="convocationForm.invalid" shape="round" size="large">
+        Crear Evento
+        <ion-icon name="checkmark" slot="end"></ion-icon>
+      </ion-button>
+    </div>
+
+  </form>
+</ion-content>
