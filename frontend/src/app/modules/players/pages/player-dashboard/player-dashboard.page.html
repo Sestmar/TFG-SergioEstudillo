@@ -2,7 +2,7 @@
   
   <div *ngIf="loading" class="loading-container">
     <ion-spinner name="crescent" color="primary"></ion-spinner>
-    <p>Calentando motores...</p>
+    <p>Cargando perfil...</p>
   </div>
 
   <div class="main-container" *ngIf="!loading && currentPlayer">
@@ -30,7 +30,12 @@
             <div class="dorsal-badge" *ngIf="currentPlayer.dorsal">#{{ currentPlayer.dorsal }}</div>
           </div>
           <div class="info-container">
-            <h3>{{ currentTeam?.nombre || 'Equipo #' + currentPlayer.equipoPrincipal }}</h3>
+            
+            <h3>{{ currentTeam?.nombre || 'Sin Equipo Asignado' }}</h3>
+            
+            <p *ngIf="currentTeam?.categoria" style="font-size: 0.9rem; opacity: 0.8; margin-top: -5px;">
+                {{ currentTeam?.categoria?.nombre || 'Categoría General' }}
+            </p>
   
             <div class="badges">
               <span class="badge position">{{ getPlayerPosition() }}</span>
@@ -56,7 +61,7 @@
         </div>
         <div class="data">
           <span class="value">{{ stats.totalConvocations }}</span>
-          <span class="label">Total</span>
+          <span class="label">Eventos</span>
         </div>
       </div>
       <div class="stat-pill">

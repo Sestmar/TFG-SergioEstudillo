@@ -2,10 +2,10 @@ package com.DAMUnitedFC.backend_tfg.controller;
 
 import com.DAMUnitedFC.backend_tfg.dto.JugadorDto;
 import com.DAMUnitedFC.backend_tfg.model.Jugador;
-import com.DAMUnitedFC.backend_tfg.model.Equipo; // ✅ Importar Equipo
+import com.DAMUnitedFC.backend_tfg.model.Equipo;
 import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
-import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository; // ✅ Importar Repo Equipo
+import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
 import org.springframework.web.bind.annotation.*;
 import com.DAMUnitedFC.backend_tfg.dto.EstadisticasJugadorDto;
 import java.sql.Date;
@@ -17,9 +17,8 @@ public class JugadorController {
 
     private final JugadorRepository repo;
     private final UsuarioRepository usuarioRepo;
-    private final EquipoRepository equipoRepo; // ✅ Nuevo
+    private final EquipoRepository equipoRepo;
 
-    // ✅ Inyectamos el repo de equipos
     public JugadorController(JugadorRepository repo, UsuarioRepository usuarioRepo, EquipoRepository equipoRepo) {
         this.repo = repo;
         this.usuarioRepo = usuarioRepo;
@@ -39,44 +38,32 @@ public class JugadorController {
     @PostMapping
     public Jugador crear(@RequestBody JugadorDto dto) {
         Jugador j = new Jugador();
-        j.setUsuario(usuarioRepo.findById(dto.getIdUsuario()).orElseThrow());
-        j.setFechaNacimiento(Date.valueOf(dto.getFechaNacimiento()));
-        j.setPosicion(dto.getPosicion());
-        j.setDorsal(dto.getDorsal());
-        j.setEstado(dto.getEstado());
-        j.setTelefonoContacto(dto.getTelefonoContacto());
-        j.setDireccion(dto.getDireccion());
-        j.setFechaAlta(Date.valueOf(dto.getFechaAlta()));
-        j.setFechaBaja(dto.getFechaBaja() != null ? Date.valueOf(dto.getFechaBaja()) : null);
-        j.setObservaciones(dto.getObservaciones());
-
-        // 🔥 LÓGICA DE EQUIPO: Buscamos el objeto por el ID
-        if (dto.getEquipoPrincipal() != null) {
-            Equipo e = equipoRepo.findById(dto.getEquipoPrincipal()).orElse(null);
-            j.setEquipoPrincipal(e);
-        } else {
-            j.setEquipoPrincipal(null);
-        }
-
-        return repo.save(j);
+        return guardarOActualizar(j, dto);
     }
 
     @PutMapping("/{id}")
     public Jugador actualizar(@PathVariable Integer id, @RequestBody JugadorDto dto) {
         Jugador j = repo.findById(id).orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+        return guardarOActualizar(j, dto);
+    }
 
+    // ✅ MÉTODO AUXILIAR PARA NO REPETIR CÓDIGO Y EVITAR ERRORES DE FECHAS
+    private Jugador guardarOActualizar(Jugador j, JugadorDto dto) {
         j.setUsuario(usuarioRepo.findById(dto.getIdUsuario()).orElseThrow());
-        j.setFechaNacimiento(Date.valueOf(dto.getFechaNacimiento()));
+
+        // 🔥 FIX CRÍTICO: Comprobamos si es null antes de convertir a Date
+        j.setFechaNacimiento(dto.getFechaNacimiento() != null ? Date.valueOf(dto.getFechaNacimiento()) : null);
+        j.setFechaAlta(dto.getFechaAlta() != null ? Date.valueOf(dto.getFechaAlta()) : null);
+        j.setFechaBaja(dto.getFechaBaja() != null ? Date.valueOf(dto.getFechaBaja()) : null);
+
         j.setPosicion(dto.getPosicion());
         j.setDorsal(dto.getDorsal());
         j.setEstado(dto.getEstado());
         j.setTelefonoContacto(dto.getTelefonoContacto());
         j.setDireccion(dto.getDireccion());
-        j.setFechaAlta(Date.valueOf(dto.getFechaAlta()));
-        j.setFechaBaja(dto.getFechaBaja() != null ? Date.valueOf(dto.getFechaBaja()) : null);
         j.setObservaciones(dto.getObservaciones());
 
-        // 🔥 LÓGICA DE EQUIPO: Actualización
+        // Lógica de Equipo
         if (dto.getEquipoPrincipal() != null) {
             Equipo e = equipoRepo.findById(dto.getEquipoPrincipal()).orElse(null);
             j.setEquipoPrincipal(e);

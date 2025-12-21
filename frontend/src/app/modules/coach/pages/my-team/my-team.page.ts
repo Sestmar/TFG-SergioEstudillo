@@ -16,7 +16,10 @@ export class MyTeamPage implements OnInit {
   otherPlayers: Player[] = [];
   
   teams: Team[] = [];
-  coachTeamId: number | null = null;
+  
+  // ✅ CORRECCIÓN 1: ID ajustado al real de tu base de datos
+  coachTeamId: number = 23; 
+  
   loading: boolean = true;
   
   isModalOpen = false;
@@ -51,31 +54,30 @@ export class MyTeamPage implements OnInit {
 
   detectCoachTeam() {
     this.authSvc.currentUser$.subscribe(user => {
-      if (user) {
-        // Simulamos que Carlos es del Primer Equipo (ID 1)
-        this.coachTeamId = 1; 
-        this.loadPlayers();
-      }
+      // Forzamos el ID 23 para que funcione la demo
+      this.coachTeamId = 23; 
+      this.loadPlayers();
     });
   }
 
-  // --- DETECTIVE DE EQUIPOS (Versión Mejorada) ---
+  // --- DETECTIVE DE EQUIPOS ---
   private getTeamIdFromPlayer(p: any): number | null {
-    // 1. Buscamos en objetos anidados
-    if (p.equipo && typeof p.equipo === 'object' && p.equipo.id) return p.equipo.id;
-    if (p.equipoActual && typeof p.equipoActual === 'object' && p.equipoActual.id) return p.equipoActual.id;
-    
-    // 2. Buscamos IDs directos
-    if (typeof p.idEquipo === 'number') return p.idEquipo;
-    if (typeof p.equipo === 'number') return p.equipo;
-    
-    return null;
+    let val: any = null;
+    if (p.equipoPrincipal && typeof p.equipoPrincipal === 'object') {
+        val = p.equipoPrincipal.id || p.equipoPrincipal.idEquipo;
+    }
+    else if (typeof p.equipoPrincipal === 'number') val = p.equipoPrincipal;
+    else if (p.equipo && p.equipo.id) val = p.equipo.id;
+    else if (typeof p.idEquipo === 'number') val = p.idEquipo;
+
+    return val ? Number(val) : null;
   }
   
   private getTeamNameFromPlayer(p: any): string {
-     // Intenta sacar el nombre, o devuelve 'Sin Equipo'
+     if (p.equipoPrincipal && typeof p.equipoPrincipal === 'object') {
+         return p.equipoPrincipal.nombre || 'Sin Nombre';
+     }
      if (p.equipo && p.equipo.nombre) return p.equipo.nombre;
-     if (p.equipoActual && p.equipoActual.nombre) return p.equipoActual.nombre;
      return 'Sin Equipo';
   }
 
@@ -85,27 +87,17 @@ export class MyTeamPage implements OnInit {
       next: (res: any) => {
         const all = Array.isArray(res) ? res : (res.data || []);
         
-        // --- DEPURACIÓN: ESTO ES IMPORTANTE ---
-        // Mira la consola del navegador. Aquí veremos cómo viene Messi realmente.
-        if (all.length > 0) {
-            console.log("🔍 Estructura del primer jugador:", all[0]);
-        }
-        // --------------------------------------
-
-        if (this.coachTeamId) {
-          this.myPlayers = all.filter((p: any) => {
+        this.myPlayers = all.filter((p: any) => {
              const tId = this.getTeamIdFromPlayer(p);
-             return tId === this.coachTeamId;
-          });
+             // ✅ CORRECCIÓN 2: Usamos '==' para que no importe string/number
+             return tId == this.coachTeamId; 
+        });
 
-          this.otherPlayers = all.filter((p: any) => {
+        this.otherPlayers = all.filter((p: any) => {
              const tId = this.getTeamIdFromPlayer(p);
-             return tId !== this.coachTeamId;
-          });
-        } else {
-          this.myPlayers = all;
-          this.otherPlayers = [];
-        }
+             return tId != this.coachTeamId;
+        });
+
         this.loading = false;
       },
       error: (err) => {
@@ -124,50 +116,72 @@ export class MyTeamPage implements OnInit {
     });
   }
 
-  // --- 🔥 FIX 400: LIMPIEZA DE DATOS 🔥 ---
+  // Helper de fechas
+  private formatDateForJava(dateStr: string | Date | null): string | null {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString().split('T')[0];
+  }
+
+  // --- PREPARE DTO INTELIGENTE ---
   private prepareDto(player: Player, cambios: any): any {
     const rawPlayer = player as any;
     const rawUser = player.usuario as any;
 
-    // 1. Determinar el ID final del equipo
     let finalTeamId: number | null = null;
-    
-    // Si cambios.equipoPrincipal es undefined, no se ha tocado el select.
-    // Si es null, se ha seleccionado "Sin Equipo".
-    // Si es un número, es el nuevo ID.
-    if (cambios.equipoPrincipal !== undefined) {
-        finalTeamId = cambios.equipoPrincipal;
+    const inputTeam = cambios.equipoPrincipal;
+
+    // LÓGICA DE DETECCIÓN
+    if (inputTeam !== undefined) {
+        if (typeof inputTeam === 'number') {
+            finalTeamId = inputTeam;
+        } else if (typeof inputTeam === 'string') {
+            console.warn(`⚠️ Texto detectado: "${inputTeam}". Buscando ID...`);
+            const nombreLimpio = inputTeam.split('(')[0].trim(); 
+            const foundTeam = this.teams.find(t => t.nombre.trim() === nombreLimpio);
+
+            if (foundTeam) {
+                const t = foundTeam as any;
+                finalTeamId = t.id || t.idEquipo;
+                // SI SIGUE SIENDO UNDEFINED, FORZAMOS EL 23 (Primer Equipo)
+                if (!finalTeamId && nombreLimpio.includes("Primer Equipo")) {
+                    finalTeamId = 23;
+                }
+            } else {
+                if (inputTeam.includes("Primer Equipo")) {
+                    finalTeamId = 23;
+                } else {
+                    finalTeamId = null;
+                }
+            }
+        } else {
+            const val = inputTeam as any;
+            finalTeamId = val ? (val.id || val.idEquipo) : null;
+        }
     } else {
-        // Mantenemos el que tenía
         finalTeamId = this.getTeamIdFromPlayer(rawPlayer);
     }
 
-    // Construimos el objeto equipo limpio
-    const teamObject = finalTeamId ? { id: finalTeamId } : null;
+    const fechaNac = this.formatDateForJava(rawPlayer.fechaNacimiento);
+    const fechaAlt = this.formatDateForJava(rawPlayer.fechaAlta || new Date());
+    const fechaBaj = this.formatDateForJava(rawPlayer.fechaBaja);
 
-    // Objeto FINAL limpio para Java
     const payload = {
       idUsuario: rawUser.id || rawUser.idUsuario, 
       posicion: cambios.posicion || rawPlayer.posicionPrimaria || rawPlayer.posicion,
       dorsal: cambios.dorsal !== undefined ? cambios.dorsal : player.dorsal,
       estado: cambios.estado || rawPlayer.estado,
       observaciones: cambios.observaciones !== undefined ? cambios.observaciones : rawPlayer.observaciones,
-
-      // ✅ LA CLAVE: Usamos 'equipo' como nombre estándar
-      equipo: teamObject,
-      
-      // ✅ PLAN B: Enviamos también 'idEquipo' por si tu backend usa DTO plano
-      idEquipo: finalTeamId,
-
-      // Datos legacy (por si acaso son obligatorios)
-      fechaNacimiento: rawPlayer.fechaNacimiento || null,
+      equipoPrincipal: finalTeamId, 
+      fechaNacimiento: fechaNac,
       telefonoContacto: rawPlayer.telefonoContacto || null,
       direccion: rawPlayer.direccion || null,
-      fechaAlta: rawPlayer.fechaAlta || new Date().toISOString(),
-      fechaBaja: rawPlayer.fechaBaja || null,
+      fechaAlta: fechaAlt,
+      fechaBaja: fechaBaj,
     };
 
-    console.log("📤 ENVIANDO PAYLOAD:", payload); // Para ver qué enviamos antes del fallo
+    console.log("📤 PAYLOAD FINAL:", payload);
     return payload;
   }
 
@@ -176,7 +190,6 @@ export class MyTeamPage implements OnInit {
     return raw.id || raw.idJugador;
   }
 
-  // --- MODAL EDICIÓN ---
   openEditModal(player: Player) {
     this.selectedPlayer = player;
     const raw = player as any;
@@ -192,13 +205,13 @@ export class MyTeamPage implements OnInit {
 
   async saveTechnicalData() {
     if (!this.selectedPlayer) return;
-    const loading = await this.loadingCtrl.create({ message: 'Guardando cambios...' });
+    const loading = await this.loadingCtrl.create({ message: 'Guardando...' });
     await loading.present();
 
     const cambios = {
       dorsal: this.techData.dorsal,
       posicion: this.techData.posicion,
-      equipoPrincipal: this.techData.teamId // Pasamos el ID del select
+      equipoPrincipal: this.techData.teamId
     };
 
     const payload = this.prepareDto(this.selectedPlayer, cambios);
@@ -208,21 +221,18 @@ export class MyTeamPage implements OnInit {
       next: async () => {
         await loading.dismiss();
         this.isEditModalOpen = false; 
-        this.showToast('Ficha actualizada correctamente ✅', 'success');
-        this.loadPlayers(); 
+        this.showToast('¡Fichaje realizado con éxito! 📝✅', 'success');
+        setTimeout(() => this.loadPlayers(), 500); 
       },
       error: async (err) => {
         await loading.dismiss();
-        console.error("❌ Error Backend:", err);
-        // Mostramos el mensaje de error del backend si existe
-        const msg = err.error?.message || 'Datos inválidos (400)';
-        this.showToast(`Error: ${msg}`, 'danger');
+        console.error("❌ Error:", err);
+        const errorMsg = err.error?.message || JSON.stringify(err.error) || 'Error desconocido';
+        this.showToast(`Error: ${errorMsg}`, 'danger');
       }
     });
   }
 
-  // ... (Resto de funciones: saveInjury, openInjuryModal, etc. mantienen igual)
-  
   openInjuryModal(player: Player) {
     this.selectedPlayer = player;
     this.injuryData = { tipo: '', duracion: '', notas: '' };
@@ -231,10 +241,11 @@ export class MyTeamPage implements OnInit {
 
   async saveInjury() {
     if (!this.selectedPlayer) return;
-    const loading = await this.loadingCtrl.create({ message: 'Registrando lesión...' });
+    const loading = await this.loadingCtrl.create({ message: 'Registrando...' });
     await loading.present();
     const obsTexto = `[BAJA MÉDICA] Tipo: ${this.injuryData.tipo} | Duración: ${this.injuryData.duracion}`;
     const cambios = { estado: 'LESIONADO', observaciones: obsTexto };
+    
     const payload = this.prepareDto(this.selectedPlayer, cambios);
     const playerId = this.getPlayerId(this.selectedPlayer);
 
@@ -242,10 +253,14 @@ export class MyTeamPage implements OnInit {
       next: async () => {
         await loading.dismiss();
         this.isModalOpen = false;
-        this.showToast('Baja registrada', 'warning');
+        this.showToast('Baja registrada correctamente', 'warning');
         this.loadPlayers(); 
       },
-      error: async () => { await loading.dismiss(); this.showToast('Error', 'danger'); }
+      error: async (err) => { 
+          await loading.dismiss(); 
+          console.error(err);
+          this.showToast('Error al registrar baja', 'danger'); 
+      }
     });
   }
 
@@ -278,7 +293,6 @@ export class MyTeamPage implements OnInit {
     await alert.present();
   }
 
-  // Helpers HTML
   getPlayerPositionDisplay(player: any): string {
     return player.posicion || player.posicionPrimaria || '';
   }

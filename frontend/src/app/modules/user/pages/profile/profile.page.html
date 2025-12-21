@@ -25,7 +25,7 @@
     
     <div class="profile-header">
       <div class="avatar-wrapper">
-        <img [src]="currentUser.fotoPerfil || 'https://ui-avatars.com/api/?name=' + currentUser.nombre + '&background=random&size=128'" alt="Avatar">
+        <img [src]="editForm.fotoUrl || currentUser.fotoPerfil || 'https://ui-avatars.com/api/?name=' + currentUser.nombre + '&background=random&size=128'" alt="Avatar">
         <div class="camera-btn">
           <ion-icon name="camera"></ion-icon>
         </div>
@@ -47,11 +47,11 @@
         </div>
         <div class="info-item">
           <span class="label">Posición</span>
-          <span class="value">{{ (playerData?.posicion || 'Sin asignar') | titlecase }}</span>
+          <span class="value">{{ $any(playerData)?.posicion || $any(playerData)?.posicionPrimaria || 'Sin asignar' | titlecase }}</span>
         </div>
         <div class="info-item full">
           <span class="label">Equipo Actual</span>
-          <span class="value">{{ (playerData?.equipoActual?.nombre || playerData?.equipo?.nombre || 'Sin Equipo Asignado') }}</span>
+          <span class="value team-name">{{ getTeamNameDisplay() }}</span>
         </div>
         <div class="info-item full">
           <span class="label">Estado</span>
@@ -79,6 +79,12 @@
           <ion-label position="stacked">Dirección / Ciudad</ion-label>
           <ion-input [(ngModel)]="editForm.direccion" placeholder="Ej: Madrid, España"></ion-input>
           <ion-icon name="location-outline" slot="end" class="input-icon"></ion-icon>
+        </ion-item>
+        
+        <ion-item class="input-item">
+          <ion-label position="stacked">URL Foto Perfil</ion-label>
+          <ion-input [(ngModel)]="editForm.fotoUrl" placeholder="http://..."></ion-input>
+          <ion-icon name="image-outline" slot="end" class="input-icon"></ion-icon>
         </ion-item>
 
       </ion-list>

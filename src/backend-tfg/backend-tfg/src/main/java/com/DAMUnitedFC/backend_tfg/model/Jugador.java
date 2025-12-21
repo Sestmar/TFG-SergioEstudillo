@@ -3,6 +3,8 @@ package com.DAMUnitedFC.backend_tfg.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.sql.Date;
+// ✅ IMPORTANTE: Importar esto
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "jugador")
@@ -44,9 +46,10 @@ public class Jugador {
     @Column(name = "observaciones", length = 255)
     private String observaciones;
 
-    // 🔥 CAMBIO IMPORTANTE: Ahora es un Objeto, no un Integer
+    // 🔥 CAMBIO CLAVE: Evita error de recursión infinita
     @ManyToOne
-    @JoinColumn(name = "equipo_principal") // Esto hace la magia de la FK
+    @JoinColumn(name = "equipo_principal")
+    @JsonIgnoreProperties({"jugadores", "hibernateLazyInitializer", "handler"})
     private Equipo equipoPrincipal;
 
     @Column(name = "foto_url")

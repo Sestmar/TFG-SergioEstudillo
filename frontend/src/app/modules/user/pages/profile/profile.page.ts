@@ -16,7 +16,6 @@ export class ProfilePage implements OnInit {
   playerData: Player | null = null;
   loading: boolean = true;
   
-  // Datos editables
   editForm = {
     telefono: '',
     direccion: '',
@@ -40,15 +39,12 @@ export class ProfilePage implements OnInit {
     this.authSvc.currentUser$.subscribe(user => {
       if (user) {
         this.currentUser = user;
-        // 🛠️ CORRECCIÓN 1: Casteamos a 'any' para evitar error si 'id' no está en la interfaz User
         const u = user as any;
         const userId = u.id || u.idUsuario;
         
-        // Cargar ficha de jugador asociada
         this.playerSvc.getAllPlayers().subscribe({
           next: (res: any) => {
             const list = Array.isArray(res) ? res : (res.data || []);
-            // Buscamos al jugador por ID de usuario
             const myPlayer = list.find((p: any) => {
                 const pUser = p.usuario || {};
                 return (pUser.id || pUser.idUsuario || p.idUsuario) === userId;
@@ -56,13 +52,9 @@ export class ProfilePage implements OnInit {
             
             if (myPlayer) {
               this.playerData = myPlayer;
-              
-              // Rellenar formulario
               const raw = myPlayer as any;
               this.editForm.telefono = raw.telefonoContacto || '';
               this.editForm.direccion = raw.direccion || '';
-              
-              // Intentamos sacar la foto del usuario o del jugador
               const userFoto = (myPlayer.usuario as any)?.fotoPerfil || (myPlayer.usuario as any)?.fotoUrl;
               this.editForm.fotoUrl = userFoto || raw.fotoUrl || '';
             }
@@ -77,48 +69,53 @@ export class ProfilePage implements OnInit {
     });
   }
 
-  // --- HELPER PARA LIMPIAR DATOS ---
+  // ✅ HELPER VITAL PARA EL HTML
+  getTeamNameDisplay(): string {
+    if (!this.playerData) return 'Cargando...';
+    
+    const p = this.playerData as any;
+    const team = p.equipoPrincipal || p.equipo || p.equipoActual;
+
+    if (team && typeof team === 'object') {
+        return team.nombre + (team.categoria ? ` (${team.categoria.nombre})` : '');
+    }
+    
+    if (team === 23) return 'Primer Equipo (Senior)';
+
+    return 'Sin Equipo Asignado';
+  }
+
   private prepareDto(player: Player, form: any): any {
-    // 🛠️ CORRECCIÓN CLAVE: Convertimos a 'any' al principio
     const rawPlayer = player as any;
     const rawUser = (player.usuario || {}) as any;
 
-    return {
-      // Campos obligatorios para el Backend
-      idUsuario: rawUser.id || rawUser.idUsuario, 
-      
-      // 🛠️ CORRECCIÓN 2: Usamos rawPlayer para evitar "Property 'posicion' does not exist"
-      posicion: rawPlayer.posicionPrimaria || rawPlayer.posicion, 
-      
-      equipoPrincipal: rawPlayer.equipoActual || rawPlayer.equipoPrincipal, 
-      dorsal: player.dorsal,
-      
-      // 🛠️ CORRECCIÓN 3: Usamos rawPlayer para evitar "Property 'estado' does not exist"
-      estado: rawPlayer.estado, 
-      
-      observaciones: rawPlayer.observaciones,
+    let teamToSend = rawPlayer.equipoPrincipal;
+    if (teamToSend && typeof teamToSend === 'object') {
+        teamToSend = teamToSend.id || teamToSend.idEquipo;
+    }
 
-      // Campos que estamos editando
+    return {
+      idUsuario: rawUser.id || rawUser.idUsuario, 
+      posicion: rawPlayer.posicionPrimaria || rawPlayer.posicion, 
+      equipoPrincipal: teamToSend, 
+      dorsal: player.dorsal,
+      estado: rawPlayer.estado, 
+      observaciones: rawPlayer.observaciones,
       telefonoContacto: form.telefono,
       direccion: form.direccion,
-
-      // Mantener fechas
-      fechaNacimiento: rawPlayer.fechaNacimiento || null,
-      fechaAlta: rawPlayer.fechaAlta || new Date().toISOString(),
-      fechaBaja: rawPlayer.fechaBaja || null,
+      // Fechas limpias
+      fechaNacimiento: rawPlayer.fechaNacimiento ? new Date(rawPlayer.fechaNacimiento).toISOString().split('T')[0] : null,
+      fechaAlta: rawPlayer.fechaAlta ? new Date(rawPlayer.fechaAlta).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      fechaBaja: rawPlayer.fechaBaja ? new Date(rawPlayer.fechaBaja).toISOString().split('T')[0] : null,
     };
   }
 
   async saveProfile() {
     if (!this.playerData) return;
-
     const loader = await this.loadingCtrl.create({ message: 'Guardando cambios...' });
     await loader.present();
 
-    // 1. Usamos el helper
     const updatePayload = this.prepareDto(this.playerData, this.editForm);
-    
-    // 2. Obtenemos ID seguro
     const raw = this.playerData as any;
     const playerId = raw.id || raw.idJugador;
 
@@ -126,7 +123,7 @@ export class ProfilePage implements OnInit {
       next: async () => {
         await loader.dismiss();
         this.showToast('Perfil actualizado correctamente', 'success');
-        this.loadProfile(); // Recargar
+        this.loadProfile(); 
       },
       error: async (err) => {
         await loader.dismiss();
