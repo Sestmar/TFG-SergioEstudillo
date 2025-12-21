@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AlertController, ToastController, LoadingController } from '@ionic/angular';
+import { HttpClient } from '@angular/common/http'; // ✅ IMPORTANTE: Para llamar al nuevo endpoint
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { TeamService } from 'src/app/core/services/team/team.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
@@ -17,8 +18,9 @@ export class MyTeamPage implements OnInit {
   
   teams: Team[] = [];
   
-  // ✅ CORRECCIÓN 1: ID ajustado al real de tu base de datos
-  coachTeamId: number = 23; 
+  // ✅ CAMBIO 1: Ya no hay número fijo. Se llena dinámicamente desde el backend.
+  coachTeamId: number | null = null; 
+  coachTeamName: string = ''; // Opcional, por si quieres mostrar el nombre del equipo
   
   loading: boolean = true;
   
@@ -42,6 +44,7 @@ export class MyTeamPage implements OnInit {
     private playerService: PlayerService,
     private teamService: TeamService,
     private authSvc: AuthService,
+    private http: HttpClient, // ✅ Inyectamos HttpClient
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
     private loadingCtrl: LoadingController
@@ -52,15 +55,35 @@ export class MyTeamPage implements OnInit {
     this.loadTeams();
   }
 
+  // --- 🔥 DETECCIÓN DINÁMICA DEL EQUIPO DEL ENTRENADOR 🔥 ---
   detectCoachTeam() {
     this.authSvc.currentUser$.subscribe(user => {
-      // Forzamos el ID 23 para que funcione la demo
-      this.coachTeamId = 23; 
-      this.loadPlayers();
+      if (user) {
+        const u = user as any;
+        const userId = u.id || u.idUsuario;
+
+        // Llamamos al nuevo endpoint que conecta Usuario -> Entrenador -> Equipo
+        this.http.get(`http://localhost:8080/api/entrenadores/usuario/${userId}/equipo`).subscribe({
+          next: (equipo: any) => {
+            console.log("✅ Equipo del Entrenador detectado:", equipo);
+            // Asignamos el ID dinámicamente (tu entidad usa idEquipo)
+            this.coachTeamId = equipo.idEquipo || equipo.id;
+            this.coachTeamName = equipo.nombre;
+            
+            // Ahora que sabemos el equipo, cargamos los jugadores
+            this.loadPlayers();
+          },
+          error: (err) => {
+            console.error("❌ Error detectando equipo:", err);
+            this.loading = false;
+            this.showToast('No tienes equipo asignado o no eres entrenador', 'warning');
+          }
+        });
+      }
     });
   }
 
-  // --- DETECTIVE DE EQUIPOS ---
+  // --- DETECTIVE DE EQUIPOS EN JUGADORES ---
   private getTeamIdFromPlayer(p: any): number | null {
     let val: any = null;
     if (p.equipoPrincipal && typeof p.equipoPrincipal === 'object') {
@@ -82,20 +105,25 @@ export class MyTeamPage implements OnInit {
   }
 
   loadPlayers() {
+    if (!this.coachTeamId) return;
+
     this.loading = true;
     this.playerService.getAllPlayers().subscribe({
       next: (res: any) => {
         const all = Array.isArray(res) ? res : (res.data || []);
         
+        // 1. MI EQUIPO: Los que coinciden con mi ID
         this.myPlayers = all.filter((p: any) => {
              const tId = this.getTeamIdFromPlayer(p);
-             // ✅ CORRECCIÓN 2: Usamos '==' para que no importe string/number
-             return tId == this.coachTeamId; 
+             return tId == this.coachTeamId;
         });
 
+        // 2. DISPONIBLES: 🔥 CAMBIO CLAVE 🔥
+        // Antes: return tId != this.coachTeamId; (Mostraba a los de otros equipos)
+        // Ahora: return tId == null; (Solo muestra a los que están libres)
         this.otherPlayers = all.filter((p: any) => {
              const tId = this.getTeamIdFromPlayer(p);
-             return tId != this.coachTeamId;
+             return tId === null; 
         });
 
         this.loading = false;
@@ -132,30 +160,26 @@ export class MyTeamPage implements OnInit {
     let finalTeamId: number | null = null;
     const inputTeam = cambios.equipoPrincipal;
 
-    // LÓGICA DE DETECCIÓN
+    // LÓGICA DE DETECCIÓN INTELIGENTE (Selector UI)
     if (inputTeam !== undefined) {
         if (typeof inputTeam === 'number') {
             finalTeamId = inputTeam;
         } else if (typeof inputTeam === 'string') {
             console.warn(`⚠️ Texto detectado: "${inputTeam}". Buscando ID...`);
+            
             const nombreLimpio = inputTeam.split('(')[0].trim(); 
             const foundTeam = this.teams.find(t => t.nombre.trim() === nombreLimpio);
 
             if (foundTeam) {
                 const t = foundTeam as any;
                 finalTeamId = t.id || t.idEquipo;
-                // SI SIGUE SIENDO UNDEFINED, FORZAMOS EL 23 (Primer Equipo)
-                if (!finalTeamId && nombreLimpio.includes("Primer Equipo")) {
-                    finalTeamId = 23;
-                }
             } else {
-                if (inputTeam.includes("Primer Equipo")) {
-                    finalTeamId = 23;
-                } else {
-                    finalTeamId = null;
-                }
+                // Fallback seguro: Si falla la detección, no asignamos nada para evitar errores
+                console.error("No se encontró el equipo por nombre, asignando null");
+                finalTeamId = null;
             }
         } else {
+            // Caso objeto
             const val = inputTeam as any;
             finalTeamId = val ? (val.id || val.idEquipo) : null;
         }
@@ -173,7 +197,9 @@ export class MyTeamPage implements OnInit {
       dorsal: cambios.dorsal !== undefined ? cambios.dorsal : player.dorsal,
       estado: cambios.estado || rawPlayer.estado,
       observaciones: cambios.observaciones !== undefined ? cambios.observaciones : rawPlayer.observaciones,
+      
       equipoPrincipal: finalTeamId, 
+      
       fechaNacimiento: fechaNac,
       telefonoContacto: rawPlayer.telefonoContacto || null,
       direccion: rawPlayer.direccion || null,
@@ -222,6 +248,7 @@ export class MyTeamPage implements OnInit {
         await loading.dismiss();
         this.isEditModalOpen = false; 
         this.showToast('¡Fichaje realizado con éxito! 📝✅', 'success');
+        // Recargamos para ver los cambios en la lista correcta
         setTimeout(() => this.loadPlayers(), 500); 
       },
       error: async (err) => {

@@ -1,0 +1,91 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/coach-dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Pizarra Táctica</ion-title>
+    <ion-buttons slot="end">
+      <ion-button>
+        <ion-icon name="save-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [scrollY]="false">
+  
+  <div *ngIf="loading" class="ion-text-center ion-padding">
+    <ion-spinner color="light"></ion-spinner>
+  </div>
+
+  <div class="drag-wrapper" cdkDropListGroup *ngIf="!loading">
+
+    <div class="football-pitch">
+      <div class="half-way-line"></div>
+      <div class="center-circle"></div>
+      <div class="penalty-box top"></div>
+      <div class="penalty-box bottom"></div>
+
+      <div class="tactical-line">
+        <div class="slot-container" *ngFor="let slot of forwards">
+          <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" (cdkDropListDropped)="drop($event)" class="player-slot">
+            <div class="player-token on-pitch" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
+              <span class="dorsal">{{ slot.player.dorsal }}</span>
+              <span class="name">{{ slot.player.usuario.nombre }}</span>
+              <div *cdkDragPlaceholder class="token-placeholder"></div>
+            </div>
+            </div>
+        </div>
+      </div>
+
+      <div class="tactical-line">
+        <div class="slot-container" *ngFor="let slot of midfielders">
+          <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" (cdkDropListDropped)="drop($event)" class="player-slot">
+            <div class="player-token on-pitch" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
+              <span class="dorsal">{{ slot.player.dorsal }}</span>
+              <span class="name">{{ slot.player.usuario.nombre }}</span>
+              <div *cdkDragPlaceholder class="token-placeholder"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tactical-line">
+        <div class="slot-container" *ngFor="let slot of defenders">
+          <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" (cdkDropListDropped)="drop($event)" class="player-slot">
+            <div class="player-token on-pitch" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
+              <span class="dorsal">{{ slot.player.dorsal }}</span>
+              <span class="name">{{ slot.player.usuario.nombre }}</span>
+              <div *cdkDragPlaceholder class="token-placeholder"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tactical-line">
+        <div class="slot-container" *ngFor="let slot of goalkeeper">
+          <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" (cdkDropListDropped)="drop($event)" class="player-slot">
+            <div class="player-token on-pitch gk-token" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
+              <span class="dorsal">{{ slot.player.dorsal }}</span>
+              <span class="name">{{ slot.player.usuario.nombre }}</span>
+              <div *cdkDragPlaceholder class="token-placeholder"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="bench-container">
+      <h3>BANQUILLO</h3>
+      <div cdkDropList id="benchList" [cdkDropListData]="bench" (cdkDropListDropped)="drop($event)" class="bench-list">
+        <div class="player-token" *ngFor="let p of bench" cdkDrag [cdkDragData]="p">
+          <span class="dorsal">{{ p.dorsal }}</span>
+          <span class="name">{{ p.usuario.nombre }}</span>
+          <div *cdkDragPlaceholder class="token-placeholder"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

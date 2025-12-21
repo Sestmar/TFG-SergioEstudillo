@@ -1,16 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, Subject, of } from 'rxjs';
-import { takeUntil, finalize, catchError } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil, finalize } from 'rxjs/operators';
 
-// Models
-import { User, Team, Convocation } from 'src/app/shared/models/models';
-
-// Services
 import { AuthService } from 'src/app/core/services/auth/auth.service';
-import { TeamService } from 'src/app/core/services/team/team.service';
 import { ConvocationService } from 'src/app/core/services/convocation/convocation.service';
-import { NotificationService } from 'src/app/core/services/notification/notification.service';
+import { PlayerService } from 'src/app/core/services/player/player.service';
+import { User, Convocation } from 'src/app/shared/models/models';
 
 interface CoachStats {
   matches: number;
@@ -26,23 +23,19 @@ interface CoachStats {
 })
 export class CoachDashboardPage implements OnInit, OnDestroy {
   currentUser$: Observable<User | null>;
-  managedTeam: Team | null = null;
   loading: boolean = true;
   
-  // Datos locales para la vista
-  stats: CoachStats = {
-    matches: 0,
-    trainings: 0,
-    wins: 0,
-    squadSize: 0
-  };
-
+  // Datos del Equipo
+  teamName: string = '';
+  categoryName: string = '';
+  managedTeamId: number | null = null;
+  
+  stats: CoachStats = { matches: 0, trainings: 0, wins: 0, squadSize: 0 };
   upcomingEvents: Convocation[] = [];
   
-  // Botones de acción rápida
   quickActions = [
     { title: 'Nueva Convocatoria', icon: 'add-circle', route: '/convocations/create', color: 'primary', description: 'Crear partido o entreno' },
-    { title: 'Gestionar Plantilla', icon: 'people', route: '/teams/manage', color: 'secondary', description: 'Ver jugadores' },
+    { title: 'Gestionar Plantilla', icon: 'people', route: '/coach/my-team', color: 'secondary', description: 'Ver jugadores' },
     { title: 'Planificación', icon: 'calendar', route: '/calendar', color: 'tertiary', description: 'Calendario mensual' },
     { title: 'Incidencias', icon: 'medkit', route: '/incidents', color: 'warning', description: 'Bajas y lesiones' }
   ];
@@ -51,9 +44,9 @@ export class CoachDashboardPage implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
-    private teamService: TeamService,
     private convocationService: ConvocationService,
-    private notificationService: NotificationService,
+    private playerService: PlayerService,
+    private http: HttpClient,
     private router: Router
   ) {
     this.currentUser$ = this.authService.currentUser$;
@@ -74,9 +67,9 @@ export class CoachDashboardPage implements OnInit, OnDestroy {
       next: (user) => {
         if (user) {
           const userId = (user as any).id || (user as any).idUsuario; 
-          this.loadManagedTeam(userId);
-        } else {
-          this.loading = false;
+          if (userId) {
+              this.loadManagedTeam(userId);
+          }
         }
       },
       error: (err) => {
@@ -87,31 +80,34 @@ export class CoachDashboardPage implements OnInit, OnDestroy {
   }
 
   private loadManagedTeam(userId: number) {
-    // Obtenemos todos los equipos para filtrar cuál pertenece a este entrenador
-    this.teamService.getTeams().pipe(
-      takeUntil(this.destroy$),
-      finalize(() => this.loading = false)
-    ).subscribe({
-      next: (response: any) => {
-        const teams: Team[] = Array.isArray(response) ? response : (response.teams || []);
-        
-        // Lógica de búsqueda robusta (incluye los IDs que configuramos en SQL)
-        this.managedTeam = teams.find((t: any) => 
-          (t.entrenador && t.entrenador.idUsuario === userId) || 
-          t.entrenadorId === 2 || // ID de la tabla Entrenador
-          t.idEquipo === 23       // ID del equipo "Primer Equipo"
-        ) || null;
+    this.http.get(`http://localhost:8080/api/entrenadores/usuario/${userId}/equipo`)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+            // El loading lo quitamos dentro del next/error
+        })
+      )
+      .subscribe({
+        next: (equipo: any) => {
+          console.log("🏆 Dashboard - Equipo detectado:", equipo);
+          
+          this.teamName = equipo.nombre;
+          this.categoryName = equipo.categoria ? equipo.categoria.nombre : 'General';
+          this.managedTeamId = equipo.idEquipo || equipo.id;
+          
+          this.loading = false;
 
-        if (this.managedTeam) {
-          console.log("Equipo del Mister encontrado:", this.managedTeam.nombre);
-          this.loadTeamStats(this.managedTeam.id);
-          this.loadUpcomingEvents(this.managedTeam.id);
-        } else {
-          console.warn("No se encontró equipo para este entrenador");
+          if (this.managedTeamId) {
+            this.loadTeamStats(this.managedTeamId);
+            this.loadUpcomingEvents(this.managedTeamId);
+          }
+        },
+        error: (err) => {
+          console.error("❌ Error cargando equipo:", err);
+          this.managedTeamId = null;
+          this.loading = false;
         }
-      },
-      error: (err) => console.error('Error loading teams:', err)
-    });
+      });
   }
 
   private loadUpcomingEvents(teamId: number) {
@@ -119,23 +115,50 @@ export class CoachDashboardPage implements OnInit, OnDestroy {
       next: (response: any) => {
         const allEvents = Array.isArray(response) ? response : (response.data || []);
         
-        this.upcomingEvents = allEvents
-          .filter((e: any) => new Date(e.fechaHoraInicio) >= new Date())
+        // 🔥 FILTRADO CRÍTICO 🔥
+        const myEvents = allEvents.filter((e: any) => {
+            // Buscamos el ID del equipo en todas las variantes posibles del backend
+            const eTeamId = e.equipo ? (e.equipo.id || e.equipo.idEquipo) : e.idEquipo;
+            
+            // Usamos '==' para comparar número con string si fuera necesario
+            return eTeamId == teamId;
+        });
+
+        this.stats.matches = myEvents.filter((e: any) => e.tipo === 'PARTIDO').length;
+        this.stats.trainings = myEvents.filter((e: any) => e.tipo === 'ENTRENAMIENTO').length;
+        
+        this.upcomingEvents = myEvents
+          .filter((e: any) => new Date(e.fechaHoraInicio || e.fechaEvento) >= new Date())
+          .sort((a: any, b: any) => new Date(a.fechaHoraInicio).getTime() - new Date(b.fechaHoraInicio).getTime())
           .slice(0, 3); 
-          
-        this.stats.matches = allEvents.filter((e: any) => e.tipo === 'PARTIDO').length;
-        this.stats.trainings = allEvents.filter((e: any) => e.tipo === 'ENTRENAMIENTO').length;
-      },
-      error: (err) => console.error('Error loading events', err)
+      }
     });
   }
 
   private loadTeamStats(teamId: number) {
-    this.stats.squadSize = this.managedTeam?.jugadores?.length || 0;
+    this.playerService.getAllPlayers().subscribe((res: any) => {
+        const all = Array.isArray(res) ? res : (res.data || []);
+        const myPlayers = all.filter((p: any) => {
+           const tId = this.getTeamIdFromPlayer(p);
+           return tId == teamId;
+        });
+        this.stats.squadSize = myPlayers.length;
+    });
   }
 
-  navigateTo(route: string) {
-    this.router.navigate([route]);
+  private getTeamIdFromPlayer(p: any): number | null {
+    let val: any = null;
+    if (p.equipoPrincipal && typeof p.equipoPrincipal === 'object') {
+        val = p.equipoPrincipal.id || p.equipoPrincipal.idEquipo;
+    }
+    else if (typeof p.equipoPrincipal === 'number') val = p.equipoPrincipal;
+    else if (p.equipo && p.equipo.id) val = p.equipo.id;
+    else if (typeof p.idEquipo === 'number') val = p.idEquipo;
+    return val ? Number(val) : null;
+  }
+
+  navigateToAction(action: any) {
+    this.router.navigate([action.route]);
   }
   
   getGreeting(): string {

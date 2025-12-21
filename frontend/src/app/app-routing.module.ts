@@ -59,6 +59,11 @@ const routes: Routes = [
     loadChildren: () => import('./modules/user/pages/profile/profile.module').then( m => m.ProfilePageModule)
   },
 
+  {
+    path: 'tactics',
+    loadChildren: () => import('./modules/coach/pages/tactics/tactics.module').then( m => m.TacticsPageModule)
+  },
+
   // COMODÍN (Siempre al final)
   { path: '**', redirectTo: 'landing' }
 ];

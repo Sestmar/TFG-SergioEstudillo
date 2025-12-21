@@ -1,7 +1,8 @@
-<ion-content [fullscreen]="true" class="coach-bg">
+<ion-content [fullscreen]="true" class="dashboard-bg">
   
   <div *ngIf="loading" class="loading-state">
     <ion-spinner color="secondary"></ion-spinner>
+    <p class="loading-text">Cargando dashboard...</p>
   </div>
 
   <div class="main-content" *ngIf="!loading">
@@ -9,19 +10,22 @@
     <div class="header-section">
       <div class="user-info">
         <span class="greeting">{{ getGreeting() }}, Míster</span>
-        <h1 *ngIf="currentUser$ | async as user">{{ user.nombre }}</h1>
+        
+        <h1 *ngIf="currentUser$ | async as user">
+          {{ user.nombre || $any(user).username || 'Entrenador' }}
+        </h1>
       </div>
       <div class="avatar-circle">
-        <img src="https://ui-avatars.com/api/?name=Mister+Coach&background=0f766e&color=fff&size=128" alt="Mister">
+        <span>MC</span>
       </div>
     </div>
 
-    <div class="team-summary-card" *ngIf="managedTeam">
+    <div class="team-summary-card" *ngIf="managedTeamId">
       <div class="card-bg-icon"><ion-icon name="shield"></ion-icon></div>
       <div class="team-info">
-        <span class="label">Tu Equipo</span>
-        <h2>{{ managedTeam.nombre }}</h2>
-        <span class="category">{{ managedTeam.categoria?.nombre || 'Categoría Senior' }}</span>
+        <span class="label">TU EQUIPO</span>
+        <h2>{{ teamName }}</h2>
+        <span class="category">{{ categoryName }}</span>
       </div>
       <div class="team-stats">
         <div class="stat">
@@ -39,7 +43,7 @@
       </div>
     </div>
 
-    <div class="no-team-card" *ngIf="!managedTeam">
+    <div class="no-team-card" *ngIf="!managedTeamId">
       <ion-icon name="alert-circle-outline"></ion-icon>
       <h3>Sin asignación detectada</h3>
       <p>Parece que no tienes equipo asignado o hubo un error cargándolo.</p>
@@ -51,7 +55,7 @@
 
     <div class="actions-grid">
       
-      <div class="action-card main-action" (click)="navigateTo('/convocations/create')">
+      <div class="action-card main-action" (click)="navigateToAction({route: '/convocations/create'})">
         <div class="icon-box">
           <ion-icon name="add"></ion-icon>
         </div>
@@ -61,7 +65,7 @@
         </div>
       </div>
 
-      <div class="action-card" (click)="navigateTo('/coach/my-team')">
+      <div class="action-card" (click)="navigateToAction({route: '/coach/my-team'})">
         <div class="icon-circle" style="background: #e0f2fe; color: #0284c7;">
           <ion-icon name="people"></ion-icon>
         </div>
@@ -73,7 +77,7 @@
           <ion-icon name="calendar"></ion-icon>
         </div>
         <span class="action-title">Planificación</span>
-        <ion-badge color="medium" style="position: absolute; top: 5px; right: 5px; font-size: 0.6rem; opacity: 0.7;">WIP</ion-badge>
+        <ion-badge color="medium" class="wip-badge">WIP</ion-badge>
       </div>
 
       <div class="action-card">
@@ -81,26 +85,29 @@
           <ion-icon name="medkit"></ion-icon>
         </div>
         <span class="action-title">Incidencias</span>
-        <ion-badge color="medium" style="position: absolute; top: 5px; right: 5px; font-size: 0.6rem; opacity: 0.7;">WIP</ion-badge>
+        <ion-badge color="medium" class="wip-badge">WIP</ion-badge>
       </div>
 
     </div>
 
     <div class="section-header" *ngIf="upcomingEvents.length > 0">
       <h3>Agenda Semanal</h3>
-      <span class="link" (click)="navigateTo('/calendar')">Ver todo</span>
+      <span class="link" (click)="navigateToAction({route: '/calendar'})">Ver todo</span>
     </div>
 
     <div class="events-list">
       <div class="event-item" *ngFor="let event of upcomingEvents">
         <div class="date-badge">
-          <span class="day">{{ event.fechaHoraInicio | date:'dd' }}</span>
-          <span class="month">{{ event.fechaHoraInicio | date:'MMM' }}</span>
+          <span class="day">{{ (event.fechaHoraInicio || event.fechaEvento) | date:'dd' }}</span>
+          <span class="month">{{ (event.fechaHoraInicio || event.fechaEvento) | date:'MMM' }}</span>
         </div>
         <div class="event-details">
-          <span class="type" [ngClass]="getEventTypeColor(event.tipo)">{{ event.tipo }}</span>
-          <h4>{{ event.titulo }}</h4>
-          <span class="time"><ion-icon name="time-outline"></ion-icon> {{ event.fechaHoraInicio | date:'HH:mm' }}</span>
+          <span class="type" [class]="getEventTypeColor(event.tipo)">{{ event.tipo }}</span>
+          <h4>{{ event.titulo || 'Evento de equipo' }}</h4>
+          <span class="time">
+            <ion-icon name="time-outline"></ion-icon> 
+            {{ (event.fechaHoraInicio || event.fechaEvento) | date:'HH:mm' }}
+          </span>
         </div>
         <div class="arrow">
           <ion-icon name="chevron-forward"></ion-icon>
@@ -108,9 +115,11 @@
       </div>
     </div>
     
-    <div class="empty-events" *ngIf="upcomingEvents.length === 0 && managedTeam">
+    <div class="empty-events" *ngIf="upcomingEvents.length === 0 && managedTeamId">
         <p>No hay eventos próximos.</p>
-        <ion-button fill="outline" size="small" (click)="navigateTo('/convocations/create')">Crear uno</ion-button>
+        <ion-button fill="outline" size="small" (click)="navigateToAction({route: '/convocations/create'})">
+            Crear uno
+        </ion-button>
     </div>
 
   </div>
