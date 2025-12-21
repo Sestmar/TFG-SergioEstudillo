@@ -10,14 +10,11 @@
     <div class="header-section">
       <div class="user-info">
         <span class="greeting">{{ getGreeting() }}, Míster</span>
-        
         <h1 *ngIf="currentUser$ | async as user">
-          {{ user.nombre || $any(user).username || 'Entrenador' }}
+          {{ user.nombre || 'Entrenador' }}
         </h1>
       </div>
-      <div class="avatar-circle">
-        <span>MC</span>
-      </div>
+      <div class="avatar-circle"><span>MC</span></div>
     </div>
 
     <div class="team-summary-card" *ngIf="managedTeamId">
@@ -46,7 +43,7 @@
     <div class="no-team-card" *ngIf="!managedTeamId">
       <ion-icon name="alert-circle-outline"></ion-icon>
       <h3>Sin asignación detectada</h3>
-      <p>Parece que no tienes equipo asignado o hubo un error cargándolo.</p>
+      <p>No tienes equipo asignado.</p>
     </div>
 
     <div class="section-header">
@@ -55,17 +52,15 @@
 
     <div class="actions-grid">
       
-      <div class="action-card main-action" (click)="navigateToAction({route: '/convocations/create'})">
-        <div class="icon-box">
-          <ion-icon name="add"></ion-icon>
-        </div>
+      <div class="action-card main-action" (click)="openNewConvocation()">
+        <div class="icon-box"><ion-icon name="add"></ion-icon></div>
         <div class="text-box">
           <span class="title">Nueva Convocatoria</span>
           <span class="desc">Crear partido o entrenamiento</span>
         </div>
       </div>
 
-      <div class="action-card" (click)="navigateToAction({route: '/coach/my-team'})">
+      <div class="action-card" (click)="navigateToAction('/coach/my-team')">
         <div class="icon-circle" style="background: #e0f2fe; color: #0284c7;">
           <ion-icon name="people"></ion-icon>
         </div>
@@ -79,45 +74,45 @@
         <span class="action-title">Planificación</span>
         <ion-badge color="medium" class="wip-badge">WIP</ion-badge>
       </div>
-
-      <div class="action-card">
-        <div class="icon-circle" style="background: #ffedd5; color: #ea580c;">
-          <ion-icon name="medkit"></ion-icon>
-        </div>
-        <span class="action-title">Incidencias</span>
-        <ion-badge color="medium" class="wip-badge">WIP</ion-badge>
-      </div>
-
     </div>
 
     <div class="section-header" *ngIf="upcomingEvents.length > 0">
-      <h3>Agenda Semanal</h3>
-      <span class="link" (click)="navigateToAction({route: '/calendar'})">Ver todo</span>
+      <h3>Próximos Eventos</h3>
+      <span class="link">Ver todo</span>
     </div>
 
     <div class="events-list">
-      <div class="event-item" *ngFor="let event of upcomingEvents">
+      <div class="event-item" 
+           *ngFor="let event of upcomingEvents"
+           [routerLink]="event.tipo === 'PARTIDO' ? ['/tactics', event.idPartido] : null" 
+           [class.clickable]="event.tipo === 'PARTIDO'">
+        
         <div class="date-badge">
-          <span class="day">{{ (event.fechaHoraInicio || event.fechaEvento) | date:'dd' }}</span>
-          <span class="month">{{ (event.fechaHoraInicio || event.fechaEvento) | date:'MMM' }}</span>
+          <span class="day">{{ event.fechaHora | date:'dd' }}</span>
+          <span class="month">{{ event.fechaHora | date:'MMM' }}</span>
         </div>
+        
         <div class="event-details">
           <span class="type" [class]="getEventTypeColor(event.tipo)">{{ event.tipo }}</span>
-          <h4>{{ event.titulo || 'Evento de equipo' }}</h4>
+          
+          <h4 *ngIf="event.tipo === 'PARTIDO'">VS {{ event.rival }}</h4>
+          <h4 *ngIf="event.tipo !== 'PARTIDO'">Entrenamiento</h4>
+          
           <span class="time">
             <ion-icon name="time-outline"></ion-icon> 
-            {{ (event.fechaHoraInicio || event.fechaEvento) | date:'HH:mm' }}
+            {{ event.fechaHora | date:'HH:mm' }} • {{ event.lugar }}
           </span>
         </div>
-        <div class="arrow">
-          <ion-icon name="chevron-forward"></ion-icon>
+        
+        <div class="arrow" *ngIf="event.tipo === 'PARTIDO'">
+          <ion-icon name="football-outline" color="primary"></ion-icon>
         </div>
       </div>
     </div>
     
     <div class="empty-events" *ngIf="upcomingEvents.length === 0 && managedTeamId">
         <p>No hay eventos próximos.</p>
-        <ion-button fill="outline" size="small" (click)="navigateToAction({route: '/convocations/create'})">
+        <ion-button fill="outline" size="small" (click)="openNewConvocation()">
             Crear uno
         </ion-button>
     </div>

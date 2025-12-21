@@ -1,25 +1,20 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms'; // ✅ Necesario para formularios
 import { IonicModule } from '@ionic/angular';
-import { RouterModule, Routes } from '@angular/router';
+
 import { CreateConvocationPage } from './create-convocation.page';
 
-const routes: Routes = [
-  {
-    path: '',
-    component: CreateConvocationPage
-  }
-];
+// ❌ AQUÍ BORRAMOS LAS RUTAS (const routes...) PARA EVITAR EL CONFLICTO
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule, // <--- OBLIGATORIO PARA FORMULARIOS
-    IonicModule,
-    RouterModule.forChild(routes)
+    ReactiveFormsModule,
+    IonicModule
   ],
-  declarations: [CreateConvocationPage]
+  declarations: [CreateConvocationPage],
+  exports: [CreateConvocationPage] // ✅ EXPORTAMOS LA PÁGINA PARA QUE EL DASHBOARD PUEDA USARLA
 })
 export class CreateConvocationPageModule {}

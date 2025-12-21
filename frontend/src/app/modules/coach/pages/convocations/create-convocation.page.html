@@ -1,61 +1,63 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/coach-dashboard"></ion-back-button>
-    </ion-buttons>
     <ion-title>Nueva Convocatoria</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding bg-light">
-  <form [formGroup]="convocationForm" (ngSubmit)="onSubmit()">
-    
-    <ion-card class="form-card">
-      <ion-card-content>
-        <ion-segment formControlName="tipo" mode="ios">
-          <ion-segment-button value="PARTIDO">
-            <ion-label>Partido</ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="ENTRENAMIENTO">
-            <ion-label>Entreno</ion-label>
-          </ion-segment-button>
-        </ion-segment>
-      </ion-card-content>
-    </ion-card>
+<ion-content class="ion-padding">
 
-    <ion-card class="form-card">
-      <ion-card-content>
-        <ion-item lines="inset" class="mb-2">
-          <ion-label position="stacked">Título / Rival</ion-label>
-          <ion-input formControlName="titulo" placeholder="Ej: Final vs Rayo"></ion-input>
-        </ion-item>
-        
-        <ion-item lines="inset">
-          <ion-label position="stacked">Lugar</ion-label>
-          <ion-input formControlName="lugar" placeholder="Ej: Campo Municipal"></ion-input>
-        </ion-item>
-      </ion-card-content>
-    </ion-card>
+  <div *ngIf="loadingData" class="ion-text-center ion-padding-top">
+    <ion-spinner></ion-spinner>
+    <p>Detectando equipo...</p>
+  </div>
 
-    <ion-card class="form-card">
-      <ion-card-content>
-        <ion-item lines="inset" class="mb-2">
-          <ion-label position="stacked">Inicio</ion-label>
-          <ion-input type="datetime-local" formControlName="fechaInicio"></ion-input>
-        </ion-item>
-        <ion-item lines="inset">
-          <ion-label position="stacked">Fin</ion-label>
-          <ion-input type="datetime-local" formControlName="fechaFin"></ion-input>
-        </ion-item>
-      </ion-card-content>
-    </ion-card>
+  <form [formGroup]="convocationForm" *ngIf="!loadingData">
 
-    <div class="ion-padding">
-      <ion-button expand="block" type="submit" [disabled]="convocationForm.invalid" shape="round" size="large">
-        Crear Evento
-        <ion-icon name="checkmark" slot="end"></ion-icon>
-      </ion-button>
+    <ion-segment formControlName="tipo" value="PARTIDO" class="ion-margin-bottom">
+      <ion-segment-button value="PARTIDO">
+        <ion-label>Partido</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="ENTRENAMIENTO">
+        <ion-label>Entreno</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <ion-item fill="outline" class="ion-margin-bottom input-item">
+      <ion-label position="stacked">Rival / Título</ion-label>
+      <ion-input formControlName="titulo" placeholder="Ej: Betis"></ion-input>
+    </ion-item>
+    <div class="error-msg" *ngIf="convocationForm.get('titulo')?.touched && convocationForm.get('titulo')?.invalid" style="color: var(--ion-color-danger); font-size: 12px; margin-top: -10px; margin-bottom: 10px; margin-left: 5px;">
+      Este campo es obligatorio
     </div>
 
+    <ion-item fill="outline" class="ion-margin-bottom input-item">
+      <ion-label position="stacked">Lugar</ion-label>
+      <ion-input formControlName="lugar" placeholder="Ej: Campo Municipal"></ion-input>
+    </ion-item>
+
+    <ion-item fill="outline" class="ion-margin-bottom input-item">
+      <ion-label position="stacked">Fecha y Hora</ion-label>
+      <ion-input type="datetime-local" formControlName="fechaInicio"></ion-input>
+    </ion-item>
+
+    <ion-item fill="outline" class="ion-margin-bottom input-item">
+      <ion-label position="stacked">Fin (Estimado)</ion-label>
+      <ion-input type="datetime-local" formControlName="fechaFin"></ion-input>
+    </ion-item>
+
+    <ion-button expand="block" 
+                color="primary" 
+                class="submit-btn" 
+                (click)="onSubmit()">
+      Crear Evento
+      <ion-icon name="checkmark-outline" slot="end"></ion-icon>
+    </ion-button>
+
   </form>
+
 </ion-content>

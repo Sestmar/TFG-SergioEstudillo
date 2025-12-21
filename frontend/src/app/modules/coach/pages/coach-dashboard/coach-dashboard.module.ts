@@ -5,6 +5,10 @@ import { IonicModule } from '@ionic/angular';
 import { RouterModule, Routes } from '@angular/router';
 
 import { CoachDashboardPage } from './coach-dashboard.page';
+import { CreateConvocationPageModule } from '../convocations/create-convocation.module';
+
+// ✅ IMPORTAMOS EL MÓDULO (Asegúrate de que la ruta del archivo es correcta)
+// Si está en una carpeta hermana suele ser '../create-convocation/create-convocation.module'
 
 const routes: Routes = [
   {
@@ -18,7 +22,12 @@ const routes: Routes = [
     CommonModule,
     FormsModule,
     IonicModule,
-    RouterModule.forChild(routes)
+    RouterModule.forChild(routes),
+    
+    // ✅ LO MANTENEMOS AQUÍ: 
+    // Ahora que le quitamos las rutas al otro archivo, esto solo carga 
+    // la lógica visual para que el Modal funcione bien.
+    CreateConvocationPageModule
   ],
   declarations: [CoachDashboardPage]
 })

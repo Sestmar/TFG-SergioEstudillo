@@ -4,9 +4,11 @@
       <ion-back-button defaultHref="/coach-dashboard"></ion-back-button>
     </ion-buttons>
     <ion-title>Pizarra Táctica</ion-title>
+    
     <ion-buttons slot="end">
-      <ion-button>
-        <ion-icon name="save-outline"></ion-icon>
+      <ion-button (click)="saveTactics()" [disabled]="saving">
+        <ion-icon name="save-outline" *ngIf="!saving"></ion-icon>
+        <ion-spinner name="crescent" color="light" *ngIf="saving"></ion-spinner>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -14,8 +16,9 @@
 
 <ion-content [scrollY]="false">
   
-  <div *ngIf="loading" class="ion-text-center ion-padding">
-    <ion-spinner color="light"></ion-spinner>
+  <div *ngIf="loading" class="ion-text-center ion-padding" style="margin-top: 50px;">
+    <ion-spinner color="primary"></ion-spinner>
+    <p>Cargando táctica...</p>
   </div>
 
   <div class="drag-wrapper" cdkDropListGroup *ngIf="!loading">
@@ -34,7 +37,7 @@
               <span class="name">{{ slot.player.usuario.nombre }}</span>
               <div *cdkDragPlaceholder class="token-placeholder"></div>
             </div>
-            </div>
+          </div>
         </div>
       </div>
 
