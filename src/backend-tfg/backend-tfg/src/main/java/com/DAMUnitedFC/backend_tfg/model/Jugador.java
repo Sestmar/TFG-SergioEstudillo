@@ -44,8 +44,10 @@ public class Jugador {
     @Column(name = "observaciones", length = 255)
     private String observaciones;
 
-    @Column(name = "equipo_principal")
-    private Integer equipoPrincipal; // FK directa, o haz ManyToOne si quieres objeto Equipo
+    // 🔥 CAMBIO IMPORTANTE: Ahora es un Objeto, no un Integer
+    @ManyToOne
+    @JoinColumn(name = "equipo_principal") // Esto hace la magia de la FK
+    private Equipo equipoPrincipal;
 
     @Column(name = "foto_url")
     private String fotoUrl;
