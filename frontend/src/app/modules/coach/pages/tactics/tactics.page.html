@@ -3,7 +3,10 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/coach-dashboard"></ion-back-button>
     </ion-buttons>
-    <ion-title>Pizarra Táctica</ion-title>
+    
+    <ion-title>
+      {{ matchInfo?.rival ? 'VS ' + matchInfo.rival : 'Pizarra Táctica' }}
+    </ion-title>
     
     <ion-buttons slot="end">
       <ion-button (click)="saveTactics()" [disabled]="saving">
@@ -18,7 +21,7 @@
   
   <div *ngIf="loading" class="ion-text-center ion-padding" style="margin-top: 50px;">
     <ion-spinner color="primary"></ion-spinner>
-    <p>Cargando táctica...</p>
+    <p>Cargando partido...</p>
   </div>
 
   <div class="drag-wrapper" cdkDropListGroup *ngIf="!loading">
@@ -80,7 +83,7 @@
     </div>
 
     <div class="bench-container">
-      <h3>BANQUILLO</h3>
+      <h3>PLANTILLA DISPONIBLE</h3>
       <div cdkDropList id="benchList" [cdkDropListData]="bench" (cdkDropListDropped)="drop($event)" class="bench-list">
         <div class="player-token" *ngFor="let p of bench" cdkDrag [cdkDragData]="p">
           <span class="dorsal">{{ p.dorsal }}</span>

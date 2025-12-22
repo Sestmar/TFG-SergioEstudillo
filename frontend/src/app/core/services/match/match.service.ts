@@ -1,50 +1,63 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs'; // Importamos 'of' por seguridad
+import { HttpClient, HttpHeaders } from '@angular/common/http'; // ✅ Importar HttpHeaders
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MatchService {
 
-  // Asegúrate de que este puerto coincida con tu backend (8080)
-  private apiUrl = 'http://localhost:8080/api/partidos'; 
+  private apiUrl = 'http://localhost:8080/api'; 
 
   constructor(private http: HttpClient) { }
 
   // ==========================================
-  // 🆕 MÉTODOS PARA EL ENTRENADOR (NUEVOS)
+  // ⚽ GESTIÓN DE PARTIDOS
   // ==========================================
 
-  // 1. Crear Partido
   createMatch(matchData: any): Observable<any> {
-    return this.http.post(this.apiUrl, matchData);
+    return this.http.post(`${this.apiUrl}/partidos`, matchData);
   }
-
-  // 2. Obtener partidos de un equipo
-  getMatchesByTeam(teamId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/equipo/${teamId}`);
-  }
-
-  // 3. Obtener un partido por ID
-  getMatchById(matchId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${matchId}`);
-  }
-
-  // ==========================================
-  // 🩹 MÉTODO DE COMPATIBILIDAD (CORRECCIÓN ERROR)
-  // ==========================================
   
-  // Este es el método que busca tu UserDashboard.
-  // Lo añadimos para que deje de dar error de compilación.
+  getMatchesByTeam(teamId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/partidos/equipo/${teamId}`);
+  }
+
+  getMatchById(matchId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/partidos/${matchId}`);
+  }
+
+  // ==========================================
+  // 📋 GESTIÓN DE ALINEACIONES (PIZARRA)
+  // ==========================================
+
+  getLineup(matchId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/alineaciones/partido/${matchId}`);
+  }
+
+  // ✅ MÉTODO MODIFICADO PARA EVITAR ERROR 400
+  saveLineup(lineupData: any[]): Observable<any> {
+    
+    // Forzamos la cabecera Content-Type a application/json
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    // Enviamos la petición con las cabeceras explícitas
+    return this.http.post(
+      `${this.apiUrl}/alineaciones/guardar`, 
+      lineupData, 
+      { headers: headers }
+    );
+  }
+  
+  // ==========================================
+  // 🔄 COMPATIBILIDAD (User Dashboard)
+  // ==========================================
   getMatches(filters?: any): Observable<any[]> {
-    // Si el filtro antiguo tenía un teamId, redirigimos a la función nueva
     if (filters && filters.teamId) {
         return this.getMatchesByTeam(filters.teamId);
     }
-    
-    // Si no, hacemos una petición genérica o devolvemos vacío para no romper nada
-    // Si tu backend soporta GET /api/partidos (listar todos), esto funcionará.
-    return this.http.get<any[]>(this.apiUrl);
+    return this.http.get<any[]>(`${this.apiUrl}/partidos`);
   }
 }

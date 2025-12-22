@@ -84,7 +84,6 @@
     <div class="events-list">
       <div class="event-item" 
            *ngFor="let event of upcomingEvents"
-           [routerLink]="event.tipo === 'PARTIDO' ? ['/tactics', event.idPartido] : null" 
            [class.clickable]="event.tipo === 'PARTIDO'">
         
         <div class="date-badge">
@@ -102,10 +101,21 @@
             <ion-icon name="time-outline"></ion-icon> 
             {{ event.fechaHora | date:'HH:mm' }} • {{ event.lugar }}
           </span>
+
+          <div *ngIf="event.tipo === 'PARTIDO'" style="margin-top: 10px;">
+            <ion-button 
+              fill="outline" 
+              size="small" 
+              [routerLink]="['/tactics', event.idPartido || event.id]">
+              <ion-icon name="easel-outline" slot="start"></ion-icon>
+              Pizarra Táctica
+            </ion-button>
+          </div>
+
         </div>
         
-        <div class="arrow" *ngIf="event.tipo === 'PARTIDO'">
-          <ion-icon name="football-outline" color="primary"></ion-icon>
+        <div class="arrow" *ngIf="event.tipo === 'PARTIDO'" [routerLink]="['/tactics', event.idPartido || event.id]">
+          <ion-icon name="chevron-forward-outline" color="medium"></ion-icon>
         </div>
       </div>
     </div>

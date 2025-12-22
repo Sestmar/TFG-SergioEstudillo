@@ -60,7 +60,7 @@ const routes: Routes = [
   },
 
   {
-    path: 'tactics',
+    path: 'tactics/:matchId',
     loadChildren: () => import('./modules/coach/pages/tactics/tactics.module').then( m => m.TacticsPageModule)
   },
 

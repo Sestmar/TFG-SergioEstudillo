@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
-import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { ActivatedRoute } from '@angular/router'; 
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
+import { MatchService } from 'src/app/core/services/match/match.service'; 
 import { HttpClient } from '@angular/common/http';
 import { ToastController } from '@ionic/angular';
 import { Player } from 'src/app/shared/models/models';
 
-// Definimos la interfaz fuera de la clase para que sea accesible
 interface PitchSlot {
   id: string;      
   player: Player | null; 
@@ -20,7 +21,10 @@ interface PitchSlot {
 export class TacticsPage implements OnInit {
 
   loading = true;
-  saving = false; // Para el spinner del botón guardar
+  saving = false;
+  
+  matchId: number = 0; 
+  matchInfo: any = null; 
   currentTeamId: number | null = null;
 
   bench: Player[] = [];
@@ -32,17 +36,25 @@ export class TacticsPage implements OnInit {
   goalkeeper: PitchSlot[] = this.createRow('GK', 1);
 
   constructor(
+    private route: ActivatedRoute, 
     private playerSvc: PlayerService,
+    private matchSvc: MatchService, 
     private authSvc: AuthService,
     private http: HttpClient,
     private toastCtrl: ToastController
   ) { }
 
   ngOnInit() {
-    this.loadTeam();
+    const idParam = this.route.snapshot.paramMap.get('matchId');
+    if (idParam) {
+      this.matchId = +idParam;
+      this.loadMatchData();
+    } else {
+      console.error("No se proporcionó ID de partido");
+      this.loading = false;
+    }
   }
 
-  // Helper para crear filas de huecos
   private createRow(prefix: string, count: number = 5): PitchSlot[] {
     return Array(count).fill(null).map((_, i) => ({
       id: `${prefix}-${i + 1}`,
@@ -50,159 +62,160 @@ export class TacticsPage implements OnInit {
     }));
   }
 
-  // 1. Obtener el equipo del entrenador logueado
-  loadTeam() {
-    this.authSvc.currentUser$.subscribe(user => {
-      if (user) {
-        const u = user as any;
-        const userId = u.id || u.idUsuario;
-        if (!userId) return;
-
-        this.http.get(`http://localhost:8080/api/entrenadores/usuario/${userId}/equipo`)
-        .subscribe({
-          next: (equipo: any) => {
-             this.currentTeamId = equipo.idEquipo || equipo.id;
-             if (this.currentTeamId) {
-                // Una vez tenemos el equipo, cargamos jugadores y táctica
-                this.loadPlayersAndTactics(this.currentTeamId);
-             }
-          },
-          error: (err) => { 
-            console.error("Error equipo:", err);
-            this.loading = false; 
-          }
-        });
+  // 2. Cargar datos del Partido de forma SEGURA
+  loadMatchData() {
+    this.matchSvc.getMatchById(this.matchId).subscribe({
+      next: (match) => {
+        this.matchInfo = match;
+        const teamObj = match.equipo;
+        this.currentTeamId = teamObj?.id || teamObj?.idEquipo || match.idEquipo || (typeof teamObj === 'number' ? teamObj : null);
+        
+        if (this.currentTeamId) {
+          this.loadPlayersAndTactics(this.currentTeamId);
+        } else {
+          this.loading = false;
+        }
+      },
+      error: (err) => {
+        console.error("Error cargando partido", err);
+        this.loading = false;
       }
     });
   }
 
-  // 2. Cargar jugadores y luego la alineación guardada
+  // 3. Cargar jugadores y alineación
   loadPlayersAndTactics(teamId: number) {
-    // A. Cargamos TODOS los jugadores al banquillo primero
-    this.playerSvc.getAllPlayers().subscribe((res: any) => {
-      const all = Array.isArray(res) ? res : (res.data || []);
-      const myPlayers = all.filter((p: any) => {
-          const pTeamId = p.equipoPrincipal?.idEquipo || p.equipoPrincipal?.id || p.equipoPrincipal;
-          return pTeamId == teamId;
-      });
-      this.bench = myPlayers;
-
-      // B. Ahora sí, buscamos la alineación en el backend
-      this.fetchSavedLineup(teamId);
+    this.playerSvc.getAllPlayers().subscribe({
+      next: (res: any) => {
+        const all = Array.isArray(res) ? res : (res.data || []);
+        
+        // Filtramos solo los de este equipo
+        const myPlayers = all.filter((p: any) => {
+            const pTeamId = p.equipoPrincipal?.id || p.equipoPrincipal?.idEquipo || p.equipoPrincipal;
+            return pTeamId == teamId;
+        });
+        
+        this.bench = myPlayers;
+        
+        // Buscamos si ya hay táctica guardada
+        this.fetchSavedLineup();
+      },
+      error: (err) => {
+        console.error("Error cargando jugadores", err);
+        this.loading = false; 
+      }
     });
   }
 
   // --- 📡 CARGAR DEL BACKEND ---
-  fetchSavedLineup(teamId: number) {
-    this.http.get(`http://localhost:8080/api/alineaciones/${teamId}`).subscribe({
+  fetchSavedLineup() {
+    this.matchSvc.getLineup(this.matchId).subscribe({
       next: (savedSlots: any) => {
-        if (Array.isArray(savedSlots)) {
+        if (Array.isArray(savedSlots) && savedSlots.length > 0) {
           savedSlots.forEach((saved: any) => {
-             // Buscamos al jugador en el banquillo usando su ID (soporta idJugador o id)
-             const playerIdToFind = saved.idJugador || saved.player?.idJugador || saved.player?.id;
-             const playerIndex = this.bench.findIndex(p => (p as any).idJugador === playerIdToFind || p.id === playerIdToFind);
-             
-             if (playerIndex > -1) {
-               // Sacamos jugador del banquillo
-               const player = this.bench[playerIndex];
-               this.bench.splice(playerIndex, 1);
+              // 1. Identificar jugador
+              const playerIdToFind = saved.idJugador || saved.jugador?.idJugador || saved.jugador?.id || saved.player?.id;
+              
+              // 2. Buscarlo en el banquillo
+              const playerIndex = this.bench.findIndex(p => (p as any).idJugador === playerIdToFind || p.id === playerIdToFind);
+              
+              if (playerIndex > -1) {
+                const player = this.bench[playerIndex];
+                this.bench.splice(playerIndex, 1); // Sacar del banquillo
 
-               // Lo ponemos en su slot correspondiente
-               const targetSlot = this.findSlot(saved.slotId);
-               if (targetSlot) {
-                 targetSlot.player = player;
-               }
-             }
+                // 3. Colocar en el hueco
+                const targetId = saved.slotId; // ✅ Usamos slotId que es lo que guarda Java
+                
+                const targetSlot = targetId ? this.findSlot(targetId) : null;
+                if (targetSlot) {
+                  targetSlot.player = player;
+                } else {
+                    this.bench.push(player);
+                }
+              }
           });
         }
         this.loading = false;
       },
       error: (err) => {
-        console.log("No hay alineación guardada o error:", err);
-        this.loading = false;
+        console.log("Alineación vacía o error al cargar", err);
+        this.loading = false; 
       }
     });
   }
 
-  // --- 💾 GUARDAR AL BACKEND ---
+  // --- 💾 GUARDAR AL BACKEND (CORREGIDO) ---
+  // FUNCIÓN GUARDAR (Sustituye la que tengas)
   saveTactics() {
-    if (!this.currentTeamId) return;
+    if (!this.matchId) return;
     this.saving = true;
 
-    // Recolectar todos los jugadores que están EN EL CAMPO
+    // Recolectar fichas del campo
     const allSlots = [...this.forwards, ...this.midfielders, ...this.defenders, ...this.goalkeeper];
     
-    // Crear el array para enviar al backend (solo los ocupados)
+    // Crear payload limpio
     const payload = allSlots
       .filter(slot => slot.player !== null) 
       .map(slot => ({
-        // Enviamos el ID del jugador. Usamos 'as any' para asegurar compatibilidad.
+        // ✅ Coincide con AlineacionDto (Java)
+        idPartido: this.matchId,
         idJugador: (slot.player as any).idJugador || slot.player?.id,
-        slotId: slot.id
+        slotId: slot.id  // Ej: "FWD-1"
       }));
 
-    console.log("Guardando alineación:", payload);
+    console.log("Enviando alineación:", payload);
 
-    this.http.post(`http://localhost:8080/api/alineaciones/${this.currentTeamId}`, payload)
-      .subscribe({
+    this.matchSvc.saveLineup(payload).subscribe({
         next: async () => {
           this.saving = false;
           const toast = await this.toastCtrl.create({
-            message: '¡Alineación guardada correctamente!', duration: 2000, color: 'success', position: 'top'
+            message: '¡Alineación guardada!', duration: 2000, color: 'success', position: 'top'
           });
           toast.present();
         },
         error: async (err) => {
           this.saving = false;
-          console.error(err);
+          console.error("Error backend:", err);
           const toast = await this.toastCtrl.create({
-            message: 'Error al guardar alineación', duration: 2000, color: 'danger'
+            message: 'Error al guardar.', duration: 2000, color: 'danger'
           });
           toast.present();
         }
       });
   }
 
-  // --- 🔥 DRAG & DROP (Lógica Corregida) ---
+  // --- 🔥 DRAG & DROP ---
   drop(event: CdkDragDrop<any>) {
     if (event.previousContainer === event.container) return;
 
     const isBenchSource = event.previousContainer.id === 'benchList';
     const isBenchTarget = event.container.id === 'benchList';
 
-    // ✅ FIX: Obtener el jugador de forma segura según el origen
     let draggedPlayer: Player;
     if (isBenchSource) {
-        // Si viene del banquillo, 'data' es un array
         draggedPlayer = event.previousContainer.data[event.previousIndex];
     } else {
-        // Si viene de un slot, 'data' es el objeto jugador directamente
         draggedPlayer = event.previousContainer.data;
     }
 
-    if (!draggedPlayer) return; // Seguridad
+    if (!draggedPlayer) return;
 
-    // A. Soltar en Banquillo
     if (isBenchTarget) {
       this.bench.push(draggedPlayer);
       this.clearSlot(event.previousContainer.id);
-    } 
-    // B. Soltar en Campo
-    else {
+    } else {
       const targetSlot = this.findSlot(event.container.id);
       if (!targetSlot) return;
 
       const existingPlayer = targetSlot.player;
       targetSlot.player = draggedPlayer;
 
-      // Limpiar origen
       if (isBenchSource) {
         this.bench.splice(event.previousIndex, 1);
       } else {
         this.clearSlot(event.previousContainer.id);
       }
 
-      // Intercambio (Swap)
       if (existingPlayer) {
         if (isBenchSource) this.bench.push(existingPlayer);
         else {
@@ -213,7 +226,6 @@ export class TacticsPage implements OnInit {
     }
   }
 
-  // Helpers
   private findSlot(slotId: string): PitchSlot | undefined {
     const all = [...this.forwards, ...this.midfielders, ...this.defenders, ...this.goalkeeper];
     return all.find(s => s.id === slotId);

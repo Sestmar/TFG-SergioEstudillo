@@ -1,51 +1,41 @@
 package com.DAMUnitedFC.backend_tfg.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "alineacion")
+@Data
 public class Alineacion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "id_equipo")
-    private Long idEquipo;
+    // --- RELACIONES ---
 
-    @Column(name = "id_jugador")
-    private Long idJugador;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_partido", nullable = false)
+    @JsonIgnoreProperties({"alineaciones", "hibernateLazyInitializer", "handler"})
+    private Partido partido;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_jugador", nullable = false)
+    @JsonIgnoreProperties({"alineaciones", "equipos", "hibernateLazyInitializer", "handler"})
+    private Jugador jugador;
+
+    // --- DATOS PROPIOS ---
+
+    // ✅ FIX: Añadimos este campo OBLIGATORIO en tu base de datos
+    @Column(name = "id_equipo", nullable = false)
+    private Long idEquipo;
 
     @Column(name = "slot_id")
     private String slotId;
 
-    // ✅ Campo clave para vincular con el partido
-    @Column(name = "id_partido")
-    private Long idPartido;
+    @Column(name = "es_titular")
+    private Boolean esTitular;
 
-    // --- Constructores ---
     public Alineacion() {}
-
-    public Alineacion(Long idEquipo, Long idJugador, String slotId, Long idPartido) {
-        this.idEquipo = idEquipo;
-        this.idJugador = idJugador;
-        this.slotId = slotId;
-        this.idPartido = idPartido;
-    }
-
-    // --- Getters y Setters ---
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Long getIdEquipo() { return idEquipo; }
-    public void setIdEquipo(Long idEquipo) { this.idEquipo = idEquipo; }
-
-    public Long getIdJugador() { return idJugador; }
-    public void setIdJugador(Long idJugador) { this.idJugador = idJugador; }
-
-    public String getSlotId() { return slotId; }
-    public void setSlotId(String slotId) { this.slotId = slotId; }
-
-    public Long getIdPartido() { return idPartido; }
-    public void setIdPartido(Long idPartido) { this.idPartido = idPartido; }
 }

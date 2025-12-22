@@ -3,24 +3,20 @@ package com.DAMUnitedFC.backend_tfg.repository;
 import com.DAMUnitedFC.backend_tfg.model.Alineacion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import jakarta.transaction.Transactional;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AlineacionRepository extends JpaRepository<Alineacion, Long> {
 
-    // --- MÉTODOS ANTIGUOS (POR SI LOS NECESITAS) ---
-    List<Alineacion> findByIdEquipo(Long idEquipo);
+    // Buscar alineación de un partido
+    List<Alineacion> findByPartidoIdPartido(Long idPartido);
 
-    @Transactional
-    void deleteByIdEquipo(Long idEquipo);
+    // Buscar ficha exacta (para actualizar si ya existe)
+    @Query("SELECT a FROM Alineacion a WHERE a.partido.idPartido = :idPartido AND a.jugador.idJugador = :idJugador")
+    Optional<Alineacion> findFichaExacta(@Param("idPartido") Long idPartido, @Param("idJugador") Integer idJugador);
 
-
-    // --- ✅ MÉTODOS NUEVOS (PARA PARTIDOS) ---
-    // Buscar todas las posiciones de un partido concreto
-    List<Alineacion> findByIdPartido(Long idPartido);
-
-    // Borrar la táctica de un partido (Necesario antes de guardar la nueva)
-    @Transactional
-    void deleteByIdPartido(Long idPartido);
+    void deleteByPartidoIdPartido(Long idPartido);
 }
