@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http'; // ✅ Importar HttpHeaders
+import { HttpClient, HttpHeaders } from '@angular/common/http'; 
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -35,17 +35,16 @@ export class MatchService {
     return this.http.get<any[]>(`${this.apiUrl}/alineaciones/partido/${matchId}`);
   }
 
-  // ✅ MÉTODO MODIFICADO PARA EVITAR ERROR 400
-  saveLineup(lineupData: any[]): Observable<any> {
+  // ✅ CAMBIO CLAVE: Aceptamos matchId y lo ponemos en la URL
+  saveLineup(matchId: number, lineupData: any[]): Observable<any> {
     
-    // Forzamos la cabecera Content-Type a application/json
     const headers = new HttpHeaders({
       'Content-Type': 'application/json'
     });
 
-    // Enviamos la petición con las cabeceras explícitas
+    // Enviamos a la ruta que hace el "Borrar y Guardar" en el backend
     return this.http.post(
-      `${this.apiUrl}/alineaciones/guardar`, 
+      `${this.apiUrl}/alineaciones/guardar/${matchId}`, 
       lineupData, 
       { headers: headers }
     );

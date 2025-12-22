@@ -33,56 +33,46 @@ public class AlineacionController {
         return alineacionRepo.findByPartidoIdPartido(idPartido);
     }
 
-    @PostMapping("/guardar")
+    @PostMapping("/guardar/{idPartido}")
     @Transactional
-    public ResponseEntity<?> guardarAlineacion(@RequestBody List<AlineacionDto> fichas) {
+    public ResponseEntity<?> guardarAlineacion(@PathVariable Long idPartido, @RequestBody List<AlineacionDto> fichas) {
 
-        // Mapa para la respuesta JSON (Soluciona el error de "parsing" en Angular)
         Map<String, Object> response = new HashMap<>();
 
-        if (fichas == null || fichas.isEmpty()) {
-            response.put("mensaje", "No hay fichas para guardar");
-            return ResponseEntity.ok(response);
-        }
-
         try {
+            // 🔥 PASO 1: BORRADO E INMEDIATA CONFIRMACIÓN (FLUSH)
+            // Esto soluciona el error "Duplicate Key". Obligamos a la BD a borrar ANTES de insertar.
+            alineacionRepo.deleteByPartidoIdPartido(idPartido);
+            alineacionRepo.flush(); // <--- ¡ESTA ES LA LÍNEA MÁGICA! 🪄
+
+            if (fichas == null || fichas.isEmpty()) {
+                response.put("success", true);
+                response.put("mensaje", "Pizarra limpiada correctamente");
+                return ResponseEntity.ok(response);
+            }
+
+            // 🔥 PASO 2: GUARDAR LOS NUEVOS
             for (AlineacionDto ficha : fichas) {
+                if (ficha.getIdJugador() == null) continue;
 
-                // Validación de seguridad
-                if (ficha.getIdPartido() == null || ficha.getIdJugador() == null) continue;
+                Alineacion alineacion = new Alineacion(); // Creamos nueva siempre
 
-                // 1. Buscamos si la ficha ya existe
-                Alineacion alineacion = alineacionRepo
-                        .findFichaExacta(ficha.getIdPartido(), ficha.getIdJugador())
-                        .orElse(new Alineacion());
+                Partido p = partidoRepo.findById(idPartido)
+                        .orElseThrow(() -> new RuntimeException("Partido no encontrado"));
 
-                // 2. Si es nueva, asignamos las relaciones
-                if (alineacion.getId() == null) {
-                    Partido p = partidoRepo.findById(ficha.getIdPartido())
-                            .orElseThrow(() -> new RuntimeException("Partido no encontrado"));
+                Jugador j = jugadorRepo.findById(ficha.getIdJugador())
+                        .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
 
-                    Jugador j = jugadorRepo.findById(ficha.getIdJugador())
-                            .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+                alineacion.setPartido(p);
+                alineacion.setJugador(j);
 
-                    alineacion.setPartido(p);
-                    alineacion.setJugador(j);
-
-                    // --- ASIGNACIÓN DE EQUIPO (Corrección de Tipos) ---
-                    if (j.getEquipoPrincipal() != null) {
-                        // Convertimos Integer a Long de forma segura
-                        Number equipoId = j.getEquipoPrincipal().getIdEquipo();
-                        alineacion.setIdEquipo(equipoId.longValue());
-                    } else {
-                        // Si el jugador no tiene equipo, usamos el del partido como respaldo
-                        // (Necesitamos evitar que idEquipo sea NULL para que no falle la BD)
-                        System.out.println("ADVERTENCIA: Jugador " + j.getIdJugador() + " sin equipo principal.");
-                        // Aquí podrías poner un valor por defecto o lanzar error si es crítico
-                        // alineacion.setIdEquipo(1L); // Ejemplo de parche si fuera necesario
-                        continue; // Saltamos este jugador para no romper el guardado del resto
-                    }
+                if (j.getEquipoPrincipal() != null) {
+                    Number equipoId = j.getEquipoPrincipal().getIdEquipo();
+                    alineacion.setIdEquipo(equipoId.longValue());
+                } else {
+                    continue;
                 }
 
-                // 3. Actualizamos posición
                 alineacion.setSlotId(ficha.getSlotId());
                 alineacion.setEsTitular(true);
 
@@ -94,7 +84,7 @@ public class AlineacionController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            e.printStackTrace(); // Ver error en consola backend
+            e.printStackTrace();
             response.put("success", false);
             response.put("error", "Error interno: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
