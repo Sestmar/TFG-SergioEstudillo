@@ -118,22 +118,25 @@
               {{ (conv.fechaHoraInicio || conv.fechaEvento) | date:'HH:mm' }}
             </span>
           </div>
-          <h3 class="title">{{ conv.titulo || 'Evento de Equipo' }}</h3> 
+          <h3 class="title">
+            <span *ngIf="conv.tipo === 'PARTIDO'">VS </span>
+            {{ conv.rival || conv.titulo || 'Evento de Equipo' }}
+          </h3>
           <p class="location">
             <ion-icon name="location-outline"></ion-icon>
             {{ conv.lugar || 'Ubicación por confirmar' }}
           </p>
           
           <div class="actions-row">
-            <ion-button 
-              expand="block" 
-              fill="outline" 
-              size="small" 
-              class="btn-details"
-              (click)="navigateTo('/convocations/' + conv.id); $event.stopPropagation()"
-            >
-              Ver Detalles
-              <ion-icon name="arrow-forward" slot="end"></ion-icon>
+              <ion-button 
+                expand="block" 
+                fill="outline" 
+                size="small" 
+                class="btn-details"
+                (click)="showMatchDetails(conv); $event.stopPropagation()">
+                  
+              Ver Información
+              <ion-icon name="information-circle-outline" slot="end"></ion-icon>
             </ion-button>
           </div>
           

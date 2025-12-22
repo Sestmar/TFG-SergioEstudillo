@@ -1,12 +1,12 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { IonRefresher, IonInfiniteScroll } from '@ionic/angular';
 import { Subject, takeUntil } from 'rxjs';
-import { HttpClient } from '@angular/common/http'; // ✅ Necesario para buscar equipo del jugador
+import { HttpClient } from '@angular/common/http'; 
 
 // Imports de Servicios
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { TeamService } from 'src/app/core/services/team/team.service';
-import { MatchService } from 'src/app/core/services/match/match.service'; // ✅ Usamos el nuevo servicio
+import { MatchService } from 'src/app/core/services/match/match.service';
 import { NewsService } from 'src/app/core/services/news/new.service';
 
 // Imports de Modelos
@@ -19,23 +19,23 @@ import { User, News } from 'src/app/shared/models/models';
 })
 export class UserDashboardPage implements OnInit, OnDestroy {
   @ViewChild(IonRefresher) refresher!: IonRefresher;
+  @ViewChild(IonInfiniteScroll) infiniteScroll!: IonInfiniteScroll;
 
   private destroy$ = new Subject<void>();
   
   currentUser: User | null = null;
-  myTeamId: number | null = null; // ID del equipo del jugador
+  myTeamId: number | null = null; 
   teamName: string = '';
-
-  nextMatches: any[] = []; // Usamos any[] para adaptarnos a la nueva entidad Partido
+  
+  nextMatches: any[] = []; 
   recentNews: News[] = [];
   
   isLoading = true;
+  newsPage = 1;
   
-  // Estadísticas simples
   stats = {
     matches: 0,
-    wins: 0, // Por implementar con nueva lógica
-    goals: 0
+    trainings: 0
   };
 
   constructor(
@@ -43,7 +43,7 @@ export class UserDashboardPage implements OnInit, OnDestroy {
     private teamService: TeamService,
     private matchService: MatchService,
     private newsService: NewsService,
-    private http: HttpClient // ✅ Inyectamos HTTP para buscar el equipo
+    private http: HttpClient 
   ) {}
 
   ngOnInit() {
@@ -55,7 +55,7 @@ export class UserDashboardPage implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // 1. Cargamos usuario y buscamos su equipo
+  // 1. Cargar usuario y buscar su equipo
   private loadUserData() {
     this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
       this.currentUser = user;
@@ -65,34 +65,32 @@ export class UserDashboardPage implements OnInit, OnDestroy {
     });
   }
 
-  // 2. Buscamos el equipo del jugador (Igual que hicimos con el entrenador)
+  // 2. Lógica para encontrar el equipo del JUGADOR
   private findPlayerTeam(user: any) {
     const userId = user.id || user.idUsuario;
-    
-    // Endpoint para saber en qué equipo juega
-    // Nota: Asumo que tienes un endpoint similar o usas el del entrenador si es compartido,
-    // o buscamos al jugador directamente.
-    // Si no tienes endpoint de jugador, intentamos leerlo del usuario directamente.
-    
-    // INTENTO 1: Si el usuario ya tiene el ID del equipo guardado
+
+    // A. Si el usuario ya tiene el ID guardado en local (Login optimizado)
     if (user.equipoId || user.idEquipo) {
         this.myTeamId = user.equipoId || user.idEquipo;
         this.loadDashboardData();
         return;
     }
 
-    // INTENTO 2: Buscar en backend (Ajusta la URL si tienes un endpoint específico de jugadores)
-    // Usaremos el de entrenadores temporalmente o asume que tienes /api/jugadores/usuario/{id}/equipo
-    this.http.get(`http://localhost:8080/api/entrenadores/usuario/${userId}/equipo`).subscribe({
+    // B. 🔥 CORRECCIÓN: Preguntamos a la API de JUGADORES (no entrenadores)
+    this.http.get(`http://localhost:8080/api/jugadores/usuario/${userId}/equipo`).subscribe({
         next: (equipo: any) => {
+            console.log("✅ Equipo de jugador detectado:", equipo);
             this.myTeamId = equipo.idEquipo || equipo.id;
             this.teamName = equipo.nombre;
+            
+            // Una vez tenemos el ID correcto, cargamos los partidos
             this.loadDashboardData();
         },
-        error: () => {
-             // Si falla, intentamos cargar noticias generales
-             this.loadRecentNews(); 
-             this.isLoading = false;
+        error: (err) => {
+            console.warn("No se encontró equipo para este jugador (o no es jugador)", err);
+            // Cargamos solo noticias si no tiene equipo
+            this.loadRecentNews();
+            this.isLoading = false;
         }
     });
   }
@@ -100,23 +98,24 @@ export class UserDashboardPage implements OnInit, OnDestroy {
   private loadDashboardData() {
     if (this.myTeamId) {
         this.loadNextMatches(this.myTeamId);
+    } else {
+        this.isLoading = false;
     }
     this.loadRecentNews();
   }
 
-  // 3. Cargamos los partidos NUEVOS (Tabla Partido)
+  // 3. Cargar partidos usando el servicio MatchService (filtra por ID de equipo)
   private loadNextMatches(teamId: number) {
     this.matchService.getMatchesByTeam(teamId).pipe(takeUntil(this.destroy$)).subscribe({
       next: (matches: any[]) => {
-        // Filtramos solo los futuros o recientes
-        const now = new Date();
         
+        // Filtramos y ordenamos por fecha
         this.nextMatches = matches
-            .filter(m => m.tipo === 'PARTIDO') // Solo partidos, no entrenos (opcional)
-            .sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime()); // Ordenar por fecha
-            
-        // Estadísticas básicas basadas en la cantidad
-        this.stats.matches = this.nextMatches.length;
+            .sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime());
+
+        // Actualizamos estadísticas
+        this.stats.matches = this.nextMatches.filter(m => m.tipo === 'PARTIDO').length;
+        this.stats.trainings = this.nextMatches.filter(m => m.tipo === 'ENTRENAMIENTO').length;
         
         this.isLoading = false;
       },
@@ -128,10 +127,18 @@ export class UserDashboardPage implements OnInit, OnDestroy {
   }
 
   private loadRecentNews() {
-    this.newsService.getNews({ page: 1, limit: 5 }).subscribe({
-      next: (res: any) => {
-        this.recentNews = Array.isArray(res) ? res : (res.data || []);
-      }
+    this.newsService.getNews({ page: this.newsPage, limit: 10 }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (response: any) => {
+        const news = Array.isArray(response) ? response : (response.news || response.data || []);
+        if (this.newsPage === 1) {
+          this.recentNews = news;
+        } else {
+          this.recentNews = [...this.recentNews, ...news];
+        }
+        // Solo quitamos el loading si no estábamos esperando partidos
+        if (!this.myTeamId) this.isLoading = false;
+      },
+      error: () => this.isLoading = false
     });
   }
 
@@ -140,13 +147,27 @@ export class UserDashboardPage implements OnInit, OnDestroy {
     setTimeout(() => event.target.complete(), 1000);
   }
 
-  // --- Helpers para la Vista ---
-
-  getMatchDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  loadMoreNews(event: any) {
+    this.newsPage++;
+    this.loadRecentNews();
+    setTimeout(() => this.infiniteScroll?.complete(), 1000);
   }
 
-  getMatchTime(dateStr: string): string {
-    return new Date(dateStr).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  // Helpers visuales
+  getTeamLogo(teamId: number): string {
+    return `assets/images/teams/${teamId}-logo.png`;
   }
+
+  getMatchStatus(dateStr: string): string {
+    const now = new Date();
+    const matchDate = new Date(dateStr);
+    if (matchDate < now) return 'Finalizado';
+    
+    const diffTime = Math.abs(matchDate.getTime() - now.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+    return diffDays <= 1 ? 'Mañana' : `En ${diffDays} días`;
+  }
+
+  trackByMatchId(index: number, match: any): number { return match.idPartido || index; }
+  trackByNewsId(index: number, news: News): number { return news.id; }
 }

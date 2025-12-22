@@ -6,6 +6,7 @@ import com.DAMUnitedFC.backend_tfg.model.Equipo;
 import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
+import org.springframework.http.ResponseEntity; // ✅ Importar esto
 import org.springframework.web.bind.annotation.*;
 import com.DAMUnitedFC.backend_tfg.dto.EstadisticasJugadorDto;
 import java.sql.Date;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/jugadores")
+@CrossOrigin(origins = "*") // ✅ Asegurar que Ionic puede llamar aquí
 public class JugadorController {
 
     private final JugadorRepository repo;
@@ -24,6 +26,8 @@ public class JugadorController {
         this.usuarioRepo = usuarioRepo;
         this.equipoRepo = equipoRepo;
     }
+
+    // --- ENDPOINTS EXISTENTES ---
 
     @GetMapping
     public List<Jugador> listar() {
@@ -47,11 +51,39 @@ public class JugadorController {
         return guardarOActualizar(j, dto);
     }
 
-    // ✅ MÉTODO AUXILIAR PARA NO REPETIR CÓDIGO Y EVITAR ERRORES DE FECHAS
+    @DeleteMapping("/{id}")
+    public void borrar(@PathVariable Integer id) {
+        repo.deleteById(id);
+    }
+
+    @GetMapping("/{id}/stats")
+    public EstadisticasJugadorDto obtenerEstadisticas(@PathVariable Integer id) {
+        // Aquí iría lógica real en el futuro
+        return new EstadisticasJugadorDto(0, 0, 0, 0);
+    }
+
+    // --- 🔥 NUEVO ENDPOINT PARA EL DASHBOARD DE JUGADOR ---
+
+    @GetMapping("/usuario/{idUsuario}/equipo")
+    public ResponseEntity<?> getEquipoDelJugador(@PathVariable Long idUsuario) {
+
+        // CAMBIO AQUÍ: repo.findByUsuario_IdUsuario(...)
+        return repo.findByUsuario_IdUsuario(idUsuario)
+                .map(jugador -> {
+                    if (jugador.getEquipoPrincipal() != null) {
+                        return ResponseEntity.ok(jugador.getEquipoPrincipal());
+                    } else {
+                        return ResponseEntity.notFound().build();
+                    }
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // --- MÉTODOS AUXILIARES ---
+
     private Jugador guardarOActualizar(Jugador j, JugadorDto dto) {
         j.setUsuario(usuarioRepo.findById(dto.getIdUsuario()).orElseThrow());
 
-        // 🔥 FIX CRÍTICO: Comprobamos si es null antes de convertir a Date
         j.setFechaNacimiento(dto.getFechaNacimiento() != null ? Date.valueOf(dto.getFechaNacimiento()) : null);
         j.setFechaAlta(dto.getFechaAlta() != null ? Date.valueOf(dto.getFechaAlta()) : null);
         j.setFechaBaja(dto.getFechaBaja() != null ? Date.valueOf(dto.getFechaBaja()) : null);
@@ -63,7 +95,6 @@ public class JugadorController {
         j.setDireccion(dto.getDireccion());
         j.setObservaciones(dto.getObservaciones());
 
-        // Lógica de Equipo
         if (dto.getEquipoPrincipal() != null) {
             Equipo e = equipoRepo.findById(dto.getEquipoPrincipal()).orElse(null);
             j.setEquipoPrincipal(e);
@@ -72,15 +103,5 @@ public class JugadorController {
         }
 
         return repo.save(j);
-    }
-
-    @DeleteMapping("/{id}")
-    public void borrar(@PathVariable Integer id) {
-        repo.deleteById(id);
-    }
-
-    @GetMapping("/{id}/stats")
-    public EstadisticasJugadorDto obtenerEstadisticas(@PathVariable Integer id) {
-        return new EstadisticasJugadorDto(0, 0, 0, 0);
     }
 }
