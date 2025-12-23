@@ -225,4 +225,25 @@ export interface PlayerStats {
   minutosJugados: number;
 }
 
+// ✅ ZONA PÚBLICA
+export interface PublicTeam {
+    idEquipo: number;
+    nombre: string;
+    categoria: string;
+    fotoUrl: string;
+    entrenadorNombre: string;
+}
+
+export interface PublicPlayer {
+    idJugador: number;
+    nombre: string;
+    apellidos: string;
+    nombreCompleto: string;
+    posicion: string;
+    dorsal: number;
+    fotoUrl: string;
+    goles: number;
+    asistencias: number;
+}
+
 export type UserRole = 'ADMIN' | 'ENTRENADOR' | 'JUGADOR' | 'PADRE';

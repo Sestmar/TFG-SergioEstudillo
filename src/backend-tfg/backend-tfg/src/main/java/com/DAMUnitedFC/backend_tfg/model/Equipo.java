@@ -10,13 +10,13 @@ public class Equipo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_equipo")         // Ajusta al nombre real
+    @Column(name = "id_equipo")
     private Integer idEquipo;
 
     @Column(nullable = false, length = 50)
     private String nombre;
 
-    @Column(name = "fecha_creacion", nullable = false) // Ajusta el nombre real
+    @Column(name = "fecha_creacion", nullable = false)
     private Date fechaCreacion;
 
     @Column(length = 255)

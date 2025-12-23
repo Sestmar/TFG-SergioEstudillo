@@ -1,6 +1,7 @@
 package com.DAMUnitedFC.backend_tfg.repository;
 
 import com.DAMUnitedFC.backend_tfg.model.Alineacion;
+import com.DAMUnitedFC.backend_tfg.model.Jugador;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,6 +14,8 @@ public interface AlineacionRepository extends JpaRepository<Alineacion, Long> {
 
     // Buscar alineación de un partido
     List<Alineacion> findByPartidoIdPartido(Long idPartido);
+    // ✅ ESTE ES EL QUE FALTABA para el PublicController:
+    List<Alineacion> findByJugador(Jugador jugador);
 
     // Buscar ficha exacta
     @Query("SELECT a FROM Alineacion a WHERE a.partido.idPartido = :idPartido AND a.jugador.idJugador = :idJugador")

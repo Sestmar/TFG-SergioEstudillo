@@ -38,13 +38,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 1. ENDPOINTS PÚBLICOS (Sin Token)
                         .requestMatchers("/api/auth/**").permitAll()   // Login y Registro
-                        .requestMatchers("/api/media/**").permitAll()  // ✅ NUEVO: Permite subir fotos al registrarse
-                        .requestMatchers("/uploads/**").permitAll()    // ✅ Permite VER las fotos subidas
+                        .requestMatchers("/api/media/**").permitAll()  // Subida de archivos
+                        .requestMatchers("/uploads/**").permitAll()    // Ver fotos
+
+                        // 🔥 ZONA FAN (PÚBLICA)
+                        .requestMatchers("/api/public/**").permitAll()
 
                         // 2. ENDPOINTS PROTEGIDOS (Requieren Token)
-                        .requestMatchers("/api/**").authenticated()    // Todo lo demás bajo /api requiere login
+                        .requestMatchers("/api/**").authenticated()
 
-                        // 3. OTROS (Swagger, etc.)
+                        // 3. OTROS
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -55,7 +58,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permite puertos típicos de Frontend (Angular 4200, React 5173/3000, Ionic 8100)
+        // Permite puertos típicos de Frontend
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:4200",
                 "http://localhost:8100",
@@ -66,7 +69,6 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Aplicamos CORS globalmente (/**) para que incluya /uploads, /api y /media
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
