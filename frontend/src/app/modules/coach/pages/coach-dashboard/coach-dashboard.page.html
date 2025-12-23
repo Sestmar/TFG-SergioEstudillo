@@ -102,14 +102,25 @@
             {{ event.fechaHora | date:'HH:mm' }} • {{ event.lugar }}
           </span>
 
-          <div *ngIf="event.tipo === 'PARTIDO'" style="margin-top: 10px;">
+          <div *ngIf="event.tipo === 'PARTIDO'" style="margin-top: 10px; display: flex; gap: 8px;">
+            
             <ion-button 
               fill="outline" 
               size="small" 
               [routerLink]="['/tactics', event.idPartido || event.id]">
               <ion-icon name="easel-outline" slot="start"></ion-icon>
-              Pizarra Táctica
+              Pizarra
             </ion-button>
+
+            <ion-button 
+              fill="outline" 
+              color="warning"
+              size="small" 
+              [routerLink]="['/edit-match', event.idPartido || event.id]">
+              <ion-icon name="document-text-outline" slot="start"></ion-icon>
+              Acta
+            </ion-button>
+
           </div>
 
         </div>

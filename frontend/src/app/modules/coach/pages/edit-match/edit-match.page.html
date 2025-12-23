@@ -1,0 +1,67 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/coach-dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Editar Acta</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="saveActa()" color="light" fill="solid" size="small">
+        <ion-icon name="checkmark-done" slot="start"></ion-icon>
+        Cerrar
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding bg-light">
+
+  <ion-card class="score-card">
+    <ion-card-header>
+      <ion-card-subtitle>Resultado Final</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content class="score-grid">
+      <div class="team-input">
+        <ion-label>Nosotros</ion-label>
+        <ion-input type="number" [(ngModel)]="matchStats.golesFavor" class="big-input"></ion-input>
+      </div>
+      <div class="divider">-</div>
+      <div class="team-input">
+        <ion-label>{{ match?.rival }}</ion-label>
+        <ion-input type="number" [(ngModel)]="matchStats.golesContra" class="big-input"></ion-input>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <h3 class="section-title">Rendimiento Individual</h3>
+
+  <div class="player-list">
+    <ion-card *ngFor="let p of lineup" class="player-edit-card">
+      <div class="card-left">
+        <div class="avatar">
+           {{ p.jugador.usuario.nombre.charAt(0) }}{{ p.jugador.usuario.apellidos.charAt(0) }}
+        </div>
+        <div class="names">
+          <strong>{{ p.jugador.usuario.nombre }}</strong>
+          <span>#{{ p.jugador.dorsal }}</span>
+        </div>
+      </div>
+
+      <div class="card-inputs">
+        <div class="input-group">
+          <label>Min</label>
+          <ion-input type="number" [(ngModel)]="p.minutos"></ion-input>
+        </div>
+        <div class="input-group success">
+          <label>Goles</label>
+          <ion-input type="number" [(ngModel)]="p.goles"></ion-input>
+        </div>
+        <div class="input-group info">
+          <label>Asist</label>
+          <ion-input type="number" [(ngModel)]="p.asistencias"></ion-input>
+        </div>
+      </div>
+    </ion-card>
+  </div>
+
+  <div class="ion-padding-bottom" style="height: 50px;"></div>
+</ion-content>

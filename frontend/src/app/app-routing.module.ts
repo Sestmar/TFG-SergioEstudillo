@@ -64,6 +64,16 @@ const routes: Routes = [
     loadChildren: () => import('./modules/coach/pages/tactics/tactics.module').then( m => m.TacticsPageModule)
   },
 
+  {
+    path: 'match-detail/:id',
+    loadChildren: () => import('./modules/match-detail/match-detail.module').then( m => m.MatchDetailPageModule)
+  },
+
+  {
+    path: 'edit-match/:id',
+    loadChildren: () => import('./modules/coach/pages/edit-match/edit-match.module').then( m => m.EditMatchPageModule)
+  },
+
   // COMODÍN (Siempre al final)
   { path: '**', redirectTo: 'landing' }
 ];

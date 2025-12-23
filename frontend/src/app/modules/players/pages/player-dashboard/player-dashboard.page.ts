@@ -210,27 +210,27 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     }, 100);
   }
 
-  async showMatchDetails(match: any) {
-    const fechaObj = new Date(match.fechaHora);
-    const fecha = fechaObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-    const hora = fechaObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-    const fechaCap = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+  showMatchDetails(match: any) {
+    // Si es un entrenamiento, seguimos mostrando la alerta simple (o creamos otra página)
+    if (match.tipo === 'ENTRENAMIENTO') {
+       this.showTrainingAlert(match); // Mueve tu lógica de alerta aquí si quieres
+       return;
+    }
 
-    const alert = await this.alertCtrl.create({
-      header: match.tipo === 'PARTIDO' ? `VS ${match.rival}` : 'Entrenamiento',
-      subHeader: `${fechaCap} - ${hora}`,
-      message: `
-📍 LUGAR:
-${match.lugar || 'Por confirmar'}
+    // Si es Partido, navegamos a la ficha "Pro"
+    // Asumiendo que la ruta es /match-detail/:id
+    this.router.navigate(['/match-detail', match.idPartido || match.id]);
+  }
 
-📝 OBSERVACIONES:
-${match.observaciones || 'Sin observaciones adicionales.'}
-      `,
-      buttons: ['Entendido'],
-      cssClass: 'custom-alert' 
-    });
-
-    await alert.present();
+  // (Opcional) Mantén la alerta antigua solo para entrenamientos
+  async showTrainingAlert(match: any) {
+      const alert = await this.alertCtrl.create({
+        header: 'Entrenamiento',
+        subHeader: match.lugar,
+        message: match.observaciones || 'Sin observaciones.',
+        buttons: ['OK']
+      });
+      await alert.present();
   }
 
   getPlayerPosition(): string {

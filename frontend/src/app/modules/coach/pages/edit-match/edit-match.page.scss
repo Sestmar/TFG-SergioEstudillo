@@ -1,0 +1,67 @@
+.bg-light { --background: #f4f5f8; }
+
+.score-card {
+  text-align: center;
+  margin-bottom: 20px;
+  .score-grid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    
+    .team-input {
+      display: flex;
+      flex-direction: column;
+      width: 80px;
+      ion-input { 
+        font-size: 2rem; 
+        font-weight: bold; 
+        --background: #eee; 
+        border-radius: 10px; 
+        text-align: center;
+      }
+    }
+    .divider { font-size: 2rem; font-weight: bold; color: #888; }
+  }
+}
+
+.player-edit-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 10px;
+
+  .card-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 40%;
+    
+    .avatar {
+      width: 40px; height: 40px; background: var(--ion-color-primary); color: white;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;
+    }
+    .names {
+      display: flex; flex-direction: column; font-size: 0.9rem;
+      span { font-size: 0.8rem; color: #666; }
+    }
+  }
+
+  .card-inputs {
+    display: flex;
+    gap: 8px;
+    
+    .input-group {
+      display: flex; flex-direction: column; align-items: center;
+      width: 45px;
+      label { font-size: 0.7rem; margin-bottom: 2px; color: #888; }
+      ion-input {
+        --padding-start: 5px; --padding-end: 5px;
+        text-align: center; background: #f0f0f0; border-radius: 5px;
+        font-weight: bold;
+      }
+      &.success ion-input { color: var(--ion-color-success); background: #e0f2f1; }
+    }
+  }
+}
