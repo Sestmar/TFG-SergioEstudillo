@@ -25,9 +25,8 @@ public class Alineacion {
     @JsonIgnoreProperties({"alineaciones", "equipos", "hibernateLazyInitializer", "handler"})
     private Jugador jugador;
 
-    // --- DATOS PROPIOS ---
+    // --- DATOS TÉCNICOS ---
 
-    // ✅ FIX: Añadimos este campo OBLIGATORIO en tu base de datos
     @Column(name = "id_equipo", nullable = false)
     private Long idEquipo;
 
@@ -36,6 +35,23 @@ public class Alineacion {
 
     @Column(name = "es_titular")
     private Boolean esTitular;
+
+    // --- DATOS DE RENDIMIENTO (NUEVOS) ---
+
+    @Column(name = "goles")
+    private Integer goles = 0;
+
+    @Column(name = "asistencias")
+    private Integer asistencias = 0;
+
+    @Column(name = "minutos_jugados")
+    private Integer minutosJugados = 0;
+
+    @Column(name = "tarjeta_amarilla")
+    private Boolean tarjetaAmarilla = false;
+
+    @Column(name = "tarjeta_roja")
+    private Boolean tarjetaRoja = false;
 
     public Alineacion() {}
 }

@@ -89,7 +89,7 @@
     </div>
     
     <div class="actions-grid">
-      <div class="action-card" *ngFor="let action of quickActions" (click)="navigateTo(action.route)" [ngClass]="action.color">
+      <div class="action-card" *ngFor="let action of quickActions" (click)="navigateTo(action)" [ngClass]="action.color">
         <div class="icon-box">
           <ion-icon [name]="action.icon"></ion-icon>
         </div>
@@ -149,29 +149,30 @@
       </div>
     </div>
 
-    <div class="section-title" *ngIf="playerStats">
+    <div class="section-title" id="stats-section"> 
       <h4>Estadísticas de Temporada</h4>
     </div>
 
-    <div class="detailed-stats-card" *ngIf="playerStats">
+    <div class="detailed-stats-card">
       <div class="stat-item">
-        <span class="val">{{ playerStats.partidosTotales }}</span>
+        <span class="val">{{ playerStats?.partidosTotales || 0 }}</span>
         <span class="lbl">Partidos</span>
       </div>
       <div class="stat-item">
-        <span class="val">{{ playerStats.golesTotales }}</span>
+        <span class="val">{{ playerStats?.golesTotales || 0 }}</span>
         <span class="lbl">Goles</span>
       </div>
       <div class="stat-item">
-        <span class="val">{{ playerStats.asistenciasTotales }}</span>
+        <span class="val">{{ playerStats?.asistenciasTotales || 0 }}</span>
         <span class="lbl">Asist.</span>
       </div>
       <div class="stat-item">
-        <span class="val">{{ playerStats.minutosJugados }}'</span>
+        <span class="val">{{ playerStats?.minutosJugados || 0 }}'</span>
         <span class="lbl">Minutos</span>
       </div>
     </div>
 
-    <div class="spacer" style="height: 50px;"></div>
+    <div class="spacer" style="height: 100px;"></div>
+  
   </div>
 </ion-content>

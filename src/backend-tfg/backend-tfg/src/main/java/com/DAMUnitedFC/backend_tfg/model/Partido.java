@@ -1,10 +1,12 @@
 package com.DAMUnitedFC.backend_tfg.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "partido")
+@Data
 public class Partido {
 
     @Id
@@ -13,7 +15,7 @@ public class Partido {
     private Long idPartido;
 
     @Column(name = "id_equipo")
-    private Long idEquipo; // El equipo propio (Alevín A)
+    private Long idEquipo;
 
     private String rival;
 
@@ -22,35 +24,29 @@ public class Partido {
 
     private String lugar;
 
-    private String tipo; // LIGA, AMISTOSO, ENTRENAMIENTO
+    private String tipo;
 
-    // Constructores
+    // --- NUEVOS CAMPOS ---
+    @Column(name = "goles_favor")
+    private Integer golesFavor = 0;
+
+    @Column(name = "goles_contra")
+    private Integer golesContra = 0;
+
+    @Column(name = "estado")
+    private String estado = "PENDIENTE"; // Valores: PENDIENTE, FINALIZADO
+
     public Partido() {}
 
+    // Constructor completo actualizado
     public Partido(Long idEquipo, String rival, LocalDateTime fechaHora, String lugar, String tipo) {
         this.idEquipo = idEquipo;
         this.rival = rival;
         this.fechaHora = fechaHora;
         this.lugar = lugar;
         this.tipo = tipo;
+        this.estado = "PENDIENTE";
+        this.golesFavor = 0;
+        this.golesContra = 0;
     }
-
-    // Getters y Setters
-    public Long getIdPartido() { return idPartido; }
-    public void setIdPartido(Long idPartido) { this.idPartido = idPartido; }
-
-    public Long getIdEquipo() { return idEquipo; }
-    public void setIdEquipo(Long idEquipo) { this.idEquipo = idEquipo; }
-
-    public String getRival() { return rival; }
-    public void setRival(String rival) { this.rival = rival; }
-
-    public LocalDateTime getFechaHora() { return fechaHora; }
-    public void setFechaHora(LocalDateTime fechaHora) { this.fechaHora = fechaHora; }
-
-    public String getLugar() { return lugar; }
-    public void setLugar(String lugar) { this.lugar = lugar; }
-
-    public String getTipo() { return tipo; }
-    public void setTipo(String tipo) { this.tipo = tipo; }
 }

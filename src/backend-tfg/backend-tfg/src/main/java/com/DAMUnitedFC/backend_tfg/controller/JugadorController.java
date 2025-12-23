@@ -6,7 +6,8 @@ import com.DAMUnitedFC.backend_tfg.model.Equipo;
 import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
-import org.springframework.http.ResponseEntity; // ✅ Importar esto
+import com.DAMUnitedFC.backend_tfg.repository.AlineacionRepository; // ✅ Importar Repo
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.DAMUnitedFC.backend_tfg.dto.EstadisticasJugadorDto;
 import java.sql.Date;
@@ -14,17 +15,23 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/jugadores")
-@CrossOrigin(origins = "*") // ✅ Asegurar que Ionic puede llamar aquí
+@CrossOrigin(origins = "*")
 public class JugadorController {
 
     private final JugadorRepository repo;
     private final UsuarioRepository usuarioRepo;
     private final EquipoRepository equipoRepo;
+    private final AlineacionRepository alineacionRepo; // ✅ Nueva inyección
 
-    public JugadorController(JugadorRepository repo, UsuarioRepository usuarioRepo, EquipoRepository equipoRepo) {
+    // Constructor actualizado con el nuevo repositorio
+    public JugadorController(JugadorRepository repo,
+                             UsuarioRepository usuarioRepo,
+                             EquipoRepository equipoRepo,
+                             AlineacionRepository alineacionRepo) {
         this.repo = repo;
         this.usuarioRepo = usuarioRepo;
         this.equipoRepo = equipoRepo;
+        this.alineacionRepo = alineacionRepo;
     }
 
     // --- ENDPOINTS EXISTENTES ---
@@ -56,18 +63,28 @@ public class JugadorController {
         repo.deleteById(id);
     }
 
+    // --- 🔥 ENDPOINT ESTADÍSTICAS REALES ---
     @GetMapping("/{id}/stats")
     public EstadisticasJugadorDto obtenerEstadisticas(@PathVariable Integer id) {
-        // Aquí iría lógica real en el futuro
-        return new EstadisticasJugadorDto(0, 0, 0, 0);
+        // 1. Consultar base de datos
+        Integer partidos = alineacionRepo.countPartidosJugados(id);
+        Integer goles = alineacionRepo.sumGoles(id);
+        Integer asistencias = alineacionRepo.sumAsistencias(id);
+        Integer minutos = alineacionRepo.sumMinutos(id);
+
+        // 2. Controlar Nulos (Si nunca jugó, la suma devuelve null)
+        return new EstadisticasJugadorDto(
+                (partidos != null) ? partidos : 0,
+                (goles != null) ? goles : 0,
+                (asistencias != null) ? asistencias : 0,
+                (minutos != null) ? minutos : 0
+        );
     }
 
-    // --- 🔥 NUEVO ENDPOINT PARA EL DASHBOARD DE JUGADOR ---
+    // --- DASHBOARD JUGADOR ---
 
     @GetMapping("/usuario/{idUsuario}/equipo")
     public ResponseEntity<?> getEquipoDelJugador(@PathVariable Long idUsuario) {
-
-        // CAMBIO AQUÍ: repo.findByUsuario_IdUsuario(...)
         return repo.findByUsuario_IdUsuario(idUsuario)
                 .map(jugador -> {
                     if (jugador.getEquipoPrincipal() != null) {

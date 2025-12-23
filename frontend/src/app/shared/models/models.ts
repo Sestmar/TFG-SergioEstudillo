@@ -218,4 +218,11 @@ export interface PlayerStats {
   minutosJugados: number;
 }
 
+export interface PlayerStats {
+  partidosTotales: number;
+  golesTotales: number;
+  asistenciasTotales: number;
+  minutosJugados: number;
+}
+
 export type UserRole = 'ADMIN' | 'ENTRENADOR' | 'JUGADOR' | 'PADRE';
