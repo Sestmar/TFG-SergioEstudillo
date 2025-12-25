@@ -2,8 +2,9 @@ package com.DAMUnitedFC.backend_tfg.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.ToString; // Importante para evitar bucles infinitos
+import lombok.ToString;
 import java.sql.Date;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // ✅ Importante
 
 @Entity
 @Data
@@ -28,16 +29,21 @@ public class Equipo {
 
     @ManyToOne
     @JoinColumn(name = "id_categoria", nullable = false)
+    // Evitamos cargar listas inversas de categorías
+    @JsonIgnoreProperties({"equipos", "hibernateLazyInitializer", "handler"})
     private Categoria categoria;
 
     @ManyToOne
     @JoinColumn(name = "id_liga", nullable = false)
+    // Evitamos cargar listas inversas de ligas
+    @JsonIgnoreProperties({"equipos", "hibernateLazyInitializer", "handler"})
     private Liga liga;
 
-    // 🔥 NUEVO: Relación con Entrenador
-    // Esto soluciona el error: equipo.getEntrenador() / equipo.setEntrenador()
+    // 🔥 CORRECCIÓN DOBLE SEGURIDAD:
+    // Al cargar el entrenador, ignoramos su propiedad 'equipo' para que no vuelva aquí.
     @OneToOne
-    @JoinColumn(name = "id_entrenador") // Clave foránea en la tabla Equipo
-    @ToString.Exclude // Evita error de StackOverflow al imprimir logs
+    @JoinColumn(name = "id_entrenador")
+    @ToString.Exclude
+    @JsonIgnoreProperties({"equipo", "usuario", "hibernateLazyInitializer", "handler"})
     private Entrenador entrenador;
 }

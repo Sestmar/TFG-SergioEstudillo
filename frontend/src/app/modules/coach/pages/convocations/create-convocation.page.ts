@@ -1,9 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, Input, OnInit } from '@angular/core'; // 🔥 Importante: Input
 import { ModalController, ToastController, LoadingController } from '@ionic/angular';
-import { HttpClient } from '@angular/common/http';
-import { MatchService } from 'src/app/core/services/match/match.service'; 
-import { AuthService } from 'src/app/core/services/auth/auth.service';
+import { MatchService } from 'src/app/core/services/match/match.service';
 
 @Component({
   selector: 'app-create-convocation',
@@ -11,107 +8,118 @@ import { AuthService } from 'src/app/core/services/auth/auth.service';
   styleUrls: ['./create-convocation.page.scss'],
 })
 export class CreateConvocationPage implements OnInit {
-  convocationForm: FormGroup;
-  loadingData: boolean = true;
-  teamId: number | null = null;
+
+  // 🔥 RECIBIMOS EL ID DESDE EL DASHBOARD (Gracias a componentProps)
+  @Input() teamId: number | null = null;
+
+  segmentValue = 'PARTIDO'; // 'PARTIDO' o 'ENTRENAMIENTO'
+  
+  formData = {
+    rival: '',
+    lugar: '',
+    fecha: '',
+    hora: '',
+    tipo: 'PARTIDO', // Se actualiza con el segmento
+    competicion: '', 
+    observaciones: ''
+  };
 
   constructor(
-    private fb: FormBuilder,
-    private matchSvc: MatchService,
-    private authSvc: AuthService,
-    private http: HttpClient,
     private modalCtrl: ModalController,
+    private matchSvc: MatchService, // Asegúrate de tener este servicio importado correctamente
     private toastCtrl: ToastController,
     private loadingCtrl: LoadingController
-  ) {
-    this.convocationForm = this.fb.group({
-      tipo: ['PARTIDO', Validators.required],
-      titulo: ['', [Validators.required, Validators.minLength(3)]], // Esto será el Rival
-      lugar: ['', Validators.required],
-      fechaInicio: ['', Validators.required],
-      fechaFin: [''] // Opcional, para que no falle el HTML
-    });
-  }
+  ) { }
 
   ngOnInit() {
-    this.detectCoachTeam();
-  }
-
-  detectCoachTeam() {
-    this.authSvc.currentUser$.subscribe(user => {
-      if (user) {
-        const userId = (user as any).id || (user as any).idUsuario;
-        
-        // Buscamos el equipo del entrenador
-        this.http.get(`http://localhost:8080/api/entrenadores/usuario/${userId}/equipo`).subscribe({
-          next: (equipo: any) => {
-            this.teamId = equipo.idEquipo || equipo.id;
-            console.log("✅ Equipo detectado ID:", this.teamId);
-            this.loadingData = false;
-          },
-          error: (err) => {
-            console.error("Error detectando equipo:", err);
-            this.showToast('No se pudo detectar tu equipo', 'danger');
-            this.loadingData = false;
-          }
-        });
-      }
-    });
-  }
-
-  async onSubmit() {
-    // 1. Validar formulario
-    if (this.convocationForm.invalid) {
-      this.convocationForm.markAllAsTouched();
-      this.showToast('Revisa los campos obligatorios', 'warning');
-      return;
-    }
-
-    // 2. Validar Equipo
-    if (!this.teamId) {
-      this.showToast('Error: No tienes equipo asignado', 'danger');
-      return;
-    }
-
-    // 3. Loading
-    const loading = await this.loadingCtrl.create({ message: 'Creando evento...' });
-    await loading.present();
-
-    const formData = this.convocationForm.value;
-    
-    // 4. Preparar objeto Partido para Java
-    const newMatch = {
-      idEquipo: this.teamId,
-      rival: formData.titulo, // Mapeamos titulo -> rival
-      lugar: formData.lugar,
-      fechaHora: new Date(formData.fechaInicio).toISOString(),
-      tipo: formData.tipo, 
-      observaciones: ''
-    };
-
-    // 5. Enviar al Backend
-    this.matchSvc.createMatch(newMatch).subscribe({
-      next: async (res) => {
-        await loading.dismiss();
-        this.showToast('¡Evento creado correctamente!', 'success');
-        this.modalCtrl.dismiss({ created: true }); // Cierra y avisa para recargar
-      },
-      error: async (err) => {
-        await loading.dismiss();
-        console.error(err);
-        this.showToast('Error al conectar con el servidor', 'danger');
-      }
-    });
+    // Depuración: Verificamos en consola si el ID llegó correctamente
+    console.log('✅ Modal abierto. ID de Equipo recibido:', this.teamId);
   }
 
   close() {
     this.modalCtrl.dismiss();
   }
 
-  async showToast(msg: string, color: string) {
-    const toast = await this.toastCtrl.create({
-      message: msg, duration: 2000, color: color, position: 'top'
-    });
-    toast.present();
+  segmentChanged(ev: any) {
+    this.segmentValue = ev.detail.value;
+    this.formData.tipo = this.segmentValue;
+  }
+
+  async createEvent() {
+    // 1. Validaciones básicas de formulario
+    if (!this.formData.fecha || !this.formData.hora || !this.formData.lugar) {
+      this.presentToast('Por favor, rellena fecha, hora y lugar', 'warning');
+      return;
+    }
+
+    if (this.formData.tipo === 'PARTIDO' && !this.formData.rival) {
+      this.presentToast('Indica el rival del partido', 'warning');
+      return;
+    }
+
+    // 🔥 Validación crítica: ¿Tenemos equipo asignado?
+    if (!this.teamId) {
+      console.error('Error: teamId es nulo o indefinido en el modal.');
+      this.presentToast('Error crítico: No se ha detectado el equipo asignado.', 'danger');
+      return;
+    }
+
+    const loading = await this.loadingCtrl.create({ message: 'Guardando convocatoria...' });
+    await loading.present();
+
+    try {
+      // 2. Construir fecha completa ISO (YYYY-MM-DDTHH:mm:00)
+      // Ajuste para inputs tipo fecha/hora de Ionic
+      const fechaBase = this.formData.fecha.split('T')[0]; // "2025-12-31"
+      
+      // Intentamos extraer la hora limpia si viene en formato ISO largo
+      let horaLimpia = this.formData.hora;
+      if (this.formData.hora.includes('T')) {
+         horaLimpia = this.formData.hora.split('T')[1].substring(0, 5); // "13:00"
+      }
+
+      const fechaHoraCombinada = `${fechaBase}T${horaLimpia}:00`;
+
+      // 3. Preparar objeto para el Backend
+      const payload = {
+        idEquipo: this.teamId, // ✅ Usamos el ID recibido por Input
+        rival: this.formData.tipo === 'PARTIDO' ? this.formData.rival : null,
+        lugar: this.formData.lugar,
+        fechaHora: fechaHoraCombinada,
+        tipo: this.formData.tipo, // 'PARTIDO' o 'ENTRENAMIENTO'
+        golesFavor: 0,
+        golesContra: 0,
+        estado: 'PENDIENTE',
+        competicion: this.formData.competicion,
+        observaciones: this.formData.observaciones
+      };
+
+      console.log('Enviando payload al servidor:', payload);
+
+      // 4. Llamar al servicio
+      this.matchSvc.createMatch(payload).subscribe({
+        next: async (res) => {
+          await loading.dismiss();
+          this.presentToast('Convocatoria creada con éxito', 'success');
+          // Cerramos el modal y pasamos un dato "created: true" para que el dashboard recargue
+          this.modalCtrl.dismiss({ created: true });
+        },
+        error: async (err) => {
+          await loading.dismiss();
+          console.error('Error creando partido:', err);
+          this.presentToast('Error al guardar el evento. Revisa la consola.', 'danger');
+        }
+      });
+
+    } catch (e) {
+      await loading.dismiss();
+      console.error('Error procesando datos:', e);
+      this.presentToast('Error inesperado al procesar los datos.', 'danger');
+    }
+  }
+
+  async presentToast(msg: string, color: string) {
+    const t = await this.toastCtrl.create({ message: msg, duration: 3000, color, position: 'top' });
+    t.present();
   }
 }

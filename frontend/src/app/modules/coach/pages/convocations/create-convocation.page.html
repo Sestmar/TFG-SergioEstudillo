@@ -11,53 +11,80 @@
 
 <ion-content class="ion-padding">
 
-  <div *ngIf="loadingData" class="ion-text-center ion-padding-top">
-    <ion-spinner></ion-spinner>
-    <p>Detectando equipo...</p>
-  </div>
+  <ion-segment (ionChange)="segmentChanged($event)" [value]="segmentValue" class="ion-margin-bottom">
+    <ion-segment-button value="PARTIDO">
+      <ion-label>Partido</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="ENTRENAMIENTO">
+      <ion-label>Entreno</ion-label>
+    </ion-segment-button>
+  </ion-segment>
 
-  <form [formGroup]="convocationForm" *ngIf="!loadingData">
+  <div class="form-container">
 
-    <ion-segment formControlName="tipo" value="PARTIDO" class="ion-margin-bottom">
-      <ion-segment-button value="PARTIDO">
-        <ion-label>Partido</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="ENTRENAMIENTO">
-        <ion-label>Entreno</ion-label>
-      </ion-segment-button>
-    </ion-segment>
-
-    <ion-item fill="outline" class="ion-margin-bottom input-item">
-      <ion-label position="stacked">Rival / Título</ion-label>
-      <ion-input formControlName="titulo" placeholder="Ej: Betis"></ion-input>
-    </ion-item>
-    <div class="error-msg" *ngIf="convocationForm.get('titulo')?.touched && convocationForm.get('titulo')?.invalid" style="color: var(--ion-color-danger); font-size: 12px; margin-top: -10px; margin-bottom: 10px; margin-left: 5px;">
-      Este campo es obligatorio
-    </div>
-
-    <ion-item fill="outline" class="ion-margin-bottom input-item">
-      <ion-label position="stacked">Lugar</ion-label>
-      <ion-input formControlName="lugar" placeholder="Ej: Campo Municipal"></ion-input>
+    <ion-item class="ion-margin-bottom input-item" *ngIf="segmentValue === 'PARTIDO'">
+      <ion-input 
+        label="Nombre del Rival" 
+        label-placement="stacked" 
+        placeholder="Ej: Betis B"
+        [(ngModel)]="formData.rival">
+      </ion-input>
     </ion-item>
 
-    <ion-item fill="outline" class="ion-margin-bottom input-item">
-      <ion-label position="stacked">Fecha y Hora</ion-label>
-      <ion-input type="datetime-local" formControlName="fechaInicio"></ion-input>
+    <ion-item class="ion-margin-bottom input-item" *ngIf="segmentValue === 'PARTIDO'">
+      <ion-input 
+        label="Competición" 
+        label-placement="stacked" 
+        placeholder="Ej: Liga, Copa, Amistoso..."
+        [(ngModel)]="formData.competicion">
+      </ion-input>
     </ion-item>
 
-    <ion-item fill="outline" class="ion-margin-bottom input-item">
-      <ion-label position="stacked">Fin (Estimado)</ion-label>
-      <ion-input type="datetime-local" formControlName="fechaFin"></ion-input>
+    <ion-item class="ion-margin-bottom input-item">
+      <ion-input 
+        label="Lugar / Campo" 
+        label-placement="stacked" 
+        placeholder="Ej: Ciudad Deportiva"
+        [(ngModel)]="formData.lugar">
+      </ion-input>
+    </ion-item>
+
+    <ion-item class="ion-margin-bottom input-item">
+      <ion-input 
+        type="date" 
+        label="Fecha" 
+        label-placement="stacked"
+        [(ngModel)]="formData.fecha">
+      </ion-input>
+    </ion-item>
+
+    <ion-item class="ion-margin-bottom input-item">
+      <ion-input 
+        type="time" 
+        label="Hora de inicio" 
+        label-placement="stacked"
+        [(ngModel)]="formData.hora">
+      </ion-input>
+    </ion-item>
+
+    <ion-item class="ion-margin-bottom input-item">
+      <ion-textarea 
+        label="Observaciones / Notas" 
+        label-placement="stacked" 
+        placeholder="Ej: Llevar botas de taco de aluminio, puntualidad..."
+        [(ngModel)]="formData.observaciones"
+        [rows]="3">
+      </ion-textarea>
     </ion-item>
 
     <ion-button expand="block" 
                 color="primary" 
-                class="submit-btn" 
-                (click)="onSubmit()">
+                class="submit-btn ion-margin-top" 
+                (click)="createEvent()">
       Crear Evento
       <ion-icon name="checkmark-outline" slot="end"></ion-icon>
     </ion-button>
 
-  </form>
+  </div>
 
 </ion-content>

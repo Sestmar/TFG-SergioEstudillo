@@ -22,6 +22,12 @@ public class Partido {
     @Column(name = "fecha_hora")
     private LocalDateTime fechaHora;
 
+    @Column(name = "competicion")
+    private String competicion;
+
+    @Column(name = "observaciones", columnDefinition = "TEXT")
+    private String observaciones;
+
     private String lugar;
 
     private String tipo;

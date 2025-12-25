@@ -3,8 +3,7 @@ package com.DAMUnitedFC.backend_tfg.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.sql.Date;
-// ✅ IMPORTANTE: Importar esto
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // ✅ Importante
 
 @Entity
 @Table(name = "jugador")
@@ -17,6 +16,8 @@ public class Jugador {
 
     @ManyToOne
     @JoinColumn(name = "id_usuario", nullable = false)
+    // Ignoramos roles y cosas internas de usuario
+    @JsonIgnoreProperties({"roles", "hibernateLazyInitializer", "handler", "passwordHash", "tokens"})
     private Usuario usuario;
 
     @Column(name = "fecha_nacimiento")
@@ -46,10 +47,13 @@ public class Jugador {
     @Column(name = "observaciones", length = 255)
     private String observaciones;
 
-    // 🔥 CAMBIO CLAVE: Evita error de recursión infinita
+    // 🔥 CORRECCIÓN DEFINITIVA AQUÍ:
+    // Añadimos "entrenador", "liga" y "categoria" a la lista de ignorados.
+    // Esto asegura que al cargar el jugador, cargue los datos básicos de su equipo (nombre, foto)
+    // PERO NO intente cargar al entrenador ni reiniciar el ciclo.
     @ManyToOne
     @JoinColumn(name = "equipo_principal")
-    @JsonIgnoreProperties({"jugadores", "hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({"jugadores", "entrenador", "liga", "categoria", "partidos", "hibernateLazyInitializer", "handler"})
     private Equipo equipoPrincipal;
 
     @Column(name = "foto_url")

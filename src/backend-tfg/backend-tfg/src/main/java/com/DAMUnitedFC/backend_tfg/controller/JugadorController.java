@@ -6,7 +6,7 @@ import com.DAMUnitedFC.backend_tfg.model.Equipo;
 import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
-import com.DAMUnitedFC.backend_tfg.repository.AlineacionRepository; // ✅ Importar Repo
+import com.DAMUnitedFC.backend_tfg.repository.AlineacionRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.DAMUnitedFC.backend_tfg.dto.EstadisticasJugadorDto;
@@ -21,9 +21,8 @@ public class JugadorController {
     private final JugadorRepository repo;
     private final UsuarioRepository usuarioRepo;
     private final EquipoRepository equipoRepo;
-    private final AlineacionRepository alineacionRepo; // ✅ Nueva inyección
+    private final AlineacionRepository alineacionRepo;
 
-    // Constructor actualizado con el nuevo repositorio
     public JugadorController(JugadorRepository repo,
                              UsuarioRepository usuarioRepo,
                              EquipoRepository equipoRepo,
@@ -63,16 +62,14 @@ public class JugadorController {
         repo.deleteById(id);
     }
 
-    // --- 🔥 ENDPOINT ESTADÍSTICAS REALES ---
+    // --- ESTADÍSTICAS ---
     @GetMapping("/{id}/stats")
     public EstadisticasJugadorDto obtenerEstadisticas(@PathVariable Integer id) {
-        // 1. Consultar base de datos
         Integer partidos = alineacionRepo.countPartidosJugados(id);
         Integer goles = alineacionRepo.sumGoles(id);
         Integer asistencias = alineacionRepo.sumAsistencias(id);
         Integer minutos = alineacionRepo.sumMinutos(id);
 
-        // 2. Controlar Nulos (Si nunca jugó, la suma devuelve null)
         return new EstadisticasJugadorDto(
                 (partidos != null) ? partidos : 0,
                 (goles != null) ? goles : 0,
@@ -82,7 +79,6 @@ public class JugadorController {
     }
 
     // --- DASHBOARD JUGADOR ---
-
     @GetMapping("/usuario/{idUsuario}/equipo")
     public ResponseEntity<?> getEquipoDelJugador(@PathVariable Long idUsuario) {
         return repo.findByUsuario_IdUsuario(idUsuario)
@@ -99,8 +95,13 @@ public class JugadorController {
     // --- MÉTODOS AUXILIARES ---
 
     private Jugador guardarOActualizar(Jugador j, JugadorDto dto) {
-        j.setUsuario(usuarioRepo.findById(dto.getIdUsuario()).orElseThrow());
+        // Conversión Long -> int para Usuario
+        if (dto.getIdUsuario() != null) {
+            j.setUsuario(usuarioRepo.findById(dto.getIdUsuario().intValue())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado")));
+        }
 
+        // Fechas y Datos
         j.setFechaNacimiento(dto.getFechaNacimiento() != null ? Date.valueOf(dto.getFechaNacimiento()) : null);
         j.setFechaAlta(dto.getFechaAlta() != null ? Date.valueOf(dto.getFechaAlta()) : null);
         j.setFechaBaja(dto.getFechaBaja() != null ? Date.valueOf(dto.getFechaBaja()) : null);
@@ -112,8 +113,10 @@ public class JugadorController {
         j.setDireccion(dto.getDireccion());
         j.setObservaciones(dto.getObservaciones());
 
+        // 🔥 CORRECCIÓN AQUÍ: Conversión Long -> int para Equipo
         if (dto.getEquipoPrincipal() != null) {
-            Equipo e = equipoRepo.findById(dto.getEquipoPrincipal()).orElse(null);
+            // Añadido .intValue() al final del get
+            Equipo e = equipoRepo.findById(dto.getEquipoPrincipal().intValue()).orElse(null);
             j.setEquipoPrincipal(e);
         } else {
             j.setEquipoPrincipal(null);

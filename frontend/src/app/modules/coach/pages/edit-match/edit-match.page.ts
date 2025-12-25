@@ -39,21 +39,24 @@ export class EditMatchPage implements OnInit {
     const loading = await this.loadingCtrl.create({ message: 'Cargando acta...' });
     await loading.present();
 
-    // 1. Cargar datos del partido (para ver rival)
+    // 1. Cargar datos del partido (para ver rival y goles actuales)
     this.matchSvc.getMatchById(this.matchId).subscribe(m => {
       this.match = m;
       this.matchStats.golesFavor = m.golesFavor || 0;
       this.matchStats.golesContra = m.golesContra || 0;
     });
 
-    // 2. Cargar jugadores convocados
+    // 2. Cargar jugadores convocados (DTO Plano)
     this.matchSvc.getLineup(this.matchId).subscribe(list => {
+      console.log('Datos recibidos para editar:', list); // Depuración
+
       this.lineup = list.map(item => ({
         ...item,
-        // Inicializamos valores si vienen nulos
+        // Al ser un DTO plano, las propiedades vienen directas
         goles: item.goles || 0,
         asistencias: item.asistencias || 0,
-        minutos: item.minutosJugados || (item.esTitular ? 90 : 0), // Sugerencia inteligente
+        // Si ya tiene minutos guardados úsalos, si no, pon 90 si es titular o 0 si no
+        minutos: item.minutosJugados !== null ? item.minutosJugados : (item.esTitular ? 90 : 0),
         amarilla: item.tarjetaAmarilla || false,
         roja: item.tarjetaRoja || false
       }));
@@ -71,7 +74,8 @@ export class EditMatchPage implements OnInit {
       golesFavor: this.matchStats.golesFavor,
       golesContra: this.matchStats.golesContra,
       estadisticas: this.lineup.map(player => ({
-        idJugador: player.jugador.idJugador, // ID Deportivo
+        // 🔥 CORRECCIÓN AQUÍ: El ID está en la raíz del objeto, no anidado
+        idJugador: player.idJugador, 
         goles: player.goles,
         asistencias: player.asistencias,
         minutos: player.minutos,
@@ -84,7 +88,7 @@ export class EditMatchPage implements OnInit {
       next: async () => {
         await loading.dismiss();
         this.presentToast('Acta cerrada y estadísticas actualizadas', 'success');
-        this.router.navigate(['/coach-dashboard']); // Volver al inicio
+        this.router.navigate(['/coach-dashboard']); 
       },
       error: async (err) => {
         await loading.dismiss();

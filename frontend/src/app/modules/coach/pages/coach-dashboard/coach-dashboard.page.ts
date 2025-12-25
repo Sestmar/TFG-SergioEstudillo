@@ -123,20 +123,27 @@ export class CoachDashboardPage implements OnInit {
   }
 
   async openNewConvocation() {
+    if (!this.managedTeamId) {
+      // Seguridad extra: si no ha cargado el equipo, no dejamos abrir
+      return; 
+    }
+
     const modal = await this.modalCtrl.create({
       component: CreateConvocationPage,
+      // AQUÍ ESTÁ LA CLAVE 👇
+      componentProps: {
+        teamId: this.managedTeamId 
+      }
     });
 
     await modal.present();
+
     const { data } = await modal.onWillDismiss();
     
+    // Si se creó algo, recargamos la lista
     if (data && data.created) {
-      if (this.managedTeamId) this.loadMatches(this.managedTeamId);
+      this.loadMatches(this.managedTeamId);
     }
-  }
-
-  navigateToAction(route: string) {
-    this.router.navigate([route]);
   }
 
   // 🔥 NUEVO: Ir a la página de perfil

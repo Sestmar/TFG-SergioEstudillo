@@ -17,12 +17,16 @@ public class Alineacion {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_partido", nullable = false)
-    @JsonIgnoreProperties({"alineaciones", "hibernateLazyInitializer", "handler"})
+    // Ignoramos la lista inversa para que no vuelva a descargar el partido entero
+    @JsonIgnoreProperties({"alineaciones", "equipoLocal", "equipoVisitante", "hibernateLazyInitializer", "handler"})
     private Partido partido;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_jugador", nullable = false)
-    @JsonIgnoreProperties({"alineaciones", "equipos", "hibernateLazyInitializer", "handler"})
+    // 🔥 CORRECCIÓN CLAVE AQUÍ ABAJO 👇
+    // Añadimos "equipoPrincipal" a la lista. Esto es lo que estaba bloqueando tu app.
+    // Mantenemos "usuario" accesible porque el frontend lo necesita para la FOTO y NOMBRE.
+    @JsonIgnoreProperties({"equipoPrincipal", "alineaciones", "estadisticas", "equipos", "partidos", "hibernateLazyInitializer", "handler"})
     private Jugador jugador;
 
     // --- DATOS TÉCNICOS ---
@@ -36,7 +40,7 @@ public class Alineacion {
     @Column(name = "es_titular")
     private Boolean esTitular;
 
-    // --- DATOS DE RENDIMIENTO (NUEVOS) ---
+    // --- DATOS DE RENDIMIENTO ---
 
     @Column(name = "goles")
     private Integer goles = 0;

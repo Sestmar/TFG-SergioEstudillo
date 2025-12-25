@@ -1,10 +1,11 @@
 package com.DAMUnitedFC.backend_tfg.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore; // Importante para JSON
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
 import java.sql.Date;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "entrenador")
@@ -17,6 +18,8 @@ public class Entrenador {
 
     @ManyToOne
     @JoinColumn(name = "id_usuario", nullable = false)
+    // Evitamos cargar roles innecesarios
+    @JsonIgnoreProperties({"roles", "hibernateLazyInitializer", "handler"})
     private Usuario usuario;
 
     @Column(name = "especialidad", length = 50)
@@ -34,16 +37,13 @@ public class Entrenador {
     @Column(name = "foto_url")
     private String fotoUrl;
 
-    // 🔥 NUEVO: Relación inversa con Equipo
-    // Esto soluciona el error: nuevoMister.setEquipo(equipo)
-    @OneToOne(mappedBy = "entrenador") // "entrenador" es el nombre del campo en la clase Equipo
-    @JsonIgnore // ⚠️ VITAL: Evita bucle infinito al convertir a JSON (Equipo->Entrenador->Equipo...)
+    // 🔥 Relación inversa con Equipo
+    @OneToOne(mappedBy = "entrenador")
+    @JsonIgnore // VITAL: Corta el bucle Equipo -> Entrenador -> Equipo
     @ToString.Exclude
     private Equipo equipo;
 
-    // Constructor vacío necesario para JPA (Lombok suele generarlo, pero por seguridad)
     public Entrenador() {
-        // Inicializamos fecha de alta por defecto si no viene
         this.fechaAlta = new java.sql.Date(System.currentTimeMillis());
     }
 }

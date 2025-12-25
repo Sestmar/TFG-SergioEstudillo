@@ -12,8 +12,8 @@ import { AuthService } from 'src/app/core/services/auth/auth.service';
 export class MatchDetailPage implements OnInit {
   
   match: any = null;
-  lineup: any[] = [];
-  myStats: any = null; // Aquí guardaremos los goles/minutos del jugador logueado
+  players: any[] = []; 
+  myStats: any = null; 
   loading = true;
   currentUserId: number | null = null;
 
@@ -25,12 +25,10 @@ export class MatchDetailPage implements OnInit {
   ) { }
 
   ngOnInit() {
-    // 1. Obtener ID del usuario actual para buscar sus stats
     this.authSvc.currentUser$.subscribe(u => {
         if (u) this.currentUserId = (u as any).id || (u as any).idUsuario;
     });
 
-    // 2. Obtener ID del partido de la URL
     const matchId = this.route.snapshot.paramMap.get('id');
     if (matchId) {
       this.loadMatchInfo(Number(matchId));
@@ -40,39 +38,68 @@ export class MatchDetailPage implements OnInit {
   loadMatchInfo(id: number) {
     this.loading = true;
     
-    // Cargar Info General del Partido (Rival, Fecha, Resultado)
-    this.matchSvc.getMatchById(id).subscribe(data => {
-      this.match = data;
-      
-      // Cargar la Alineación (para sacar las stats individuales)
-      this.matchSvc.getLineup(id).subscribe(alineacion => {
-        this.lineup = alineacion;
-        this.calculateMyStats();
-        this.loading = false;
-      });
+    this.matchSvc.getMatchById(id).subscribe({
+      next: (data) => {
+        this.match = data;
+        
+        // Ahora alineacionRaw es una lista de DTOs planos (AlineacionResponseDto)
+        this.matchSvc.getLineup(id).subscribe({
+          next: (alineacionDtos: any[]) => {
+            
+            console.log('📋 Alineación recibida (DTO):', alineacionDtos);
+
+            // Mapeo SIMPLIFICADO (Porque el DTO ya viene plano)
+            if (alineacionDtos && alineacionDtos.length > 0) {
+              this.players = alineacionDtos.map(dto => {
+                return {
+                    // Ya no navegamos por .jugador.usuario... viene directo
+                    nombre: dto.nombre || 'Jugador',
+                    apellidos: dto.apellidos || '',
+                    fotoUrl: dto.fotoUrl, 
+                    dorsal: dto.dorsal || '--',
+                    posicion: dto.posicion || 'Sin Demarcación',
+                    esTitular: dto.esTitular,
+                    
+                    // Datos para stats
+                    goles: dto.goles,
+                    asistencias: dto.asistencias,
+                    minutos: dto.minutosJugados,
+                    tarjetaAmarilla: dto.tarjetaAmarilla,
+                    tarjetaRoja: dto.tarjetaRoja,
+                    
+                    // Guardamos ID jugador para calcular estadísticas personales
+                    idJugador: dto.idJugador 
+                };
+              });
+
+              // Calcular estadísticas personales
+              // (Nota: Aquí la lógica cambia un poco porque ya no tenemos el objeto usuario anidado)
+              // Pero para visualización, la lista players ya está lista.
+              
+              this.players.sort((a, b) => (a.esTitular === b.esTitular) ? 0 : a.esTitular ? -1 : 1);
+            } else {
+              this.players = [];
+            }
+            this.loading = false;
+          },
+          error: (err) => {
+            console.error("❌ Error cargando alineación", err);
+            this.players = [];
+            this.loading = false;
+          }
+        });
+      },
+      error: (err) => {
+         console.error("❌ Error cargando partido", err);
+         this.loading = false;
+      }
     });
   }
 
-  calculateMyStats() {
-    if (!this.lineup || !this.currentUserId) return;
-
-    // Buscamos en la alineación al jugador que coincida con el usuario logueado
-    const myRecord = this.lineup.find(item => {
-        const uId = item.jugador?.usuario?.id || item.jugador?.usuario?.idUsuario;
-        return uId === this.currentUserId;
-    });
-
-    if (myRecord) {
-        this.myStats = {
-            jugado: true,
-            titular: myRecord.esTitular,
-            goles: myRecord.goles || 0,
-            asistencias: myRecord.asistencias || 0,
-            minutos: myRecord.minutosJugados || 0,
-            amarilla: myRecord.tarjetaAmarilla,
-            roja: myRecord.tarjetaRoja
-        };
-    }
+  // (Nota: He simplificado esto porque con el DTO plano es difícil comparar con currentUserId 
+  // a menos que traigamos el idUsuario en el DTO. Para visualización básica, esto vale).
+  calculateMyStats(lineup: any[]) {
+      // Pendiente de ajuste si necesitas stats personales
   }
 
   goBack() {

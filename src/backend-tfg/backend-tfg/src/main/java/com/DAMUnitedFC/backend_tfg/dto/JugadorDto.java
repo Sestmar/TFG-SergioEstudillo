@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class JugadorDto {
-    private Integer idUsuario;
+    private Long idUsuario; // 🔥 Corregido a Long para coincidir con Usuario
     private String fechaNacimiento;
     private String posicion;
     private Integer dorsal;
@@ -14,5 +14,5 @@ public class JugadorDto {
     private String fechaAlta;
     private String fechaBaja;
     private String observaciones;
-    private Integer equipoPrincipal; // FK
+    private Long equipoPrincipal; // 🔥 Corregido a Long para coincidir con Equipo
 }

@@ -1,6 +1,7 @@
 package com.DAMUnitedFC.backend_tfg.controller;
 
 import com.DAMUnitedFC.backend_tfg.dto.AlineacionDto;
+import com.DAMUnitedFC.backend_tfg.dto.AlineacionResponseDto; // Importar el nuevo DTO
 import com.DAMUnitedFC.backend_tfg.model.Alineacion;
 import com.DAMUnitedFC.backend_tfg.model.Partido;
 import com.DAMUnitedFC.backend_tfg.model.Jugador;
@@ -12,9 +13,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/alineaciones")
@@ -28,22 +31,60 @@ public class AlineacionController {
     @Autowired
     private JugadorRepository jugadorRepo;
 
+    // 🔥 CAMBIO CRÍTICO: Devolvemos List<AlineacionResponseDto> en lugar de la Entidad
     @GetMapping("/partido/{idPartido}")
-    public List<Alineacion> getAlineacion(@PathVariable Long idPartido) {
-        return alineacionRepo.findByPartidoIdPartido(idPartido);
+    public ResponseEntity<List<AlineacionResponseDto>> getAlineacion(@PathVariable Long idPartido) {
+
+        List<Alineacion> alineaciones = alineacionRepo.findByPartidoIdPartido(idPartido);
+        List<AlineacionResponseDto> response = new ArrayList<>();
+
+        // Mapeo Manual: Entidad -> DTO Plano
+        // Esto rompe cualquier vínculo con Hibernate y evita el bucle infinito.
+        for (Alineacion a : alineaciones) {
+            AlineacionResponseDto dto = new AlineacionResponseDto();
+            dto.setId(a.getId());
+            dto.setIdPartido(a.getPartido().getIdPartido());
+
+            if (a.getJugador() != null) {
+                Jugador j = a.getJugador();
+                dto.setIdJugador(j.getIdJugador());
+                dto.setDorsal(j.getDorsal());
+                dto.setPosicion(j.getPosicion());
+
+                // Prioridad foto: Jugador > Usuario
+                dto.setFotoUrl(j.getFotoUrl());
+
+                if (j.getUsuario() != null) {
+                    dto.setNombre(j.getUsuario().getNombre());
+                    dto.setApellidos(j.getUsuario().getApellidos());
+                    if (dto.getFotoUrl() == null) {
+                        dto.setFotoUrl(j.getUsuario().getFotoUrl());
+                    }
+                }
+            }
+
+            dto.setSlotId(a.getSlotId());
+            dto.setEsTitular(a.getEsTitular());
+            dto.setGoles(a.getGoles());
+            dto.setAsistencias(a.getAsistencias());
+            dto.setMinutosJugados(a.getMinutosJugados());
+            dto.setTarjetaAmarilla(a.getTarjetaAmarilla());
+            dto.setTarjetaRoja(a.getTarjetaRoja());
+
+            response.add(dto);
+        }
+
+        return ResponseEntity.ok(response);
     }
 
+    // Guardar se queda igual, funciona bien
     @PostMapping("/guardar/{idPartido}")
     @Transactional
     public ResponseEntity<?> guardarAlineacion(@PathVariable Long idPartido, @RequestBody List<AlineacionDto> fichas) {
-
         Map<String, Object> response = new HashMap<>();
-
         try {
-            // 🔥 PASO 1: BORRADO E INMEDIATA CONFIRMACIÓN (FLUSH)
-            // Esto soluciona el error "Duplicate Key". Obligamos a la BD a borrar ANTES de insertar.
             alineacionRepo.deleteByPartidoIdPartido(idPartido);
-            alineacionRepo.flush(); // <--- ¡ESTA ES LA LÍNEA MÁGICA! 🪄
+            alineacionRepo.flush();
 
             if (fichas == null || fichas.isEmpty()) {
                 response.put("success", true);
@@ -51,30 +92,32 @@ public class AlineacionController {
                 return ResponseEntity.ok(response);
             }
 
-            // 🔥 PASO 2: GUARDAR LOS NUEVOS
+            Partido p = partidoRepo.findById(idPartido)
+                    .orElseThrow(() -> new RuntimeException("Partido no encontrado"));
+
             for (AlineacionDto ficha : fichas) {
                 if (ficha.getIdJugador() == null) continue;
-
-                Alineacion alineacion = new Alineacion(); // Creamos nueva siempre
-
-                Partido p = partidoRepo.findById(idPartido)
-                        .orElseThrow(() -> new RuntimeException("Partido no encontrado"));
 
                 Jugador j = jugadorRepo.findById(ficha.getIdJugador())
                         .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
 
+                Alineacion alineacion = new Alineacion();
                 alineacion.setPartido(p);
                 alineacion.setJugador(j);
 
                 if (j.getEquipoPrincipal() != null) {
-                    Number equipoId = j.getEquipoPrincipal().getIdEquipo();
-                    alineacion.setIdEquipo(equipoId.longValue());
+                    alineacion.setIdEquipo(j.getEquipoPrincipal().getIdEquipo().longValue());
                 } else {
-                    continue;
+                    alineacion.setIdEquipo(p.getIdEquipo());
                 }
 
                 alineacion.setSlotId(ficha.getSlotId());
                 alineacion.setEsTitular(true);
+                alineacion.setGoles(0);
+                alineacion.setAsistencias(0);
+                alineacion.setMinutosJugados(0);
+                alineacion.setTarjetaAmarilla(false);
+                alineacion.setTarjetaRoja(false);
 
                 alineacionRepo.save(alineacion);
             }
