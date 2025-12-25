@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ModalController } from '@ionic/angular'; // ✅ Necesario para abrir el modal
+import { ModalController } from '@ionic/angular';
 
 import { AuthService } from 'src/app/core/services/auth/auth.service';
-import { MatchService } from 'src/app/core/services/match/match.service'; // ✅ Nuevo servicio
+import { MatchService } from 'src/app/core/services/match/match.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
+// 🔥 IMPORTANTE: Asegúrate de importar el nuevo servicio
+import { CoachService } from 'src/app/core/services/coach/coach.service'; 
 import { User } from 'src/app/shared/models/models';
 import { CreateConvocationPage } from '../convocations/create-convocation.page';
 
@@ -25,23 +26,24 @@ export class CoachDashboardPage implements OnInit {
   currentUser$: Observable<User | null>;
   loading: boolean = true;
   
-  // Datos del Equipo
+  // Datos del Equipo y Rol
   teamName: string = '';
   categoryName: string = '';
   managedTeamId: number | null = null;
+  currentRole: string = ''; // 🔥 Nuevo: Rol específico (Ej: Segundo Entrenador)
+  coachId: number | null = null; // 🔥 Nuevo: ID para ir al perfil
   
   stats: CoachStats = { matches: 0, trainings: 0, squadSize: 0 };
   
-  // ✅ Usamos 'any[]' porque viene de la entidad Partido de Java
   upcomingEvents: any[] = []; 
 
   constructor(
     private authService: AuthService,
-    private matchService: MatchService, // ✅ Inyectado
+    private matchService: MatchService,
     private playerService: PlayerService,
-    private http: HttpClient,
+    private coachService: CoachService, // 🔥 Inyectado
     private router: Router,
-    private modalCtrl: ModalController // ✅ Inyectado
+    private modalCtrl: ModalController
   ) {
     this.currentUser$ = this.authService.currentUser$;
   }
@@ -50,7 +52,6 @@ export class CoachDashboardPage implements OnInit {
     // Carga inicial
   }
 
-  // ✅ Se ejecuta cada vez que entras a la pantalla (útil al volver de la pizarra)
   ionViewWillEnter() {
     this.loadCoachData();
   }
@@ -70,39 +71,41 @@ export class CoachDashboardPage implements OnInit {
     });
   }
 
+  // 🔥 LÓGICA ACTUALIZADA: Recibe { equipo, rol, entrenadorId }
   private loadManagedTeam(userId: number) {
-    this.http.get(`http://localhost:8080/api/entrenadores/usuario/${userId}/equipo`)
-      .subscribe({
-        next: (equipo: any) => {
+    this.coachService.getDashboardData(userId).subscribe({
+        next: (response: any) => {
+          // Desempaquetamos la respuesta compuesta del backend
+          const equipo = response.equipo;
+          this.currentRole = response.rol; // "Entrenador Principal", "Segundo Entrenador", etc.
+          this.coachId = response.entrenadorId;
+
           this.teamName = equipo.nombre;
           this.categoryName = equipo.categoria ? equipo.categoria.nombre : 'General';
           this.managedTeamId = equipo.idEquipo || equipo.id;
           
           if (this.managedTeamId) {
             this.loadTeamStats(this.managedTeamId);
-            this.loadMatches(this.managedTeamId); // ✅ Cargamos partidos reales
+            this.loadMatches(this.managedTeamId);
           }
           this.loading = false;
         },
         error: (err) => {
           console.error("Error cargando equipo", err);
           this.loading = false;
+          // Reseteamos datos si falla
+          this.managedTeamId = null;
+          this.currentRole = '';
         }
       });
   }
 
-  // ✅ Cargar Partidos desde MatchService
   private loadMatches(teamId: number) {
     this.matchService.getMatchesByTeam(teamId).subscribe({
       next: (matches) => {
-        // Guardamos todos
         this.upcomingEvents = matches;
-        
-        // Actualizamos estadísticas
         this.stats.matches = matches.filter(m => m.tipo === 'PARTIDO').length;
         this.stats.trainings = matches.filter(m => m.tipo === 'ENTRENAMIENTO').length;
-
-        // Ordenar por fecha y coger los próximos 3
         this.upcomingEvents.sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime());
       }
     });
@@ -119,27 +122,29 @@ export class CoachDashboardPage implements OnInit {
     });
   }
 
-  // ✅ ABRIR MODAL PARA NUEVA CONVOCATORIA
   async openNewConvocation() {
     const modal = await this.modalCtrl.create({
       component: CreateConvocationPage,
-      // No hace falta pasar ID porque el modal lo detecta solo, pero podrías pasarlo
     });
 
     await modal.present();
-
-    // Esperamos a que se cierre
     const { data } = await modal.onWillDismiss();
     
-    // Si se creó algo, recargamos la lista
     if (data && data.created) {
       if (this.managedTeamId) this.loadMatches(this.managedTeamId);
     }
   }
 
-  // Navegación genérica (para otras tarjetas)
   navigateToAction(route: string) {
     this.router.navigate([route]);
+  }
+
+  // 🔥 NUEVO: Ir a la página de perfil
+  goToProfile() {
+    if (this.coachId) {
+      // Asumiendo que crearás la ruta /coach/profile/:id
+      this.router.navigate(['/coach/profile', this.coachId]);
+    }
   }
   
   getGreeting(): string {

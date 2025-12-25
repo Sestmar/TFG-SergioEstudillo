@@ -5,10 +5,9 @@ import { IonicModule } from '@ionic/angular';
 import { RouterModule, Routes } from '@angular/router';
 
 import { CoachDashboardPage } from './coach-dashboard.page';
-import { CreateConvocationPageModule } from '../convocations/create-convocation.module';
 
-// ✅ IMPORTAMOS EL MÓDULO (Asegúrate de que la ruta del archivo es correcta)
-// Si está en una carpeta hermana suele ser '../create-convocation/create-convocation.module'
+// Importamos el módulo del modal para que Angular lo reconozca al abrirlo
+import { CreateConvocationPageModule } from '../convocations/create-convocation.module';
 
 const routes: Routes = [
   {
@@ -23,11 +22,8 @@ const routes: Routes = [
     FormsModule,
     IonicModule,
     RouterModule.forChild(routes),
-    
-    // ✅ LO MANTENEMOS AQUÍ: 
-    // Ahora que le quitamos las rutas al otro archivo, esto solo carga 
-    // la lógica visual para que el Modal funcione bien.
-    CreateConvocationPageModule
+    // Mantenemos esto para que el Modal de "Nueva Convocatoria" funcione
+    CreateConvocationPageModule 
   ],
   declarations: [CoachDashboardPage]
 })

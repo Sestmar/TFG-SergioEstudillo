@@ -1,131 +1,85 @@
-<ion-content class="login-futbolero-content">
-  <div class="background-animation">
-    <div class="particle" *ngFor="let particle of backgroundAnimation.particles"
-         [ngStyle]="getParticleStyle(particle)">
-      <i class="fas fa-futbol"></i>
-    </div>
+<ion-content class="login-content">
+  
+  <div class="background-glows">
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
   </div>
 
-  <div class="overlay"></div>
-
-  <div class="login-container">
-    <div class="login-header">
-      <div class="stadium-background">
-        <div class="stadium-overlay">
-          <div class="header-content">
-            <div class="logo-section">
-              <div class="logo-icon">
-                <ion-icon name="football-outline"></ion-icon>
-              </div>
-              <div class="logo-text">
-                <h1 class="app-title">Club de Fútbol Pro</h1>
-                <p class="app-subtitle">Sistema de Gestión Deportiva</p>
-              </div>
-            </div>
-            
-            <div class="match-info">
-              <div class="match-card">
-                <div class="team home-team">
-                  <div class="team-logo">
-                    <ion-icon name="shield-outline"></ion-icon>
-                  </div>
-                  <span>Local</span>
-                </div>
-                <div class="vs">VS</div>
-                <div class="team away-team">
-                  <div class="team-logo">
-                    <ion-icon name="shield-half-outline"></ion-icon>
-                  </div>
-                  <span>Visitante</span>
-                </div>
-              </div>
-            </div>
-          </div>
+  <div class="auth-wrapper">
+    
+    <div class="glass-card">
+      
+      <div class="auth-header">
+        <div class="logo-container">
+          <ion-icon name="football-outline"></ion-icon>
         </div>
+        <h1>DAM United F.C</h1>
+        <p>Acceso al Estadio</p>
       </div>
-    </div>
 
-    <div class="login-form-section">
-      <div class="form-container">
-        <div class="form-header">
-          <h2 class="form-title">Acceso al Estadio</h2>
-          <p class="form-subtitle">Ingresa tus credenciales para saltar al campo</p>
-        </div>
+      <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="auth-form">
+        
+        <ion-input
+          class="neon-input"
+          label="Correo Electrónico"
+          label-placement="floating"
+          fill="outline"
+          type="email"
+          formControlName="email"
+          placeholder="ejemplo@futchain.com"
+          errorText="Email inválido o requerido"
+          [class.ion-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+        >
+          <ion-icon slot="start" name="mail-outline"></ion-icon>
+        </ion-input>
 
-        <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="login-form">
-          
-          <div class="form-group">
-            <div class="input-container" [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
-              <div class="input-icon">
-                <ion-icon name="mail-outline"></ion-icon>
-              </div>
-              <input
-                formControlName="email"
-                type="email"
-                placeholder="Correo electrónico"
-                class="form-input"
-              />
-            </div>
-            <div class="error-message" *ngIf="emailError && loginForm.get('email')?.touched">
-              <ion-icon name="alert-circle-outline"></ion-icon>
-              {{ emailError }}
-            </div>
-          </div>
-
-          <div class="form-group">
-            <div class="input-container" [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-              <div class="input-icon">
-                <ion-icon name="lock-closed-outline"></ion-icon>
-              </div>
-              <input
-                formControlName="password"
-                [type]="showPassword ? 'text' : 'password'"
-                placeholder="Contraseña"
-                class="form-input"
-              />
-              <button type="button" class="password-toggle" (click)="togglePasswordVisibility()">
-                <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
-              </button>
-            </div>
-            <div class="error-message" *ngIf="passwordError && loginForm.get('password')?.touched">
-              <ion-icon name="alert-circle-outline"></ion-icon>
-              {{ passwordError }}
-            </div>
-          </div>
-
-          <div class="form-options">
-            <label class="checkbox-container">
-              <input type="checkbox" formControlName="rememberMe">
-              <span class="checkmark"></span>
-              <span class="checkbox-label">Recordarme</span>
-            </label>
-            
-            <a class="forgot-password-link" (click)="goToForgotPassword()">
-              ¿Olvidaste tu contraseña?
-            </a>
-          </div>
-
-          <button
-            type="submit"
-            class="login-button"
-            [disabled]="loginForm.invalid || isLoading"
+        <div class="password-wrapper">
+          <ion-input
+            class="neon-input"
+            label="Contraseña"
+            label-placement="floating"
+            fill="outline"
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            errorText="Mínimo 4 caracteres"
+            [class.ion-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
           >
-            <div class="button-content">
-              <ion-icon name="log-in-outline" *ngIf="!isLoading"></ion-icon>
-              <ion-spinner name="crescent" *ngIf="isLoading"></ion-spinner>
-              <span>{{ isLoading ? 'Calentando...' : 'Ingresar al Estadio' }}</span>
-            </div>
-          </button>
-        </form>
-
-        <div class="register-link">
-          <p>¿Nuevo fichaje?</p>
-          <a (click)="goToRegister()" class="register-button">
-            <ion-icon name="person-add-outline"></ion-icon>
-            Registrarse en el club
-          </a>
+            <ion-icon slot="start" name="lock-closed-outline"></ion-icon>
+          </ion-input>
+          
+          <ion-button 
+            fill="clear" 
+            class="eye-btn" 
+            (click)="togglePasswordVisibility()" 
+            slot="end">
+            <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+          </ion-button>
         </div>
+
+        <div class="form-options">
+          <ion-checkbox formControlName="rememberMe" justify="start" labelPlacement="end">Recordarme</ion-checkbox>
+          <a class="forgot-link" routerLink="/auth/forgot-password">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <ion-button 
+          expand="block" 
+          type="submit" 
+          class="neon-button" 
+          [disabled]="loginForm.invalid || isLoading">
+          <span *ngIf="!isLoading">INGRESAR</span>
+          <ion-spinner name="dots" *ngIf="isLoading"></ion-spinner>
+        </ion-button>
+
+      </form>
+
+      <div class="auth-footer">
+        <p>¿Nuevo fichaje?</p>
+        <ion-button fill="outline" routerLink="/auth/register" class="register-btn" expand="block">
+          Registrarse en el Club
+        </ion-button>
       </div>
+
     </div>
   </div>
+
 </ion-content>

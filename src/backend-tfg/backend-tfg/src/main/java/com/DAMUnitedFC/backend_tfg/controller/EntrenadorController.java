@@ -5,10 +5,12 @@ import com.DAMUnitedFC.backend_tfg.model.Entrenador;
 import com.DAMUnitedFC.backend_tfg.model.Equipo;
 import com.DAMUnitedFC.backend_tfg.model.EquipoEntrenador;
 import com.DAMUnitedFC.backend_tfg.repository.EntrenadorRepository;
+import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
-import com.DAMUnitedFC.backend_tfg.repository.EquipoEntrenadorRepository;
-import org.springframework.web.bind.annotation.*;
+import com.DAMUnitedFC.backend_tfg.repository.EquipoEntrenadorRepository; // 🔥 Recuperamos esto
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.sql.Date;
 import java.util.List;
@@ -16,16 +18,22 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/entrenadores")
+@CrossOrigin(origins = "*")
 public class EntrenadorController {
 
     private final EntrenadorRepository repo;
     private final UsuarioRepository usuarioRepo;
-    private final EquipoEntrenadorRepository equipoEntrenadorRepo;
+    private final EquipoRepository equipoRepo;
+    private final EquipoEntrenadorRepository equipoEntrenadorRepo; // 🔥 Inyección
 
-    // Inyección de dependencias (Ahora incluimos equipoEntrenadorRepo)
-    public EntrenadorController(EntrenadorRepository repo, UsuarioRepository usuarioRepo, EquipoEntrenadorRepository equipoEntrenadorRepo) {
+    @Autowired
+    public EntrenadorController(EntrenadorRepository repo,
+                                UsuarioRepository usuarioRepo,
+                                EquipoRepository equipoRepo,
+                                EquipoEntrenadorRepository equipoEntrenadorRepo) {
         this.repo = repo;
         this.usuarioRepo = usuarioRepo;
+        this.equipoRepo = equipoRepo;
         this.equipoEntrenadorRepo = equipoEntrenadorRepo;
     }
 
@@ -44,15 +52,15 @@ public class EntrenadorController {
     @PostMapping
     public Entrenador crear(@RequestBody EntrenadorDto dto) {
         Entrenador e = new Entrenador();
-        e.setUsuario(usuarioRepo.findById(dto.getIdUsuario()).orElseThrow());
+        e.setUsuario(usuarioRepo.findById(dto.getIdUsuario()).orElseThrow(() -> new RuntimeException("Usuario no encontrado")));
         e.setEspecialidad(dto.getEspecialidad());
         e.setLicencia(dto.getLicencia());
         e.setTelefonoContacto(dto.getTelefonoContacto());
-        // Controlamos nulos en la fecha por seguridad
+
         if (dto.getFechaAlta() != null) {
             e.setFechaAlta(Date.valueOf(dto.getFechaAlta()));
         } else {
-            e.setFechaAlta(new Date(System.currentTimeMillis())); // Fecha actual por defecto
+            e.setFechaAlta(new Date(System.currentTimeMillis()));
         }
         return repo.save(e);
     }
@@ -60,7 +68,9 @@ public class EntrenadorController {
     @PutMapping("/{id}")
     public Entrenador actualizar(@PathVariable Integer id, @RequestBody EntrenadorDto dto) {
         Entrenador e = repo.findById(id).orElseThrow(() -> new RuntimeException("Entrenador no encontrado"));
-        e.setUsuario(usuarioRepo.findById(dto.getIdUsuario()).orElseThrow());
+        if(dto.getIdUsuario() != null) {
+            e.setUsuario(usuarioRepo.findById(dto.getIdUsuario()).orElseThrow(() -> new RuntimeException("Usuario no encontrado")));
+        }
         e.setEspecialidad(dto.getEspecialidad());
         e.setLicencia(dto.getLicencia());
         e.setTelefonoContacto(dto.getTelefonoContacto());
@@ -75,29 +85,47 @@ public class EntrenadorController {
         repo.deleteById(id);
     }
 
-    // --- ✅ NUEVO ENDPOINT: DETECCIÓN DE EQUIPO POR USUARIO ---
+    // --- ✅ ENDPOINT INTELIGENTE (LECTOR UNIVERSAL) ---
+    // Busca tanto si es Jefe (Tabla Equipo) como si es Staff (Tabla Intermedia)
+
+    // --- ✅ ENDPOINT ACTUALIZADO: Devuelve Equipo + Rol Específico ---
 
     @GetMapping("/usuario/{idUsuario}/equipo")
     public ResponseEntity<?> getEquipoDelUsuario(@PathVariable Integer idUsuario) {
-        // 1. Buscar si este usuario es entrenador
+
         Optional<Entrenador> entrenadorOpt = repo.findByUsuario_IdUsuario(idUsuario);
-
         if (entrenadorOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body("Este usuario no está registrado como entrenador.");
+            return ResponseEntity.badRequest().body("Este usuario no es entrenador.");
         }
-
         Entrenador entrenador = entrenadorOpt.get();
 
-        // 2. Buscar qué equipos gestiona este entrenador
-        List<EquipoEntrenador> asignaciones = equipoEntrenadorRepo.findByEntrenador_IdEntrenador(entrenador.getIdEntrenador());
+        // 1. INTENTO A: Buscar en Staff (Tabla Intermedia) -> Sacamos el Rol Específico
+        List<EquipoEntrenador> staffAssignments = equipoEntrenadorRepo.findByEntrenador_IdEntrenador(entrenador.getIdEntrenador());
 
-        if (asignaciones.isEmpty()) {
-            return ResponseEntity.status(404).body("El entrenador no tiene ningún equipo asignado.");
+        if (!staffAssignments.isEmpty()) {
+            EquipoEntrenador asignacion = staffAssignments.get(0);
+
+            // Construimos la respuesta compuesta
+            java.util.Map<String, Object> response = new java.util.HashMap<>();
+            response.put("equipo", asignacion.getEquipo());
+            response.put("rol", asignacion.getRol()); // Ej: "Segundo Entrenador"
+            response.put("entrenadorId", entrenador.getIdEntrenador()); // Útil para el perfil
+
+            return ResponseEntity.ok(response);
         }
 
-        // 3. Devolvemos el PRIMER equipo que encontremos (Objeto Equipo limpio)
-        Equipo miEquipo = asignaciones.get(0).getEquipo();
+        // 2. INTENTO B: Buscar como Jefe Directo (Legacy)
+        Optional<Equipo> equipoJefe = equipoRepo.findByEntrenador_Usuario_IdUsuario(idUsuario);
 
-        return ResponseEntity.ok(miEquipo);
+        if (equipoJefe.isPresent()) {
+            java.util.Map<String, Object> response = new java.util.HashMap<>();
+            response.put("equipo", equipoJefe.get());
+            response.put("rol", "Entrenador Principal"); // Por defecto si es relación directa
+            response.put("entrenadorId", entrenador.getIdEntrenador());
+
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.status(404).body("Sin asignación de equipo.");
     }
 }

@@ -9,12 +9,25 @@
     
     <div class="header-section">
       <div class="user-info">
-        <span class="greeting">{{ getGreeting() }}, Míster</span>
+        <span class="greeting">{{ getGreeting() }}</span>
         <h1 *ngIf="currentUser$ | async as user">
-          {{ user.nombre || 'Entrenador' }}
+          {{ user.nombre || 'Míster' }}
         </h1>
+        
+        <div class="role-badge" *ngIf="currentRole">
+          <ion-icon name="id-card-outline"></ion-icon>
+          <span>{{ currentRole }}</span>
+        </div>
       </div>
-      <div class="avatar-circle"><span>MC</span></div>
+
+      <div class="avatar-container" (click)="goToProfile()">
+        <div class="avatar-circle">
+          <span>DT</span>
+        </div>
+        <div class="edit-hint">
+          <ion-icon name="create-outline"></ion-icon>
+        </div>
+      </div>
     </div>
 
     <div class="team-summary-card" *ngIf="managedTeamId">
@@ -43,7 +56,7 @@
     <div class="no-team-card" *ngIf="!managedTeamId">
       <ion-icon name="alert-circle-outline"></ion-icon>
       <h3>Sin asignación detectada</h3>
-      <p>No tienes equipo asignado.</p>
+      <p>No tienes equipo asignado. Contacta al Admin.</p>
     </div>
 
     <div class="section-header">
@@ -103,26 +116,13 @@
           </span>
 
           <div *ngIf="event.tipo === 'PARTIDO'" style="margin-top: 10px; display: flex; gap: 8px;">
-            
-            <ion-button 
-              fill="outline" 
-              size="small" 
-              [routerLink]="['/tactics', event.idPartido || event.id]">
-              <ion-icon name="easel-outline" slot="start"></ion-icon>
-              Pizarra
+            <ion-button fill="outline" size="small" [routerLink]="['/tactics', event.idPartido || event.id]">
+              <ion-icon name="easel-outline" slot="start"></ion-icon> Pizarra
             </ion-button>
-
-            <ion-button 
-              fill="outline" 
-              color="warning"
-              size="small" 
-              [routerLink]="['/edit-match', event.idPartido || event.id]">
-              <ion-icon name="document-text-outline" slot="start"></ion-icon>
-              Acta
+            <ion-button fill="outline" color="warning" size="small" [routerLink]="['/edit-match', event.idPartido || event.id]">
+              <ion-icon name="document-text-outline" slot="start"></ion-icon> Acta
             </ion-button>
-
           </div>
-
         </div>
         
         <div class="arrow" *ngIf="event.tipo === 'PARTIDO'" [routerLink]="['/tactics', event.idPartido || event.id]">

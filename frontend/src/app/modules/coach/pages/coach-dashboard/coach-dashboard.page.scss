@@ -23,26 +23,61 @@
   padding: 2rem 1.5rem 4rem 1.5rem;
 }
 
-// HEADER
+// HEADER ACTUALIZADO
 .header-section {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 2rem;
 
   .user-info {
     .greeting { display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 4px; }
-    h1 { margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--text-dark); }
+    h1 { margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--text-dark); line-height: 1.2; }
+    
+    // 🔥 Estilo del Badge de Rol
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 8px;
+      background: #ccfbf1; // Teal muy claro
+      color: var(--coach-primary);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      border: 1px solid #99f6e4;
+      
+      ion-icon { font-size: 1rem; }
+    }
   }
 
-  .avatar-circle {
-    img {
-      width: 55px;
-      height: 55px;
+  // 🔥 Estilo Avatar con Botón
+  .avatar-container {
+    position: relative;
+    cursor: pointer;
+
+    .avatar-circle {
+      width: 55px; height: 55px;
+      background: white;
       border-radius: 50%;
       border: 2px solid var(--coach-secondary);
-      padding: 2px;
-      object-fit: cover;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; color: var(--coach-primary);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .edit-hint {
+      position: absolute;
+      bottom: -2px; right: -2px;
+      background: var(--coach-primary);
+      color: white;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem;
+      border: 2px solid white;
     }
   }
 }
@@ -123,7 +158,6 @@
   gap: 1rem;
   margin-bottom: 2rem;
 
-  // Main Action (Full Width)
   .action-card.main-action {
     grid-column: span 2;
     background: white;
@@ -138,19 +172,14 @@
     
     .icon-box {
       background: var(--coach-primary);
-      width: 48px;
-      height: 48px;
+      width: 48px; height: 48px;
       border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 1.5rem;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 1.5rem;
     }
     
     .text-box {
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       .title { font-weight: 700; color: var(--text-dark); }
       .desc { font-size: 0.8rem; color: var(--text-muted); }
     }
@@ -158,63 +187,39 @@
     &:active { transform: scale(0.98); background: #f1f5f9; }
   }
 
-  // Small Actions
   .action-card:not(.main-action) {
-    background: white;
-    padding: 1.2rem;
-    border-radius: 16px;
-    text-align: center;
+    background: white; padding: 1.2rem;
+    border-radius: 16px; text-align: center;
     border: 1px solid #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.8rem;
+    display: flex; flex-direction: column; align-items: center; gap: 0.8rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     transition: transform 0.2s;
 
     &:active { transform: scale(0.98); }
 
     .icon-circle {
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      background: #f1f5f9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      
+      width: 45px; height: 45px;
+      border-radius: 50%; background: #f1f5f9;
+      display: flex; align-items: center; justify-content: center;
       ion-icon { font-size: 1.5rem; color: var(--text-muted); }
     }
 
     .action-title { font-size: 0.9rem; font-weight: 600; color: var(--text-dark); }
-
-    &.secondary .icon-circle ion-icon { color: #3b82f6; }
-    &.tertiary .icon-circle ion-icon { color: #8b5cf6; }
-    &.warning .icon-circle ion-icon { color: #f59e0b; }
   }
 }
 
 // EVENTS LIST
 .events-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
+  display: flex; flex-direction: column; gap: 0.8rem;
 
   .event-item {
-    background: white;
-    border-radius: 16px;
-    padding: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    background: white; border-radius: 16px;
+    padding: 1rem; display: flex; align-items: center; gap: 1rem;
     border: 1px solid #e2e8f0;
 
     .date-badge {
-      background: #f1f5f9;
-      border-radius: 12px;
-      padding: 0.5rem 0.8rem;
-      text-align: center;
-      min-width: 60px;
+      background: #f1f5f9; border-radius: 12px;
+      padding: 0.5rem 0.8rem; text-align: center; min-width: 60px;
       .day { display: block; font-weight: 800; font-size: 1.1rem; color: var(--text-dark); }
       .month { display: block; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); }
     }
@@ -235,12 +240,8 @@
 }
 
 .empty-events {
-    text-align: center;
-    color: var(--text-muted);
-    padding: 2rem;
-    background: white;
-    border-radius: 16px;
-    border: 1px dashed #e2e8f0;
-    
+    text-align: center; color: var(--text-muted);
+    padding: 2rem; background: white;
+    border-radius: 16px; border: 1px dashed #e2e8f0;
     p { margin-bottom: 1rem; }
 }

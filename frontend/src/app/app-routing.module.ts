@@ -46,14 +46,13 @@ const routes: Routes = [
     loadChildren: () => import('./modules/coach/pages/convocations/convocation-details/convocation-details.module').then( m => m.ConvocationDetailsPageModule)
   },
 
-  // ✅ RUTA GESTIONAR PLANTILLA
-  // Al corregir el archivo my-team.module.ts, este error desaparecerá.
+  // RUTA GESTIONAR PLANTILLA
   {
     path: 'coach/my-team',
     loadChildren: () => import('./modules/coach/pages/my-team/my-team.module').then( m => m.MyTeamPageModule)
   },
 
-  // ✅ RUTA DE PERFIL (Para todos los usuarios)
+  // RUTA DE PERFIL DE USUARIO GENÉRICO
   {
     path: 'profile',
     loadChildren: () => import('./modules/user/pages/profile/profile.module').then( m => m.ProfilePageModule)
@@ -77,6 +76,18 @@ const routes: Routes = [
   {
     path: 'club',
     loadChildren: () => import('./modules/club/club.module').then( m => m.ClubPageModule)
+  },
+
+  {
+    path: 'admin',
+    loadChildren: () => import('./modules/admin/admin.module').then(m => m.AdminModule)
+  },
+
+  // 🔥 RUTA DE PERFIL DE ENTRENADOR (CORREGIDA)
+  // Verificamos la ruta: src/app/modules/coach/pages/coach-profile/coach-profile.module.ts
+  {
+    path: 'coach/profile/:id',
+    loadChildren: () => import('./modules/coach/pages/coach-profile/coach-profile.module').then( m => m.CoachProfilePageModule)
   },
 
   // COMODÍN (Siempre al final)

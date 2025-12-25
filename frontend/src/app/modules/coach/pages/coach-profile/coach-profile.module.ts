@@ -4,14 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule, Routes } from '@angular/router';
 
-// Componente
-import { AdminDashboardPage } from './pages/admin-dashboard/admin-dashboard.page';
+import { CoachProfilePage } from './coach-profile.page';
 
-// Rutas
+// Definimos la ruta interna del módulo
 const routes: Routes = [
   {
-    path: '', // Si entran a /admin, carga el dashboard
-    component: AdminDashboardPage
+    path: '',
+    component: CoachProfilePage
   }
 ];
 
@@ -20,9 +19,9 @@ const routes: Routes = [
     CommonModule,
     FormsModule,
     IonicModule,
-    RouterModule.forChild(routes)
+    // Importante: forChild para que funcione el Lazy Loading
+    RouterModule.forChild(routes) 
   ],
-  declarations: [AdminDashboardPage]
-  // Ya no necesitas providers extra aquí, AdminService es 'root'
+  declarations: [CoachProfilePage]
 })
-export class AdminModule {}
+export class CoachProfilePageModule {}

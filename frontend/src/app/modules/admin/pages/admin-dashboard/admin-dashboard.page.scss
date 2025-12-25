@@ -1,0 +1,128 @@
+.admin-bg {
+  --background: #f1f5f9;
+}
+
+.dashboard-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* HEADER */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+
+  .header-text {
+    h1 { margin: 0; font-size: 1.5rem; font-weight: 800; color: #1e293b; }
+    p { margin: 4px 0 0; color: #64748b; font-size: 0.9rem; }
+  }
+
+  .admin-badge {
+    background: #0f172a;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+  }
+}
+
+/* TABS */
+.tabs-container {
+  background: white;
+  padding: 6px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 30px;
+}
+
+/* CARDS */
+.section-title h3 {
+  font-size: 1.2rem; font-weight: 700; color: #334155; margin-bottom: 15px;
+}
+
+.candidates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.candidate-card {
+  margin: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  overflow: visible;
+
+  .card-top {
+    padding: 20px;
+    display: flex;
+    gap: 15px;
+    border-bottom: 1px solid #f1f5f9;
+
+    .avatar-placeholder {
+      width: 50px; height: 50px;
+      background: #e2e8f0; color: #475569;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 1.2rem;
+    }
+    
+    .staff-avatar { background: #334155; color: white; }
+
+    .user-details {
+      h4 { margin: 0; font-weight: 700; color: #1e293b; font-size: 1rem; }
+      .email { margin: 2px 0 6px; color: #64748b; font-size: 0.85rem; }
+      
+      .status-tag {
+        background: #ffedd5; color: #c2410c;
+        padding: 3px 8px; border-radius: 4px;
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      }
+      .staff-tag { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+    }
+  }
+
+  .card-actions {
+    padding: 15px;
+
+    .custom-select {
+      --background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      ion-select { --placeholder-color: #64748b; font-size: 0.9rem; }
+    }
+
+    // Estilo para el selector de rol (más pegadito)
+    .role-select {
+      margin-top: -5px;
+      ion-select { font-weight: 600; color: #475569; }
+    }
+
+    .action-btn {
+      --border-radius: 8px;
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 50px;
+  color: #94a3b8;
+  ion-icon { font-size: 3rem; margin-bottom: 10px; }
+  p { font-size: 1rem; }
+}
+
+.spin-container { color: #64748b; }

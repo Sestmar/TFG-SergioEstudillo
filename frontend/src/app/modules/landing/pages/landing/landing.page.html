@@ -1,116 +1,65 @@
 <ion-content class="landing-content">
-  <!-- Hero Section -->
-  <app-hero-section
-  ></app-hero-section>
 
-  <!-- Equipos Destacados -->
-  <section class="featured-teams-section">
-    <div class="section-container">
-      <div class="section-header">
-        <h2 class="section-title">Nuestros Equipos</h2>
-        <p class="section-subtitle">
-          Descubre nuestros equipos destacados y sus logros en las diferentes categorías
-        </p>
-      </div>
-
-      <div class="teams-container">
-        <ion-spinner *ngIf="isLoading" name="crescent" class="loading-spinner"></ion-spinner>
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1>DAM United F.C</h1>
+      <p>La plataforma integral para la gestión deportiva profesional. Entrenadores, jugadores y afición unidos en un solo lugar.</p>
+      
+      <div class="hero-actions">
+        <ion-button class="btn-primary" routerLink="/auth/login">
+          <ion-icon name="log-in-outline" slot="start"></ion-icon>
+          Iniciar Sesión
+        </ion-button>
         
-        <!-- Mantenemos esto comentado por ahora para evitar la pantalla negra -->
-        <!--
-        <div *ngIf="!isLoading" class="teams-grid">
-          <app-team-card
-            *ngFor="let team of (featuredTeams$ | async)"
-            [team]="team"
-            [showStats]="true"
-            > 
-          </app-team-card>
-        </div>
-        -->
-
-        <div class="section-actions">
-          <ion-button 
-            expand="block" 
-            class="view-all-button"
-            routerLink="/teams"
-            routerDirection="forward"
-            > <!-- ¡ARREGLO AQUÍ! -->
-            Ver Todos los Equipos
-            <ion-icon name="arrow-forward" slot="end"></ion-icon>
-          </ion-button>
-        </div>
+        <ion-button class="btn-outline" fill="outline" routerLink="/auth/register">
+          <ion-icon name="person-add-outline" slot="start"></ion-icon>
+          Registrarse
+        </ion-button>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- Features Section -->
-  <section class="features-section">
-    <div class="section-container">
-      <div class="section-header">
-        <h2 class="section-title">¿Por qué elegirnos?</h2>
-        <p class="section-subtitle">
-          Tecnología de vanguardia para la gestión deportiva profesional
-        </p>
+  <div class="section-container" style="padding-top: 0;">
+    <div class="club-preview">
+      <h3>Zona del Aficionado</h3>
+      <p>Consulta las plantillas, estadísticas y resultados de todas nuestras categorías (Alevín, Infantil, Cadete...) sin necesidad de registro.</p>
+      
+      <ion-button class="btn-club" routerLink="/club" size="large">
+        <ion-icon name="people-circle-outline" slot="start"></ion-icon>
+        Ver Equipos y Plantillas
+      </ion-button>
+    </div>
+  </div>
+
+  <div class="section-container">
+    <div class="section-title">
+      <h2>¿Por qué elegirnos?</h2>
+      <p>Tecnología al servicio del deporte base y profesional</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="icon-circle"><ion-icon name="football-outline"></ion-icon></div>
+        <h3>Gestión Deportiva</h3>
+        <p>Control total de plantillas, dorsales y fichas de jugadores.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="icon-circle"><ion-icon name="easel-outline"></ion-icon></div>
+        <h3>Pizarra Táctica</h3>
+        <p>Diseña alineaciones y estrategias interactivas para cada partido.</p>
       </div>
 
-      <div class="features-grid">
-        <!-- (Tu código de 'features' va aquí) -->
-        <div class="feature-card">
-          <div class="feature-icon"><ion-icon name="calendar"></ion-icon></div>
-          <h3 class="feature-title">Gestión de Convocatorias</h3>
-          <p class="feature-description">Organiza y gestiona convocatorias...</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon"><ion-icon name="analytics"></ion-icon></div>
-          <h3 class="feature-title">Estadísticas en Vivo</h3>
-          <p class="feature-description">Accede a estadísticas detalladas...</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon"><ion-icon name="medical"></ion-icon></div>
-          <h3 class="feature-title">Control Médico</h3>
-          <p class="feature-description">Gestión integral de lesiones...</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon"><ion-icon name="notifications"></ion-icon></div>
-          <h3 class="feature-title">Notificaciones Push</h3>
-          <p class="feature-description">Mantente informado de todas las novedades...</p>
-        </div>
+      <div class="feature-card">
+        <div class="icon-circle"><ion-icon name="stats-chart-outline"></ion-icon></div>
+        <h3>Estadísticas Reales</h3>
+        <p>Seguimiento de goles, asistencias y minutos jugados en tiempo real.</p>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- Call to Action -->
-  <section class="cta-section">
-    <div class="section-container">
-      <div class="cta-content">
-        <h2 class="cta-title">¿Listo para comenzar?</h2>
-        <p class="cta-subtitle">
-          Únete a nuestra comunidad deportiva y descubre todo lo que tenemos para ofrecerte
-        </p>
-        
-        <div class="cta-actions">
-          <ion-button 
-            size="large" 
-            class="cta-button primary"
-            routerLink="/auth/register"
-            routerDirection="forward"
-            > <!-- ¡ARREGLO AQUÍ! -->
-            <ion-icon name="person-add" slot="start"></ion-icon>
-            Regístrate Gratis
-          </ion-button>
-          
-          <ion-button 
-            size="large" 
-            fill="outline" 
-            class="cta-button secondary"
-            routerLink="/auth/login"
-            routerDirection="forward"
-            > <!-- ¡ARREGLO AQUÍ! -->
-            <ion-icon name="log-in" slot="start"></ion-icon>
-            Iniciar Sesión
-          </ion-button>
-        </div>
-      </div>
-    </div>
-  </section>
+  <div style="text-align: center; padding: 40px; color: #999; font-size: 0.9rem;">
+    <p>&copy; 2025 Club de Fútbol Pro. TFG Desarrollo de Aplicaciones Multiplataforma.</p>
+  </div>
+
 </ion-content>

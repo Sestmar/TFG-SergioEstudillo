@@ -6,10 +6,6 @@ import { RouterModule, Routes } from '@angular/router';
 // Importa el componente landing
 import { LandingPage } from './pages/landing/landing.page';
 
-// Importa los componentes
-import { HeroSectionComponent } from './components/hero-section/hero-section.component';
-import { TeamCardComponent } from './components/team-card/team-card.component';
-
 const routes: Routes = [
   {
     path: '',
@@ -21,12 +17,8 @@ const routes: Routes = [
   imports: [
     CommonModule,
     IonicModule,
-    RouterModule.forChild(routes)  // ¡IMPORTANTE!
+    RouterModule.forChild(routes)
   ],
-  declarations: [
-    LandingPage,
-    HeroSectionComponent,
-    TeamCardComponent
-  ]
+  declarations: [LandingPage] 
 })
 export class LandingPageModule {}
