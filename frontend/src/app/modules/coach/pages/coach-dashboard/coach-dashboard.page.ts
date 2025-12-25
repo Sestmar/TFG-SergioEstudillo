@@ -6,7 +6,6 @@ import { ModalController } from '@ionic/angular';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
-// 🔥 IMPORTANTE: Asegúrate de importar el nuevo servicio
 import { CoachService } from 'src/app/core/services/coach/coach.service'; 
 import { User } from 'src/app/shared/models/models';
 import { CreateConvocationPage } from '../convocations/create-convocation.page';
@@ -30,8 +29,8 @@ export class CoachDashboardPage implements OnInit {
   teamName: string = '';
   categoryName: string = '';
   managedTeamId: number | null = null;
-  currentRole: string = ''; // 🔥 Nuevo: Rol específico (Ej: Segundo Entrenador)
-  coachId: number | null = null; // 🔥 Nuevo: ID para ir al perfil
+  currentRole: string = ''; 
+  coachId: number | null = null; 
   
   stats: CoachStats = { matches: 0, trainings: 0, squadSize: 0 };
   
@@ -41,7 +40,7 @@ export class CoachDashboardPage implements OnInit {
     private authService: AuthService,
     private matchService: MatchService,
     private playerService: PlayerService,
-    private coachService: CoachService, // 🔥 Inyectado
+    private coachService: CoachService,
     private router: Router,
     private modalCtrl: ModalController
   ) {
@@ -71,29 +70,31 @@ export class CoachDashboardPage implements OnInit {
     });
   }
 
-  // 🔥 LÓGICA ACTUALIZADA: Recibe { equipo, rol, entrenadorId }
   private loadManagedTeam(userId: number) {
     this.coachService.getDashboardData(userId).subscribe({
         next: (response: any) => {
-          // Desempaquetamos la respuesta compuesta del backend
           const equipo = response.equipo;
-          this.currentRole = response.rol; // "Entrenador Principal", "Segundo Entrenador", etc.
+          this.currentRole = response.rol; 
           this.coachId = response.entrenadorId;
 
-          this.teamName = equipo.nombre;
-          this.categoryName = equipo.categoria ? equipo.categoria.nombre : 'General';
-          this.managedTeamId = equipo.idEquipo || equipo.id;
-          
-          if (this.managedTeamId) {
-            this.loadTeamStats(this.managedTeamId);
-            this.loadMatches(this.managedTeamId);
+          if (equipo) {
+            this.teamName = equipo.nombre;
+            this.categoryName = equipo.categoria ? equipo.categoria.nombre : 'General';
+            this.managedTeamId = equipo.idEquipo || equipo.id;
+            
+            if (this.managedTeamId) {
+              this.loadTeamStats(this.managedTeamId);
+              this.loadMatches(this.managedTeamId);
+            }
+          } else {
+             // Caso donde el entrenador no tiene equipo asignado
+             this.managedTeamId = null;
           }
           this.loading = false;
         },
         error: (err) => {
           console.error("Error cargando equipo", err);
           this.loading = false;
-          // Reseteamos datos si falla
           this.managedTeamId = null;
           this.currentRole = '';
         }
@@ -123,14 +124,10 @@ export class CoachDashboardPage implements OnInit {
   }
 
   async openNewConvocation() {
-    if (!this.managedTeamId) {
-      // Seguridad extra: si no ha cargado el equipo, no dejamos abrir
-      return; 
-    }
+    if (!this.managedTeamId) return; 
 
     const modal = await this.modalCtrl.create({
       component: CreateConvocationPage,
-      // AQUÍ ESTÁ LA CLAVE 👇
       componentProps: {
         teamId: this.managedTeamId 
       }
@@ -140,20 +137,23 @@ export class CoachDashboardPage implements OnInit {
 
     const { data } = await modal.onWillDismiss();
     
-    // Si se creó algo, recargamos la lista
     if (data && data.created) {
       this.loadMatches(this.managedTeamId);
     }
   }
 
-  // 🔥 NUEVO: Ir a la página de perfil
   goToProfile() {
     if (this.coachId) {
-      // Asumiendo que crearás la ruta /coach/profile/:id
       this.router.navigate(['/coach/profile', this.coachId]);
     }
   }
   
+  // 🔥 MÉTODO FALTANTE AÑADIDO
+  // Esto arregla el error "navigateToAction is not a function"
+  navigateToAction(path: string) {
+    this.router.navigate([path]);
+  }
+
   getGreeting(): string {
     const hour = new Date().getHours();
     return hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';

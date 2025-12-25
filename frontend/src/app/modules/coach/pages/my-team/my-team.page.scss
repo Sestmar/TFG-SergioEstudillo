@@ -1,102 +1,98 @@
-// Fondo general gris suave
-.bg-light {
-  --background: #f8fafc;
-}
+.bg-light { --background: #f8fafc; }
 
-// Títulos de las secciones (Mi Equipo / Disponibles)
-.section-title {
-  padding: 10px 5px;
-  margin-bottom: 5px;
-  
-  h3 {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: #1e293b;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.section-header {
+  margin-bottom: 15px;
+  .title-row {
+    display: flex; align-items: center; gap: 8px;
+    h3 { margin: 0; font-size: 1.2rem; font-weight: 800; color: #1e293b; }
+    ion-icon { font-size: 1.4rem; }
   }
-  
-  p {
-    margin: 4px 0 0 0;
-    font-size: 0.9rem;
-    color: #64748b;
-  }
+  .subtitle { margin: 4px 0 0 0; font-size: 0.9rem; color: #64748b; margin-left: 30px; }
 }
 
-// Separación extra para la segunda sección
-.mt-4 {
-  margin-top: 2.5rem;
-}
+.mt-4 { margin-top: 2.5rem; }
 
-// Estilo de la lista
-.custom-list {
-  background: transparent;
-  padding: 0;
-}
-
-// Tarjetas de jugadores
-.player-item {
-  --background: white;
-  --padding-start: 10px;
-  --inner-padding-end: 10px;
-  margin-bottom: 10px;
+// TARJETA DE JUGADOR (Diseño Pro)
+.player-card {
+  margin: 0 0 12px 0;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); // Sombra suave
-
-  // Avatar más grande y bonito
-  ion-avatar {
-    width: 48px;
-    height: 48px;
-    margin-right: 15px;
-    border: 2px solid #f1f5f9;
-  }
-
-  // Textos del jugador
-  h2 {
-    font-weight: 700;
-    font-size: 1rem;
-    color: #334155;
-    margin-bottom: 4px;
-  }
-
-  p {
-    font-size: 0.85rem;
-    color: #94a3b8;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-}
-
-// Estilo para jugadores de "Otros equipos" (un poco más transparentes)
-.opacity-item {
-  --background: rgba(255, 255, 255, 0.6);
-  border: 1px dashed #cbd5e1; // Borde punteado para indicar que no son tuyos
-  box-shadow: none;
-}
-
-// Estado vacío (cuando no hay jugadores)
-.empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
   background: white;
-  border-radius: 16px;
-  border: 2px dashed #e2e8f0;
-  color: #94a3b8;
-  margin-bottom: 1rem;
-  
-  p {
-    font-size: 1rem;
-    font-weight: 500;
+  overflow: hidden; // Para la barra de estado inferior
+
+  .card-content {
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .player-info {
+    display: flex; align-items: center; gap: 12px;
+    
+    ion-avatar {
+      width: 45px; height: 45px;
+      border: 2px solid #e2e8f0;
+    }
+
+    .text-info {
+      h2 { margin: 0; font-size: 1rem; font-weight: 700; color: #0f172a; }
+      .meta {
+        margin: 2px 0 0 0; font-size: 0.75rem; color: #64748b;
+        display: flex; gap: 6px; align-items: center;
+        
+        .pos-badge { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 0.7rem; }
+        .dorsal { font-weight: 800; color: #334155; }
+      }
+    }
+  }
+
+  .status-bar {
+    height: 4px;
+    background: #10b981; // Verde (Disponible)
+    width: 100%;
+    font-size: 0;
+    
+    &.injured {
+      background: #ef4444; // Rojo (Lesionado)
+      height: 20px; // Más grande si está lesionado para mostrar texto
+      color: white;
+      font-size: 0.7rem;
+      text-align: center;
+      font-weight: 700;
+      line-height: 20px;
+      letter-spacing: 1px;
+    }
   }
 }
 
-// Ajustes del Badge
-ion-badge {
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+// Mercado de fichajes
+.market-item {
+  --background: white;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  
+  ion-avatar { width: 35px; height: 35px; margin-right: 10px; opacity: 0.8; }
+  h3 { font-size: 0.95rem; font-weight: 600; }
+  p { font-size: 0.8rem; }
+}
+
+.empty-state {
+  text-align: center; padding: 40px; color: #94a3b8;
+  ion-icon { font-size: 3rem; margin-bottom: 10px; opacity: 0.5; }
+  p { font-weight: 600; margin: 0; }
+}
+
+// Modal Styles
+.modal-wrapper {
+    text-align: center;
+    .modal-user-info {
+        margin-bottom: 20px;
+        ion-avatar.large { width: 80px; height: 80px; margin: 0 auto 10px; }
+        h2 { font-weight: 800; margin: 0; }
+        p { color: var(--ion-color-primary); margin: 0; font-size: 0.9rem; }
+    }
+    .form-list { text-align: left; }
+    .mb-3 { margin-bottom: 15px; }
 }

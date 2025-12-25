@@ -5,7 +5,6 @@ import { IonicModule } from '@ionic/angular';
 
 import { CreateConvocationPage } from './create-convocation.page';
 
-// ❌ AQUÍ BORRAMOS LAS RUTAS (const routes...) PARA EVITAR EL CONFLICTO
 
 @NgModule({
   imports: [
