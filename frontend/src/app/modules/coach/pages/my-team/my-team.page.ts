@@ -4,7 +4,6 @@ import { HttpClient } from '@angular/common/http';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { TeamService } from 'src/app/core/services/team/team.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
-import { UploadService } from 'src/app/core/services/common/upload.service'; // ✅ IMPORTADO
 import { Player, Team } from 'src/app/shared/models/models';
 
 @Component({
@@ -14,16 +13,18 @@ import { Player, Team } from 'src/app/shared/models/models';
 })
 export class MyTeamPage implements OnInit {
   
-  myPlayers: Player[] = [];
-  teams: Team[] = []; 
+  keepers: Player[] = [];
+  defenders: Player[] = [];
+  midfielders: Player[] = [];
+  forwards: Player[] = [];
   
+  allPlayersCount: number = 0;
   coachTeamId: number | null = null; 
   coachTeamName: string = ''; 
-  currentTeamShield: string = ''; // ✅ VARIABLE PARA EL ESCUDO
   
   loading: boolean = true;
-  isModalOpen = false;
-  isEditModalOpen = false;
+  isModalOpen = false;      // Modal de Lesión
+  isEditModalOpen = false;  // Modal de Ficha Técnica
   selectedPlayer: Player | null = null;
   
   injuryData = { tipo: '', duracion: '', notas: '' };
@@ -39,11 +40,15 @@ export class MyTeamPage implements OnInit {
     'MEDIOCENTRO', 'EXTREMO', 'DELANTERO', 'PIVOTE', 'MEDIA_PUNTA'
   ];
 
+  // Opciones para que el popover del select se vea oscuro
+  customPopoverOptions: any = {
+    cssClass: 'custom-dark-popover'
+  };
+
   constructor(
     private playerService: PlayerService,
     private teamService: TeamService,
     private authSvc: AuthService,
-    private uploadSvc: UploadService, // ✅ INYECTADO
     private http: HttpClient,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
@@ -54,7 +59,6 @@ export class MyTeamPage implements OnInit {
     this.detectCoachTeam();
   }
 
-  // --- 1. DETECCIÓN DEL EQUIPO DEL MÍSTER ---
   detectCoachTeam() {
     this.authSvc.currentUser$.subscribe(user => {
       if (user) {
@@ -63,88 +67,21 @@ export class MyTeamPage implements OnInit {
 
         this.http.get(`http://localhost:8080/api/entrenadores/usuario/${userId}/equipo`).subscribe({
           next: (response: any) => {
-            console.log("🎯 Respuesta Backend Entrenador:", response);
-            
             const equipo = response.equipo; 
-
             if (equipo) {
                 this.coachTeamId = Number(equipo.idEquipo || equipo.id); 
                 this.coachTeamName = equipo.nombre;
-                
-                // ✅ CAPTURAMOS EL ESCUDO
-                this.currentTeamShield = equipo.escudoUrl;
-
-                console.log("✅ ID Equipo Entrenador fijado en:", this.coachTeamId);
                 this.loadPlayers();
             } else {
-                console.warn("⚠️ El entrenador no tiene equipo asignado en el objeto respuesta.");
                 this.loading = false;
             }
           },
-          error: (err) => {
-            console.error("❌ Error detectando equipo:", err);
-            this.loading = false;
-          }
+          error: () => this.loading = false
         });
       }
     });
   }
 
-  // ✅ LOGICA DE SUBIDA DE ESCUDO
-  onShieldSelected(event: any) {
-    if (!this.coachTeamId) return;
-    
-    const file: File = event.target.files[0];
-    if (file) {
-      this.loadingCtrl.create({ message: 'Actualizando escudo...' }).then(loading => {
-        loading.present();
-        
-        this.uploadSvc.uploadImage(file).subscribe({
-          next: (res: any) => {
-            const newUrl = res.url;
-            this.updateShieldBackend(this.coachTeamId!, newUrl, loading);
-          },
-          error: (err) => {
-             console.error(err);
-             loading.dismiss();
-             this.showToast('Error al subir imagen', 'danger');
-          }
-        });
-      });
-    }
-  }
-
-  // ✅ ACTUALIZAR EN BACKEND (Usamos GET + PUT para asegurar integridad)
-  updateShieldBackend(id: number, url: string, loading: HTMLIonLoadingElement) {
-     this.http.get<any>(`http://localhost:8080/api/equipos/${id}`).subscribe({
-        next: (eq) => {
-            const dto = {
-               nombre: eq.nombre,
-               fechaCreacion: eq.fechaCreacion,
-               observaciones: eq.observaciones,
-               idLiga: eq.liga?.idLiga || 1, 
-               idCategoria: eq.categoria?.idCategoria || 1,
-               escudoUrl: url // Nueva URL
-            };
-
-            this.http.put(`http://localhost:8080/api/equipos/${id}`, dto).subscribe({
-               next: () => {
-                  this.currentTeamShield = url; // Actualizamos vista
-                  loading.dismiss();
-                  this.showToast('Escudo actualizado 🛡️', 'success');
-               },
-               error: (err) => {
-                  console.error(err);
-                  loading.dismiss();
-                  this.showToast('Error al guardar escudo', 'danger');
-               }
-            });
-        },
-        error: () => loading.dismiss()
-     });
-  }
-
-  // --- 2. CARGA Y FILTRADO ---
   loadPlayers() {
     if (!this.coachTeamId) return;
 
@@ -153,11 +90,13 @@ export class MyTeamPage implements OnInit {
       next: (res: any) => {
         const all = Array.isArray(res) ? res : (res.data || []);
         
-        this.myPlayers = all.filter((p: any) => {
+        const myPlayers = all.filter((p: any) => {
              const playerTeamId = this.getTeamIdFromPlayer(p);
              return playerTeamId == this.coachTeamId;
         });
 
+        this.allPlayersCount = myPlayers.length;
+        this.organizeByPosition(myPlayers);
         this.loading = false;
       },
       error: (err) => {
@@ -167,31 +106,54 @@ export class MyTeamPage implements OnInit {
     });
   }
 
+  private organizeByPosition(players: Player[]) {
+      this.keepers = players.filter(p => this.checkPos(p, ['PORTERO']));
+      this.defenders = players.filter(p => this.checkPos(p, ['DEFENSA', 'CENTRAL', 'LATERAL_DERECHO', 'LATERAL_IZQUIERDO']));
+      this.midfielders = players.filter(p => this.checkPos(p, ['MEDIOCENTRO', 'PIVOTE', 'MEDIA_PUNTA']));
+      this.forwards = players.filter(p => this.checkPos(p, ['DELANTERO', 'EXTREMO']));
+  }
+
+  private checkPos(p: any, validPositions: string[]): boolean {
+      const pos = p.posicion ? p.posicion.toUpperCase() : '';
+      return validPositions.includes(pos);
+  }
+
   private getTeamIdFromPlayer(p: any): number | null {
     if (!p) return null;
     if (p.equipoPrincipal && typeof p.equipoPrincipal === 'object') {
         return Number(p.equipoPrincipal.idEquipo || p.equipoPrincipal.id);
     }
-    if (typeof p.equipoPrincipal === 'number') {
-        return Number(p.equipoPrincipal);
-    }
-    if (p.equipo && typeof p.equipo === 'object') {
-        return Number(p.equipo.idEquipo || p.equipo.id);
-    }
+    if (typeof p.equipoPrincipal === 'number') return Number(p.equipoPrincipal);
+    if (p.equipo && typeof p.equipo === 'object') return Number(p.equipo.idEquipo || p.equipo.id);
     return null;
   }
 
-  // --- MODALES Y EDICIÓN ---
+  // --- GESTIÓN DE MODALES ---
   openEditModal(player: Player) {
     this.selectedPlayer = player;
     const raw = player as any;
-    
     this.techData = {
       dorsal: player.dorsal || null,
       posicion: raw.posicion || '',
       teamId: this.coachTeamId 
     };
     this.isEditModalOpen = true;
+  }
+
+  // 🔥 CORRECCIÓN BUG TRANSICIÓN
+  switchToInjuryModal() {
+    // Guardamos la referencia al jugador actual
+    const playerToReport = this.selectedPlayer;
+    
+    // Cerramos el primer modal
+    this.isEditModalOpen = false;
+
+    // Abrimos el segundo modal con un pequeño delay, asegurando que tenemos el jugador
+    setTimeout(() => {
+        if(playerToReport) {
+            this.openInjuryModal(playerToReport);
+        }
+    }, 200); // Aumentamos un poco el tiempo para asegurar fluidez
   }
 
   async saveTechnicalData() {
@@ -211,11 +173,11 @@ export class MyTeamPage implements OnInit {
     this.playerService.updatePlayer(playerId, payload).subscribe({
       next: async () => {
         await loading.dismiss();
-        this.isEditModalOpen = false; 
-        this.showToast('Datos técnicos actualizados', 'success');
+        this.closeModals(); // Cerramos y limpiamos
+        this.showToast('Ficha actualizada', 'success');
         this.loadPlayers(); 
       },
-      error: async (err) => {
+      error: async () => {
         await loading.dismiss();
         this.showToast('Error al actualizar', 'danger');
       }
@@ -254,13 +216,23 @@ export class MyTeamPage implements OnInit {
     this.playerService.updatePlayer(playerId, payload).subscribe({
       next: async () => {
         await loading.dismiss();
-        this.isModalOpen = false;
+        this.closeModals(); // Cerramos y limpiamos
         this.loadPlayers(); 
+        this.showToast('Baja registrada', 'warning');
       },
       error: async () => { await loading.dismiss(); }
     });
   }
 
+  // 🔥 CORRECCIÓN: No limpiamos el jugador aquí inmediatamente
+  // Esto se llama cuando el modal se cierra por arrastre o click fuera
+  onModalDismiss() {
+      this.isModalOpen = false;
+      this.isEditModalOpen = false;
+      // NO ponemos selectedPlayer a null aquí para evitar el bug de transición
+  }
+  
+  // Método explícito para cerrar y limpiar cuando terminamos
   closeModals() {
     this.isModalOpen = false;
     this.isEditModalOpen = false;
@@ -269,15 +241,20 @@ export class MyTeamPage implements OnInit {
 
   async setRecovered(player: Player) {
       const alert = await this.alertCtrl.create({
-      header: '¿Dar de alta?',
+      header: '¿Alta Médica?',
+      subHeader: `${player.usuario.nombre} volverá a estar disponible.`,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         {
-          text: 'Confirmar',
+          text: 'Confirmar Alta',
           handler: () => {
             const payload = this.prepareDto(player, { estado: 'ACTIVO' });
             const id = (player as any).id || (player as any).idJugador;
-            this.playerService.updatePlayer(id, payload).subscribe(() => this.loadPlayers());
+            this.playerService.updatePlayer(id, payload).subscribe(() => {
+                this.closeModals(); // Cerramos y limpiamos
+                this.loadPlayers();
+                this.showToast('Jugador recuperado', 'success');
+            });
           }
         }
       ]

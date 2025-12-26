@@ -250,3 +250,82 @@ ion-alert {
   --border-radius: 12px;
   --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
+
+/* ==========================================================================
+   CORRECCIÓN DARK MODE PARA ION-SELECT (POPOVER & ALERT)
+   ==========================================================================
+   Esto fuerza los estilos oscuros en los componentes flotantes que se renderizan
+   fuera del DOM de la página (en el root de la app).
+*/
+
+.custom-dark-popover {
+  /* 1. Fondo general del contenedor y texto */
+  --background: #1f2937; /* Gris Oscuro alineado con modales */
+  --color: white;         /* Texto Blanco */
+
+  /* 2. Estilos específicos si se abre como ALERTA (Centro de pantalla) */
+  .alert-wrapper {
+    background-color: #1f2937 !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+  }
+
+  .alert-head {
+    h2.alert-title {
+        color: #ffffff !important;
+        font-weight: 800;
+    }
+  }
+
+  .alert-radio-group, .alert-checkbox-group {
+      border-top: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .alert-radio-label {
+    color: #cbd5e1 !important; /* Blanco suave */
+  }
+
+  /* Círculo del radio button */
+  .alert-radio-icon {
+    border-color: #64748b !important; /* Gris claro */
+  }
+  
+  /* Cuando está seleccionado */
+  [aria-checked="true"] .alert-radio-label {
+    color: #10b981 !important; /* Verde Neón */
+    font-weight: 700;
+  }
+  
+  .alert-radio-inner {
+    background-color: #10b981 !important;
+  }
+
+  /* Botones de OK/Cancel */
+  .alert-button-group {
+      .alert-button {
+        color: #8b5cf6 !important; /* Lila Neón */
+        font-weight: 700;
+      }
+  }
+
+  /* 3. Estilos específicos si se abre como POPOVER (Lista flotante) */
+  ion-content {
+    --background: #1f2937;
+  }
+  
+  ion-item {
+    --background: #1f2937;
+    --color: white;
+    --border-color: rgba(255,255,255,0.1);
+    
+    ion-label {
+        color: white !important;
+    }
+  }
+  
+  ion-item:hover {
+    --background: #374151; /* Un poco más claro al pasar el mouse */
+  }
+}
