@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, Subject, of } from 'rxjs';
-import { takeUntil, finalize, catchError } from 'rxjs/operators';
+import { takeUntil, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http'; 
 import { AlertController } from '@ionic/angular'; 
 
@@ -41,11 +41,12 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   upcomingConvocations: any[] = []; 
   playerStats: PlayerStats | null = null;
   
+  // Acciones rápidas
   quickActions = [
-    { title: 'Convocatorias', icon: 'calendar', route: '/convocations', color: 'primary' },
-    { title: 'Mi Equipo', icon: 'shield', route: '/coach/my-team', color: 'secondary' },
-    { title: 'Mi Perfil', icon: 'person', route: '/profile', color: 'tertiary' },
-    { title: 'Estadísticas', icon: 'bar-chart', route: null, action: 'scrollStats', color: 'success' }
+    { id: 'convocations', title: 'Convocatorias', icon: 'calendar', color: 'primary' },
+    { id: 'team', title: 'Mi Equipo', icon: 'shield-checkmark', color: 'secondary' },
+    { id: 'profile', title: 'Mi Perfil', icon: 'person', color: 'tertiary' },
+    { id: 'stats', title: 'Estadísticas', icon: 'stats-chart', color: 'success' }
   ];
 
   private destroy$ = new Subject<void>();
@@ -77,8 +78,10 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     this.loading = true;
     this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe({
       next: (user) => {
-        if (user && ((user as any).id || (user as any).idUsuario)) {
-          const userId = (user as any).id || (user as any).idUsuario; 
+        // Cast seguro a any para leer propiedades dinámicas
+        const u = user as any;
+        if (u && (u.id || u.idUsuario)) {
+          const userId = u.id || u.idUsuario; 
           this.loadPlayerProfile(userId); 
         } else {
           console.log("Esperando datos de usuario...");
@@ -97,10 +100,15 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     ).subscribe((equipo: any) => {
         if (equipo) {
             this.currentTeam = equipo;
-            this.currentPlayer = { usuario: { id: userId } as any } as Player; 
             
+            // Mock temporal para evitar errores de renderizado
+            this.currentPlayer = { 
+                usuario: { id: userId } as any 
+            } as Player; 
+            
+            // Cargar datos completos
             this.getFullPlayerData(userId);
-
+            
             const teamId = equipo.id || equipo.idEquipo;
             this.loadTeamMatches(teamId);
         } else {
@@ -119,15 +127,20 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
           
           if (found) {
               this.currentPlayer = found;
+              
               const realPlayerId = (found as any).id || (found as any).idJugador;
               console.log("✅ Jugador encontrado. ID Deportivo REAL:", realPlayerId);
               
               if (realPlayerId) {
-                  if (!this.currentPlayer!.id) this.currentPlayer!.id = realPlayerId;
+                  if (!this.currentPlayer!.id) {
+                      this.currentPlayer!.id = realPlayerId;
+                  }
                   this.loadPlayerStats(realPlayerId); 
               } else {
                   console.error("❌ Error: El objeto jugador no tiene campo 'id' ni 'idJugador'");
               }
+          } else {
+              this.loading = false;
           }
       });
   }
@@ -143,6 +156,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
 
               this.stats.upcomingConvocations = this.upcomingConvocations.length;
               this.stats.totalConvocations = matches.length; 
+              
               this.loading = false;
           },
           error: (err) => {
@@ -156,16 +170,49 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     this.playerService.getPlayerStats(playerId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (stats: PlayerStats) => this.playerStats = stats,
+        next: (stats: PlayerStats) => {
+            console.log("📊 ESTADÍSTICAS RECIBIDAS:", stats); 
+            this.playerStats = stats;
+        },
         error: (err) => console.error('Error cargando stats', err)
       });
   }
 
-  navigateTo(action: any) {
-    if (action.route) {
-      this.router.navigate([action.route]);
-    } else if (action.action === 'scrollStats') {
-      this.scrollToStats();
+  // 🔥 NAVEGACIÓN CORREGIDA
+  navigateTo(actionOrRoute: any) {
+    console.log("Navegando a:", actionOrRoute);
+
+    // 1. Caso: Llamada directa desde HTML con string
+    if (typeof actionOrRoute === 'string') {
+        if (actionOrRoute === '/profile') {
+             // Navegación directa sin ID, ya que el perfil carga al usuario logueado
+             this.router.navigate(['/profile']);
+        } else {
+             this.router.navigate([actionOrRoute]);
+        }
+        return;
+    }
+
+    // 2. Caso: Llamada desde objeto quickActions
+    const actionId = actionOrRoute.id;
+
+    switch (actionId) {
+        case 'convocations':
+            this.router.navigate(['/convocations']);
+            break;
+            
+        case 'team':
+            this.router.navigate(['/coach/my-team']); 
+            break;
+            
+        case 'profile':
+            // Navegación directa a /profile
+            this.router.navigate(['/profile']);
+            break;
+            
+        case 'stats':
+            this.scrollToStats();
+            break;
     }
   }
 
@@ -183,7 +230,8 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
        this.showTrainingAlert(match);
        return;
     }
-    this.router.navigate(['/match-detail', match.idPartido || match.id]);
+    const matchId = match.idPartido || match.id;
+    this.router.navigate(['/match-detail', matchId]);
   }
 
   async showTrainingAlert(match: any) {
@@ -191,11 +239,13 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
         header: 'Entrenamiento',
         subHeader: match.lugar,
         message: match.observaciones || 'Sin observaciones.',
-        buttons: ['OK']
+        buttons: ['OK'],
+        cssClass: 'custom-alert'
       });
       await alert.present();
   }
 
+  // Helpers
   getPlayerPosition(): string {
     const player: any = this.currentPlayer;
     return player?.posicion || 'Sin Posición';
@@ -206,11 +256,6 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     return player?.estado === 'ACTIVO';
   }
   
-  getConvocationTitle(conv: any): string {
-      if (conv.tipo === 'PARTIDO') return 'VS ' + (conv.rival || 'Rival');
-      return conv.rival || 'Entrenamiento'; 
-  }
-  
   getConvocationTypeColor(type: string): string {
       const map: any = { 'PARTIDO': 'success', 'ENTRENAMIENTO': 'primary' };
       return map[type] || 'medium';
@@ -219,6 +264,4 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   getPlayerAttendanceStatus(conv: any): string { return 'PENDIENTE'; }
   getAttendanceStatusColor(status: string): string { return 'primary'; }
   getAttendanceStatusText(status: string): string { return 'Convocado'; }
-  confirmAttendance(id: any) {}
-  rejectAttendance(id: any) {}
 }

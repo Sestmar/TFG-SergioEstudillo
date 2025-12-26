@@ -1,181 +1,88 @@
 <ion-content [fullscreen]="true" class="dashboard-bg">
   
   <div *ngIf="loading" class="loading-container">
-    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <ion-spinner name="crescent" color="secondary"></ion-spinner>
     <p>Cargando perfil...</p>
   </div>
 
-  <div class="main-container" *ngIf="!loading && currentPlayer">
+  <div class="main-content" *ngIf="!loading && currentPlayer">
     
-    <div class="hero-section">
-      <div class="hero-content">
-        <div class="top-bar">
-          <div class="welcome-text">
-            <span>Hola,</span>
-            <h2>{{ currentPlayer.usuario.nombre }}</h2>
+    <div class="header-pro">
+      <ng-container *ngIf="currentUser$ | async as user">
+          <div class="text-container">
+            <span class="greeting">Hola,</span>
+            <h1>{{ user.nombre || 'Jugador' }}</h1>
           </div>
-          <div class="notification-badge" (click)="navigateTo('/notifications')">
-            <ion-icon name="notifications-outline"></ion-icon>
-            <span class="dot" *ngIf="stats.pendingConfirmations > 0"></span>
-          </div>
-        </div>
+          
+          <div class="profile-pic-wrapper" (click)="navigateTo('/profile')">
+            
+            <img *ngIf="user.fotoPerfil || user.fotoUrl" 
+                 [src]="user.fotoPerfil || user.fotoUrl" 
+                 class="profile-img">
+            
+            <div *ngIf="!(user.fotoPerfil || user.fotoUrl)" class="profile-initials">
+                {{ (user.nombre || 'J')[0] | uppercase }}{{ (user.apellidos || '')[0] | uppercase }}
+            </div>
 
-        <div class="player-card-glass">
-          <div class="avatar-container">
-            <img 
-              [src]="currentPlayer.usuario.fotoPerfil" 
-              onError="this.src='https://ui-avatars.com/api/?name=User&background=random&color=fff&size=128'" 
-              alt="Avatar"
-            >
             <div class="dorsal-badge" *ngIf="currentPlayer.dorsal">#{{ currentPlayer.dorsal }}</div>
           </div>
-          <div class="info-container">
-            <h3>{{ currentTeam?.nombre || 'Sin Equipo Asignado' }}</h3>
-            <p *ngIf="currentTeam?.categoria" style="font-size: 0.9rem; opacity: 0.8; margin-top: -5px;">
-                {{ currentTeam?.categoria?.nombre || 'Categoría General' }}
-            </p>
-  
-            <div class="badges">
-              <span class="badge position">{{ getPlayerPosition() }}</span>
-              <span class="badge status" [class.active]="isPlayerAvailable()">
-              {{ isPlayerAvailable() ? 'Activo' : 'Baja' }}
-              </span>
-            </div>
-        </div>
-        </div>
-      </div>
-      <div class="custom-shape-divider-bottom-16789">
-          <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-              <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
-          </svg>
-      </div>
+      </ng-container>
     </div>
 
-    <div class="stats-row">
-      <div class="stat-pill">
-        <div class="icon-circle primary-gradient">
-          <ion-icon name="calendar"></ion-icon>
+    <div class="player-identity-card" *ngIf="currentTeam">
+      <div class="card-bg-glow"></div>
+      
+      <div class="card-content">
+        <div class="shield-section">
+          <div class="shield-glow-effect"></div>
+          <img src="assets/img/mi-club-logo.png" alt="Club" class="main-shield">
         </div>
-        <div class="data">
+        
+        <div class="info-section">
+          <div class="role-badge" [class.active]="isPlayerAvailable()">
+            {{ isPlayerAvailable() ? 'ACTIVO' : 'BAJA' }}
+          </div>
+          
+          <h2 class="team-name">{{ currentTeam.nombre }}</h2>
+          
+          <div class="league-info">
+             <span>{{ currentTeam.categoria?.nombre || 'Categoría General' }}</span>
+             <span class="dot">•</span>
+             <span class="pos-text">{{ getPlayerPosition() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat-item">
           <span class="value">{{ stats.totalConvocations }}</span>
           <span class="label">Eventos</span>
         </div>
-      </div>
-      <div class="stat-pill">
-        <div class="icon-circle warning-gradient">
-          <ion-icon name="time"></ion-icon>
-        </div>
-        <div class="data">
+        <div class="divider"></div>
+        <div class="stat-item">
           <span class="value">{{ stats.pendingConfirmations }}</span>
           <span class="label">Pendientes</span>
         </div>
-      </div>
-      <div class="stat-pill">
-        <div class="icon-circle success-gradient">
-          <ion-icon name="checkmark-circle"></ion-icon>
-        </div>
-        <div class="data">
+        <div class="divider"></div>
+        <div class="stat-item">
           <span class="value">{{ stats.attendanceRate }}%</span>
           <span class="label">Asistencia</span>
         </div>
       </div>
     </div>
 
-    <div class="section-title">
-      <h4>Acciones Rápidas</h4>
+    <div class="section-title"><h3>Acciones</h3></div>
+    <div class="actions-grid-pro">
+      <div class="action-card" (click)="navigateTo('/convocations')"><div class="icon-circle primary"><ion-icon name="calendar"></ion-icon></div><span class="title">Convocatorias</span></div>
+      <div class="action-card" (click)="navigateTo('/coach/my-team')"><div class="icon-circle secondary"><ion-icon name="shield-checkmark"></ion-icon></div><span class="title">Mi Equipo</span></div>
+      <div class="action-card" (click)="navigateTo('/profile')"><div class="icon-circle tertiary"><ion-icon name="person"></ion-icon></div><span class="title">Mi Perfil</span></div>
+      <div class="action-card" (click)="scrollToStats()"><div class="icon-circle success"><ion-icon name="stats-chart"></ion-icon></div><span class="title">Estadísticas</span></div>
     </div>
-    
-    <div class="actions-grid">
-      <div class="action-card" *ngFor="let action of quickActions" (click)="navigateTo(action)" [ngClass]="action.color">
-        <div class="icon-box">
-          <ion-icon [name]="action.icon"></ion-icon>
-        </div>
-        <span class="title">{{ action.title }}</span>
-      </div>
-    </div>
-
-    <div class="section-header" *ngIf="upcomingConvocations.length > 0">
-      <h4>Próximos Eventos</h4>
-      <span class="see-all" (click)="navigateTo('/convocations')">Ver todo</span>
-    </div>
-
-    <div class="convocations-list">
-      <div class="convocation-ticket" *ngFor="let conv of upcomingConvocations" [ngClass]="{'is-match': conv.tipo === 'PARTIDO'}">
-        <div class="left-side">
-          <span class="day">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'dd' }}</span>
-          <span class="month">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'MMM' | uppercase }}</span>
-        </div>
-        <div class="right-side">
-          <div class="header">
-            <span class="type-badge" [class]="getConvocationTypeColor(conv.tipo)">
-              {{ conv.tipo }}
-            </span>
-            <span class="time">
-              <ion-icon name="time-outline"></ion-icon>
-              {{ (conv.fechaHoraInicio || conv.fechaHora) | date:'HH:mm' }}
-            </span>
-          </div>
-          
-          <h3 class="title">
-            <span *ngIf="conv.tipo === 'PARTIDO'">VS </span>
-            
-            <img *ngIf="conv.escudoRivalUrl" [src]="conv.escudoRivalUrl" class="mini-shield">
-            
-            <ion-icon *ngIf="conv.tipo === 'PARTIDO' && !conv.escudoRivalUrl" name="shield-outline" class="mini-shield-placeholder"></ion-icon>
-            
-            {{ conv.rival || conv.titulo || 'Evento de Equipo' }}
-          </h3>
-
-          <p class="location">
-            <ion-icon name="location-outline"></ion-icon>
-            {{ conv.lugar || 'Ubicación por confirmar' }}
-          </p>
-          
-          <div class="actions-row">
-              <ion-button 
-                expand="block" 
-                fill="outline" 
-                size="small" 
-                class="btn-details"
-                (click)="showMatchDetails(conv); $event.stopPropagation()">
-              Ver Información
-              <ion-icon name="information-circle-outline" slot="end"></ion-icon>
-            </ion-button>
-          </div>
-          
-          <div class="status-badge-row">
-             <ion-badge [color]="getAttendanceStatusColor(getPlayerAttendanceStatus(conv))">
-               {{ getAttendanceStatusText(getPlayerAttendanceStatus(conv)) }}
-             </ion-badge>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-title" id="stats-section"> 
-      <h4>Estadísticas de Temporada</h4>
-    </div>
-
-    <div class="detailed-stats-card">
-      <div class="stat-item">
-        <span class="val">{{ playerStats?.partidosTotales || 0 }}</span>
-        <span class="lbl">Partidos</span>
-      </div>
-      <div class="stat-item">
-        <span class="val">{{ playerStats?.golesTotales || 0 }}</span>
-        <span class="lbl">Goles</span>
-      </div>
-      <div class="stat-item">
-        <span class="val">{{ playerStats?.asistenciasTotales || 0 }}</span>
-        <span class="lbl">Asist.</span>
-      </div>
-      <div class="stat-item">
-        <span class="val">{{ playerStats?.minutosJugados || 0 }}'</span>
-        <span class="lbl">Minutos</span>
-      </div>
-    </div>
-
-    <div class="spacer" style="height: 100px;"></div>
+    <div class="section-title row-between" *ngIf="upcomingConvocations.length > 0"><h3>Próximos Eventos</h3><span class="link" (click)="navigateTo('/convocations')">Ver todo</span></div>
+    <div class="events-list-pro"><div class="event-card" *ngFor="let conv of upcomingConvocations" [class.match-card]="conv.tipo === 'PARTIDO'"><div class="date-col"><span class="day">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'dd' }}</span><span class="month">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'MMM' | uppercase }}</span></div><div class="info-col"><div class="top-row"><span class="type-tag" [class.match]="conv.tipo === 'PARTIDO'">{{ conv.tipo }}</span><span class="time-tag">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'HH:mm' }}</span></div><div class="event-main-title"><ng-container *ngIf="conv.tipo === 'PARTIDO'"><div class="match-vs"><span class="vs">VS</span><img *ngIf="conv.escudoRivalUrl" [src]="conv.escudoRivalUrl" class="mini-shield"><span class="rival-name">{{ conv.rival }}</span></div></ng-container><ng-container *ngIf="conv.tipo !== 'PARTIDO'"><span class="training-title">{{ conv.rival || 'Entrenamiento' }}</span></ng-container></div><div class="location-row"><ion-icon name="location-sharp"></ion-icon> {{ conv.lugar || 'Ubicación por confirmar' }}</div></div><div class="actions-col"><ion-button fill="clear" class="action-btn" (click)="showMatchDetails(conv); $event.stopPropagation()"><ion-icon name="information-circle"></ion-icon></ion-button><div class="status-dot confirmed"></div></div></div></div>
+    <div class="section-title" id="stats-section" style="margin-top: 30px;"><h3>Rendimiento</h3></div>
+    <div class="detailed-stats-card"><div class="stat-item"><span class="val">{{ playerStats?.partidosTotales || 0 }}</span><span class="lbl">Partidos</span></div><div class="stat-item"><span class="val">{{ playerStats?.golesTotales || 0 }}</span><span class="lbl">Goles</span></div><div class="stat-item"><span class="val">{{ playerStats?.asistenciasTotales || 0 }}</span><span class="lbl">Asist.</span></div><div class="stat-item"><span class="val highlight">{{ playerStats?.minutosJugados || 0 }}'</span><span class="lbl">Minutos</span></div></div>
+    <div class="spacer" style="height: 80px;"></div>
   
   </div>
 </ion-content>

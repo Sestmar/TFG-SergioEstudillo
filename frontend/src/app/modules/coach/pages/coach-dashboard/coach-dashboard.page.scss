@@ -1,11 +1,15 @@
-// Variables Tema Entrenador
+// --- PALETA DARK PRO ---
 :host {
-  --coach-primary: #0f766e; // Teal 700
-  --coach-secondary: #14b8a6; // Teal 500
-  --bg-color: #f8fafc;
-  --card-white: #ffffff;
-  --text-dark: #1e293b;
-  --text-muted: #64748b;
+  --bg-color: #09090b;       // Negro Profundo
+  --card-bg: #18181b;        // Gris muy oscuro
+  --text-main: #ffffff;      // Blanco puro
+  --text-muted: #a1a1aa;     // Gris claro
+  
+  --neon-purple: #8b5cf6;    // Lila Neón
+  --neon-blue: #3b82f6;      // Azul Eléctrico
+  --gold: #fbbf24;           // Dorado
+  --gold-gradient: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  --club-gradient: linear-gradient(135deg, #4c1d95 0%, #2563eb 100%);
 }
 
 .coach-bg {
@@ -13,235 +17,254 @@
 }
 
 .loading-state {
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center;
+  p { color: var(--text-muted); margin-top: 15px; letter-spacing: 1px; font-size: 0.8rem; text-transform: uppercase; }
 }
 
 .main-content {
-  padding: 2rem 1.5rem 4rem 1.5rem;
+  padding: 20px;
 }
 
-// HEADER ACTUALIZADO
-.header-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
+// 1. HEADER PRO
+.header-pro {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; margin-top: 10px;
 
-  .user-info {
-    .greeting { display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 4px; }
-    h1 { margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--text-dark); line-height: 1.2; }
+  .text-container {
+    .greeting { 
+      font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;
+    }
+    h1 { 
+      margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--text-main); 
+      background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+  }
+
+  .profile-pic-wrapper {
+    position: relative; width: 50px; height: 50px;
     
-    // 🔥 Estilo del Badge de Rol
-    .role-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      margin-top: 8px;
-      background: #ccfbf1; // Teal muy claro
-      color: var(--coach-primary);
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      border: 1px solid #99f6e4;
-      
-      ion-icon { font-size: 1rem; }
+    .profile-img { 
+      width: 100%; height: 100%; border-radius: 50%; object-fit: cover; 
+      border: 2px solid var(--neon-purple); box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
     }
-  }
-
-  // 🔥 Estilo Avatar con Botón
-  .avatar-container {
-    position: relative;
-    cursor: pointer;
-
-    .avatar-circle {
-      width: 55px; height: 55px;
-      background: white;
-      border-radius: 50%;
-      border: 2px solid var(--coach-secondary);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; color: var(--coach-primary);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    
+    .profile-initials {
+      width: 100%; height: 100%; border-radius: 50%; background: #27272a; color: var(--text-main);
+      display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid var(--neon-purple);
     }
 
-    .edit-hint {
-      position: absolute;
-      bottom: -2px; right: -2px;
-      background: var(--coach-primary);
-      color: white;
-      width: 22px; height: 22px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.8rem;
-      border: 2px solid white;
+    .badge-edit {
+      position: absolute; bottom: -2px; right: -2px; background: var(--gold); color: black;
+      width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; border: 2px solid var(--bg-color);
     }
   }
 }
 
-// TEAM CARD (Featured)
-.team-summary-card {
-  background: linear-gradient(135deg, var(--coach-primary) 0%, #115e59 100%);
+// 2. TARJETA CLUB IDENTITY (Diseño Cromo FIFA - REFINADO)
+.club-identity-card {
+  background: var(--club-gradient);
   border-radius: 24px;
-  padding: 1.5rem;
-  color: white;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 25px -5px rgba(15, 118, 110, 0.4);
-  margin-bottom: 2rem;
+  box-shadow: 0 10px 40px -10px rgba(76, 29, 149, 0.6); // Sombra morada
+  margin-bottom: 35px;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.1);
 
-  .card-bg-icon {
-    position: absolute;
-    right: -20px;
-    top: -20px;
-    font-size: 10rem;
-    opacity: 0.1;
-    color: white;
-    transform: rotate(15deg);
+  // Efecto de brillo de fondo
+  .card-bg-glow {
+    position: absolute; top: -50%; right: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    pointer-events: none;
   }
 
-  .team-info {
-    position: relative;
-    z-index: 2;
-    margin-bottom: 1.5rem;
-    .label { font-size: 0.8rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
-    h2 { margin: 5px 0; font-size: 1.6rem; font-weight: 700; }
-    .category { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; }
-  }
+  .card-content {
+    padding: 25px;
+    display: flex; align-items: center; gap: 20px;
+    position: relative; z-index: 2;
 
-  .team-stats {
-    display: flex;
-    gap: 1.5rem;
-    position: relative;
-    z-index: 2;
-
-    .stat {
-      display: flex;
-      flex-direction: column;
-      .num { font-size: 1.4rem; font-weight: 800; }
-      .lbl { font-size: 0.75rem; opacity: 0.8; }
-    }
-  }
-}
-
-.no-team-card {
-  background: #fee2e2;
-  color: #991b1b;
-  padding: 1.5rem;
-  border-radius: 16px;
-  text-align: center;
-  margin-bottom: 2rem;
-  border: 1px solid #fecaca;
-  
-  ion-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-  h3 { margin: 0; font-weight: 700; }
-  p { margin: 5px 0 0; font-size: 0.9rem; }
-}
-
-// SECTIONS
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 1rem;
-  h3 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-dark); }
-  .link { color: var(--coach-secondary); font-size: 0.9rem; font-weight: 600; }
-}
-
-// ACTIONS GRID
-.actions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 2rem;
-
-  .action-card.main-action {
-    grid-column: span 2;
-    background: white;
-    padding: 1rem;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-    transition: transform 0.2s;
-    
-    .icon-box {
-      background: var(--coach-primary);
-      width: 48px; height: 48px;
-      border-radius: 12px;
+    // 🔥 ESCUDO PRINCIPAL (Limpio y flotante)
+    .shield-section {
+      position: relative;
+      width: 85px; height: 85px; // Un poco más grande
       display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 1.5rem;
-    }
-    
-    .text-box {
-      display: flex; flex-direction: column;
-      .title { font-weight: 700; color: var(--text-dark); }
-      .desc { font-size: 0.8rem; color: var(--text-muted); }
+      
+      // Brillo trasero difuso en lugar de borde duro
+      .shield-glow-effect {
+        position: absolute; width: 100%; height: 100%;
+        background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+        filter: blur(12px);
+        z-index: -1;
+      }
+      
+      .main-shield { 
+          width: 100%; height: 100%; 
+          object-fit: contain; 
+          filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); // Sombra para destacar
+          transform: scale(1.1);
+      }
     }
 
-    &:active { transform: scale(0.98); background: #f1f5f9; }
+    .info-section {
+      flex: 1;
+      .role-badge { 
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 0.65rem; text-transform: uppercase; font-weight: 800; color: black;
+        background: var(--gold-gradient); padding: 3px 8px; border-radius: 6px; margin-bottom: 6px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      }
+      
+      .team-name { margin: 0; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+      
+      .league-info { 
+        display: flex; align-items: center; gap: 6px; margin-top: 6px;
+        opacity: 0.9; font-size: 0.85rem; font-weight: 500;
+        ion-icon { color: var(--gold); }
+      }
+    }
   }
 
-  .action-card:not(.main-action) {
-    background: white; padding: 1.2rem;
-    border-radius: 16px; text-align: center;
-    border: 1px solid #e2e8f0;
-    display: flex; flex-direction: column; align-items: center; gap: 0.8rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    transition: transform 0.2s;
+  .stats-bar {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);
 
-    &:active { transform: scale(0.98); }
+    .stat-item {
+      display: flex; flex-direction: column; align-items: center;
+      .value { font-size: 1.3rem; font-weight: 800; line-height: 1; }
+      .label { font-size: 0.6rem; text-transform: uppercase; opacity: 0.6; letter-spacing: 1px; margin-top: 4px; }
+    }
+    .divider { width: 1px; height: 25px; background: rgba(255,255,255,0.15); }
+  }
+}
+
+// 3. ACCIONES
+.section-title {
+  margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end;
+  h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
+  .link { font-size: 0.8rem; color: var(--neon-blue); font-weight: 600; }
+}
+
+.actions-grid-pro {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 35px;
+
+  .action-card {
+    background: var(--card-bg); 
+    padding: 16px; 
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.05);
+    display: flex; flex-direction: column; justify-content: space-between;
+    transition: transform 0.2s, box-shadow 0.2s; 
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+
+    &:active { transform: scale(0.98); border-color: rgba(255,255,255,0.1); }
 
     .icon-circle {
-      width: 45px; height: 45px;
-      border-radius: 50%; background: #f1f5f9;
-      display: flex; align-items: center; justify-content: center;
-      ion-icon { font-size: 1.5rem; color: var(--text-muted); }
+      width: 42px; height: 42px; border-radius: 14px; 
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 12px;
+      
+      &.secondary { background: rgba(59, 130, 246, 0.15); color: var(--neon-blue); }
+      &.tertiary { background: rgba(139, 92, 246, 0.15); color: var(--neon-purple); }
     }
 
-    .action-title { font-size: 0.9rem; font-weight: 600; color: var(--text-dark); }
+    .title { font-weight: 700; font-size: 0.9rem; color: var(--text-main); line-height: 1.2; }
+    .wip-tag { font-size: 0.6rem; background: #27272a; color: var(--text-muted); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 6px; width: fit-content;}
+    
+    &.disabled { opacity: 0.5; pointer-events: none; }
+  }
+
+  // Tarjeta Grande (Nueva Convocatoria)
+  .action-card.big.primary {
+    grid-column: span 2; 
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); // Azul noche
+    border: 1px solid rgba(99, 102, 241, 0.3); // Borde neón sutil
+    flex-direction: row; align-items: center; justify-content: space-between;
+
+    .content-wrapper { display: flex; align-items: center; gap: 15px; }
+
+    .icon-circle { 
+      background: var(--neon-blue); color: white; margin-bottom: 0; 
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); 
+    }
+    .text {
+      display: flex; flex-direction: column;
+      .title { color: white; font-size: 1rem; }
+      .desc { font-size: 0.75rem; color: #a5b4fc; }
+    }
+    .arrow-icon { color: white; opacity: 0.5; font-size: 1.2rem; }
   }
 }
 
-// EVENTS LIST
-.events-list {
-  display: flex; flex-direction: column; gap: 0.8rem;
+// 4. LISTA DE EVENTOS (DARK - Mejorada visualmente)
+.events-list-pro {
+  display: flex; flex-direction: column; gap: 12px;
 
-  .event-item {
-    background: white; border-radius: 16px;
-    padding: 1rem; display: flex; align-items: center; gap: 1rem;
-    border: 1px solid #e2e8f0;
+  .event-card {
+    background: var(--card-bg); 
+    padding: 16px; border-radius: 18px;
+    display: flex; align-items: center; gap: 15px;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-left: 4px solid #52525b; // Gris por defecto
 
-    .date-badge {
-      background: #f1f5f9; border-radius: 12px;
-      padding: 0.5rem 0.8rem; text-align: center; min-width: 60px;
-      .day { display: block; font-weight: 800; font-size: 1.1rem; color: var(--text-dark); }
-      .month { display: block; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); }
+    &.match-card { border-left-color: #10b981; } // Verde para partidos
+
+    .date-col {
+      display: flex; flex-direction: column; align-items: center; min-width: 45px;
+      padding-right: 15px; border-right: 1px solid rgba(255,255,255,0.1);
+      .day { font-size: 1.4rem; font-weight: 800; color: var(--text-main); line-height: 1; }
+      .month { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
     }
 
-    .event-details {
+    .info-col {
       flex: 1;
-      .type { 
-        font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-        &.success { color: #10b981; }
-        &.primary { color: #3b82f6; }
+      .top-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+      
+      .type-tag { 
+        font-size: 0.6rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+        &.match { color: #10b981; }
       }
-      h4 { margin: 2px 0; font-size: 1rem; font-weight: 600; }
-      .time { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+      .time-tag { font-size: 0.75rem; font-weight: 600; color: var(--text-main); background: #27272a; padding: 2px 6px; border-radius: 4px; }
+
+      .event-main-title {
+        margin-bottom: 8px;
+        .training-title { font-weight: 700; color: var(--text-main); font-size: 0.95rem; }
+        
+        // 🔥 ESTILO RIVAL MEJORADO
+        .match-vs {
+            display: flex; align-items: center; gap: 10px; 
+            
+            .vs { color: var(--text-muted); font-size: 0.7rem; font-weight: 700; opacity: 0.6; }
+            
+            // Imagen del rival limpia
+            .mini-shield { 
+                width: 32px; height: 32px; // Un poco más grande
+                object-fit: contain; 
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); // Sombra suave
+            }
+            
+            .rival-name { 
+                color: var(--text-main); font-weight: 700; font-size: 1.05rem; 
+                line-height: 1.1;
+            }
+        }
+      }
+      
+      .location-row {
+        font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px;
+        ion-icon { color: var(--neon-blue); }
+      }
     }
 
-    .arrow { color: #cbd5e1; }
+    .actions-col {
+      display: flex; flex-direction: column; gap: 5px;
+      .action-btn { 
+          height: 32px; 
+          --padding-start: 8px; --padding-end: 8px;
+          color: var(--text-muted);
+          &.gold { color: var(--gold); }
+      }
+    }
   }
-}
-
-.empty-events {
-    text-align: center; color: var(--text-muted);
-    padding: 2rem; background: white;
-    border-radius: 16px; border: 1px dashed #e2e8f0;
-    p { margin-bottom: 1rem; }
 }
