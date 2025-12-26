@@ -5,9 +5,35 @@
   .title-row {
     display: flex; align-items: center; gap: 8px;
     h3 { margin: 0; font-size: 1.2rem; font-weight: 800; color: #1e293b; }
-    ion-icon { font-size: 1.4rem; }
+    // Ya no usamos el ion-icon suelto aquí, usamos el wrapper
   }
-  .subtitle { margin: 4px 0 0 0; font-size: 0.9rem; color: #64748b; margin-left: 30px; }
+  .subtitle { margin: 4px 0 0 0; font-size: 0.9rem; color: #64748b; margin-left: 60px; /* Ajustado por el logo */ }
+}
+
+// ✅ ESTILOS NUEVOS PARA EL ESCUDO
+.team-shield-wrapper {
+  width: 50px; height: 50px; 
+  position: relative; 
+  margin-right: 10px; 
+  cursor: pointer;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  display: flex; align-items: center; justify-content: center;
+
+  img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+  
+  // Icono placeholder si no hay imagen
+  & > ion-icon { font-size: 2.5rem; }
+  
+  .edit-badge {
+    position: absolute; bottom: -2px; right: -2px; 
+    background: var(--ion-color-tertiary);
+    color: white; border-radius: 50%; width: 20px; height: 20px; 
+    display: flex; align-items: center; justify-content: center; 
+    font-size: 0.8rem;
+    border: 2px solid white;
+  }
 }
 
 .mt-4 { margin-top: 2.5rem; }
@@ -18,7 +44,7 @@
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.04);
   background: white;
-  overflow: hidden; // Para la barra de estado inferior
+  overflow: hidden; 
 
   .card-content {
     padding: 12px 15px;
@@ -49,13 +75,13 @@
 
   .status-bar {
     height: 4px;
-    background: #10b981; // Verde (Disponible)
+    background: #10b981; 
     width: 100%;
     font-size: 0;
     
     &.injured {
-      background: #ef4444; // Rojo (Lesionado)
-      height: 20px; // Más grande si está lesionado para mostrar texto
+      background: #ef4444; 
+      height: 20px; 
       color: white;
       font-size: 0.7rem;
       text-align: center;
@@ -64,18 +90,6 @@
       letter-spacing: 1px;
     }
   }
-}
-
-// Mercado de fichajes
-.market-item {
-  --background: white;
-  margin-bottom: 8px;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  
-  ion-avatar { width: 35px; height: 35px; margin-right: 10px; opacity: 0.8; }
-  h3 { font-size: 0.95rem; font-weight: 600; }
-  p { font-size: 0.8rem; }
 }
 
 .empty-state {

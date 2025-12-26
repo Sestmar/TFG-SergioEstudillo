@@ -14,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/equipos")
+@CrossOrigin(origins = "*") // Asegúrate de tener esto para evitar problemas de CORS
 public class EquipoController {
 
     private final EquipoRepository equipoRepository;
@@ -45,8 +46,13 @@ public class EquipoController {
 
         Equipo equipo = new Equipo();
         equipo.setNombre(equipoDto.getNombre());
-        equipo.setFechaCreacion(Date.valueOf(equipoDto.getFechaCreacion())); // usar yyyy-MM-dd
+        // Importante: parsear fecha. Si viene como String "yyyy-MM-dd" funciona con Date.valueOf
+        equipo.setFechaCreacion(Date.valueOf(equipoDto.getFechaCreacion()));
         equipo.setObservaciones(equipoDto.getObservaciones());
+
+        // ✅ NUEVO: Guardar el escudo
+        equipo.setEscudoUrl(equipoDto.getEscudoUrl());
+
         equipo.setLiga(liga);
         equipo.setCategoria(categoria);
         return equipoRepository.save(equipo);
@@ -62,8 +68,18 @@ public class EquipoController {
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
         equipo.setNombre(equipoDto.getNombre());
-        equipo.setFechaCreacion(Date.valueOf(equipoDto.getFechaCreacion()));
+
+        if (equipoDto.getFechaCreacion() != null) {
+            equipo.setFechaCreacion(Date.valueOf(equipoDto.getFechaCreacion()));
+        }
+
         equipo.setObservaciones(equipoDto.getObservaciones());
+
+        // ✅ NUEVO: Actualizar el escudo
+        if (equipoDto.getEscudoUrl() != null) {
+            equipo.setEscudoUrl(equipoDto.getEscudoUrl());
+        }
+
         equipo.setLiga(liga);
         equipo.setCategoria(categoria);
         return equipoRepository.save(equipo);

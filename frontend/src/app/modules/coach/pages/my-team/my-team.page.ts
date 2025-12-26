@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { TeamService } from 'src/app/core/services/team/team.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
+import { UploadService } from 'src/app/core/services/common/upload.service'; // ✅ IMPORTADO
 import { Player, Team } from 'src/app/shared/models/models';
 
 @Component({
@@ -14,12 +15,11 @@ import { Player, Team } from 'src/app/shared/models/models';
 export class MyTeamPage implements OnInit {
   
   myPlayers: Player[] = [];
-  // otherPlayers eliminado: El entrenador no ficha.
-  
-  teams: Team[] = []; // Se mantiene para referenciar nombres si hace falta
+  teams: Team[] = []; 
   
   coachTeamId: number | null = null; 
   coachTeamName: string = ''; 
+  currentTeamShield: string = ''; // ✅ VARIABLE PARA EL ESCUDO
   
   loading: boolean = true;
   isModalOpen = false;
@@ -43,6 +43,7 @@ export class MyTeamPage implements OnInit {
     private playerService: PlayerService,
     private teamService: TeamService,
     private authSvc: AuthService,
+    private uploadSvc: UploadService, // ✅ INYECTADO
     private http: HttpClient,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
@@ -51,7 +52,6 @@ export class MyTeamPage implements OnInit {
 
   ngOnInit() {
     this.detectCoachTeam();
-    // this.loadTeams(); // Ya no hace falta cargar todos los equipos si no vamos a fichar
   }
 
   // --- 1. DETECCIÓN DEL EQUIPO DEL MÍSTER ---
@@ -65,13 +65,15 @@ export class MyTeamPage implements OnInit {
           next: (response: any) => {
             console.log("🎯 Respuesta Backend Entrenador:", response);
             
-            // El backend devuelve un objeto complejo { equipo: {...}, rol: ... }
             const equipo = response.equipo; 
 
             if (equipo) {
-                // Aseguramos que sea un número para comparar bien
                 this.coachTeamId = Number(equipo.idEquipo || equipo.id); 
                 this.coachTeamName = equipo.nombre;
+                
+                // ✅ CAPTURAMOS EL ESCUDO
+                this.currentTeamShield = equipo.escudoUrl;
+
                 console.log("✅ ID Equipo Entrenador fijado en:", this.coachTeamId);
                 this.loadPlayers();
             } else {
@@ -88,7 +90,61 @@ export class MyTeamPage implements OnInit {
     });
   }
 
-  // --- 2. CARGA Y FILTRADO ROBUSTO ---
+  // ✅ LOGICA DE SUBIDA DE ESCUDO
+  onShieldSelected(event: any) {
+    if (!this.coachTeamId) return;
+    
+    const file: File = event.target.files[0];
+    if (file) {
+      this.loadingCtrl.create({ message: 'Actualizando escudo...' }).then(loading => {
+        loading.present();
+        
+        this.uploadSvc.uploadImage(file).subscribe({
+          next: (res: any) => {
+            const newUrl = res.url;
+            this.updateShieldBackend(this.coachTeamId!, newUrl, loading);
+          },
+          error: (err) => {
+             console.error(err);
+             loading.dismiss();
+             this.showToast('Error al subir imagen', 'danger');
+          }
+        });
+      });
+    }
+  }
+
+  // ✅ ACTUALIZAR EN BACKEND (Usamos GET + PUT para asegurar integridad)
+  updateShieldBackend(id: number, url: string, loading: HTMLIonLoadingElement) {
+     this.http.get<any>(`http://localhost:8080/api/equipos/${id}`).subscribe({
+        next: (eq) => {
+            const dto = {
+               nombre: eq.nombre,
+               fechaCreacion: eq.fechaCreacion,
+               observaciones: eq.observaciones,
+               idLiga: eq.liga?.idLiga || 1, 
+               idCategoria: eq.categoria?.idCategoria || 1,
+               escudoUrl: url // Nueva URL
+            };
+
+            this.http.put(`http://localhost:8080/api/equipos/${id}`, dto).subscribe({
+               next: () => {
+                  this.currentTeamShield = url; // Actualizamos vista
+                  loading.dismiss();
+                  this.showToast('Escudo actualizado 🛡️', 'success');
+               },
+               error: (err) => {
+                  console.error(err);
+                  loading.dismiss();
+                  this.showToast('Error al guardar escudo', 'danger');
+               }
+            });
+        },
+        error: () => loading.dismiss()
+     });
+  }
+
+  // --- 2. CARGA Y FILTRADO ---
   loadPlayers() {
     if (!this.coachTeamId) return;
 
@@ -97,16 +153,11 @@ export class MyTeamPage implements OnInit {
       next: (res: any) => {
         const all = Array.isArray(res) ? res : (res.data || []);
         
-        console.log(`📋 Total jugadores en BD: ${all.length}`);
-
-        // MI EQUIPO
         this.myPlayers = all.filter((p: any) => {
              const playerTeamId = this.getTeamIdFromPlayer(p);
-             // Comprobación laxa (==) para evitar problemas de string vs number
              return playerTeamId == this.coachTeamId;
         });
 
-        console.log(`✅ Jugadores encontrados para el equipo ${this.coachTeamId}: ${this.myPlayers.length}`);
         this.loading = false;
       },
       error: (err) => {
@@ -116,29 +167,21 @@ export class MyTeamPage implements OnInit {
     });
   }
 
-  // --- 🔥 FUNCIÓN DE EXTRACCIÓN DE ID MEJORADA 🔥 ---
   private getTeamIdFromPlayer(p: any): number | null {
     if (!p) return null;
-
-    // 1. Si viene como objeto completo (Backend con relaciones)
     if (p.equipoPrincipal && typeof p.equipoPrincipal === 'object') {
         return Number(p.equipoPrincipal.idEquipo || p.equipoPrincipal.id);
     }
-    
-    // 2. Si viene como número directo (Backend con DTO plano)
     if (typeof p.equipoPrincipal === 'number') {
         return Number(p.equipoPrincipal);
     }
-
-    // 3. Fallback a propiedad antigua 'equipo'
     if (p.equipo && typeof p.equipo === 'object') {
         return Number(p.equipo.idEquipo || p.equipo.id);
     }
-
     return null;
   }
 
-  // --- MODAL DE EDICIÓN (DORSAL / POSICIÓN) ---
+  // --- MODALES Y EDICIÓN ---
   openEditModal(player: Player) {
     this.selectedPlayer = player;
     const raw = player as any;
@@ -146,7 +189,7 @@ export class MyTeamPage implements OnInit {
     this.techData = {
       dorsal: player.dorsal || null,
       posicion: raw.posicion || '',
-      teamId: this.coachTeamId // El equipo no se cambia aquí
+      teamId: this.coachTeamId 
     };
     this.isEditModalOpen = true;
   }
@@ -156,11 +199,10 @@ export class MyTeamPage implements OnInit {
     const loading = await this.loadingCtrl.create({ message: 'Actualizando...' });
     await loading.present();
 
-    // Solo enviamos lo que el entrenador puede cambiar
     const cambios = {
       dorsal: this.techData.dorsal,
       posicion: this.techData.posicion,
-      equipoPrincipal: this.coachTeamId // Mantenemos el equipo actual
+      equipoPrincipal: this.coachTeamId 
     };
 
     const payload = this.prepareDto(this.selectedPlayer, cambios);
@@ -182,20 +224,18 @@ export class MyTeamPage implements OnInit {
 
   private prepareDto(player: Player, cambios: any): any {
     const rawPlayer = player as any;
-    
     return {
       idUsuario: rawPlayer.usuario.id || rawPlayer.usuario.idUsuario,
       posicion: cambios.posicion !== undefined ? cambios.posicion : rawPlayer.posicion,
       dorsal: cambios.dorsal !== undefined ? cambios.dorsal : player.dorsal,
       estado: cambios.estado || rawPlayer.estado || 'ACTIVO',
-      equipoPrincipal: this.coachTeamId, // Siempre forzamos el equipo actual
+      equipoPrincipal: this.coachTeamId,
       observaciones: cambios.observaciones || rawPlayer.observaciones,
       fechaNacimiento: rawPlayer.fechaNacimiento,
       fechaAlta: rawPlayer.fechaAlta
     };
   }
 
-  // --- MODAL DE LESIONES ---
   openInjuryModal(player: Player) {
     this.selectedPlayer = player;
     this.injuryData = { tipo: '', duracion: '', notas: '' };

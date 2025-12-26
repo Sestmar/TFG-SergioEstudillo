@@ -22,69 +22,52 @@
 
   <div class="form-container">
 
-    <ion-item class="ion-margin-bottom input-item" *ngIf="segmentValue === 'PARTIDO'">
-      <ion-input 
-        label="Nombre del Rival" 
-        label-placement="stacked" 
-        placeholder="Ej: Betis B"
-        [(ngModel)]="formData.rival">
-      </ion-input>
-    </ion-item>
+    <div *ngIf="segmentValue === 'PARTIDO'">
+      <ion-item class="ion-margin-bottom input-item">
+        <ion-input 
+          label="Nombre del Rival" 
+          label-placement="stacked" 
+          placeholder="Ej: Betis B"
+          [(ngModel)]="formData.rival">
+        </ion-input>
+      </ion-item>
+
+      <div class="logo-upload-container ion-margin-bottom" (click)="fileInput.click()">
+        <div class="preview-box">
+          <img *ngIf="formData.escudoRivalUrl" [src]="formData.escudoRivalUrl" class="shield-preview">
+          <div *ngIf="!formData.escudoRivalUrl" class="placeholder">
+            <ion-icon name="cloud-upload-outline"></ion-icon>
+            <span>Subir Escudo</span>
+          </div>
+          <ion-spinner *ngIf="uploadingImage" name="crescent" color="primary"></ion-spinner>
+        </div>
+        <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+      </div>
+    </div>
 
     <ion-item class="ion-margin-bottom input-item" *ngIf="segmentValue === 'PARTIDO'">
-      <ion-input 
-        label="Competición" 
-        label-placement="stacked" 
-        placeholder="Ej: Liga, Copa, Amistoso..."
-        [(ngModel)]="formData.competicion">
-      </ion-input>
+      <ion-input label="Competición" label-placement="stacked" placeholder="Ej: Liga..." [(ngModel)]="formData.competicion"></ion-input>
     </ion-item>
 
     <ion-item class="ion-margin-bottom input-item">
-      <ion-input 
-        label="Lugar / Campo" 
-        label-placement="stacked" 
-        placeholder="Ej: Ciudad Deportiva"
-        [(ngModel)]="formData.lugar">
-      </ion-input>
+      <ion-input label="Lugar / Campo" label-placement="stacked" placeholder="Ej: Ciudad Deportiva" [(ngModel)]="formData.lugar"></ion-input>
     </ion-item>
 
     <ion-item class="ion-margin-bottom input-item">
-      <ion-input 
-        type="date" 
-        label="Fecha" 
-        label-placement="stacked"
-        [(ngModel)]="formData.fecha">
-      </ion-input>
+      <ion-input type="date" label="Fecha" label-placement="stacked" [(ngModel)]="formData.fecha"></ion-input>
     </ion-item>
 
     <ion-item class="ion-margin-bottom input-item">
-      <ion-input 
-        type="time" 
-        label="Hora de inicio" 
-        label-placement="stacked"
-        [(ngModel)]="formData.hora">
-      </ion-input>
+      <ion-input type="time" label="Hora de inicio" label-placement="stacked" [(ngModel)]="formData.hora"></ion-input>
     </ion-item>
 
     <ion-item class="ion-margin-bottom input-item">
-      <ion-textarea 
-        label="Observaciones / Notas" 
-        label-placement="stacked" 
-        placeholder="Ej: Llevar botas de taco de aluminio, puntualidad..."
-        [(ngModel)]="formData.observaciones"
-        [rows]="3">
-      </ion-textarea>
+      <ion-textarea label="Observaciones" label-placement="stacked" placeholder="Notas..." [(ngModel)]="formData.observaciones" [rows]="3"></ion-textarea>
     </ion-item>
 
-    <ion-button expand="block" 
-                color="primary" 
-                class="submit-btn ion-margin-top" 
-                (click)="createEvent()">
-      Crear Evento
-      <ion-icon name="checkmark-outline" slot="end"></ion-icon>
+    <ion-button expand="block" color="primary" class="submit-btn ion-margin-top" (click)="createEvent()">
+      Crear Evento <ion-icon name="checkmark-outline" slot="end"></ion-icon>
     </ion-button>
 
   </div>
-
 </ion-content>

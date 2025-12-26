@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
 import java.sql.Date;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // ✅ Importante
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Data
@@ -25,22 +25,22 @@ public class Equipo {
     private String observaciones;
 
     @Column(name = "foto_url")
-    private String fotoUrl;
+    private String fotoUrl; // Foto de la plantilla (opcional)
+
+    // ✅ NUEVO CAMPO: Escudo del equipo
+    @Column(name = "escudo_url")
+    private String escudoUrl;
 
     @ManyToOne
     @JoinColumn(name = "id_categoria", nullable = false)
-    // Evitamos cargar listas inversas de categorías
     @JsonIgnoreProperties({"equipos", "hibernateLazyInitializer", "handler"})
     private Categoria categoria;
 
     @ManyToOne
     @JoinColumn(name = "id_liga", nullable = false)
-    // Evitamos cargar listas inversas de ligas
     @JsonIgnoreProperties({"equipos", "hibernateLazyInitializer", "handler"})
     private Liga liga;
 
-    // 🔥 CORRECCIÓN DOBLE SEGURIDAD:
-    // Al cargar el entrenador, ignoramos su propiedad 'equipo' para que no vuelva aquí.
     @OneToOne
     @JoinColumn(name = "id_entrenador")
     @ToString.Exclude

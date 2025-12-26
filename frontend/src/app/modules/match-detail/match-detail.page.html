@@ -19,11 +19,12 @@
     
     <div class="match-header">
       <div class="teams-container">
+        
         <div class="team">
           <div class="logo-circle">
-            <img src="assets/icon/shield-placeholder.png" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';" alt="Escudo">
+            <img src="assets/img/mi-club-logo.png" alt="Nuestro Escudo" class="team-logo">
           </div>
-          <h3>Nosotros</h3>
+          <h3>DAM United F.C</h3>
         </div>
         
         <div class="score-board">
@@ -38,10 +39,12 @@
 
         <div class="team">
           <div class="logo-circle rival">
-            <ion-icon name="shield-half-outline"></ion-icon>
+            <img *ngIf="match?.escudoRivalUrl" [src]="match.escudoRivalUrl" class="team-logo">
+            <ion-icon *ngIf="!match?.escudoRivalUrl" name="shield-half-outline" class="placeholder-shield"></ion-icon>
           </div>
           <h3>{{ match.rival }}</h3>
         </div>
+
       </div>
       
       <div class="match-meta">

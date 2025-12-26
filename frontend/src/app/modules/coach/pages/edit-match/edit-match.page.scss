@@ -1,67 +1,154 @@
-.bg-light { --background: #f4f5f8; }
+// VARIABLES DE COLOR
+:host {
+  --ion-background-color: #f8fafc;
+  --text-main: #1e293b;
+  --card-bg: #ffffff;
+}
 
-.score-card {
-  text-align: center; margin-bottom: 20px;
-  .score-grid {
-    display: flex; justify-content: center; align-items: center; gap: 20px;
-    .team-input {
-      display: flex; flex-direction: column; width: 80px;
-      ion-input { font-size: 2rem; font-weight: bold; --background: #eee; border-radius: 10px; text-align: center; }
+// CABECERA DE EDICIÓN (MARCADOR)
+.match-header-edit {
+  background: white;
+  padding: 20px 10px 30px 10px;
+  border-radius: 0 0 30px 30px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+
+  .teams-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+
+    .team-col {
+      width: 30%;
+      display: flex; flex-direction: column; align-items: center;
+      
+      .logo-box {
+        width: 60px; height: 60px;
+        background: #f1f5f9;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 8px;
+        border: 2px solid white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        overflow: hidden;
+
+        img { width: 100%; height: 100%; object-fit: cover; }
+        .placeholder-icon { font-size: 2rem; color: #94a3b8; }
+      }
+
+      .team-name {
+        margin: 0;
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: var(--text-main); // 🔥 IMPORTANTE: Color oscuro forzado
+        text-align: center;
+        line-height: 1.2;
+      }
     }
-    .divider { font-size: 2rem; font-weight: bold; color: #888; }
+
+    .score-col {
+      display: flex; flex-direction: column; align-items: center;
+      margin-top: 10px;
+
+      .score-inputs {
+        display: flex; align-items: center; gap: 10px;
+        
+        .score-input {
+          width: 50px; height: 50px;
+          --background: #f1f5f9;
+          --padding-start: 0; --padding-end: 0;
+          font-size: 1.8rem; font-weight: 800;
+          text-align: center;
+          border-radius: 10px;
+          color: var(--text-main);
+          // Centrar texto dentro del input
+          --padding-top: 0; --padding-bottom: 0;
+          display: flex; justify-content: center; 
+          text-align: center;
+        }
+        
+        // Truco para centrar el texto en Ionic inputs modernos
+        .score-input::part(native) {
+            text-align: center;
+        }
+
+        .divider { font-size: 1.5rem; font-weight: 700; color: #cbd5e1; }
+      }
+
+      .match-status {
+        margin-top: 5px;
+        font-size: 0.65rem; font-weight: 800;
+        color: #64748b; letter-spacing: 1px;
+      }
+    }
   }
 }
 
+// SEPARADORES
 .section-divider {
-  padding: 10px 5px;
-  font-size: 0.9rem;
-  font-weight: 800;
+  padding: 10px 20px;
+  font-size: 0.8rem; font-weight: 800;
   color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  text-transform: uppercase; letter-spacing: 1px;
   display: flex; align-items: center; gap: 8px;
-  &.mt-4 { margin-top: 2rem; }
+  &.mt-4 { margin-top: 1.5rem; }
 }
 
+// TARJETAS DE JUGADOR (EDITABLE)
 .player-edit-card {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 10px; margin-bottom: 10px;
+  background: white;
+  padding: 10px 15px;
+  margin: 0 15px 10px 15px; // Márgenes laterales
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
   border-left: 4px solid transparent;
 
   &.starter { border-left-color: var(--ion-color-success); }
   &.bench { border-left-color: #cbd5e1; opacity: 0.8; }
-  &.bench.played { opacity: 1; border-left-color: var(--ion-color-warning); background: #fffbeb; }
+  &.bench.played { opacity: 1; border-left-color: var(--ion-color-warning); background: white; }
 
   .card-left {
-    display: flex; align-items: center; gap: 10px; width: 45%;
+    display: flex; align-items: center; gap: 12px; width: 50%;
     
-    .avatar {
-      width: 40px; height: 40px; background: var(--ion-color-primary); color: white;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; overflow: hidden;
-      &.gray { background: #94a3b8; }
-      .img-fit { width: 100%; height: 100%; object-fit: cover; }
+    .player-avatar {
+      width: 40px; height: 40px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      img { object-fit: cover; }
     }
+
     .names {
       display: flex; flex-direction: column; font-size: 0.9rem;
-      span { font-size: 0.75rem; color: #666; }
+      strong { color: var(--text-main); font-weight: 700; }
+      span { font-size: 0.7rem; color: #64748b; }
+      .text-success { color: var(--ion-color-success); font-weight: 700; }
     }
   }
 
   .card-inputs {
-    display: flex; gap: 6px;
+    display: flex; gap: 8px;
     
     .input-group {
-      display: flex; flex-direction: column; align-items: center; width: 42px;
-      label { font-size: 0.65rem; margin-bottom: 2px; color: #888; text-transform: uppercase; }
+      display: flex; flex-direction: column; align-items: center; width: 40px;
+      
+      label { font-size: 0.6rem; margin-bottom: 2px; color: #94a3b8; font-weight: 700; }
+      
       ion-input {
-        --padding-start: 2px; --padding-end: 2px;
-        text-align: center; background: #f0f0f0; border-radius: 6px;
-        font-weight: bold; font-size: 0.9rem; min-height: 30px;
+        --background: #f8fafc;
+        border-radius: 6px;
+        font-weight: 700; font-size: 0.9rem;
+        text-align: center;
+        height: 32px;
+        min-height: 32px;
+        border: 1px solid #e2e8f0;
+        --padding-start: 0; --padding-end: 0;
       }
-      &.success ion-input { color: var(--ion-color-success); background: #e0f2f1; }
-      &.info ion-input { color: var(--ion-color-tertiary); background: #e0f7fa; }
+      
+      ion-input::part(native) { text-align: center; }
+
+      &.success ion-input { color: var(--ion-color-success); background: #f0fdf4; border-color: #bbf7d0; }
+      &.info ion-input { color: var(--ion-color-tertiary); background: #ecfeff; border-color: #a5f3fc; }
     }
   }
 }
-
-.empty-msg { text-align: center; color: #94a3b8; padding: 20px; font-style: italic; }

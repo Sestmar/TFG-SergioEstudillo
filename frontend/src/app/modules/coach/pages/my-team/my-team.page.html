@@ -13,7 +13,14 @@
 
     <div class="section-header">
       <div class="title-row">
-        <ion-icon name="shield-checkmark" color="primary"></ion-icon>
+        
+        <div class="team-shield-wrapper" (click)="shieldInput.click()">
+           <img *ngIf="currentTeamShield" [src]="currentTeamShield" alt="Escudo">
+           <ion-icon *ngIf="!currentTeamShield" name="shield-checkmark" color="primary"></ion-icon>
+           <div class="edit-badge"><ion-icon name="camera"></ion-icon></div>
+        </div>
+        <input #shieldInput type="file" accept="image/*" (change)="onShieldSelected($event)" style="display: none;">
+
         <h3>{{ coachTeamName || 'Mi Equipo' }}</h3>
       </div>
       <p class="subtitle">Gestión de dorsales, posiciones y estado físico</p>
@@ -77,7 +84,6 @@
       </ion-header>
       <ion-content class="ion-padding">
         <div class="modal-wrapper" *ngIf="selectedPlayer">
-            
             <div class="modal-user-info">
                 <ion-avatar class="large">
                     <img [src]="getAvatar(selectedPlayer)">
@@ -85,23 +91,18 @@
                 <h2>{{ selectedPlayer.usuario.nombre }}</h2>
                 <p>Editar Dorsal y Posición</p>
             </div>
-
             <ion-list class="form-list">
-                
                 <ion-item fill="outline" class="mb-3">
                     <ion-label position="stacked">Posición</ion-label>
                     <ion-select [(ngModel)]="techData.posicion" interface="popover">
                         <ion-select-option *ngFor="let pos of posicionesDisponibles" [value]="pos">{{ pos }}</ion-select-option>
                     </ion-select>
                 </ion-item>
-
                 <ion-item fill="outline" class="mb-3">
                     <ion-label position="stacked">Dorsal (#)</ion-label>
                     <ion-input type="number" [(ngModel)]="techData.dorsal" placeholder="Ej: 10"></ion-input>
                 </ion-item>
-
                 </ion-list>
-
             <ion-button expand="block" class="mt-4" (click)="saveTechnicalData()">
                 <ion-icon name="save" slot="start"></ion-icon> Guardar Cambios
             </ion-button>
@@ -128,7 +129,6 @@
                 <ion-label position="stacked">Tiempo Estimado</ion-label>
                 <ion-input [(ngModel)]="injuryData.duracion" placeholder="Ej: 2 semanas"></ion-input>
             </ion-item>
-            
             <ion-button expand="block" color="danger" class="mt-4" (click)="saveInjury()">
                 <ion-icon name="alert-circle" slot="start"></ion-icon> Confirmar Baja
             </ion-button>

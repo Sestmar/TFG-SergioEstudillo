@@ -1,17 +1,17 @@
 // VARIABLES DE COLOR FORZADAS
 :host {
-  --ion-background-color: #f8fafc; // Gris muy claro de fondo
-  --text-main: #1e293b;            // Gris oscuro (casi negro) para texto principal
-  --text-light: #64748b;           // Gris medio para textos secundarios
-  --card-bg: #ffffff;              // Blanco puro para tarjetas
-  --primary: #3b82f6;              // Azul principal
+  --ion-background-color: #f8fafc; 
+  --text-main: #1e293b;            
+  --text-light: #64748b;           
+  --card-bg: #ffffff;              
+  --primary: #3b82f6;              
 }
 
 ion-content {
   --background: var(--ion-background-color);
 }
 
-// CABECERA DEL PARTIDO (Marcador)
+// CABECERA DEL PARTIDO
 .match-header {
   background: white;
   padding-bottom: 30px;
@@ -27,164 +27,82 @@ ion-content {
     margin-bottom: 20px;
 
     .team {
-      width: 30%;
+      width: 35%; // Un poco más ancho para que quepan nombres largos
+      display: flex; 
+      flex-direction: column; 
+      align-items: center;
+
       .logo-circle {
         width: 60px; height: 60px;
-        margin: 0 auto 10px;
+        margin-bottom: 10px;
         display: flex; align-items: center; justify-content: center;
+        background: #f1f5f9; // Fondo gris suave
+        border-radius: 50%;
+        overflow: hidden; // Recorte circular
+        border: 2px solid white; // Borde blanco
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+
+        // 🔥 ESTILOS PARA LA IMAGEN REAL
+        .team-logo { 
+            width: 100%; height: 100%; 
+            object-fit: cover; // O 'contain' si prefieres ver todo el escudo sin recorte
+        }
         
-        img { width: 100%; height: 100%; object-fit: contain; }
-        
-        &.rival {
-          background: #e2e8f0;
-          border-radius: 50%;
+        // Estilos para el icono placeholder
+        .placeholder-shield {
           color: #94a3b8;
           font-size: 2rem;
         }
       }
-      h3 { font-size: 0.9rem; font-weight: 700; color: var(--text-main); margin: 0; }
+      h3 { font-size: 0.9rem; font-weight: 800; color: var(--text-main); margin: 0; line-height: 1.2; }
     }
 
     .score-board {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-
-      .competition-badge {
-        background: #eff6ff; color: var(--primary);
-        font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
-        padding: 2px 8px; border-radius: 10px;
-      }
-
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
       .score { font-size: 2.5rem; font-weight: 800; color: var(--text-main); letter-spacing: -1px; }
-      
       .vs-text { font-size: 1.5rem; font-weight: 800; color: #cbd5e1; }
-      .time-badge { font-size: 1.2rem; font-weight: 700; color: var(--text-main); }
-      
-      .status-text { font-size: 0.7rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; }
+      .status-text { font-size: 0.7rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
     }
   }
 
   .match-meta {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    font-size: 0.85rem;
-    color: var(--text-light);
+    display: flex; justify-content: center; gap: 15px; font-size: 0.85rem; color: var(--text-light);
     p { margin: 0; display: flex; align-items: center; gap: 5px; }
   }
-
-  .notes-box {
-    margin-top: 20px;
-    background: #fff7ed;
-    color: #c2410c;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-align: left;
-    max-width: 90%; // Corregido mx-width
-    margin-left: auto; margin-right: auto;
-  }
 }
 
-// Renderizado de "Mi Rendimiento" (Tarjetas)
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  margin: 0 15px 20px; // Margen lateral añadido
-  
-  .stat-card {
-    background: var(--card-bg);
-    padding: 15px;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-    
-    .value { display: block; font-size: 1.5rem; font-weight: 800; color: var(--text-main); }
-    .label { font-size: 0.7rem; color: var(--text-light); text-transform: uppercase; font-weight: 700; }
-  }
-}
-
-// SECCIÓN ALINEACIÓN (Donde no veías nada)
+// SECCIÓN ALINEACIÓN
 .squad-section {
-  padding: 0 15px 40px;
-  margin-top: 20px;
+  padding: 0 15px 40px; margin-top: 20px;
 
   h3 {
-    margin-bottom: 15px;
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: var(--text-main); // 🔥 ESTO HACE QUE EL TÍTULO SE VEA (Negro)
-    display: flex; align-items: center; gap: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    margin-bottom: 15px; font-size: 1.1rem; font-weight: 800; color: var(--text-main);
+    display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px;
   }
 
-  // Lista transparente para que no tenga fondo por defecto
   ion-list.player-list {
-    background: transparent;
-    padding: 0;
+    background: transparent; padding: 0;
     
-    // Cada elemento de la lista (Tarjeta de jugador)
     ion-item.player-item {
-      --background: var(--card-bg); // 🔥 FONDO BLANCO PURO
-      --color: var(--text-main);    // 🔥 TEXTO OSCURO
-      --padding-start: 10px;
-      --inner-padding-end: 10px;
-      margin-bottom: 10px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04); // Sombra suave para que destaque del fondo gris
+      --background: var(--card-bg); --color: var(--text-main); --padding-start: 10px; --inner-padding-end: 10px;
+      margin-bottom: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 
       ion-avatar {
-        width: 45px; height: 45px;
-        margin-right: 15px;
-        background: #f1f5f9;
-        border: 2px solid #e2e8f0;
-        
-        img { 
-          object-fit: cover; 
-          width: 100%; height: 100%;
-          border-radius: 50%;
-        }
+        width: 45px; height: 45px; margin-right: 15px; background: #f1f5f9; border: 2px solid #e2e8f0;
+        img { object-fit: cover; width: 100%; height: 100%; border-radius: 50%; }
       }
 
       ion-label {
-        h2 { 
-          font-weight: 700; 
-          font-size: 1rem; 
-          color: #0f172a; // 🔥 Negro casi puro para el nombre
-          margin-bottom: 4px;
-        }
-        p { 
-          font-size: 0.85rem; 
-          color: #64748b; // 🔥 Gris medio para posición/dorsal
-          margin-top: 0;
-        }
+        h2 { font-weight: 700; font-size: 1rem; color: #0f172a; margin-bottom: 4px; }
+        p { font-size: 0.85rem; color: #64748b; margin-top: 0; }
       }
 
-      ion-badge {
-        font-weight: 700;
-        padding: 6px 10px;
-        border-radius: 8px;
-        font-size: 0.7rem;
-        margin-inline-start: 10px; // Espacio antes del badge
-      }
+      ion-badge { font-weight: 700; padding: 6px 10px; border-radius: 8px; font-size: 0.7rem; margin-inline-start: 10px; }
     }
   }
 
   .empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: #94a3b8;
-    background: white;
-    border-radius: 12px;
-    border: 2px dashed #e2e8f0;
-    
+    text-align: center; padding: 40px 20px; color: #94a3b8; background: white; border-radius: 12px; border: 2px dashed #e2e8f0;
     p { font-weight: 500; }
   }
 }

@@ -30,9 +30,7 @@
             <div class="dorsal-badge" *ngIf="currentPlayer.dorsal">#{{ currentPlayer.dorsal }}</div>
           </div>
           <div class="info-container">
-            
             <h3>{{ currentTeam?.nombre || 'Sin Equipo Asignado' }}</h3>
-            
             <p *ngIf="currentTeam?.categoria" style="font-size: 0.9rem; opacity: 0.8; margin-top: -5px;">
                 {{ currentTeam?.categoria?.nombre || 'Categoría General' }}
             </p>
@@ -44,7 +42,6 @@
               </span>
             </div>
         </div>
-        
         </div>
       </div>
       <div class="custom-shape-divider-bottom-16789">
@@ -105,8 +102,8 @@
     <div class="convocations-list">
       <div class="convocation-ticket" *ngFor="let conv of upcomingConvocations" [ngClass]="{'is-match': conv.tipo === 'PARTIDO'}">
         <div class="left-side">
-          <span class="day">{{ (conv.fechaHoraInicio || conv.fechaEvento) | date:'dd' }}</span>
-          <span class="month">{{ (conv.fechaHoraInicio || conv.fechaEvento) | date:'MMM' | uppercase }}</span>
+          <span class="day">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'dd' }}</span>
+          <span class="month">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'MMM' | uppercase }}</span>
         </div>
         <div class="right-side">
           <div class="header">
@@ -115,13 +112,20 @@
             </span>
             <span class="time">
               <ion-icon name="time-outline"></ion-icon>
-              {{ (conv.fechaHoraInicio || conv.fechaEvento) | date:'HH:mm' }}
+              {{ (conv.fechaHoraInicio || conv.fechaHora) | date:'HH:mm' }}
             </span>
           </div>
+          
           <h3 class="title">
             <span *ngIf="conv.tipo === 'PARTIDO'">VS </span>
+            
+            <img *ngIf="conv.escudoRivalUrl" [src]="conv.escudoRivalUrl" class="mini-shield">
+            
+            <ion-icon *ngIf="conv.tipo === 'PARTIDO' && !conv.escudoRivalUrl" name="shield-outline" class="mini-shield-placeholder"></ion-icon>
+            
             {{ conv.rival || conv.titulo || 'Evento de Equipo' }}
           </h3>
+
           <p class="location">
             <ion-icon name="location-outline"></ion-icon>
             {{ conv.lugar || 'Ubicación por confirmar' }}
@@ -134,7 +138,6 @@
                 size="small" 
                 class="btn-details"
                 (click)="showMatchDetails(conv); $event.stopPropagation()">
-                  
               Ver Información
               <ion-icon name="information-circle-outline" slot="end"></ion-icon>
             </ion-button>

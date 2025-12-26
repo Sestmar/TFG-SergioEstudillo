@@ -1,6 +1,8 @@
-import { Component, Input, OnInit } from '@angular/core'; // 🔥 Importante: Input
+import { Component, Input, OnInit } from '@angular/core';
 import { ModalController, ToastController, LoadingController } from '@ionic/angular';
 import { MatchService } from 'src/app/core/services/match/match.service';
+// ✅ IMPORTAR SERVICIO DE SUBIDA
+import { UploadService } from 'src/app/core/services/common/upload.service';
 
 @Component({
   selector: 'app-create-convocation',
@@ -9,30 +11,32 @@ import { MatchService } from 'src/app/core/services/match/match.service';
 })
 export class CreateConvocationPage implements OnInit {
 
-  // 🔥 RECIBIMOS EL ID DESDE EL DASHBOARD (Gracias a componentProps)
   @Input() teamId: number | null = null;
 
-  segmentValue = 'PARTIDO'; // 'PARTIDO' o 'ENTRENAMIENTO'
+  segmentValue = 'PARTIDO';
   
   formData = {
     rival: '',
     lugar: '',
     fecha: '',
     hora: '',
-    tipo: 'PARTIDO', // Se actualiza con el segmento
+    tipo: 'PARTIDO',
     competicion: '', 
-    observaciones: ''
+    observaciones: '',
+    escudoRivalUrl: '' // ✅ NUEVO CAMPO
   };
+
+  uploadingImage = false; // Estado visual de carga
 
   constructor(
     private modalCtrl: ModalController,
-    private matchSvc: MatchService, // Asegúrate de tener este servicio importado correctamente
+    private matchSvc: MatchService,
+    private uploadSvc: UploadService, // ✅ INYECCIÓN
     private toastCtrl: ToastController,
     private loadingCtrl: LoadingController
   ) { }
 
   ngOnInit() {
-    // Depuración: Verificamos en consola si el ID llegó correctamente
     console.log('✅ Modal abierto. ID de Equipo recibido:', this.teamId);
   }
 
@@ -45,8 +49,27 @@ export class CreateConvocationPage implements OnInit {
     this.formData.tipo = this.segmentValue;
   }
 
+  // ✅ LÓGICA DE SUBIDA DE ESCUDO
+  async onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (file) {
+      this.uploadingImage = true;
+      this.uploadSvc.uploadImage(file).subscribe({
+        next: (res: any) => {
+          this.formData.escudoRivalUrl = res.url;
+          this.uploadingImage = false;
+          this.presentToast('Escudo subido correctamente 🛡️', 'success');
+        },
+        error: (err) => {
+          console.error(err);
+          this.uploadingImage = false;
+          this.presentToast('Error al subir el escudo', 'danger');
+        }
+      });
+    }
+  }
+
   async createEvent() {
-    // 1. Validaciones básicas de formulario
     if (!this.formData.fecha || !this.formData.hora || !this.formData.lugar) {
       this.presentToast('Por favor, rellena fecha, hora y lugar', 'warning');
       return;
@@ -57,9 +80,7 @@ export class CreateConvocationPage implements OnInit {
       return;
     }
 
-    // 🔥 Validación crítica: ¿Tenemos equipo asignado?
     if (!this.teamId) {
-      console.error('Error: teamId es nulo o indefinido en el modal.');
       this.presentToast('Error crítico: No se ha detectado el equipo asignado.', 'danger');
       return;
     }
@@ -68,25 +89,22 @@ export class CreateConvocationPage implements OnInit {
     await loading.present();
 
     try {
-      // 2. Construir fecha completa ISO (YYYY-MM-DDTHH:mm:00)
-      // Ajuste para inputs tipo fecha/hora de Ionic
-      const fechaBase = this.formData.fecha.split('T')[0]; // "2025-12-31"
+      const fechaBase = this.formData.fecha.split('T')[0];
       
-      // Intentamos extraer la hora limpia si viene en formato ISO largo
       let horaLimpia = this.formData.hora;
       if (this.formData.hora.includes('T')) {
-         horaLimpia = this.formData.hora.split('T')[1].substring(0, 5); // "13:00"
+         horaLimpia = this.formData.hora.split('T')[1].substring(0, 5);
       }
 
       const fechaHoraCombinada = `${fechaBase}T${horaLimpia}:00`;
 
-      // 3. Preparar objeto para el Backend
       const payload = {
-        idEquipo: this.teamId, // ✅ Usamos el ID recibido por Input
+        idEquipo: this.teamId,
         rival: this.formData.tipo === 'PARTIDO' ? this.formData.rival : null,
+        escudoRivalUrl: this.formData.tipo === 'PARTIDO' ? this.formData.escudoRivalUrl : null, // ✅ ENVIAMOS URL
         lugar: this.formData.lugar,
         fechaHora: fechaHoraCombinada,
-        tipo: this.formData.tipo, // 'PARTIDO' o 'ENTRENAMIENTO'
+        tipo: this.formData.tipo,
         golesFavor: 0,
         golesContra: 0,
         estado: 'PENDIENTE',
@@ -94,27 +112,25 @@ export class CreateConvocationPage implements OnInit {
         observaciones: this.formData.observaciones
       };
 
-      console.log('Enviando payload al servidor:', payload);
+      console.log('Enviando payload:', payload);
 
-      // 4. Llamar al servicio
       this.matchSvc.createMatch(payload).subscribe({
         next: async (res) => {
           await loading.dismiss();
           this.presentToast('Convocatoria creada con éxito', 'success');
-          // Cerramos el modal y pasamos un dato "created: true" para que el dashboard recargue
           this.modalCtrl.dismiss({ created: true });
         },
         error: async (err) => {
           await loading.dismiss();
           console.error('Error creando partido:', err);
-          this.presentToast('Error al guardar el evento. Revisa la consola.', 'danger');
+          this.presentToast('Error al guardar el evento.', 'danger');
         }
       });
 
     } catch (e) {
       await loading.dismiss();
       console.error('Error procesando datos:', e);
-      this.presentToast('Error inesperado al procesar los datos.', 'danger');
+      this.presentToast('Error inesperado.', 'danger');
     }
   }
 

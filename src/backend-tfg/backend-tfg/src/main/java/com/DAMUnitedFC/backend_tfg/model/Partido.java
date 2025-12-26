@@ -19,6 +19,10 @@ public class Partido {
 
     private String rival;
 
+    // ✅ NUEVO CAMPO: Escudo del rival para este partido concreto
+    @Column(name = "escudo_rival_url")
+    private String escudoRivalUrl;
+
     @Column(name = "fecha_hora")
     private LocalDateTime fechaHora;
 
@@ -32,7 +36,7 @@ public class Partido {
 
     private String tipo;
 
-    // --- NUEVOS CAMPOS ---
+    // --- RESULTADOS ---
     @Column(name = "goles_favor")
     private Integer golesFavor = 0;
 
@@ -40,11 +44,11 @@ public class Partido {
     private Integer golesContra = 0;
 
     @Column(name = "estado")
-    private String estado = "PENDIENTE"; // Valores: PENDIENTE, FINALIZADO
+    private String estado = "PENDIENTE";
 
     public Partido() {}
 
-    // Constructor completo actualizado
+    // Constructor actualizado (opcional, por si lo usas en tests o carga inicial)
     public Partido(Long idEquipo, String rival, LocalDateTime fechaHora, String lugar, String tipo) {
         this.idEquipo = idEquipo;
         this.rival = rival;

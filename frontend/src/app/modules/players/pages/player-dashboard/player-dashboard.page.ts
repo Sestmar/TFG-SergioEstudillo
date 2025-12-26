@@ -5,10 +5,7 @@ import { takeUntil, finalize, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http'; 
 import { AlertController } from '@ionic/angular'; 
 
-// Imports de Modelos
 import { User, Player, Team, PlayerStats } from 'src/app/shared/models/models';
-
-// Imports de Servicios
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { UserService } from 'src/app/core/services/user/user.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
@@ -42,7 +39,6 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   };
 
   upcomingConvocations: any[] = []; 
-  
   playerStats: PlayerStats | null = null;
   
   quickActions = [
@@ -99,34 +95,23 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     this.http.get(`http://localhost:8080/api/jugadores/usuario/${userId}/equipo`).pipe(
         catchError(() => of(null))
     ).subscribe((equipo: any) => {
-        
         if (equipo) {
             this.currentTeam = equipo;
+            this.currentPlayer = { usuario: { id: userId } as any } as Player; 
             
-            // Creamos el mock temporal
-            this.currentPlayer = { 
-                usuario: { id: userId } as any 
-            } as Player; 
-            
-            // 1. Cargamos los datos reales del jugador
             this.getFullPlayerData(userId);
 
-            // Solo cargamos los partidos del equipo aquí
             const teamId = equipo.id || equipo.idEquipo;
             this.loadTeamMatches(teamId);
-
         } else {
             this.loading = false;
         }
     });
   }
 
-  // ✅ CORRECCIÓN CRÍTICA AQUÍ
   private getFullPlayerData(userId: number) {
       this.playerService.getAllPlayers().subscribe((res: any) => {
           const players = Array.isArray(res) ? res : (res.data || []);
-          
-          // Buscamos el jugador que coincida con el usuario
           const found = players.find((p: any) => {
              const uId = p.usuario?.id || p.usuario?.idUsuario;
              return uId === userId;
@@ -134,28 +119,17 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
           
           if (found) {
               this.currentPlayer = found;
-              
-              // 🔥 FIX: Capturamos el ID asegurando ambas nomenclaturas (id o idJugador)
               const realPlayerId = (found as any).id || (found as any).idJugador;
-
               console.log("✅ Jugador encontrado. ID Deportivo REAL:", realPlayerId);
               
               if (realPlayerId) {
-                  // Asignamos el ID al objeto local si faltaba
-                  if (!this.currentPlayer!.id) {
-                      this.currentPlayer!.id = realPlayerId;
-                  }
-                  // Llamamos a las estadísticas con el ID seguro
+                  if (!this.currentPlayer!.id) this.currentPlayer!.id = realPlayerId;
                   this.loadPlayerStats(realPlayerId); 
               } else {
                   console.error("❌ Error: El objeto jugador no tiene campo 'id' ni 'idJugador'");
               }
           }
       });
-  }
-
-  private loadDataAfterTeamLoaded() {
-     // Método deprecado por la nueva lógica, se mantiene vacío o se borra
   }
 
   private loadTeamMatches(teamId: number) {
@@ -169,7 +143,6 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
 
               this.stats.upcomingConvocations = this.upcomingConvocations.length;
               this.stats.totalConvocations = matches.length; 
-              
               this.loading = false;
           },
           error: (err) => {
@@ -183,10 +156,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     this.playerService.getPlayerStats(playerId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (stats: PlayerStats) => {
-          console.log("📊 ESTADÍSTICAS RECIBIDAS:", stats); 
-          this.playerStats = stats;
-        },
+        next: (stats: PlayerStats) => this.playerStats = stats,
         error: (err) => console.error('Error cargando stats', err)
       });
   }
@@ -204,25 +174,18 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
         const element = document.getElementById('stats-section');
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else {
-            console.warn("Elemento stats-section no encontrado");
         }
     }, 100);
   }
 
   showMatchDetails(match: any) {
-    // Si es un entrenamiento, seguimos mostrando la alerta simple (o creamos otra página)
     if (match.tipo === 'ENTRENAMIENTO') {
-       this.showTrainingAlert(match); // Mueve tu lógica de alerta aquí si quieres
+       this.showTrainingAlert(match);
        return;
     }
-
-    // Si es Partido, navegamos a la ficha "Pro"
-    // Asumiendo que la ruta es /match-detail/:id
     this.router.navigate(['/match-detail', match.idPartido || match.id]);
   }
 
-  // (Opcional) Mantén la alerta antigua solo para entrenamientos
   async showTrainingAlert(match: any) {
       const alert = await this.alertCtrl.create({
         header: 'Entrenamiento',
@@ -253,18 +216,9 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
       return map[type] || 'medium';
   }
 
-  getPlayerAttendanceStatus(conv: any): string {
-    return 'PENDIENTE'; 
-  }
-
-  getAttendanceStatusColor(status: string): string {
-    return 'primary'; 
-  }
-
-  getAttendanceStatusText(status: string): string {
-    return 'Convocado';
-  }
-
-  confirmAttendance(id: any) { console.log('Confirmar asistencia pendiente de implementar'); }
-  rejectAttendance(id: any) { console.log('Rechazar asistencia pendiente de implementar'); }
+  getPlayerAttendanceStatus(conv: any): string { return 'PENDIENTE'; }
+  getAttendanceStatusColor(status: string): string { return 'primary'; }
+  getAttendanceStatusText(status: string): string { return 'Convocado'; }
+  confirmAttendance(id: any) {}
+  rejectAttendance(id: any) {}
 }
