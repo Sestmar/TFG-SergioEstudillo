@@ -61,7 +61,20 @@ export class TacticsPage implements OnInit {
     }));
   }
 
-  // 2. Cargar datos
+  getBorderColor(posicion: string): string {
+    if (!posicion) return '#94a3b8'; 
+    const pos = posicion.toUpperCase();
+    if (pos.includes('PORTERO')) return '#22c55e'; 
+    if (pos.includes('DEFENSA') || pos.includes('LATERAL') || pos.includes('CENTRAL')) return '#eab308'; 
+    if (pos.includes('MEDIO') || pos.includes('PIVOTE') || pos.includes('INTERIOR')) return '#3b82f6'; 
+    if (pos.includes('DELANTERO') || pos.includes('EXTREMO') || pos.includes('PUNTA')) return '#ef4444'; 
+    return '#94a3b8';
+  }
+
+  getShortName(nombre: string): string {
+      return nombre ? nombre.split(' ')[0] : '';
+  }
+
   loadMatchData() {
     this.matchSvc.getMatchById(this.matchId).subscribe({
       next: (match) => {
@@ -82,7 +95,6 @@ export class TacticsPage implements OnInit {
     });
   }
 
-  // 3. Cargar jugadores y alineación
   loadPlayersAndTactics(teamId: number) {
     this.playerSvc.getAllPlayers().subscribe({
       next: (res: any) => {
@@ -93,6 +105,7 @@ export class TacticsPage implements OnInit {
         });
         
         this.bench = myPlayers;
+        // Importante: llamamos a fetch después de llenar el banquillo
         this.fetchSavedLineup();
       },
       error: (err) => {
@@ -102,14 +115,24 @@ export class TacticsPage implements OnInit {
     });
   }
 
-  // Cargar del Backend
   fetchSavedLineup() {
     this.matchSvc.getLineup(this.matchId).subscribe({
       next: (savedSlots: any) => {
-        if (Array.isArray(savedSlots)) {
+        console.log("📥 Alineación recibida (DTO):", savedSlots);
+
+        if (Array.isArray(savedSlots) && savedSlots.length > 0) {
           savedSlots.forEach((saved: any) => {
-              const playerIdToFind = saved.jugador?.idJugador || saved.jugador?.id;
-              const playerIndex = this.bench.findIndex(p => (p as any).idJugador === playerIdToFind || p.id === playerIdToFind);
+              
+              // 🔥 CORRECCIÓN CLAVE: El DTO plano trae 'idJugador' en la raíz, no dentro de 'jugador'
+              const playerIdToFind = saved.idJugador || saved.jugador?.idJugador || saved.jugador?.id;
+              
+              if (!playerIdToFind) return; // Si no hay ID, saltamos
+
+              // Buscamos al jugador en el banquillo
+              const playerIndex = this.bench.findIndex(p => {
+                  const pId = (p as any).idJugador || p.id;
+                  return String(pId) === String(playerIdToFind);
+              });
               
               if (playerIndex > -1) {
                 const player = this.bench[playerIndex];
@@ -117,29 +140,32 @@ export class TacticsPage implements OnInit {
                 const targetSlot = this.findSlot(targetSlotId);
 
                 if (targetSlot) {
-                  this.bench.splice(playerIndex, 1);
-                  targetSlot.player = player;
+                  console.log(`✅ Moviendo ${player.usuario.nombre} a ${targetSlotId}`);
+                  this.bench.splice(playerIndex, 1); // Sacar del banquillo
+                  targetSlot.player = player;        // Poner en campo
+                } else {
+                  console.warn(`⚠️ Slot ${targetSlotId} no encontrado para jugador ${playerIdToFind}`);
                 }
+              } else {
+                console.warn(`⚠️ Jugador ID ${playerIdToFind} no encontrado en la plantilla cargada.`);
               }
           });
         }
         this.loading = false;
       },
       error: (err) => {
-        console.log(err);
+        console.error("Error cargando alineación:", err);
         this.loading = false; 
       }
     });
   }
 
-  // --- GUARDAR (ACTUALIZADO CON MATCHID) ---
   saveTactics() {
     if (!this.matchId) return;
     this.saving = true;
 
     const allSlots = [...this.forwards, ...this.midfielders, ...this.defenders, ...this.goalkeeper];
     
-    // Crear payload
     const payload = allSlots
       .filter(slot => slot.player !== null) 
       .map(slot => ({
@@ -148,14 +174,13 @@ export class TacticsPage implements OnInit {
         slotId: slot.id 
       }));
 
-    console.log("Enviando alineación (Limpieza + Guardado):", payload);
+    console.log("📤 Guardando táctica:", payload);
 
-    // ✅ PASAMOS EL ID EN LA LLAMADA
     this.matchSvc.saveLineup(this.matchId, payload).subscribe({
         next: async () => {
           this.saving = false;
           const toast = await this.toastCtrl.create({
-            message: '¡Alineación actualizada correctamente!', duration: 2000, color: 'success', position: 'top'
+            message: '¡Alineación guardada correctamente! 💾', duration: 2000, color: 'success', position: 'top'
           });
           toast.present();
         },
@@ -170,7 +195,6 @@ export class TacticsPage implements OnInit {
       });
   }
 
-  // --- DRAG & DROP ---
   drop(event: CdkDragDrop<any>) {
     if (event.previousContainer === event.container) return;
 

@@ -42,12 +42,10 @@ export class AuthService {
   }
 
   private initializeAuth(): void {
-    // ✅ CORREGIDO: Usamos el método específico para recuperar el token limpio
     const token = this.storageService.getToken(); 
     
     if (token && !this.isTokenExpired(token)) {
       this.setAuth(token);
-      // Intentamos recuperar los datos completos del usuario al recargar
       this.getCurrentUser().subscribe({
         error: () => {
            console.warn('Sesión inválida al inicio, cerrando sesión.');
@@ -55,20 +53,16 @@ export class AuthService {
         }
       });
     } else {
-      // ✅ CORREGIDO
       this.storageService.removeToken();
     }
   }
 
-  /**
-   * LOGIN
-   */
+  // LOGIN
   login(credentials: UserLoginDto): Observable<User> {
     return this.apiService.post<AuthResponse>('/auth/login', credentials).pipe(
       tap(response => {
         this.setAuth(response.token, response.refreshToken);
       }),
-      // Una vez tenemos token, pedimos los datos del usuario
       switchMap(() => this.getCurrentUser()),
       catchError(error => {
         console.error('Login error:', error);
@@ -87,9 +81,8 @@ export class AuthService {
   }
 
   logout(): void {
-    // ✅ CORREGIDO: Limpieza específica
     this.storageService.removeToken();
-    this.storageService.remove(jwtConfig.refreshTokenKey); // El refresh sí usa el método genérico si lo guardaste así
+    this.storageService.remove(jwtConfig.refreshTokenKey);
     
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
@@ -100,7 +93,6 @@ export class AuthService {
   }
   
   private setAuth(token: string, refreshToken?: string): void {
-    // ✅ CRÍTICO: Usar setToken para guardar sin comillas
     this.storageService.setToken(token);
     
     if (refreshToken) {
@@ -140,11 +132,25 @@ export class AuthService {
   }
 
   getCurrentUser(): Observable<User> {
-    // ✅ CORREGIDO: La ruta debe coincidir con tu UsuarioController ("/api/auth/me")
     return this.apiService.get<User>('/auth/me').pipe(
       tap(user => {
         this.currentUserSubject.next(user);
         this.isAuthenticatedSubject.next(true);
+      })
+    );
+  }
+
+  // 🔥 NUEVO MÉTODO AÑADIDO: Actualizar Usuario (Fundamental para la foto)
+  updateUser(id: number, data: Partial<User>): Observable<User> {
+    // Asumimos que tienes un endpoint PUT o PATCH para actualizar usuarios
+    // Si tu endpoint es '/usuarios/{id}', ajústalo aquí.
+    return this.apiService.put<User>(`/usuarios/${id}`, data).pipe(
+      tap(updatedUser => {
+        // Actualizamos el usuario en memoria para que la foto cambie al instante
+        const current = this.currentUserSubject.value;
+        if (current && current.idUsuario === id) {
+             this.currentUserSubject.next({ ...current, ...updatedUser });
+        }
       })
     );
   }
@@ -166,7 +172,6 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    // ✅ CORREGIDO
     return this.storageService.getToken();
   }
 

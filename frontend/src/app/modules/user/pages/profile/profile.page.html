@@ -24,12 +24,21 @@
   <div class="content-wrapper" *ngIf="!loading && currentUser">
     
     <div class="profile-header">
-      <div class="avatar-wrapper">
-        <img [src]="editForm.fotoUrl || currentUser.fotoPerfil || 'https://ui-avatars.com/api/?name=' + currentUser.nombre + '&background=random&size=128'" alt="Avatar">
+      
+      <div class="avatar-wrapper" (click)="fileInput.click()">
+        <img *ngIf="editForm.fotoUrl" [src]="editForm.fotoUrl" class="profile-img" alt="Avatar">
+        
+        <div *ngIf="!editForm.fotoUrl" class="initials-placeholder">
+           {{ currentUser.nombre?.charAt(0) || 'U' }}
+        </div>
+
         <div class="camera-btn">
           <ion-icon name="camera"></ion-icon>
         </div>
       </div>
+
+      <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+
       <h2>{{ currentUser.nombre }} {{ currentUser.apellidos }}</h2>
       <p>{{ currentUser.email }}</p>
     </div>
@@ -82,8 +91,8 @@
         </ion-item>
         
         <ion-item class="input-item">
-          <ion-label position="stacked">URL Foto Perfil</ion-label>
-          <ion-input [(ngModel)]="editForm.fotoUrl" placeholder="http://..."></ion-input>
+          <ion-label position="stacked">URL Foto (Opcional)</ion-label>
+          <ion-input [(ngModel)]="editForm.fotoUrl" placeholder="http://..." readonly></ion-input>
           <ion-icon name="image-outline" slot="end" class="input-icon"></ion-icon>
         </ion-item>
 

@@ -31,6 +31,22 @@ public class AlineacionController {
     @Autowired
     private JugadorRepository jugadorRepo;
 
+    // Helper para evitar nulos
+    private Integer safeInt(Object value) {
+        if (value == null) return null;
+        if (value instanceof Integer) return (Integer) value;
+        if (value instanceof Long) return ((Long) value).intValue();
+        if (value instanceof String) {
+            try { return Integer.parseInt((String) value); } catch (NumberFormatException e) { return 0; }
+        }
+        return 0;
+    }
+
+    private Integer safeInt(Object value, Integer defaultValue) {
+        Integer res = safeInt(value);
+        return res != null ? res : defaultValue;
+    }
+
     @GetMapping("/partido/{idPartido}")
     public ResponseEntity<List<AlineacionResponseDto>> getAlineacion(@PathVariable Long idPartido) {
         List<Alineacion> alineaciones = alineacionRepo.findByPartidoIdPartido(idPartido);
@@ -55,15 +71,15 @@ public class AlineacionController {
                 }
             }
 
+            // Normalizamos BENCH_ID a BENCH para el frontend si es necesario, o lo dejamos tal cual
             dto.setSlotId(a.getSlotId());
+
             dto.setEsTitular(a.getEsTitular());
             dto.setGoles(a.getGoles());
             dto.setAsistencias(a.getAsistencias());
             dto.setMinutosJugados(a.getMinutosJugados());
             dto.setTarjetaAmarilla(a.getTarjetaAmarilla());
             dto.setTarjetaRoja(a.getTarjetaRoja());
-
-            // 🔥 MAPEO DE SUSTITUCIONES
             dto.setMinutoEntrada(a.getMinutoEntrada());
             dto.setMinutoSalida(a.getMinutoSalida());
 
@@ -82,52 +98,36 @@ public class AlineacionController {
 
             if (fichas == null || fichas.isEmpty()) {
                 response.put("success", true);
-                response.put("mensaje", "Pizarra limpiada correctamente");
                 return ResponseEntity.ok(response);
             }
 
-            Partido p = partidoRepo.findById(idPartido)
-                    .orElseThrow(() -> new RuntimeException("Partido no encontrado"));
+            Partido p = partidoRepo.findById(idPartido).orElseThrow(() -> new RuntimeException("Partido no encontrado"));
 
             for (AlineacionDto ficha : fichas) {
                 if (ficha.getIdJugador() == null) continue;
-
-                Jugador j = jugadorRepo.findById(ficha.getIdJugador())
-                        .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+                Jugador j = jugadorRepo.findById(ficha.getIdJugador()).orElseThrow();
 
                 Alineacion alineacion = new Alineacion();
                 alineacion.setPartido(p);
                 alineacion.setJugador(j);
-
-                if (j.getEquipoPrincipal() != null) {
-                    alineacion.setIdEquipo(j.getEquipoPrincipal().getIdEquipo().longValue());
-                } else {
-                    alineacion.setIdEquipo(p.getIdEquipo());
-                }
+                if (j.getEquipoPrincipal() != null) alineacion.setIdEquipo(j.getEquipoPrincipal().getIdEquipo().longValue());
+                else alineacion.setIdEquipo(p.getIdEquipo());
 
                 alineacion.setSlotId(ficha.getSlotId());
                 alineacion.setEsTitular(true);
-
-                // Inicializar
                 alineacion.setGoles(0);
                 alineacion.setAsistencias(0);
                 alineacion.setMinutosJugados(0);
                 alineacion.setTarjetaAmarilla(false);
                 alineacion.setTarjetaRoja(false);
-                alineacion.setMinutoEntrada(0); // Titulares entran en min 0
+                alineacion.setMinutoEntrada(0);
 
                 alineacionRepo.save(alineacion);
             }
-
             response.put("success", true);
-            response.put("mensaje", "Alineación guardada correctamente");
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("error", "Error interno: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -137,12 +137,10 @@ public class AlineacionController {
         Map<String, Object> response = new HashMap<>();
         try {
             Long idPartido = Long.valueOf(payload.get("idPartido").toString());
-            Integer golesFavor = (Integer) payload.get("golesFavor");
-            Integer golesContra = (Integer) payload.get("golesContra");
+            Integer golesFavor = safeInt(payload.get("golesFavor"), 0);
+            Integer golesContra = safeInt(payload.get("golesContra"), 0);
 
-            Partido p = partidoRepo.findById(idPartido)
-                    .orElseThrow(() -> new RuntimeException("Partido no encontrado"));
-
+            Partido p = partidoRepo.findById(idPartido).orElseThrow();
             p.setGolesFavor(golesFavor);
             p.setGolesContra(golesContra);
             p.setEstado("FINALIZADO");
@@ -152,49 +150,50 @@ public class AlineacionController {
 
             if (stats != null) {
                 for (Map<String, Object> stat : stats) {
-                    Integer idJugador = (Integer) stat.get("idJugador");
+                    Integer idJugador = safeInt(stat.get("idJugador"));
+
                     Optional<Alineacion> fichaOpt = alineacionRepo.findFichaExacta(idPartido, idJugador);
 
                     Alineacion alineacion;
                     if (fichaOpt.isPresent()) {
                         alineacion = fichaOpt.get();
                     } else {
+                        // NUEVO REGISTRO (SUPLENTE)
                         alineacion = new Alineacion();
                         alineacion.setPartido(p);
-                        Jugador j = jugadorRepo.findById(idJugador)
-                                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+                        Jugador j = jugadorRepo.findById(idJugador).orElseThrow();
                         alineacion.setJugador(j);
                         alineacion.setIdEquipo(p.getIdEquipo());
                         alineacion.setEsTitular(false);
-                        alineacion.setSlotId("BENCH");
+
+                        // 🔥 SOLUCIÓN AL ERROR UNIQUE CONSTRAINT:
+                        // Asignamos un Slot ID único para cada suplente (ej: BENCH_123)
+                        // Así nunca chocan en la base de datos.
+                        alineacion.setSlotId("BENCH_" + idJugador);
                     }
 
-                    alineacion.setGoles((Integer) stat.get("goles"));
-                    alineacion.setAsistencias((Integer) stat.get("asistencias"));
-                    alineacion.setMinutosJugados((Integer) stat.get("minutos"));
-                    alineacion.setTarjetaAmarilla((Boolean) stat.get("amarilla"));
-                    alineacion.setTarjetaRoja((Boolean) stat.get("roja"));
+                    alineacion.setGoles(safeInt(stat.get("goles"), 0));
+                    alineacion.setAsistencias(safeInt(stat.get("asistencias"), 0));
+                    alineacion.setMinutosJugados(safeInt(stat.get("minutos"), 0));
 
-                    // 🔥 GUARDAR SUSTITUCIONES
-                    Object minEntrada = stat.get("minutoEntrada");
-                    Object minSalida = stat.get("minutoSalida");
+                    Object am = stat.get("amarilla");
+                    Object ro = stat.get("roja");
+                    alineacion.setTarjetaAmarilla(am != null && (Boolean) am);
+                    alineacion.setTarjetaRoja(ro != null && (Boolean) ro);
 
-                    alineacion.setMinutoEntrada(minEntrada != null ? (Integer) minEntrada : 0);
-                    alineacion.setMinutoSalida(minSalida != null ? (Integer) minSalida : null);
+                    alineacion.setMinutoEntrada(safeInt(stat.get("minutoEntrada")));
+                    alineacion.setMinutoSalida(safeInt(stat.get("minutoSalida")));
 
                     alineacionRepo.save(alineacion);
                 }
             }
 
             response.put("success", true);
-            response.put("mensaje", "Acta cerrada y estadísticas guardadas");
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             e.printStackTrace();
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(Map.of("error", "Error cerrando acta: " + e.getMessage()));
         }
     }
 }

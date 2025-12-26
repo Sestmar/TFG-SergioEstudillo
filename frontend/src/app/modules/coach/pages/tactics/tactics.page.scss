@@ -15,7 +15,6 @@
   position: relative;
   overflow: hidden;
 
-  // Césped realista
   background: 
     repeating-linear-gradient(
       180deg,
@@ -27,24 +26,18 @@
 
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly; // Reparte las líneas
+  justify-content: space-evenly; 
   padding: 10px 0;
   box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
 }
 
-// Decoración del campo
 .half-way-line {
-  position: absolute;
-  top: 50%; width: 100%; height: 2px;
-  background: rgba(255,255,255,0.5);
-  transform: translateY(-50%);
+  position: absolute; top: 50%; width: 100%; height: 2px;
+  background: rgba(255,255,255,0.5); transform: translateY(-50%);
 }
 .center-circle {
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 100px; height: 100px;
-  border: 2px solid rgba(255,255,255,0.5);
-  border-radius: 50%;
+  position: absolute; top: 50%; left: 50%; width: 100px; height: 100px;
+  border: 2px solid rgba(255,255,255,0.5); border-radius: 50%;
   transform: translate(-50%, -50%);
 }
 .penalty-box {
@@ -57,55 +50,59 @@
 
 // --- ESTRUCTURA GRID ---
 .tactical-line {
-  display: flex;
-  justify-content: center;
-  gap: 2%;
-  height: 60px;
-  z-index: 10;
+  display: flex; justify-content: center; gap: 2%; height: 60px; z-index: 10;
 }
-
 .slot-container {
-  width: 18%; // 5 huecos = 90% ancho
-  display: flex; justify-content: center; align-items: center;
+  width: 18%; display: flex; justify-content: center; align-items: center;
 }
-
 .player-slot {
-  width: 100%; height: 100%;
-  display: flex; justify-content: center; align-items: center;
-  // Sin bordes ni fondos = Invisible
+  width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
 }
 
-// --- FICHAS ---
+// --- FICHAS DE JUGADOR ---
 .player-token {
-  width: 48px; height: 48px;
-  background: #f8f9fa;
-  border: 2px solid #ccc;
+  width: 50px; height: 50px;
+  background: white;
+  border: 3px solid #999;
   border-radius: 50%;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
   cursor: grab;
   z-index: 20;
+  position: relative; // Necesario para posicionar el nombre
 
   &.on-pitch {
-    background: #fff;
-    border: 3px solid #ffce00;
-    transform: scale(1.1);
+    width: 60px; height: 60px; 
+    transform: scale(1.05);
   }
-  
-  &.gk-token { border-color: #00bcd4; background: #e0f7fa; }
 
-  .dorsal { font-weight: 900; font-size: 1.1rem; color: #333; }
+  .token-img {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .token-initials {
+    font-weight: 900; font-size: 1.2rem; color: #333;
+  }
+
+  // ESTILO POR DEFECTO (CÉSPED)
   .name {
-    position: absolute; bottom: -18px;
-    font-size: 0.65rem; color: white;
-    text-shadow: 0 1px 2px black;
+    position: absolute; 
+    bottom: -20px;
+    font-size: 0.7rem; 
+    color: white;
+    text-shadow: 0 1px 3px black;
     white-space: nowrap;
-    background: rgba(0,0,0,0.6);
-    padding: 1px 5px; border-radius: 4px;
+    background: rgba(0,0,0,0.7);
+    padding: 2px 6px; border-radius: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    pointer-events: none;
   }
 }
 
-// --- BANQUILLO ---
+// --- BANQUILLO (SOLUCIÓN NOMBRES) ---
 .bench-container {
   background: white;
   height: 25vh;
@@ -121,22 +118,42 @@
 
 .bench-list {
   flex-grow: 1;
-  display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start;
-  padding: 5px; overflow-y: auto;
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 15px;
+  align-content: flex-start;
   
-  .player-token .name {
-    position: static; color: #333; text-shadow: none; background: none; font-size: 0.6rem;
+  // 🔥 CLAVE 1: Padding bottom extra para que el scroll no corte los nombres de la última fila
+  padding: 10px 5px 40px 5px; 
+  overflow-y: auto;
+
+  .player-token {
+      // 🔥 CLAVE 2: Margen inferior para que el nombre no se monte sobre la ficha de abajo
+      margin-bottom: 25px; 
+      
+      // 🔥 CLAVE 3: Estilo forzado para banquillo
+      .name {
+          display: block !important;
+          color: #111 !important;       // Negro
+          background: none !important;  // Sin fondo
+          text-shadow: none !important; // Sin sombra
+          font-weight: 800;
+          bottom: -22px;                // Un poco más abajo
+          font-size: 0.65rem;
+          width: 140%;                  // Más ancho para nombres largos
+          text-align: center;
+      }
   }
 }
 
 // --- DRAG PREVIEW ---
 .cdk-drag-preview {
-  width: 55px; height: 55px;
+  width: 60px; height: 60px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.9);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: bold; font-size: 1.2rem;
-  .name { display: none; }
+  border: 3px solid white;
+  opacity: 0.9;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+  background: #ccc; 
+  .name { display: none; } 
 }
 .token-placeholder { opacity: 0; }

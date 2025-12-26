@@ -13,9 +13,27 @@
   <div class="profile-container">
     
     <div class="profile-header">
-      <div class="avatar-circle">
-        {{ coachData.usuario.nombre?.charAt(0) || 'C' }}
+      
+      <div class="avatar-wrapper" (click)="fileInput.click()">
+        <img *ngIf="coachData.usuario.fotoUrl" [src]="coachData.usuario.fotoUrl" class="profile-img">
+        
+        <div *ngIf="!coachData.usuario.fotoUrl" class="initials">
+          {{ coachData.usuario.nombre?.charAt(0) || 'C' }}
+        </div>
+
+        <div class="camera-badge">
+          <ion-icon name="camera"></ion-icon>
+        </div>
       </div>
+
+      <input 
+        #fileInput 
+        type="file" 
+        accept="image/*" 
+        (change)="onFileSelected($event)" 
+        style="display: none;"
+      >
+
       <h2>{{ coachData.usuario.nombre }} {{ coachData.usuario.apellidos }}</h2>
       <p>{{ coachData.usuario.email }}</p>
     </div>

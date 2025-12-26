@@ -35,11 +35,24 @@
       <div class="tactical-line">
         <div class="slot-container" *ngFor="let slot of forwards">
           <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" (cdkDropListDropped)="drop($event)" class="player-slot">
-            <div class="player-token on-pitch" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
-              <span class="dorsal">{{ slot.player.dorsal }}</span>
-              <span class="name">{{ slot.player.usuario.nombre }}</span>
+            
+            <div class="player-token on-pitch" 
+                 *ngIf="slot.player" 
+                 cdkDrag 
+                 [cdkDragData]="slot.player"
+                 [style.border-color]="getBorderColor(slot.player.posicion)">
+              
+              <img *ngIf="slot.player.usuario.fotoUrl" [src]="slot.player.usuario.fotoUrl" class="token-img">
+              
+              <div *ngIf="!slot.player.usuario.fotoUrl" class="token-initials">
+                 {{ slot.player.dorsal }}
+              </div>
+
+              <span class="name">{{ getShortName(slot.player.usuario.nombre) }}</span>
+              
               <div *cdkDragPlaceholder class="token-placeholder"></div>
             </div>
+
           </div>
         </div>
       </div>
@@ -47,9 +60,16 @@
       <div class="tactical-line">
         <div class="slot-container" *ngFor="let slot of midfielders">
           <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" (cdkDropListDropped)="drop($event)" class="player-slot">
-            <div class="player-token on-pitch" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
-              <span class="dorsal">{{ slot.player.dorsal }}</span>
-              <span class="name">{{ slot.player.usuario.nombre }}</span>
+            <div class="player-token on-pitch" 
+                 *ngIf="slot.player" 
+                 cdkDrag 
+                 [cdkDragData]="slot.player"
+                 [style.border-color]="getBorderColor(slot.player.posicion)">
+              
+              <img *ngIf="slot.player.usuario.fotoUrl" [src]="slot.player.usuario.fotoUrl" class="token-img">
+              <div *ngIf="!slot.player.usuario.fotoUrl" class="token-initials">{{ slot.player.dorsal }}</div>
+              
+              <span class="name">{{ getShortName(slot.player.usuario.nombre) }}</span>
               <div *cdkDragPlaceholder class="token-placeholder"></div>
             </div>
           </div>
@@ -59,9 +79,16 @@
       <div class="tactical-line">
         <div class="slot-container" *ngFor="let slot of defenders">
           <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" (cdkDropListDropped)="drop($event)" class="player-slot">
-            <div class="player-token on-pitch" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
-              <span class="dorsal">{{ slot.player.dorsal }}</span>
-              <span class="name">{{ slot.player.usuario.nombre }}</span>
+            <div class="player-token on-pitch" 
+                 *ngIf="slot.player" 
+                 cdkDrag 
+                 [cdkDragData]="slot.player"
+                 [style.border-color]="getBorderColor(slot.player.posicion)">
+                 
+              <img *ngIf="slot.player.usuario.fotoUrl" [src]="slot.player.usuario.fotoUrl" class="token-img">
+              <div *ngIf="!slot.player.usuario.fotoUrl" class="token-initials">{{ slot.player.dorsal }}</div>
+
+              <span class="name">{{ getShortName(slot.player.usuario.nombre) }}</span>
               <div *cdkDragPlaceholder class="token-placeholder"></div>
             </div>
           </div>
@@ -71,9 +98,16 @@
       <div class="tactical-line">
         <div class="slot-container" *ngFor="let slot of goalkeeper">
           <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" (cdkDropListDropped)="drop($event)" class="player-slot">
-            <div class="player-token on-pitch gk-token" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
-              <span class="dorsal">{{ slot.player.dorsal }}</span>
-              <span class="name">{{ slot.player.usuario.nombre }}</span>
+            <div class="player-token on-pitch" 
+                 *ngIf="slot.player" 
+                 cdkDrag 
+                 [cdkDragData]="slot.player"
+                 [style.border-color]="getBorderColor(slot.player.posicion)">
+              
+              <img *ngIf="slot.player.usuario.fotoUrl" [src]="slot.player.usuario.fotoUrl" class="token-img">
+              <div *ngIf="!slot.player.usuario.fotoUrl" class="token-initials">{{ slot.player.dorsal }}</div>
+
+              <span class="name">{{ getShortName(slot.player.usuario.nombre) }}</span>
               <div *cdkDragPlaceholder class="token-placeholder"></div>
             </div>
           </div>
@@ -85,11 +119,19 @@
     <div class="bench-container">
       <h3>PLANTILLA DISPONIBLE</h3>
       <div cdkDropList id="benchList" [cdkDropListData]="bench" (cdkDropListDropped)="drop($event)" class="bench-list">
-        <div class="player-token" *ngFor="let p of bench" cdkDrag [cdkDragData]="p">
-          <span class="dorsal">{{ p.dorsal }}</span>
-          <span class="name">{{ p.usuario.nombre }}</span>
+        
+        <div class="player-token" 
+             *ngFor="let p of bench" 
+             cdkDrag 
+             [cdkDragData]="p"
+             [style.border-color]="getBorderColor(p.posicion)">
+          
+          <img *ngIf="p.usuario.fotoUrl" [src]="p.usuario.fotoUrl" class="token-img">
+          <div *ngIf="!p.usuario.fotoUrl" class="token-initials">{{ p.dorsal }}</div>
+          
           <div *cdkDragPlaceholder class="token-placeholder"></div>
         </div>
+
       </div>
     </div>
 

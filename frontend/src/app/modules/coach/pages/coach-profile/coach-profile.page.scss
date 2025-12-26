@@ -15,16 +15,48 @@
   margin: -20px -20px 30px -20px; // Pegado al header
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 
-  .avatar-circle {
-    width: 80px; height: 80px;
-    background: #0f766e; // Color Entrenador
-    color: white;
-    border-radius: 50%;
+  // 🔥 ESTILOS AVATAR ACTUALIZADOS
+  .avatar-wrapper {
+    width: 90px; height: 90px;
     margin: 0 auto 15px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 2rem; font-weight: bold;
+    position: relative;
+    cursor: pointer;
+    
+    // Contenedor base (círculo)
+    background: #0f766e;
+    border-radius: 50%;
     box-shadow: 0 0 0 4px #ccfbf1;
+    display: flex; align-items: center; justify-content: center;
+
+    // Si hay imagen
+    .profile-img {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid white;
+    }
+
+    // Si son iniciales
+    .initials {
+      color: white;
+      font-size: 2.2rem; 
+      font-weight: bold;
+    }
+
+    // Icono de cámara flotante
+    .camera-badge {
+      position: absolute;
+      bottom: 0; right: 0;
+      background: #0f766e;
+      color: white;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid white;
+      font-size: 0.9rem;
+    }
   }
+
   h2 { margin: 0; font-size: 1.4rem; font-weight: 700; color: #1e293b; }
   p { margin: 5px 0; color: #64748b; }
 }
@@ -32,16 +64,16 @@
 .form-card {
   
   .custom-input {
-    --background: white; // Fondo blanco para input
-    --color: #1e293b;    // Texto oscuro (gris azulado)
-    --placeholder-color: #94a3b8; // Placeholder visible
+    --background: white; 
+    --color: #1e293b;    
+    --placeholder-color: #94a3b8;
     
     border-radius: 12px;
     margin-bottom: 15px;
     border: 1px solid #e2e8f0;
     
     ion-label { 
-      color: #64748b !important; // Etiqueta gris
+      color: #64748b !important; 
       font-weight: 700; 
       font-size: 0.8rem;
       text-transform: uppercase;
@@ -50,7 +82,7 @@
     }
     
     ion-icon { 
-      color: #0f766e; // Icono Teal
+      color: #0f766e; 
       margin-top: 25px; 
       margin-right: 15px; 
     }

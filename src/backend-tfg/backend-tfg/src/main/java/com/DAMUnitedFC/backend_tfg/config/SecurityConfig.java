@@ -38,8 +38,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 1. ENDPOINTS PÚBLICOS (Sin Token)
                         .requestMatchers("/api/auth/**").permitAll()   // Login y Registro
-                        .requestMatchers("/api/media/**").permitAll()  // Subida de archivos
-                        .requestMatchers("/uploads/**").permitAll()    // Ver fotos
+
+                        // 🔥 NUEVO: Permitir acceso total al controlador de Archivos (FileController)
+                        // Esto permite subir (POST) y ver fotos (GET) sin token
+                        .requestMatchers("/api/uploads/**").permitAll()
+
+                        // Mantengo estos por compatibilidad con tu código anterior, por si acaso
+                        .requestMatchers("/api/media/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
 
                         // 🔥 ZONA FAN (PÚBLICA)
                         .requestMatchers("/api/public/**").permitAll()

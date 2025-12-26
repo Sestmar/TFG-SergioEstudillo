@@ -3,6 +3,7 @@ import { Location } from '@angular/common';
 import { ToastController, LoadingController } from '@ionic/angular';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
+import { UploadService } from 'src/app/core/services/common/upload.service'; // ✅ Importar servicio de subida
 import { Player } from 'src/app/shared/models/models';
 
 @Component({
@@ -25,6 +26,7 @@ export class ProfilePage implements OnInit {
   constructor(
     private authSvc: AuthService,
     private playerSvc: PlayerService,
+    private uploadSvc: UploadService, // ✅ Inyectar servicio
     private location: Location,
     private toastCtrl: ToastController,
     private loadingCtrl: LoadingController
@@ -42,6 +44,7 @@ export class ProfilePage implements OnInit {
         const u = user as any;
         const userId = u.id || u.idUsuario;
         
+        // Cargar datos del jugador asociados al usuario
         this.playerSvc.getAllPlayers().subscribe({
           next: (res: any) => {
             const list = Array.isArray(res) ? res : (res.data || []);
@@ -55,7 +58,8 @@ export class ProfilePage implements OnInit {
               const raw = myPlayer as any;
               this.editForm.telefono = raw.telefonoContacto || '';
               this.editForm.direccion = raw.direccion || '';
-              const userFoto = (myPlayer.usuario as any)?.fotoPerfil || (myPlayer.usuario as any)?.fotoUrl;
+              // Prioridad: Foto del usuario > Foto en datos del jugador > cadena vacía
+              const userFoto = (myPlayer.usuario as any)?.fotoPerfil || (myPlayer.usuario as any)?.fotoUrl || this.currentUser.fotoUrl;
               this.editForm.fotoUrl = userFoto || raw.fotoUrl || '';
             }
             this.loading = false;
@@ -69,7 +73,57 @@ export class ProfilePage implements OnInit {
     });
   }
 
-  // ✅ HELPER VITAL PARA EL HTML
+  // ✅ NUEVA LÓGICA DE SUBIDA DE FOTO
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (file) {
+      this.uploadPhoto(file);
+    }
+  }
+
+  async uploadPhoto(file: File) {
+    const loading = await this.loadingCtrl.create({ message: 'Subiendo foto...' });
+    await loading.present();
+
+    this.uploadSvc.uploadImage(file).subscribe({
+      next: (res: any) => {
+        const nuevaUrl = res.url;
+        // 1. Actualizar visualmente al instante
+        this.editForm.fotoUrl = nuevaUrl;
+        if (this.currentUser) {
+            this.currentUser.fotoUrl = nuevaUrl; // Actualizar objeto local usuario
+            this.currentUser.fotoPerfil = nuevaUrl; // Por si acaso usas este campo
+        }
+        
+        // 2. Guardar la URL en la base de datos (Entidad Usuario)
+        this.updateUserPhoto(nuevaUrl, loading);
+      },
+      error: async (err) => {
+        console.error(err);
+        await loading.dismiss();
+        this.showToast('Error al subir la imagen', 'danger');
+      }
+    });
+  }
+
+  updateUserPhoto(url: string, loading: HTMLIonLoadingElement) {
+    const userId = this.currentUser.id || this.currentUser.idUsuario;
+    
+    // Usamos el método updateUser que añadiste al AuthService
+    this.authSvc.updateUser(userId, { fotoUrl: url }).subscribe({
+      next: async () => {
+        await loading.dismiss();
+        this.showToast('Foto de perfil actualizada 📸', 'success');
+      },
+      error: async (err) => {
+        await loading.dismiss();
+        console.error("Error guardando URL en usuario", err);
+        this.showToast('Error al guardar la foto en el perfil', 'warning');
+      }
+    });
+  }
+
+  // Helper para mostrar nombre del equipo
   getTeamNameDisplay(): string {
     if (!this.playerData) return 'Cargando...';
     
@@ -80,7 +134,7 @@ export class ProfilePage implements OnInit {
         return team.nombre + (team.categoria ? ` (${team.categoria.nombre})` : '');
     }
     
-    if (team === 23) return 'Primer Equipo (Senior)';
+    if (team === 23) return 'Primer Equipo (Senior)'; // Ejemplo hardcoded que tenías
 
     return 'Sin Equipo Asignado';
   }
@@ -94,6 +148,9 @@ export class ProfilePage implements OnInit {
         teamToSend = teamToSend.id || teamToSend.idEquipo;
     }
 
+    // Nota: fotoUrl aquí se refiere a la foto en la tabla 'jugador', 
+    // pero idealmente deberíamos usar la de la tabla 'usuario' que actualizamos arriba.
+    // Aun así, lo enviamos por consistencia.
     return {
       idUsuario: rawUser.id || rawUser.idUsuario, 
       posicion: rawPlayer.posicionPrimaria || rawPlayer.posicion, 
@@ -103,7 +160,8 @@ export class ProfilePage implements OnInit {
       observaciones: rawPlayer.observaciones,
       telefonoContacto: form.telefono,
       direccion: form.direccion,
-      // Fechas limpias
+      fotoUrl: form.fotoUrl, // Enviamos la URL también al registro de jugador si tu backend lo soporta
+      
       fechaNacimiento: rawPlayer.fechaNacimiento ? new Date(rawPlayer.fechaNacimiento).toISOString().split('T')[0] : null,
       fechaAlta: rawPlayer.fechaAlta ? new Date(rawPlayer.fechaAlta).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       fechaBaja: rawPlayer.fechaBaja ? new Date(rawPlayer.fechaBaja).toISOString().split('T')[0] : null,
