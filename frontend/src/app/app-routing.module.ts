@@ -90,6 +90,11 @@ const routes: Routes = [
     loadChildren: () => import('./modules/coach/pages/coach-profile/coach-profile.module').then( m => m.CoachProfilePageModule)
   },
 
+  {
+  path: 'calendar',
+  loadChildren: () => import('./modules/calendar/calendar.module').then( m => m.CalendarPageModule)
+},
+
   // COMODÍN (Siempre al final)
   { path: '**', redirectTo: 'landing' }
 ];

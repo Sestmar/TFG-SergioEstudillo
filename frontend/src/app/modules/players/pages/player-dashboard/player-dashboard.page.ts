@@ -41,9 +41,10 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   upcomingConvocations: any[] = []; 
   playerStats: PlayerStats | null = null;
   
-  // Acciones rápidas
+  // 🔥 ACCIONES RÁPIDAS CORREGIDAS
   quickActions = [
-    { id: 'convocations', title: 'Convocatorias', icon: 'calendar', color: 'primary' },
+    // El ID 'calendar' coincidirá con el switch en navigateTo
+    { id: 'calendar', title: 'Calendario', icon: 'calendar', color: 'primary' },
     { id: 'team', title: 'Mi Equipo', icon: 'shield-checkmark', color: 'secondary' },
     { id: 'profile', title: 'Mi Perfil', icon: 'person', color: 'tertiary' },
     { id: 'stats', title: 'Estadísticas', icon: 'stats-chart', color: 'success' }
@@ -78,7 +79,6 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     this.loading = true;
     this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe({
       next: (user) => {
-        // Cast seguro a any para leer propiedades dinámicas
         const u = user as any;
         if (u && (u.id || u.idUsuario)) {
           const userId = u.id || u.idUsuario; 
@@ -101,12 +101,10 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
         if (equipo) {
             this.currentTeam = equipo;
             
-            // Mock temporal para evitar errores de renderizado
             this.currentPlayer = { 
                 usuario: { id: userId } as any 
             } as Player; 
             
-            // Cargar datos completos
             this.getFullPlayerData(userId);
             
             const teamId = equipo.id || equipo.idEquipo;
@@ -178,27 +176,30 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
       });
   }
 
-  // 🔥 NAVEGACIÓN CORREGIDA
+  // 🔥 NAVEGACIÓN BLINDADA
   navigateTo(actionOrRoute: any) {
     console.log("Navegando a:", actionOrRoute);
 
-    // 1. Caso: Llamada directa desde HTML con string
+    // 1. Caso String directo (desde HTML)
     if (typeof actionOrRoute === 'string') {
         if (actionOrRoute === '/profile') {
-             // Navegación directa sin ID, ya que el perfil carga al usuario logueado
-             this.router.navigate(['/profile']);
+             this.goToProfile();
+        } else if (actionOrRoute === '/convocations') {
+             // Redirección de compatibilidad al calendario
+             this.router.navigate(['/calendar']);
         } else {
              this.router.navigate([actionOrRoute]);
         }
         return;
     }
 
-    // 2. Caso: Llamada desde objeto quickActions
+    // 2. Caso Objeto QuickAction
     const actionId = actionOrRoute.id;
 
     switch (actionId) {
-        case 'convocations':
-            this.router.navigate(['/convocations']);
+        case 'calendar':      // Caso nuevo
+        case 'convocations':  // Caso antiguo (por si acaso)
+            this.router.navigate(['/calendar']);
             break;
             
         case 'team':
@@ -206,13 +207,21 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
             break;
             
         case 'profile':
-            // Navegación directa a /profile
-            this.router.navigate(['/profile']);
+            this.goToProfile();
             break;
             
         case 'stats':
             this.scrollToStats();
             break;
+    }
+  }
+
+  private goToProfile() {
+    if (this.currentPlayer && this.currentPlayer.usuario) {
+        // Navegación genérica al perfil, el componente profile ya carga el usuario actual
+        this.router.navigate(['/profile']);
+    } else {
+        console.warn("⚠️ Aún no se ha cargado el jugador.");
     }
   }
 
@@ -245,7 +254,6 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
       await alert.present();
   }
 
-  // Helpers
   getPlayerPosition(): string {
     const player: any = this.currentPlayer;
     return player?.posicion || 'Sin Posición';

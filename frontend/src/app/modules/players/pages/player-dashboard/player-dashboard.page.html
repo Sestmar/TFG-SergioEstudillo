@@ -15,7 +15,6 @@
           </div>
           
           <div class="profile-pic-wrapper" (click)="navigateTo('/profile')">
-            
             <img *ngIf="user.fotoPerfil || user.fotoUrl" 
                  [src]="user.fotoPerfil || user.fotoUrl" 
                  class="profile-img">
@@ -72,16 +71,102 @@
     </div>
 
     <div class="section-title"><h3>Acciones</h3></div>
+    
     <div class="actions-grid-pro">
-      <div class="action-card" (click)="navigateTo('/convocations')"><div class="icon-circle primary"><ion-icon name="calendar"></ion-icon></div><span class="title">Convocatorias</span></div>
-      <div class="action-card" (click)="navigateTo('/coach/my-team')"><div class="icon-circle secondary"><ion-icon name="shield-checkmark"></ion-icon></div><span class="title">Mi Equipo</span></div>
-      <div class="action-card" (click)="navigateTo('/profile')"><div class="icon-circle tertiary"><ion-icon name="person"></ion-icon></div><span class="title">Mi Perfil</span></div>
-      <div class="action-card" (click)="scrollToStats()"><div class="icon-circle success"><ion-icon name="stats-chart"></ion-icon></div><span class="title">Estadísticas</span></div>
+      
+      <div class="action-card" (click)="navigateTo('/calendar')">
+        <div class="icon-circle primary">
+          <ion-icon name="calendar"></ion-icon>
+        </div>
+        <span class="title">Calendario</span>
+      </div>
+
+      <div class="action-card" (click)="navigateTo('/coach/my-team')">
+        <div class="icon-circle secondary">
+          <ion-icon name="shield-checkmark"></ion-icon>
+        </div>
+        <span class="title">Mi Equipo</span>
+      </div>
+
+      <div class="action-card" (click)="navigateTo('/profile')">
+        <div class="icon-circle tertiary">
+          <ion-icon name="person"></ion-icon>
+        </div>
+        <span class="title">Mi Perfil</span>
+      </div>
+
+      <div class="action-card" (click)="scrollToStats()">
+        <div class="icon-circle success">
+          <ion-icon name="stats-chart"></ion-icon>
+        </div>
+        <span class="title">Estadísticas</span>
+      </div>
     </div>
-    <div class="section-title row-between" *ngIf="upcomingConvocations.length > 0"><h3>Próximos Eventos</h3><span class="link" (click)="navigateTo('/convocations')">Ver todo</span></div>
-    <div class="events-list-pro"><div class="event-card" *ngFor="let conv of upcomingConvocations" [class.match-card]="conv.tipo === 'PARTIDO'"><div class="date-col"><span class="day">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'dd' }}</span><span class="month">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'MMM' | uppercase }}</span></div><div class="info-col"><div class="top-row"><span class="type-tag" [class.match]="conv.tipo === 'PARTIDO'">{{ conv.tipo }}</span><span class="time-tag">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'HH:mm' }}</span></div><div class="event-main-title"><ng-container *ngIf="conv.tipo === 'PARTIDO'"><div class="match-vs"><span class="vs">VS</span><img *ngIf="conv.escudoRivalUrl" [src]="conv.escudoRivalUrl" class="mini-shield"><span class="rival-name">{{ conv.rival }}</span></div></ng-container><ng-container *ngIf="conv.tipo !== 'PARTIDO'"><span class="training-title">{{ conv.rival || 'Entrenamiento' }}</span></ng-container></div><div class="location-row"><ion-icon name="location-sharp"></ion-icon> {{ conv.lugar || 'Ubicación por confirmar' }}</div></div><div class="actions-col"><ion-button fill="clear" class="action-btn" (click)="showMatchDetails(conv); $event.stopPropagation()"><ion-icon name="information-circle"></ion-icon></ion-button><div class="status-dot confirmed"></div></div></div></div>
-    <div class="section-title" id="stats-section" style="margin-top: 30px;"><h3>Rendimiento</h3></div>
-    <div class="detailed-stats-card"><div class="stat-item"><span class="val">{{ playerStats?.partidosTotales || 0 }}</span><span class="lbl">Partidos</span></div><div class="stat-item"><span class="val">{{ playerStats?.golesTotales || 0 }}</span><span class="lbl">Goles</span></div><div class="stat-item"><span class="val">{{ playerStats?.asistenciasTotales || 0 }}</span><span class="lbl">Asist.</span></div><div class="stat-item"><span class="val highlight">{{ playerStats?.minutosJugados || 0 }}'</span><span class="lbl">Minutos</span></div></div>
+
+    <div class="section-title row-between" *ngIf="upcomingConvocations.length > 0">
+      <h3>Próximos Eventos</h3>
+      <span class="link" (click)="navigateTo('/calendar')">Ver todo</span>
+    </div>
+
+    <div class="events-list-pro">
+      <div class="event-card" *ngFor="let conv of upcomingConvocations" [class.match-card]="conv.tipo === 'PARTIDO'">
+        <div class="date-col">
+          <span class="day">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'dd' }}</span>
+          <span class="month">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'MMM' | uppercase }}</span>
+        </div>
+        <div class="info-col">
+          <div class="top-row">
+            <span class="type-tag" [class.match]="conv.tipo === 'PARTIDO'">{{ conv.tipo }}</span>
+            <span class="time-tag">{{ (conv.fechaHoraInicio || conv.fechaHora) | date:'HH:mm' }}</span>
+          </div>
+          <div class="event-main-title">
+            <ng-container *ngIf="conv.tipo === 'PARTIDO'">
+              <div class="match-vs">
+                <span class="vs">VS</span>
+                <img *ngIf="conv.escudoRivalUrl" [src]="conv.escudoRivalUrl" class="mini-shield">
+                <span class="rival-name">{{ conv.rival }}</span>
+              </div>
+            </ng-container>
+            <ng-container *ngIf="conv.tipo !== 'PARTIDO'">
+              <span class="training-title">{{ conv.rival || 'Entrenamiento' }}</span>
+            </ng-container>
+          </div>
+          <div class="location-row">
+            <ion-icon name="location-sharp"></ion-icon> {{ conv.lugar || 'Ubicación por confirmar' }}
+          </div>
+        </div>
+        <div class="actions-col">
+           <ion-button fill="clear" class="action-btn" (click)="showMatchDetails(conv); $event.stopPropagation()">
+             <ion-icon name="information-circle"></ion-icon>
+           </ion-button>
+           <div class="status-dot confirmed"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title" id="stats-section" style="margin-top: 30px;"> 
+      <h3>Rendimiento</h3>
+    </div>
+
+    <div class="detailed-stats-card">
+      <div class="stat-item">
+        <span class="val">{{ playerStats?.partidosTotales || 0 }}</span>
+        <span class="lbl">Partidos</span>
+      </div>
+      <div class="stat-item">
+        <span class="val">{{ playerStats?.golesTotales || 0 }}</span>
+        <span class="lbl">Goles</span>
+      </div>
+      <div class="stat-item">
+        <span class="val">{{ playerStats?.asistenciasTotales || 0 }}</span>
+        <span class="lbl">Asist.</span>
+      </div>
+      <div class="stat-item">
+        <span class="val highlight">{{ playerStats?.minutosJugados || 0 }}'</span>
+        <span class="lbl">Minutos</span>
+      </div>
+    </div>
+
     <div class="spacer" style="height: 80px;"></div>
   
   </div>

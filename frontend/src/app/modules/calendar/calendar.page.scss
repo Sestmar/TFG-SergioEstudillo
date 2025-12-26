@@ -1,0 +1,119 @@
+// --- PALETA DARK PRO ---
+:host {
+  --bg-color: #09090b;
+  --card-bg: #18181b;
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
+  
+  --neon-purple: #8b5cf6;
+  --neon-blue: #3b82f6;
+  --gold: #fbbf24;
+  --match-green: #10b981;
+}
+
+.dashboard-bg { --background: var(--bg-color); }
+
+.main-content { padding: 20px; }
+
+// HEADER
+.header-pro {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+  
+  .back-btn { font-size: 1.5rem; color: var(--text-main); cursor: pointer; }
+  h1 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--text-main); }
+  .today-btn { 
+    color: var(--neon-blue); font-weight: 700; font-size: 0.9rem; cursor: pointer;
+    background: rgba(59, 130, 246, 0.1); padding: 5px 12px; border-radius: 20px;
+  }
+}
+
+// CALENDARIO CARD
+.calendar-card {
+  background: var(--card-bg); border-radius: 24px; padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 30px;
+
+  .month-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+    h2 { 
+      margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-main); text-transform: capitalize;
+      .year { color: var(--text-muted); font-weight: 400; margin-left: 5px; }
+    }
+    ion-button { --color: var(--text-main); }
+  }
+
+  .weekdays-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin-bottom: 10px;
+    span { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; }
+  }
+
+  .days-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; row-gap: 10px;
+
+    .day-cell {
+      height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border-radius: 12px; position: relative; cursor: pointer; transition: all 0.2s;
+      
+      .day-number { font-size: 0.9rem; font-weight: 500; color: var(--text-main); z-index: 2; }
+
+      // Estados
+      &.today { 
+        background: rgba(59, 130, 246, 0.2); color: var(--neon-blue); border: 1px solid var(--neon-blue);
+      }
+      &.selected {
+        background: var(--neon-purple); box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        .day-number { color: white; font-weight: 800; }
+      }
+
+      // Dots (Indicadores)
+      .dots {
+        display: flex; gap: 3px; position: absolute; bottom: 4px;
+        .dot { width: 4px; height: 4px; border-radius: 50%; }
+        .dot.match { background: var(--match-green); box-shadow: 0 0 4px var(--match-green); }
+        .dot.training { background: var(--neon-blue); }
+      }
+    }
+  }
+}
+
+// LISTA DE EVENTOS (Estilo Unificado)
+.section-title h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 15px; }
+
+.events-list-pro {
+  display: flex; flex-direction: column; gap: 12px;
+
+  .event-card {
+    background: var(--card-bg); padding: 15px; border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.05); border-left: 4px solid #52525b;
+    
+    &.match-card { border-left-color: var(--match-green); }
+
+    .top-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    
+    .type-tag { 
+        font-size: 0.6rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; 
+        &.match { color: var(--match-green); }
+    }
+    .time-tag { font-size: 0.75rem; color: var(--text-main); background: #27272a; padding: 2px 6px; border-radius: 4px; }
+
+    .event-main-title {
+        margin-bottom: 5px;
+        .match-vs { 
+            display: flex; align-items: center; gap: 8px;
+            .vs { color: var(--text-muted); font-size: 0.7rem; font-weight: 700; }
+            .mini-shield { width: 24px; height: 24px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+            .rival-name { color: var(--text-main); font-weight: 700; font-size: 1rem; }
+        }
+        .training-title { font-weight: 700; color: var(--text-main); font-size: 0.95rem; }
+    }
+    
+    .location-row { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  }
+
+  .empty-day-state {
+    text-align: center; padding: 30px; color: var(--text-muted);
+    background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);
+    ion-icon { font-size: 2rem; margin-bottom: 10px; opacity: 0.5; }
+    p { margin: 0; font-size: 0.9rem; }
+  }
+}

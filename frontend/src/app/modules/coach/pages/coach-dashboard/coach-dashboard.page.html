@@ -99,19 +99,18 @@
         <span class="title">Plantilla</span>
       </div>
 
-      <div class="action-card small disabled">
+      <div class="action-card small" (click)="navigateToAction('/calendar')">
         <div class="icon-circle tertiary">
           <ion-icon name="calendar-clear-outline"></ion-icon>
         </div>
         <span class="title">Calendario</span>
-        <span class="wip-tag">WIP</span>
       </div>
 
     </div>
 
     <div class="section-title row-between" *ngIf="upcomingEvents.length > 0">
       <h3>Agenda</h3>
-      <span class="link">Ver todo</span>
+      <span class="link" (click)="navigateToAction('/calendar')">Ver todo</span>
     </div>
 
     <div class="events-list-pro">

@@ -1,0 +1,95 @@
+<ion-content [fullscreen]="true" class="dashboard-bg">
+  
+  <div class="main-content">
+    
+    <div class="header-pro">
+      <div class="back-btn" (click)="goBack()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </div>
+      <h1>Calendario</h1>
+      <div class="today-btn" (click)="goToToday()">Hoy</div>
+    </div>
+
+    <div class="calendar-card">
+      
+      <div class="month-header">
+        <ion-button fill="clear" (click)="prevMonth()">
+          <ion-icon name="chevron-back"></ion-icon>
+        </ion-button>
+        <h2>{{ currentMonthName }} <span class="year">{{ currentYear }}</span></h2>
+        <ion-button fill="clear" (click)="nextMonth()">
+          <ion-icon name="chevron-forward"></ion-icon>
+        </ion-button>
+      </div>
+
+      <div class="weekdays-grid">
+        <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+      </div>
+
+      <div class="days-grid">
+        
+        <div *ngFor="let empty of emptyDays" class="day-cell empty"></div>
+
+        <div *ngFor="let day of daysInMonth" 
+             class="day-cell" 
+             [class.today]="isToday(day)"
+             [class.selected]="isSelected(day)"
+             (click)="selectDay(day)">
+          
+          <span class="day-number">{{ day }}</span>
+          
+          <div class="dots" *ngIf="hasEvents(day)">
+            <div *ngIf="hasMatch(day)" class="dot match"></div>
+            <div *ngIf="hasTraining(day)" class="dot training"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="section-title">
+      <h3>Eventos del {{ selectedDate | date:'dd MMM' }}</h3>
+    </div>
+
+    <div class="events-list-pro">
+      
+      <div class="event-card" 
+           *ngFor="let event of selectedDayEvents"
+           [class.match-card]="event.tipo === 'PARTIDO'">
+        
+        <div class="info-col">
+          <div class="top-row">
+            <span class="type-tag" [class.match]="event.tipo === 'PARTIDO'">
+               {{ event.tipo === 'PARTIDO' ? 'MATCHDAY' : 'TRAINING' }}
+            </span>
+            <span class="time-tag">{{ event.fechaHora | date:'HH:mm' }}</span>
+          </div>
+
+          <div class="event-main-title">
+            <ng-container *ngIf="event.tipo === 'PARTIDO'">
+               <div class="match-vs">
+                  <span class="vs">VS</span>
+                  <img *ngIf="event.escudoRivalUrl" [src]="event.escudoRivalUrl" class="mini-shield">
+                  <span class="rival-name">{{ event.rival }}</span>
+               </div>
+            </ng-container>
+            <ng-container *ngIf="event.tipo !== 'PARTIDO'">
+               <span class="training-title">Entrenamiento</span>
+            </ng-container>
+          </div>
+
+          <div class="location-row">
+            <ion-icon name="location-sharp"></ion-icon> {{ event.lugar }}
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="selectedDayEvents.length === 0" class="empty-day-state">
+        <ion-icon name="calendar-clear-outline"></ion-icon>
+        <p>No hay eventos programados</p>
+      </div>
+
+    </div>
+
+  </div>
+</ion-content>
