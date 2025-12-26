@@ -27,13 +27,8 @@ export class MatchService {
     return this.http.get<any[]>(`${this.apiUrl}/alineaciones/partido/${matchId}`);
   }
 
-  // ✅ MÉTODO ADAPTADO: Pide matchId para ponerlo en la URL
   saveLineup(matchId: number, lineupData: any[]): Observable<any> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
-
-    // Enviamos el ID en la URL para que el backend pueda borrar primero
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     return this.http.post(
       `${this.apiUrl}/alineaciones/guardar/${matchId}`, 
       lineupData, 
@@ -48,8 +43,8 @@ export class MatchService {
     return this.http.get<any[]>(`${this.apiUrl}/partidos`);
   }
 
-  // ✅ NUEVO MÉTODO PARA ENVIAR EL ACTA
+  // ✅ CRÍTICO: Debe apuntar al endpoint nuevo que hace upsert
   closeMatchReport(actaData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/partidos/cerrar-acta`, actaData);
+    return this.http.post(`${this.apiUrl}/alineaciones/cerrar`, actaData);
   }
 }

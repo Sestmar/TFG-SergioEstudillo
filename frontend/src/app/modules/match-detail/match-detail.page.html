@@ -52,7 +52,7 @@
 
     <div class="squad-section">
       <h3>
-        <ion-icon name="people-outline"></ion-icon> Convocatoria
+        <ion-icon name="people-outline"></ion-icon> Participantes
       </h3>
 
       <ion-list class="player-list">
@@ -69,14 +69,29 @@
 
           <ion-label>
             <h2>{{ player.nombre }} {{ player.apellidos }}</h2>
-            <p>{{ player.posicion || 'Jugador' }} • #{{ player.dorsal || '--' }}</p>
+            <p>{{ player.posicion || 'JUG' }} • #{{ player.dorsal || '--' }}</p>
           </ion-label>
           
           <div slot="end" class="mini-stats" style="display:flex; gap:5px; align-items:center;">
+            
             <ion-badge color="success" *ngIf="player.esTitular">Titular</ion-badge>
-            <span *ngIf="player.goles > 0" style="font-size:0.9rem;">⚽ {{ player.goles }}</span>
-            <div *ngIf="player.tarjetaAmarilla" style="width:10px; height:14px; background:gold; border-radius:2px;"></div>
-            <div *ngIf="player.tarjetaRoja" style="width:10px; height:14px; background:red; border-radius:2px;"></div>
+            <ion-badge color="medium" *ngIf="!player.esTitular">Suplente</ion-badge>
+
+            <span *ngIf="player.goles > 0" style="font-size:0.9rem; font-weight:bold; margin-left:5px;">
+                ⚽ {{ player.goles > 1 ? 'x'+player.goles : '' }}
+            </span>
+
+            <ion-badge color="light" *ngIf="player.minutoEntrada > 0" style="color: #16a34a; border: 1px solid #bbf7d0; margin-left:5px; padding: 4px 6px;">
+                <ion-icon name="arrow-up"></ion-icon> {{ player.minutoEntrada }}'
+            </ion-badge>
+
+            <ion-badge color="light" *ngIf="player.minutoSalida" style="color: #dc2626; border: 1px solid #fecaca; margin-left: 2px; padding: 4px 6px;">
+                <ion-icon name="arrow-down"></ion-icon> {{ player.minutoSalida }}'
+            </ion-badge>
+
+            <div *ngIf="player.tarjetaAmarilla" style="width:10px; height:14px; background:gold; border-radius:2px; border:1px solid #eab308; margin-left:5px;"></div>
+            <div *ngIf="player.tarjetaRoja" style="width:10px; height:14px; background:red; border-radius:2px; border:1px solid #dc2626; margin-left:2px;"></div>
+          
           </div>
 
         </ion-item>

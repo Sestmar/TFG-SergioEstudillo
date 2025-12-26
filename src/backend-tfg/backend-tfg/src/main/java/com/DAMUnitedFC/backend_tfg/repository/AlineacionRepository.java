@@ -12,32 +12,30 @@ import java.util.Optional;
 @Repository
 public interface AlineacionRepository extends JpaRepository<Alineacion, Long> {
 
-    // Buscar alineación de un partido
+    // Buscar alineación completa de un partido
     List<Alineacion> findByPartidoIdPartido(Long idPartido);
-    // ✅ ESTE ES EL QUE FALTABA para el PublicController:
+
+    // Buscar historial de alineaciones de un jugador
     List<Alineacion> findByJugador(Jugador jugador);
 
-    // Buscar ficha exacta
+    // 🔥 NUEVO Y CRÍTICO: Busca si un jugador concreto ya está en la alineación de un partido
+    // Devuelve Optional para poder hacer if(isPresent) en el controlador
     @Query("SELECT a FROM Alineacion a WHERE a.partido.idPartido = :idPartido AND a.jugador.idJugador = :idJugador")
     Optional<Alineacion> findFichaExacta(@Param("idPartido") Long idPartido, @Param("idJugador") Integer idJugador);
 
     void deleteByPartidoIdPartido(Long idPartido);
 
-    // --- 🔥 QUERIES PARA ESTADÍSTICAS ---
+    // --- ESTADÍSTICAS (Se mantienen igual, funcionan bien) ---
 
-    // 1. Partidos Jugados (cuenta cuántas veces aparece el jugador en la tabla alineación)
-    @Query("SELECT COUNT(a) FROM Alineacion a WHERE a.jugador.idJugador = :idJugador")
+    @Query("SELECT COUNT(a) FROM Alineacion a WHERE a.jugador.idJugador = :idJugador AND a.minutosJugados > 0")
     Integer countPartidosJugados(@Param("idJugador") Integer idJugador);
 
-    // 2. Suma de Goles
     @Query("SELECT SUM(a.goles) FROM Alineacion a WHERE a.jugador.idJugador = :idJugador")
     Integer sumGoles(@Param("idJugador") Integer idJugador);
 
-    // 3. Suma de Asistencias
     @Query("SELECT SUM(a.asistencias) FROM Alineacion a WHERE a.jugador.idJugador = :idJugador")
     Integer sumAsistencias(@Param("idJugador") Integer idJugador);
 
-    // 4. Suma de Minutos
     @Query("SELECT SUM(a.minutosJugados) FROM Alineacion a WHERE a.jugador.idJugador = :idJugador")
     Integer sumMinutos(@Param("idJugador") Integer idJugador);
 }

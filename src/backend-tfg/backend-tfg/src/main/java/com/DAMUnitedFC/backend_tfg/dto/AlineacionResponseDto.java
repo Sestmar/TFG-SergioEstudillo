@@ -7,15 +7,13 @@ public class AlineacionResponseDto {
     private Long id;
     private Long idPartido;
 
-    // Datos del Jugador (Ya procesados, sin objetos anidados)
     private Integer idJugador;
-    private String nombre;     // Nombre del usuario
-    private String apellidos;  // Apellidos del usuario
-    private String fotoUrl;    // Foto del usuario o jugador
+    private String nombre;
+    private String apellidos;
+    private String fotoUrl;
     private Integer dorsal;
     private String posicion;
 
-    // Datos de la Alineación
     private String slotId;
     private Boolean esTitular;
     private Integer goles;
@@ -23,6 +21,10 @@ public class AlineacionResponseDto {
     private Integer minutosJugados;
     private Boolean tarjetaAmarilla;
     private Boolean tarjetaRoja;
+
+    // 🔥 NUEVOS CAMPOS EN EL DTO
+    private Integer minutoEntrada;
+    private Integer minutoSalida;
 
     public AlineacionResponseDto() {}
 }

@@ -6,8 +6,8 @@
     <ion-title>Editar Acta</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="saveActa()" color="light" fill="solid" size="small">
-        <ion-icon name="checkmark-done" slot="start"></ion-icon>
-        Cerrar
+        <ion-icon name="save-outline" slot="start"></ion-icon>
+        Guardar
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -32,23 +32,21 @@
     </ion-card-content>
   </ion-card>
 
-  <h3 class="section-title">Rendimiento Individual</h3>
+  <div class="section-divider">
+    <ion-icon name="shirt-outline"></ion-icon> ONCE INICIAL
+  </div>
 
   <div class="player-list">
-    <ion-card *ngFor="let p of lineup" class="player-edit-card">
+    <ion-card *ngFor="let p of starters" class="player-edit-card starter">
       
       <div class="card-left">
         <div class="avatar">
-          <img *ngIf="p.fotoUrl" [src]="p.fotoUrl" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
-          
-          <span *ngIf="!p.fotoUrl">
-             {{ p.nombre?.charAt(0) }}{{ p.apellidos?.charAt(0) }}
-          </span>
+          <img *ngIf="p.fotoUrl" [src]="p.fotoUrl" class="img-fit">
+          <span *ngIf="!p.fotoUrl">{{ p.nombre?.charAt(0) }}</span>
         </div>
-        
         <div class="names">
           <strong>{{ p.nombre }} {{ p.apellidos }}</strong>
-          <span>#{{ p.dorsal || '--' }} • {{ p.posicion }}</span>
+          <span>#{{ p.dorsal || '--' }} • <ion-text color="success">Titular</ion-text></span>
         </div>
       </div>
 
@@ -57,18 +55,60 @@
           <label>Min</label>
           <ion-input type="number" [(ngModel)]="p.minutos"></ion-input>
         </div>
+        
+        <div class="input-group" style="border: 1px solid #fee2e2; border-radius: 6px;">
+            <label style="color: #ef4444;">OUT</label>
+            <ion-input type="number" [(ngModel)]="p.minutoSalida" placeholder="Min"></ion-input>
+        </div>
+
         <div class="input-group success">
           <label>Goles</label>
           <ion-input type="number" [(ngModel)]="p.goles"></ion-input>
         </div>
-        <div class="input-group info">
-          <label>Asist</label>
-          <ion-input type="number" [(ngModel)]="p.asistencias"></ion-input>
-        </div>
       </div>
-
     </ion-card>
   </div>
 
-  <div class="ion-padding-bottom" style="height: 50px;"></div>
+  <div class="section-divider mt-4">
+    <ion-icon name="accessibility-outline"></ion-icon> BANQUILLO / SUPLENTES
+  </div>
+
+  <div class="player-list">
+    <ion-card *ngFor="let p of bench" class="player-edit-card bench" [class.played]="p.minutos > 0">
+      
+      <div class="card-left">
+        <div class="avatar gray">
+          <img *ngIf="p.fotoUrl" [src]="p.fotoUrl" class="img-fit">
+          <span *ngIf="!p.fotoUrl">{{ p.nombre?.charAt(0) }}</span>
+        </div>
+        <div class="names">
+          <strong>{{ p.nombre }} {{ p.apellidos }}</strong>
+          <span>#{{ p.dorsal || '--' }} • <ion-text color="medium">Suplente</ion-text></span>
+        </div>
+      </div>
+
+      <div class="card-inputs">
+        <div class="input-group">
+          <label>Min</label>
+          <ion-input type="number" [(ngModel)]="p.minutos" placeholder="0"></ion-input>
+        </div>
+
+        <div class="input-group" style="border: 1px solid #dcfce7; border-radius: 6px;">
+            <label style="color: #22c55e;">IN</label>
+            <ion-input type="number" [(ngModel)]="p.minutoEntrada" placeholder="Min"></ion-input>
+        </div>
+
+        <div class="input-group success">
+          <label>Goles</label>
+          <ion-input type="number" [(ngModel)]="p.goles"></ion-input>
+        </div>
+      </div>
+    </ion-card>
+    
+    <div *ngIf="bench.length === 0" class="empty-msg">
+      No hay jugadores en el banquillo.
+    </div>
+  </div>
+
+  <div class="ion-padding-bottom" style="height: 80px;"></div>
 </ion-content>

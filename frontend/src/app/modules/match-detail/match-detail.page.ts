@@ -42,41 +42,38 @@ export class MatchDetailPage implements OnInit {
       next: (data) => {
         this.match = data;
         
-        // Ahora alineacionRaw es una lista de DTOs planos (AlineacionResponseDto)
         this.matchSvc.getLineup(id).subscribe({
           next: (alineacionDtos: any[]) => {
-            
             console.log('📋 Alineación recibida (DTO):', alineacionDtos);
 
-            // Mapeo SIMPLIFICADO (Porque el DTO ya viene plano)
             if (alineacionDtos && alineacionDtos.length > 0) {
               this.players = alineacionDtos.map(dto => {
                 return {
-                    // Ya no navegamos por .jugador.usuario... viene directo
                     nombre: dto.nombre || 'Jugador',
                     apellidos: dto.apellidos || '',
                     fotoUrl: dto.fotoUrl, 
                     dorsal: dto.dorsal || '--',
                     posicion: dto.posicion || 'Sin Demarcación',
                     esTitular: dto.esTitular,
-                    
-                    // Datos para stats
                     goles: dto.goles,
                     asistencias: dto.asistencias,
                     minutos: dto.minutosJugados,
                     tarjetaAmarilla: dto.tarjetaAmarilla,
                     tarjetaRoja: dto.tarjetaRoja,
+                    idJugador: dto.idJugador,
                     
-                    // Guardamos ID jugador para calcular estadísticas personales
-                    idJugador: dto.idJugador 
+                    // 🔥 NUEVOS CAMPOS LEÍDOS
+                    minutoEntrada: dto.minutoEntrada,
+                    minutoSalida: dto.minutoSalida
                 };
               });
 
-              // Calcular estadísticas personales
-              // (Nota: Aquí la lógica cambia un poco porque ya no tenemos el objeto usuario anidado)
-              // Pero para visualización, la lista players ya está lista.
-              
-              this.players.sort((a, b) => (a.esTitular === b.esTitular) ? 0 : a.esTitular ? -1 : 1);
+              this.players.sort((a, b) => {
+                  if (a.esTitular && !b.esTitular) return -1;
+                  if (!a.esTitular && b.esTitular) return 1;
+                  return (b.goles || 0) - (a.goles || 0);
+              });
+
             } else {
               this.players = [];
             }
@@ -94,12 +91,6 @@ export class MatchDetailPage implements OnInit {
          this.loading = false;
       }
     });
-  }
-
-  // (Nota: He simplificado esto porque con el DTO plano es difícil comparar con currentUserId 
-  // a menos que traigamos el idUsuario en el DTO. Para visualización básica, esto vale).
-  calculateMyStats(lineup: any[]) {
-      // Pendiente de ajuste si necesitas stats personales
   }
 
   goBack() {
