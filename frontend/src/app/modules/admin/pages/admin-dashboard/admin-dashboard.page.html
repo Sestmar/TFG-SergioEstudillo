@@ -1,116 +1,213 @@
-<ion-content class="admin-bg">
-  <div class="dashboard-container">
+<ion-content [fullscreen]="true" class="admin-bg">
+  
+  <div class="main-container">
     
     <div class="admin-header">
-      <div class="header-text">
-        <h1>Director Deportivo</h1>
-        <p>Panel de Gestión Corporativa</p>
+      <div class="text-info">
+        <span class="role-badge">DIRECTOR DEPORTIVO</span>
+        <h1>Panel de Control</h1>
       </div>
-      <div class="admin-badge">ADMIN</div>
+      <div class="club-logo-wrapper">
+        <img src="assets/img/mi-club-logo.png" alt="Club">
+      </div>
     </div>
 
-    <div class="tabs-container">
-      <ion-segment [(ngModel)]="segmentValue" mode="ios">
-        <ion-segment-button value="players">
-          <ion-label>
-            <ion-icon name="football-outline"></ion-icon> Jugadores
-          </ion-label>
+    <div class="custom-tabs">
+      <ion-segment [(ngModel)]="currentView" mode="ios" (ionChange)="segmentChanged($event)">
+        <ion-segment-button value="users">
+          <ion-icon name="people"></ion-icon>
+          <ion-label>Usuarios</ion-label>
         </ion-segment-button>
-        <ion-segment-button value="staff">
-          <ion-label>
-            <ion-icon name="briefcase-outline"></ion-icon> Staff Técnico
-          </ion-label>
+        <ion-segment-button value="teams">
+          <ion-icon name="shield"></ion-icon>
+          <ion-label>Equipos</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="competition">
+          <ion-icon name="trophy"></ion-icon>
+          <ion-label>Competición</ion-label>
         </ion-segment-button>
       </ion-segment>
     </div>
 
-    <div *ngIf="loading" class="ion-text-center ion-padding spin-container">
-      <ion-spinner name="crescent" color="primary"></ion-spinner>
-      <p>Consultando base de datos...</p>
+    <div *ngIf="currentView === 'users'" class="view-section animate-fade-in">
+        
+        <div class="sub-filter">
+            <ion-chip [outline]="userSegment !== 'pending'" [color]="userSegment === 'pending' ? 'warning' : 'medium'" (click)="userSegment = 'pending'">
+                Solicitudes ({{ candidates.length }})
+            </ion-chip>
+            <ion-chip [outline]="userSegment !== 'active'" [color]="userSegment === 'active' ? 'primary' : 'medium'" (click)="userSegment = 'active'">
+                Base de Datos
+            </ion-chip>
+            
+            <div class="spacer"></div>
+            
+            <ion-button size="small" fill="solid" color="primary" class="create-btn" (click)="isUserModalOpen = true">
+                <ion-icon name="person-add" slot="icon-only"></ion-icon>
+            </ion-button>
+        </div>
+
+        <div *ngIf="userSegment === 'pending'">
+            <div class="admin-card" *ngFor="let candidate of candidates">
+                <div class="user-row">
+                    <div class="avatar-circle">{{ candidate.nombre.charAt(0) }}</div>
+                    <div class="info">
+                        <h4>{{ candidate.nombre }} {{ candidate.apellidos }}</h4>
+                        <p>{{ candidate.email }}</p>
+                        <span class="tag-pending">Pendiente de Asignación</span>
+                    </div>
+                </div>
+                <div class="action-row">
+                    <ion-select placeholder="Asignar Equipo..." [(ngModel)]="candidate.selectedTeamId" interface="popover" class="dark-select">
+                        <ion-select-option *ngFor="let t of teams" [value]="t.idEquipo">{{ t.nombre }}</ion-select-option>
+                    </ion-select>
+                    <ion-button (click)="onAssignPlayer(candidate)" color="success" size="small">
+                        <ion-icon name="checkmark"></ion-icon>
+                    </ion-button>
+                </div>
+            </div>
+            
+            <div *ngIf="candidates.length === 0" class="empty-state">
+                <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+                <p>Todo al día. No hay solicitudes pendientes.</p>
+            </div>
+        </div>
+
+        <div *ngIf="userSegment === 'active'">
+            <div class="admin-card compact" *ngFor="let user of activeUsers">
+                <div class="user-row">
+                    <img [src]="user.fotoUrl || 'https://ui-avatars.com/api/?name='+user.nombre" class="avatar-img">
+                    <div class="info">
+                        <h4>{{ user.nombre }}</h4>
+                        <p class="role-text">{{ user.rol }} • {{ user.equipoNombre }}</p>
+                    </div>
+                    
+                    <ion-button fill="clear" color="danger" (click)="deleteUser(user)">
+                        <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                    </ion-button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="candidates-grid" *ngIf="!loading && segmentValue === 'players'">
-      <div class="section-title">
-        <h3>Solicitudes de Ingreso</h3>
-      </div>
-
-      <ion-card *ngFor="let user of candidates" class="candidate-card">
-        <div class="card-top">
-          <div class="avatar-placeholder">{{ user.nombre.charAt(0) }}</div>
-          <div class="user-details">
-            <h4>{{ user.nombre }} {{ user.apellidos }}</h4>
-            <p class="email">{{ user.email }}</p>
-            <span class="status-tag">Candidato</span>
-          </div>
+    <div *ngIf="currentView === 'teams'" class="view-section animate-fade-in">
+        <div class="action-header">
+            <h3>Equipos del Club</h3>
+            <ion-button size="small" color="tertiary" (click)="isTeamModalOpen = true">
+                <ion-icon name="add" slot="start"></ion-icon> Nuevo
+            </ion-button>
         </div>
-        
-        <div class="card-actions">
-          <ion-item lines="none" class="custom-select">
-            <ion-select placeholder="Asignar a equipo..." interface="popover" [(ngModel)]="user.selectedTeamId">
-              <ion-select-option *ngFor="let team of teams" [value]="team.idEquipo">
-                {{ team.nombre }} ({{ team.categoria?.nombre || team.categoria }})
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-          
-          <ion-button expand="block" (click)="onAssignPlayer(user)" [disabled]="!user.selectedTeamId" class="action-btn">
-            Validar Ficha
-            <ion-icon name="checkmark-circle-outline" slot="end"></ion-icon>
-          </ion-button>
-        </div>
-      </ion-card>
 
-      <div *ngIf="candidates.length === 0" class="empty-state">
-        <ion-icon name="file-tray-outline"></ion-icon>
-        <p>No hay jugadores pendientes.</p>
-      </div>
+        <div class="teams-grid">
+            <div class="team-card" *ngFor="let team of teams" (click)="openTeamDetail(team)">
+                <img [src]="team.escudoUrl || 'assets/img/mi-club-logo.png'" class="team-logo">
+                <h4>{{ team.nombre }}</h4>
+                <p>{{ team.categoriaNombre }}</p>
+                <div class="team-stats">
+                    <span>{{ team.jugadoresCount || 0 }} Jug.</span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="candidates-grid" *ngIf="!loading && segmentValue === 'staff'">
-      <div class="section-title">
-        <h3>Entrenadores Disponibles</h3>
-      </div>
-
-      <ion-card *ngFor="let coach of coaches" class="candidate-card coach-style">
-        <div class="card-top">
-          <div class="avatar-placeholder staff-avatar">DT</div>
-          <div class="user-details">
-            <h4>{{ coach.nombre }} {{ coach.apellidos }}</h4>
-            <p class="email">{{ coach.email }}</p>
-            <span class="status-tag staff-tag">Míster Libre</span>
-          </div>
-        </div>
+    <div *ngIf="currentView === 'competition'" class="view-section animate-fade-in">
         
-        <div class="card-actions">
-          
-          <ion-item lines="none" class="custom-select">
-            <ion-select placeholder="Asignar al equipo..." interface="popover" [(ngModel)]="coach.selectedTeamId">
-              <ion-select-option *ngFor="let team of teams" [value]="team.idEquipo">
-                {{ team.nombre }} ({{ team.categoria?.nombre || team.categoria }})
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-
-          <ion-item lines="none" class="custom-select role-select">
-            <ion-select placeholder="Rol / Puesto" interface="popover" [(ngModel)]="coach.selectedRole">
-              <ion-select-option *ngFor="let role of staffRoles" [value]="role">
-                {{ role }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-          
-          <ion-button expand="block" color="dark" (click)="onAssignCoach(coach)" [disabled]="!coach.selectedTeamId" class="action-btn">
-            Contratar Staff
-            <ion-icon name="contract-outline" slot="end"></ion-icon>
-          </ion-button>
+        <div class="hero-action-card" (click)="isMatchModalOpen = true">
+            <div class="icon-box"><ion-icon name="calendar-number"></ion-icon></div>
+            <div class="text">
+                <h3>Agendar Partido / Evento</h3>
+                <p>Crear nuevo encuentro para cualquier equipo</p>
+            </div>
+            <ion-icon name="add-circle" class="arrow"></ion-icon>
         </div>
-      </ion-card>
 
-      <div *ngIf="coaches.length === 0" class="empty-state">
-        <ion-icon name="people-outline"></ion-icon>
-        <p>No hay personal técnico disponible.</p>
-      </div>
+        <div class="section-title"><h3>Calendarios de Equipo</h3></div>
+        
+        <div class="teams-grid">
+            <div class="team-calendar-card" *ngFor="let team of teams" (click)="goToTeamCalendar(team)">
+                <div class="card-left">
+                    <img [src]="team.escudoUrl || 'assets/img/mi-club-logo.png'" class="team-mini-logo">
+                </div>
+                <div class="card-center">
+                    <h4>{{ team.nombre }}</h4>
+                    <span class="category-badge">{{ team.categoriaNombre || 'General' }}</span>
+                </div>
+                <div class="card-right">
+                    <ion-icon name="calendar-outline"></ion-icon>
+                </div>
+            </div>
+        </div>
     </div>
 
   </div>
+
+  <ion-modal [isOpen]="isUserModalOpen" (didDismiss)="isUserModalOpen = false" [initialBreakpoint]="0.75" [breakpoints]="[0, 0.75]">
+    <ng-template>
+        <div class="modal-content-dark">
+            <h3>Nuevo Fichaje</h3>
+            <ion-list class="dark-list">
+                <ion-item><ion-label position="stacked">Nombre</ion-label><ion-input [(ngModel)]="newUser.nombre"></ion-input></ion-item>
+                <ion-item><ion-label position="stacked">Email</ion-label><ion-input type="email" [(ngModel)]="newUser.email"></ion-input></ion-item>
+                <ion-item>
+                    <ion-label position="stacked">Rol</ion-label>
+                    <ion-select [(ngModel)]="newUser.rol" interface="popover">
+                        <ion-select-option value="JUGADOR">Jugador</ion-select-option>
+                        <ion-select-option value="ENTRENADOR">Entrenador</ion-select-option>
+                    </ion-select>
+                </ion-item>
+                <p class="hint">* Contraseña por defecto: "123"</p>
+            </ion-list>
+            <ion-button expand="block" color="primary" class="mt-4" (click)="createNewUser()">Crear Usuario</ion-button>
+        </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="isTeamModalOpen" (didDismiss)="isTeamModalOpen = false" [initialBreakpoint]="0.5" [breakpoints]="[0, 0.5]">
+    <ng-template>
+        <div class="modal-content-dark">
+            <h3>Nuevo Equipo</h3>
+            <ion-list class="dark-list">
+                <ion-item><ion-label position="stacked">Nombre del Equipo</ion-label><ion-input [(ngModel)]="newTeam.nombre" placeholder="Ej: Alevín A"></ion-input></ion-item>
+                <ion-item><ion-label position="stacked">Categoría</ion-label><ion-input [(ngModel)]="newTeam.categoria" placeholder="Ej: Primera Provincial"></ion-input></ion-item>
+            </ion-list>
+            <ion-button expand="block" color="tertiary" class="mt-4" (click)="createNewTeam()">Registrar Equipo</ion-button>
+        </div>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="isMatchModalOpen" (didDismiss)="isMatchModalOpen = false" [initialBreakpoint]="0.85" [breakpoints]="[0, 0.85]">
+    <ng-template>
+        <div class="modal-content-dark">
+            <h3>Nuevo Partido</h3>
+            <ion-list class="dark-list">
+                <ion-item>
+                    <ion-label position="stacked">Equipo Local</ion-label>
+                    <ion-select [(ngModel)]="newMatch.idEquipo" placeholder="Seleccionar..." interface="popover">
+                        <ion-select-option *ngFor="let t of teams" [value]="t.idEquipo">{{ t.nombre }}</ion-select-option>
+                    </ion-select>
+                </ion-item>
+                <ion-item>
+                    <ion-label position="stacked">Rival</ion-label>
+                    <ion-input [(ngModel)]="newMatch.rival" placeholder="Ej: Real Betis"></ion-input>
+                </ion-item>
+                <ion-item>
+                    <ion-label position="stacked">Lugar</ion-label>
+                    <ion-input [(ngModel)]="newMatch.lugar" placeholder="Ej: Ciudad Deportiva"></ion-input>
+                </ion-item>
+                <ion-item>
+                    <ion-label position="stacked">Fecha y Hora</ion-label>
+                    <ion-datetime-button datetime="datetime"></ion-datetime-button>
+                </ion-item>
+            </ion-list>
+            
+            <ion-modal [keepContentsMounted]="true">
+                <ng-template>
+                    <ion-datetime id="datetime" presentation="date-time" [(ngModel)]="newMatch.fechaHora"></ion-datetime>
+                </ng-template>
+            </ion-modal>
+
+            <ion-button expand="block" color="success" class="mt-4" (click)="createMatch()">Agendar Partido</ion-button>
+        </div>
+    </ng-template>
+  </ion-modal>
+
 </ion-content>

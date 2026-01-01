@@ -27,8 +27,9 @@ public class Usuario implements UserDetails {
     @Column(unique = true, nullable = false, length = 120)
     private String email;
 
+    // 🔙 REVERTIDO A passwordHash (Como estaba antes)
     @Column(nullable = false)
-    @JsonIgnore // ✅ EVITA que la contraseña viaje al frontend (Seguridad + Evita error)
+    @JsonIgnore
     private String passwordHash;
 
     @Column(nullable = false, length = 20)
@@ -43,49 +44,33 @@ public class Usuario implements UserDetails {
     private String telefono;
     private String direccion;
 
-    // --- MÉTODOS DE SEGURIDAD (UserDetails) ---
-    // Añadimos @JsonIgnore a todos para que no ensucien el JSON ni rompan la serialización
+    // Helper útil para el Admin (lo mantenemos porque no rompe nada)
+    public void setFechaRegistro(java.util.Date fecha) {
+        this.fechaAlta = new java.sql.Date(fecha.getTime());
+    }
 
+    // Seguridad
     @Override
-    @JsonIgnore // ✅ Ignoramos esto porque el frontend ya tiene el campo "rol"
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (this.rol == null) return List.of(); // Protección contra nulos
+        if (this.rol == null) return List.of();
         return List.of(new SimpleGrantedAuthority("ROLE_" + this.rol));
     }
 
     @Override
-    @JsonIgnore // ✅ Ya ignoramos el campo passwordHash arriba
+    @JsonIgnore
     public String getPassword() {
         return this.passwordHash;
     }
 
     @Override
-    @JsonIgnore // ✅ El frontend ya tiene el campo "email"
+    @JsonIgnore
     public String getUsername() {
         return this.email;
     }
 
-    @Override
-    @JsonIgnore
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    @JsonIgnore
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    @JsonIgnore
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    @JsonIgnore
-    public boolean isEnabled() {
-        return true;
-    }
+    @Override @JsonIgnore public boolean isAccountNonExpired() { return true; }
+    @Override @JsonIgnore public boolean isAccountNonLocked() { return true; }
+    @Override @JsonIgnore public boolean isCredentialsNonExpired() { return true; }
+    @Override @JsonIgnore public boolean isEnabled() { return true; }
 }

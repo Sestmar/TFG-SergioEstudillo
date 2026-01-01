@@ -80,7 +80,7 @@ public class JugadorController {
 
     // --- DASHBOARD JUGADOR ---
     @GetMapping("/usuario/{idUsuario}/equipo")
-    public ResponseEntity<?> getEquipoDelJugador(@PathVariable Long idUsuario) {
+    public ResponseEntity<?> getEquipoDelJugador(@PathVariable Integer idUsuario) {
         return repo.findByUsuario_IdUsuario(idUsuario)
                 .map(jugador -> {
                     if (jugador.getEquipoPrincipal() != null) {

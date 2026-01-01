@@ -11,26 +11,39 @@ export class AdminService {
 
   constructor(private http: HttpClient) { }
 
-  // --- JUGADORES ---
+  // --- USUARIOS ---
   getCandidates(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/candidatos`);
   }
 
-  getTeams(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/equipos`);
+  getAllActiveUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/usuarios-activos`);
+  }
+
+  createUser(userData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/crear-usuario`, userData);
+  }
+
+  // 🔥 NUEVO: Eliminar Usuario
+  deleteUser(id: number): Observable<any> {
+      return this.http.delete(`${this.apiUrl}/usuario/${id}`);
   }
 
   assignTeam(idUsuario: number, idEquipo: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/asignar-equipo`, { idUsuario, idEquipo });
   }
 
-  // --- STAFF TÉCNICO ---
-  getAvailableCoaches(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/entrenadores-libres`);
+  // --- EQUIPOS ---
+  getTeams(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/equipos`);
   }
 
-  // 🔥 ACTUALIZADO: Acepta parámetro Rol
-  assignCoach(idUsuario: number, idEquipo: number, rol: string = 'Entrenador Principal'): Observable<any> {
-    return this.http.post(`${this.apiUrl}/asignar-mister`, { idUsuario, idEquipo, rol });
+  createTeam(teamData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/crear-equipo`, teamData);
+  }
+
+  // --- COMPETICIÓN ---
+  createMatch(matchData: any): Observable<any> {
+      return this.http.post(`${this.apiUrl}/crear-partido`, matchData);
   }
 }

@@ -8,5 +8,5 @@ import java.util.List;
 @Repository
 public interface PartidoRepository extends JpaRepository<Partido, Long> {
     // Para listar en el Dashboard: "Dame los partidos del equipo X"
-    List<Partido> findByIdEquipoOrderByFechaHoraAsc(Long idEquipo);
+    List<Partido> findByEquipo_IdEquipoOrderByFechaHoraAsc(Long idEquipo);
 }

@@ -18,6 +18,9 @@ public interface AlineacionRepository extends JpaRepository<Alineacion, Long> {
     // Buscar historial de alineaciones de un jugador
     List<Alineacion> findByJugador(Jugador jugador);
 
+    // 🔥 NUEVO: Necesario para borrar en cascada
+    void deleteByJugador(Jugador jugador);
+
     // 🔥 NUEVO Y CRÍTICO: Busca si un jugador concreto ya está en la alineación de un partido
     // Devuelve Optional para poder hacer if(isPresent) en el controlador
     @Query("SELECT a FROM Alineacion a WHERE a.partido.idPartido = :idPartido AND a.jugador.idJugador = :idJugador")

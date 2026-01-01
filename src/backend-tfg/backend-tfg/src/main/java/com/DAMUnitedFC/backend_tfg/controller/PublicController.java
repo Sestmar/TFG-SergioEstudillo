@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/public")
-@CrossOrigin(origins = "*") // Permitimos acceso desde cualquier lugar
+@CrossOrigin(origins = "*")
 public class PublicController {
 
     @Autowired private EquipoRepository equipoRepo;
@@ -32,8 +32,8 @@ public class PublicController {
         List<PublicTeamDto> dtos = equipos.stream().map(e -> {
             PublicTeamDto dto = new PublicTeamDto();
 
-            // 🔥 CORRECCIÓN 1: Convertir Integer a Long explícitamente
-            dto.setIdEquipo(Long.valueOf(e.getIdEquipo()));
+            // Convierte Integer a Long de forma segura
+            dto.setIdEquipo(e.getIdEquipo() != null ? e.getIdEquipo().longValue() : null);
 
             dto.setNombre(e.getNombre());
             dto.setFotoUrl(e.getFotoUrl());
@@ -50,16 +50,16 @@ public class PublicController {
     // 2. Obtener la Plantilla (Roster) de un equipo específico
     @GetMapping("/equipos/{idEquipo}/plantilla")
     public ResponseEntity<List<PublicPlayerDto>> getPublicRoster(@PathVariable Long idEquipo) {
-        // Buscamos jugadores que pertenezcan a ese equipo
-        List<Jugador> jugadores = jugadorRepo.findByEquipoPrincipal_IdEquipo(idEquipo);
+
+        // 🔥 CORRECCIÓN: Casteamos Long a Integer porque el repositorio usa Integer
+        List<Jugador> jugadores = jugadorRepo.findByEquipoPrincipal_IdEquipo(idEquipo.intValue());
 
         List<PublicPlayerDto> roster = jugadores.stream().map(j -> {
             PublicPlayerDto dto = new PublicPlayerDto();
 
-            // 🔥 CORRECCIÓN 2: Convertir Integer a Long explícitamente
-            dto.setIdJugador(Long.valueOf(j.getIdJugador()));
+            // Convertir Integer a Long
+            dto.setIdJugador(j.getIdJugador() != null ? j.getIdJugador().longValue() : null);
 
-            // Datos seguros del Usuario asociado
             if (j.getUsuario() != null) {
                 dto.setNombre(j.getUsuario().getNombre());
                 dto.setApellidos(j.getUsuario().getApellidos());
@@ -70,9 +70,7 @@ public class PublicController {
             dto.setPosicion(j.getPosicion());
             dto.setDorsal(j.getDorsal());
 
-            // ⚡ CÁLCULO DE ESTADÍSTICAS AL VUELO ⚡
-            // Buscamos todas las alineaciones de este jugador
-            // Ahora esto funcionará porque añadiste findByJugador en el repositorio
+            // ⚡ CÁLCULO DE ESTADÍSTICAS
             List<Alineacion> participaciones = alineacionRepo.findByJugador(j);
 
             int totalGoles = participaciones.stream().mapToInt(a -> a.getGoles() != null ? a.getGoles() : 0).sum();

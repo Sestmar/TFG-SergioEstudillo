@@ -14,12 +14,13 @@ public class Partido {
     @Column(name = "id_partido")
     private Long idPartido;
 
-    @Column(name = "id_equipo")
-    private Long idEquipo;
+    // 🔥 CORRECCIÓN IMPORTANTE: Relación directa con Equipo, no solo el ID
+    @ManyToOne
+    @JoinColumn(name = "id_equipo")
+    private Equipo equipo;
 
     private String rival;
 
-    // ✅ NUEVO CAMPO: Escudo del rival para este partido concreto
     @Column(name = "escudo_rival_url")
     private String escudoRivalUrl;
 
@@ -36,7 +37,6 @@ public class Partido {
 
     private String tipo;
 
-    // --- RESULTADOS ---
     @Column(name = "goles_favor")
     private Integer golesFavor = 0;
 
@@ -48,9 +48,9 @@ public class Partido {
 
     public Partido() {}
 
-    // Constructor actualizado (opcional, por si lo usas en tests o carga inicial)
-    public Partido(Long idEquipo, String rival, LocalDateTime fechaHora, String lugar, String tipo) {
-        this.idEquipo = idEquipo;
+    // Constructor actualizado
+    public Partido(Equipo equipo, String rival, LocalDateTime fechaHora, String lugar, String tipo) {
+        this.equipo = equipo;
         this.rival = rival;
         this.fechaHora = fechaHora;
         this.lugar = lugar;

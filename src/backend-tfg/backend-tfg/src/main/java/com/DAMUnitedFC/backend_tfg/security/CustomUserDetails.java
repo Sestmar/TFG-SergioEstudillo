@@ -17,12 +17,18 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority(usuario.getRol()));
+        // Aseguramos compatibilidad con ROLE_
+        String rol = usuario.getRol();
+        if (!rol.startsWith("ROLE_")) {
+            rol = "ROLE_" + rol;
+        }
+        return Collections.singletonList(new SimpleGrantedAuthority(rol));
     }
 
     @Override
     public String getPassword() {
-        return usuario.getPasswordHash(); // Usa el campo hash
+        // 🔥 REVERTIDO: Devuelve el campo original de la BBDD
+        return usuario.getPasswordHash();
     }
 
     @Override

@@ -71,9 +71,7 @@ public class AlineacionController {
                 }
             }
 
-            // Normalizamos BENCH_ID a BENCH para el frontend si es necesario, o lo dejamos tal cual
             dto.setSlotId(a.getSlotId());
-
             dto.setEsTitular(a.getEsTitular());
             dto.setGoles(a.getGoles());
             dto.setAsistencias(a.getAsistencias());
@@ -110,8 +108,15 @@ public class AlineacionController {
                 Alineacion alineacion = new Alineacion();
                 alineacion.setPartido(p);
                 alineacion.setJugador(j);
-                if (j.getEquipoPrincipal() != null) alineacion.setIdEquipo(j.getEquipoPrincipal().getIdEquipo().longValue());
-                else alineacion.setIdEquipo(p.getIdEquipo());
+
+                // 🔥 ASIGNACIÓN SEGURA DE EQUIPO
+                if (j.getEquipoPrincipal() != null) {
+                    alineacion.setIdEquipo(j.getEquipoPrincipal().getIdEquipo().longValue());
+                } else if (p.getEquipo() != null) {
+                    alineacion.setIdEquipo(p.getEquipo().getIdEquipo().longValue());
+                } else {
+                    alineacion.setIdEquipo(0L);
+                }
 
                 alineacion.setSlotId(ficha.getSlotId());
                 alineacion.setEsTitular(true);
@@ -127,6 +132,7 @@ public class AlineacionController {
             response.put("success", true);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
@@ -163,12 +169,15 @@ public class AlineacionController {
                         alineacion.setPartido(p);
                         Jugador j = jugadorRepo.findById(idJugador).orElseThrow();
                         alineacion.setJugador(j);
-                        alineacion.setIdEquipo(p.getIdEquipo());
-                        alineacion.setEsTitular(false);
 
-                        // 🔥 SOLUCIÓN AL ERROR UNIQUE CONSTRAINT:
-                        // Asignamos un Slot ID único para cada suplente (ej: BENCH_123)
-                        // Así nunca chocan en la base de datos.
+                        // 🔥 ASIGNACIÓN SEGURA DE EQUIPO
+                        if (p.getEquipo() != null) {
+                            alineacion.setIdEquipo(p.getEquipo().getIdEquipo().longValue());
+                        } else {
+                            alineacion.setIdEquipo(0L);
+                        }
+
+                        alineacion.setEsTitular(false);
                         alineacion.setSlotId("BENCH_" + idJugador);
                     }
 

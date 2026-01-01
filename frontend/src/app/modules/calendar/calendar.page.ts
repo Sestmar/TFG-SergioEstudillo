@@ -4,6 +4,7 @@ import { MatchService } from 'src/app/core/services/match/match.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
 import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router'; // 🔥 IMPORTANTE
 
 @Component({
   selector: 'app-calendar',
@@ -29,12 +30,25 @@ export class CalendarPage implements OnInit {
     private matchSvc: MatchService,
     private authSvc: AuthService,
     private coachSvc: CoachService,
-    private http: HttpClient
+    private http: HttpClient,
+    private route: ActivatedRoute // 🔥 Inyectar ruta activa
   ) { }
 
   ngOnInit() {
     this.generateCalendar();
-    this.detectTeamAndLoadEvents();
+
+    // 🔥 LÓGICA CORREGIDA:
+    // Primero miramos si la URL trae un ID de equipo (Caso Admin)
+    this.route.queryParams.subscribe(params => {
+        if (params['teamId']) {
+            console.log('Modo Admin/Visor: Cargando equipo ID', params['teamId']);
+            this.currentTeamId = Number(params['teamId']);
+            this.loadEvents();
+        } else {
+            // Si NO hay param, buscamos el equipo del usuario logueado (Caso Jugador/Mister)
+            this.detectTeamAndLoadEvents();
+        }
+    });
   }
 
   detectTeamAndLoadEvents() {
@@ -51,14 +65,18 @@ export class CalendarPage implements OnInit {
                     this.loadEvents();
                 }
             });
-        } else {
-            this.http.get(`http://localhost:8080/api/jugadores/usuario/${userId}/equipo`).subscribe((equipo: any) => {
-                if (equipo) {
-                    this.currentTeamId = equipo.idEquipo || equipo.id;
-                    this.loadEvents();
-                }
+        } else if (rol === 'JUGADOR') {
+            this.http.get(`http://localhost:8080/api/jugadores/usuario/${userId}/equipo`).subscribe({
+                next: (equipo: any) => {
+                    if (equipo) {
+                        this.currentTeamId = equipo.idEquipo || equipo.id;
+                        this.loadEvents();
+                    }
+                },
+                error: (err) => console.log("Usuario sin equipo asignado o Admin")
             });
         }
+        // Si es ADMIN y no pasó params, no hace nada (correcto)
       }
     });
   }
@@ -71,6 +89,7 @@ export class CalendarPage implements OnInit {
     });
   }
 
+  // ... (RESTO DE MÉTODOS DE CALENDARIO IGUAL: generateCalendar, prevMonth, etc.) ...
   generateCalendar() {
     const year = this.viewDate.getFullYear();
     const month = this.viewDate.getMonth();

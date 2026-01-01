@@ -31,7 +31,7 @@ public class PartidoController {
     // 2. Listar partidos
     @GetMapping("/equipo/{idEquipo}")
     public List<Partido> getPartidosPorEquipo(@PathVariable Long idEquipo) {
-        return partidoRepo.findByIdEquipoOrderByFechaHoraAsc(idEquipo);
+        return partidoRepo.findByEquipo_IdEquipoOrderByFechaHoraAsc(idEquipo);
     }
 
     // 3. Obtener detalle
