@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { filter, switchMap } from 'rxjs/operators'; // 🔥 USAMOS SWITCHMAP
 import { ModalController } from '@ionic/angular';
 
 import { AuthService } from 'src/app/core/services/auth/auth.service';
@@ -8,7 +9,6 @@ import { MatchService } from 'src/app/core/services/match/match.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { CoachService } from 'src/app/core/services/coach/coach.service'; 
 import { User } from 'src/app/shared/models/models';
-import { CreateConvocationPage } from '../convocations/create-convocation.page';
 
 interface CoachStats {
   matches: number;
@@ -47,9 +47,7 @@ export class CoachDashboardPage implements OnInit {
     this.currentUser$ = this.authService.currentUser$;
   }
 
-  ngOnInit() {
-    // Carga inicial
-  }
+  ngOnInit() {}
 
   ionViewWillEnter() {
     this.loadCoachData();
@@ -57,22 +55,26 @@ export class CoachDashboardPage implements OnInit {
 
   private loadCoachData() {
     this.loading = true;
-    this.authService.currentUser$.subscribe({
-      next: (user) => {
-        if (user) {
-          const userId = (user as any).id || (user as any).idUsuario; 
-          if (userId) {
-              this.loadManagedTeam(userId);
-          }
-        }
-      },
-      error: () => this.loading = false
-    });
-  }
+    
+    // 🔥 PATRÓN SEMÁFORO: Esperamos al usuario + ID antes de llamar
+    this.authService.currentUser$
+      .pipe(
+        filter(user => !!user), // 1. Espera si es null
+        switchMap(user => {
+            // 2. Extrae ID seguro
+            const u = user as any;
+            const userId = u.id || u.idUsuario || u.sub;
+            
+            console.log('Dashboard - Usuario detectado:', userId);
 
-  private loadManagedTeam(userId: number) {
-    this.coachService.getDashboardData(userId).subscribe({
+            // 3. Llama a la API (Devuelve observable)
+            return this.coachService.getDashboardData(userId);
+        })
+      )
+      .subscribe({
         next: (response: any) => {
+          // 4. Procesa datos
+          console.log('Datos Dashboard recibidos:', response);
           const equipo = response.equipo;
           this.currentRole = response.rol; 
           this.coachId = response.entrenadorId;
@@ -87,13 +89,12 @@ export class CoachDashboardPage implements OnInit {
               this.loadMatches(this.managedTeamId);
             }
           } else {
-             // Caso donde el entrenador no tiene equipo asignado
              this.managedTeamId = null;
           }
           this.loading = false;
         },
         error: (err) => {
-          console.error("Error cargando equipo", err);
+          console.error("Error cargando dashboard:", err);
           this.loading = false;
           this.managedTeamId = null;
           this.currentRole = '';
@@ -107,6 +108,7 @@ export class CoachDashboardPage implements OnInit {
         this.upcomingEvents = matches;
         this.stats.matches = matches.filter(m => m.tipo === 'PARTIDO').length;
         this.stats.trainings = matches.filter(m => m.tipo === 'ENTRENAMIENTO').length;
+        // Ordenar por fecha
         this.upcomingEvents.sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime());
       }
     });
@@ -123,33 +125,12 @@ export class CoachDashboardPage implements OnInit {
     });
   }
 
-  async openNewConvocation() {
-    if (!this.managedTeamId) return; 
-
-    const modal = await this.modalCtrl.create({
-      component: CreateConvocationPage,
-      componentProps: {
-        teamId: this.managedTeamId 
-      }
-    });
-
-    await modal.present();
-
-    const { data } = await modal.onWillDismiss();
-    
-    if (data && data.created) {
-      this.loadMatches(this.managedTeamId);
-    }
-  }
-
   goToProfile() {
     if (this.coachId) {
       this.router.navigate(['/coach/profile', this.coachId]);
     }
   }
   
-  // 🔥 MÉTODO FALTANTE AÑADIDO
-  // Esto arregla el error "navigateToAction is not a function"
   navigateToAction(path: string) {
     this.router.navigate([path]);
   }
@@ -157,9 +138,5 @@ export class CoachDashboardPage implements OnInit {
   getGreeting(): string {
     const hour = new Date().getHours();
     return hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
-  }
-
-  getEventTypeColor(type: string): string {
-    return type === 'PARTIDO' ? 'success' : 'primary';
   }
 }

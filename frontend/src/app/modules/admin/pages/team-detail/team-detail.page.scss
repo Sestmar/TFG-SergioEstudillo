@@ -1,0 +1,144 @@
+.detail-bg {
+    --background: #121212;
+}
+
+.spinner-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.team-header-card {
+    background: linear-gradient(135deg, #1e1e28 0%, #2a2a35 100%);
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+
+    .team-logo-big {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        margin-bottom: 15px;
+    }
+
+    h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .category-badge {
+        display: inline-block;
+        margin-top: 5px;
+        background: rgba(var(--ion-color-primary-rgb), 0.2);
+        color: var(--ion-color-primary);
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+}
+
+.custom-segment {
+    padding: 15px;
+    background: #121212;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.list-section {
+    padding: 0 15px 20px 15px;
+
+    .section-title {
+        color: #888;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 15px;
+        margin-left: 5px;
+    }
+}
+
+.player-card {
+    background: #1e1e28;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(255,255,255,0.03);
+
+    .player-left {
+        display: flex;
+        align-items: center;
+        margin-right: 15px;
+        
+        .dorsal {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #555;
+            width: 25px;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        .player-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #2a2a35;
+            
+            &.staff {
+                border-radius: 8px; /* Staff un poco más cuadrado para diferenciar */
+            }
+        }
+    }
+
+    .player-center {
+        flex: 1;
+        h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: #eee;
+            font-weight: 600;
+        }
+        p {
+            margin: 2px 0 0 0;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+        .role-badge-text {
+            color: var(--ion-color-tertiary);
+        }
+    }
+
+    .player-right {
+        .mini-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.9rem;
+            color: #ddd;
+            background: rgba(255,255,255,0.05);
+            padding: 4px 8px;
+            border-radius: 6px;
+            
+            ion-icon { color: #ffd700; }
+        }
+    }
+}
+
+.empty-msg {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-style: italic;
+}

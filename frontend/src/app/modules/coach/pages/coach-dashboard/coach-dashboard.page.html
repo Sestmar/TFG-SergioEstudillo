@@ -2,19 +2,15 @@
   
   <div *ngIf="loading" class="loading-state">
     <ion-spinner name="crescent" color="secondary"></ion-spinner>
-    <p>Preparando táctica...</p>
+    <p>Cargando perfil técnico...</p>
   </div>
 
   <div class="main-content" *ngIf="!loading">
     
     <div class="header-pro">
       <div class="text-container">
-        <span class="greeting">
-          {{ getGreeting() }},
-        </span>
-        <h1 *ngIf="currentUser$ | async as user">
-          {{ user.nombre || 'Míster' }}
-        </h1>
+        <span class="greeting">{{ getGreeting() }},</span>
+        <h1 *ngIf="currentUser$ | async as user">{{ user.nombre || 'Míster' }}</h1>
       </div>
       
       <div class="profile-pic-wrapper" (click)="goToProfile()">
@@ -37,14 +33,12 @@
         
         <div class="info-section">
           <div class="role-badge">
-            <ion-icon name="star"></ion-icon> {{ currentRole || 'Head Coach' }}
+            <ion-icon name="clipboard"></ion-icon> {{ currentRole || 'Staff Técnico' }}
           </div>
-          
           <h2 class="team-name">{{ teamName }}</h2>
-          
           <div class="league-info">
              <ion-icon name="trophy-outline"></ion-icon>
-             <span>{{ categoryName || 'Liga Regular' }}</span>
+             <span>{{ categoryName || 'Liga Oficial' }}</span>
           </div>
         </div>
       </div>
@@ -52,41 +46,35 @@
       <div class="stats-bar">
         <div class="stat-item">
           <span class="value">{{ stats.squadSize }}</span>
-          <span class="label">Plantilla</span>
+          <span class="label">Jugadores</span>
         </div>
         <div class="divider"></div>
         <div class="stat-item">
           <span class="value">{{ stats.matches }}</span>
           <span class="label">Partidos</span>
         </div>
-        <div class="divider"></div>
-        <div class="stat-item">
-          <span class="value">{{ stats.trainings }}</span>
-          <span class="label">Sesiones</span>
-        </div>
       </div>
     </div>
 
     <div class="no-team-card" *ngIf="!managedTeamId">
       <div class="icon-wrapper"><ion-icon name="warning-outline"></ion-icon></div>
-      <h3>Sin Asignación</h3>
-      <p>Contacta con dirección deportiva.</p>
+      <h3>Sin Equipo Asignado</h3>
+      <p>Espera a que el Director Deportivo te asigne plantilla.</p>
     </div>
 
     <div class="section-title">
-      <h3>Command Center</h3>
+      <h3>Accesos Directos</h3>
     </div>
 
     <div class="actions-grid-pro">
-      
-      <div class="action-card big primary" (click)="openNewConvocation()">
+      <div class="action-card big primary" (click)="navigateToAction('/calendar')">
         <div class="content-wrapper">
             <div class="icon-circle">
-              <ion-icon name="add"></ion-icon>
+              <ion-icon name="calendar-number"></ion-icon>
             </div>
             <div class="text">
-              <span class="title">Nueva Convocatoria</span>
-              <span class="desc">Partido o Entrenamiento</span>
+              <span class="title">Agenda & Partidos</span>
+              <span class="desc">Ver próximos encuentros</span>
             </div>
         </div>
         <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
@@ -96,21 +84,20 @@
         <div class="icon-circle secondary">
           <ion-icon name="shirt-outline"></ion-icon>
         </div>
-        <span class="title">Plantilla</span>
+        <span class="title">Mi Plantilla</span>
       </div>
 
-      <div class="action-card small" (click)="navigateToAction('/calendar')">
+      <div class="action-card small" (click)="goToProfile()">
         <div class="icon-circle tertiary">
-          <ion-icon name="calendar-clear-outline"></ion-icon>
+          <ion-icon name="person-circle-outline"></ion-icon>
         </div>
-        <span class="title">Calendario</span>
+        <span class="title">Mi Perfil</span>
       </div>
-
     </div>
 
     <div class="section-title row-between" *ngIf="upcomingEvents.length > 0">
-      <h3>Agenda</h3>
-      <span class="link" (click)="navigateToAction('/calendar')">Ver todo</span>
+      <h3>Próximos Eventos</h3>
+      <span class="link" (click)="navigateToAction('/calendar')">Ver Todo</span>
     </div>
 
     <div class="events-list-pro">
@@ -126,37 +113,38 @@
         <div class="info-col">
           <div class="top-row">
             <span class="type-tag" [class.match]="event.tipo === 'PARTIDO'">
-                {{ event.tipo === 'PARTIDO' ? 'MATCHDAY' : 'TRAINING' }}
+                {{ event.tipo === 'PARTIDO' ? 'PARTIDO' : 'ENTRENO' }}
             </span>
-            <span class="time-tag">
-                {{ event.fechaHora | date:'HH:mm' }}
-            </span>
+            <span class="time-tag">{{ event.fechaHora | date:'HH:mm' }}</span>
           </div>
           
           <div class="event-main-title">
             <ng-container *ngIf="event.tipo === 'PARTIDO'">
               <div class="match-vs">
                 <span class="vs">VS</span> 
-                <img *ngIf="event.escudoRivalUrl" [src]="event.escudoRivalUrl" class="mini-shield">
                 <span class="rival-name">{{ event.rival }}</span>
               </div>
+              <div class="location-row">
+                <ion-icon name="location-sharp"></ion-icon> {{ event.lugar }}
+              </div>
             </ng-container>
+            
             <ng-container *ngIf="event.tipo !== 'PARTIDO'">
-              <span class="training-title">Sesión Táctica</span>
+              <span class="training-title">{{ event.descripcion || 'Entrenamiento' }}</span>
+              <div class="location-row">
+                <ion-icon name="location-sharp"></ion-icon> {{ event.lugar }}
+              </div>
             </ng-container>
-          </div>
-
-          <div class="location-row">
-            <ion-icon name="location-sharp"></ion-icon> {{ event.lugar }}
           </div>
         </div>
 
         <div class="actions-col" *ngIf="event.tipo === 'PARTIDO'">
           <ion-button fill="clear" class="action-btn" [routerLink]="['/tactics', event.idPartido || event.id]">
-            <ion-icon name="easel"></ion-icon>
+            <ion-icon name="easel" slot="icon-only"></ion-icon>
           </ion-button>
-          <ion-button fill="clear" class="action-btn gold" [routerLink]="['/edit-match', event.idPartido || event.id]">
-            <ion-icon name="document-text"></ion-icon>
+          
+          <ion-button fill="clear" class="action-btn gold" [routerLink]="['/match-detail', event.idPartido || event.id]">
+            <ion-icon name="document-text" slot="icon-only"></ion-icon>
           </ion-button>
         </div>
       </div>

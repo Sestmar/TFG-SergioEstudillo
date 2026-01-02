@@ -69,6 +69,17 @@
         </div>
       </div>
 
+      <div class="position-group" *ngIf="others.length > 0">
+        <div class="group-title" style="color: #a1a1aa;"><ion-icon name="help-circle-outline"></ion-icon> SIN POSICIÓN DEFINIDA</div>
+        <div class="players-grid">
+          <div class="player-card-pro" *ngFor="let p of others" (click)="openEditModal(p)" style="opacity: 0.8; border: 1px dashed #666;">
+             <div class="card-status" [class.injured]="p.estado === 'LESIONADO'"></div>
+             <img [src]="getAvatar(p)" class="player-img">
+             <div class="info"><span class="dorsal">?</span><span class="name">{{ p.usuario.nombre }}</span></div>
+          </div>
+        </div>
+      </div>
+
       <div *ngIf="allPlayersCount === 0" class="empty-state"><p>No hay jugadores en la plantilla.</p></div>
     </div>
   </div>

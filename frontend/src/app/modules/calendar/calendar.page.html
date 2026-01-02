@@ -11,7 +11,6 @@
     </div>
 
     <div class="calendar-card">
-      
       <div class="month-header">
         <ion-button fill="clear" (click)="prevMonth()">
           <ion-icon name="chevron-back"></ion-icon>
@@ -27,23 +26,18 @@
       </div>
 
       <div class="days-grid">
-        
         <div *ngFor="let empty of emptyDays" class="day-cell empty"></div>
-
         <div *ngFor="let day of daysInMonth" 
              class="day-cell" 
              [class.today]="isToday(day)"
              [class.selected]="isSelected(day)"
              (click)="selectDay(day)">
-          
           <span class="day-number">{{ day }}</span>
-          
           <div class="dots" *ngIf="hasEvents(day)">
             <div *ngIf="hasMatch(day)" class="dot match"></div>
             <div *ngIf="hasTraining(day)" class="dot training"></div>
           </div>
         </div>
-
       </div>
     </div>
 
@@ -55,9 +49,8 @@
       
       <div class="event-card" 
            *ngFor="let event of selectedDayEvents"
-           [class.match-card]="event.tipo === 'PARTIDO'">
-        
-        <div class="info-col">
+           [class.match-card]="event.tipo === 'PARTIDO'"
+           (click)="onEventClick(event)"> <div class="info-col">
           <div class="top-row">
             <span class="type-tag" [class.match]="event.tipo === 'PARTIDO'">
                {{ event.tipo === 'PARTIDO' ? 'MATCHDAY' : 'TRAINING' }}

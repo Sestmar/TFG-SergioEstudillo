@@ -4,7 +4,9 @@ import { HttpClient } from '@angular/common/http';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { TeamService } from 'src/app/core/services/team/team.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
-import { Player, Team } from 'src/app/shared/models/models';
+import { Player } from 'src/app/shared/models/models'; // Eliminado Team si no se usa
+// 🔥 IMPORTS CLAVE PARA CORREGIR EL ERROR DE CARGA
+import { filter, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-my-team',
@@ -17,6 +19,7 @@ export class MyTeamPage implements OnInit {
   defenders: Player[] = [];
   midfielders: Player[] = [];
   forwards: Player[] = [];
+  others: Player[] = []; // 🔥 NUEVO: Para jugadores PENDIENTES o sin posición
   
   allPlayersCount: number = 0;
   coachTeamId: number | null = null; 
@@ -59,33 +62,53 @@ export class MyTeamPage implements OnInit {
     this.detectCoachTeam();
   }
 
+  // 🔥 MÉTODO BLINDADO CON SWITCHMAP
   detectCoachTeam() {
-    this.authSvc.currentUser$.subscribe(user => {
-      if (user) {
-        const u = user as any;
-        const userId = u.id || u.idUsuario;
+    this.loading = true;
 
-        this.http.get(`http://localhost:8080/api/entrenadores/usuario/${userId}/equipo`).subscribe({
-          next: (response: any) => {
-            const equipo = response.equipo; 
-            if (equipo) {
-                this.coachTeamId = Number(equipo.idEquipo || equipo.id); 
-                this.coachTeamName = equipo.nombre;
-                this.loadPlayers();
-            } else {
-                this.loading = false;
-            }
-          },
-          error: () => this.loading = false
-        });
-      }
-    });
+    // 1. Esperamos a que el usuario NO sea null
+    this.authSvc.currentUser$
+      .pipe(
+        filter(user => !!user), // Semáforo: Si es null, espera.
+        switchMap(user => {
+          // 2. Una vez pasa, sacamos ID seguro
+          const u = user as any;
+          const userId = u.id || u.idUsuario || u.sub;
+          
+          console.log('MyTeam - Usuario detectado:', userId);
+
+          // 3. Devolvemos la petición para encadenarla
+          return this.http.get(`http://localhost:8080/api/entrenadores/usuario/${userId}/equipo`);
+        })
+      )
+      .subscribe({
+        next: (response: any) => {
+          // 4. Procesamos respuesta
+          const equipo = response.equipo; 
+          
+          if (equipo) {
+             this.coachTeamId = Number(equipo.idEquipo || equipo.id); 
+             this.coachTeamName = equipo.nombre;
+             
+             console.log('Equipo cargado:', this.coachTeamName, 'ID:', this.coachTeamId);
+
+             // 5. Cargamos jugadores
+             this.loadPlayers();
+          } else {
+             console.warn('El entrenador no tiene equipo asignado.');
+             this.loading = false;
+          }
+        },
+        error: (err) => {
+          console.error('Error cargando equipo del entrenador:', err);
+          this.loading = false;
+        }
+      });
   }
 
   loadPlayers() {
     if (!this.coachTeamId) return;
 
-    this.loading = true;
     this.playerService.getAllPlayers().subscribe({
       next: (res: any) => {
         const all = Array.isArray(res) ? res : (res.data || []);
@@ -106,11 +129,27 @@ export class MyTeamPage implements OnInit {
     });
   }
 
+  // 🔥 LÓGICA CORREGIDA PARA MOSTRAR "PENDIENTES"
   private organizeByPosition(players: Player[]) {
       this.keepers = players.filter(p => this.checkPos(p, ['PORTERO']));
+      
       this.defenders = players.filter(p => this.checkPos(p, ['DEFENSA', 'CENTRAL', 'LATERAL_DERECHO', 'LATERAL_IZQUIERDO']));
+      
       this.midfielders = players.filter(p => this.checkPos(p, ['MEDIOCENTRO', 'PIVOTE', 'MEDIA_PUNTA']));
+      
       this.forwards = players.filter(p => this.checkPos(p, ['DELANTERO', 'EXTREMO']));
+
+      // 🔥 CAPTURAMOS EL RESTO (PENDIENTES, NUEVOS, ETC)
+      this.others = players.filter(p => {
+         const pos = (p as any).posicion ? (p as any).posicion.toUpperCase() : '';
+         const esPortero = ['PORTERO'].includes(pos);
+         const esDefensa = ['DEFENSA', 'CENTRAL', 'LATERAL_DERECHO', 'LATERAL_IZQUIERDO'].includes(pos);
+         const esMedio = ['MEDIOCENTRO', 'PIVOTE', 'MEDIA_PUNTA'].includes(pos);
+         const esDelantero = ['DELANTERO', 'EXTREMO'].includes(pos);
+         
+         // Si no es ninguno de los anteriores, va a "Others"
+         return !esPortero && !esDefensa && !esMedio && !esDelantero;
+      });
   }
 
   private checkPos(p: any, validPositions: string[]): boolean {
@@ -128,7 +167,7 @@ export class MyTeamPage implements OnInit {
     return null;
   }
 
-  // --- GESTIÓN DE MODALES ---
+  // --- GESTIÓN DE MODALES (Sin cambios) ---
   openEditModal(player: Player) {
     this.selectedPlayer = player;
     const raw = player as any;
@@ -140,20 +179,15 @@ export class MyTeamPage implements OnInit {
     this.isEditModalOpen = true;
   }
 
-  // 🔥 CORRECCIÓN BUG TRANSICIÓN
   switchToInjuryModal() {
-    // Guardamos la referencia al jugador actual
     const playerToReport = this.selectedPlayer;
-    
-    // Cerramos el primer modal
     this.isEditModalOpen = false;
 
-    // Abrimos el segundo modal con un pequeño delay, asegurando que tenemos el jugador
     setTimeout(() => {
         if(playerToReport) {
             this.openInjuryModal(playerToReport);
         }
-    }, 200); // Aumentamos un poco el tiempo para asegurar fluidez
+    }, 200); 
   }
 
   async saveTechnicalData() {
@@ -173,7 +207,7 @@ export class MyTeamPage implements OnInit {
     this.playerService.updatePlayer(playerId, payload).subscribe({
       next: async () => {
         await loading.dismiss();
-        this.closeModals(); // Cerramos y limpiamos
+        this.closeModals(); 
         this.showToast('Ficha actualizada', 'success');
         this.loadPlayers(); 
       },
@@ -216,7 +250,7 @@ export class MyTeamPage implements OnInit {
     this.playerService.updatePlayer(playerId, payload).subscribe({
       next: async () => {
         await loading.dismiss();
-        this.closeModals(); // Cerramos y limpiamos
+        this.closeModals(); 
         this.loadPlayers(); 
         this.showToast('Baja registrada', 'warning');
       },
@@ -224,15 +258,11 @@ export class MyTeamPage implements OnInit {
     });
   }
 
-  // 🔥 CORRECCIÓN: No limpiamos el jugador aquí inmediatamente
-  // Esto se llama cuando el modal se cierra por arrastre o click fuera
   onModalDismiss() {
       this.isModalOpen = false;
       this.isEditModalOpen = false;
-      // NO ponemos selectedPlayer a null aquí para evitar el bug de transición
   }
   
-  // Método explícito para cerrar y limpiar cuando terminamos
   closeModals() {
     this.isModalOpen = false;
     this.isEditModalOpen = false;
@@ -251,7 +281,7 @@ export class MyTeamPage implements OnInit {
             const payload = this.prepareDto(player, { estado: 'ACTIVO' });
             const id = (player as any).id || (player as any).idJugador;
             this.playerService.updatePlayer(id, payload).subscribe(() => {
-                this.closeModals(); // Cerramos y limpiamos
+                this.closeModals(); 
                 this.loadPlayers();
                 this.showToast('Jugador recuperado', 'success');
             });

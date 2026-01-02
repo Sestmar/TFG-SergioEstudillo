@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { AuthService } from 'src/app/core/services/auth/auth.service';
+import { LoadingController, ToastController, AlertController } from '@ionic/angular';
 
 @Component({
   selector: 'app-edit-match',
@@ -22,13 +23,19 @@ export class EditMatchPage implements OnInit {
     golesContra: 0
   };
 
+  isAdmin = false;
+  isCoach = false;
+  saving = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private matchSvc: MatchService,
     private playerService: PlayerService,
+    private authSvc: AuthService,
     private loadingCtrl: LoadingController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private alertCtrl: AlertController
   ) { }
 
   ngOnInit() {
@@ -37,6 +44,16 @@ export class EditMatchPage implements OnInit {
       this.matchId = +id;
       this.loadData();
     }
+
+    // Detección de roles segura
+    this.authSvc.currentUser$.subscribe(user => {
+        const u = user as any;
+        if (u && u.rol) {
+            const r = String(u.rol).toUpperCase();
+            this.isAdmin = r.includes('ADMIN'); 
+            this.isCoach = r.includes('ENTRENADOR') || r.includes('COACH') || r.includes('STAFF') || r.includes('DELEGADO');
+        }
+    });
   }
 
   async loadData() {
@@ -49,8 +66,13 @@ export class EditMatchPage implements OnInit {
         this.matchStats.golesFavor = m.golesFavor || 0;
         this.matchStats.golesContra = m.golesContra || 0;
         
-        // Cargamos jugadores y fusionamos
-        this.loadPlayersAndMerge(m.idEquipo, loading);
+        // Si hay equipo asignado, cargamos jugadores
+        const teamId = m.idEquipo || (m.equipo ? m.equipo.idEquipo : null);
+        if (teamId) {
+             this.loadPlayersAndMerge(teamId, loading);
+        } else {
+             loading.dismiss();
+        }
       },
       error: () => loading.dismiss()
     });
@@ -65,77 +87,49 @@ export class EditMatchPage implements OnInit {
       const alineacion = lineupData || [];
       const allPlayers = Array.isArray(allPlayersData) ? allPlayersData : (allPlayersData.data || []);
 
+      // Filtramos solo los jugadores de ESTE equipo
       const myTeamPlayers = allPlayers.filter((p: any) => {
          const pTeamId = p.equipoPrincipal?.id || p.equipoPrincipal?.idEquipo || p.equipoPrincipal;
          return pTeamId == teamId;
       });
 
       this.fullSquadStats = myTeamPlayers.map((player: any) => {
-        
-        // 🔥 FIX PERSISTENCIA: Convertimos a String para comparar, así no falla si uno es number y otro string
         const pId = player.idJugador || player.id;
-        const existingRecord = alineacion.find((a: any) => {
-            const aId = a.idJugador || a.jugador?.idJugador;
-            return String(aId) === String(pId);
-        });
-
-        // Aseguramos que tenemos el ID correcto para trabajar
-        const idJugadorSeguro = pId;
-
-        if (existingRecord) {
-          // --- JUGADOR CON DATOS GUARDADOS ---
-          return {
-            ...existingRecord,
-            // Datos visuales
-            nombre: existingRecord.nombre || player.usuario?.nombre,
-            apellidos: existingRecord.apellidos || player.usuario?.apellidos,
-            dorsal: existingRecord.dorsal || player.dorsal,
-            fotoUrl: existingRecord.fotoUrl || player.usuario?.fotoUrl,
-            idJugador: idJugadorSeguro,
-            
-            esTitular: existingRecord.esTitular,
-            
-            // Stats: Si vienen del backend, usarlas. Si no, inicializar.
-            minutos: (existingRecord.minutosJugados !== undefined && existingRecord.minutosJugados !== null) 
-                     ? existingRecord.minutosJugados 
-                     : (existingRecord.esTitular ? 90 : 0),
-            
-            goles: existingRecord.goles || 0,
-            asistencias: existingRecord.asistencias || 0,
-            amarilla: existingRecord.tarjetaAmarilla || false,
-            roja: existingRecord.tarjetaRoja || false,
-            
-            // Cambios: Importante mantener el 0 si existe
-            minutoEntrada: existingRecord.minutoEntrada, 
-            minutoSalida: existingRecord.minutoSalida
-          };
-        } else {
-          // --- JUGADOR NUEVO (SIN DATOS) ---
-          return {
-            idJugador: idJugadorSeguro,
+        // Buscamos si ya tiene datos guardados en la alineación
+        const existingRecord = alineacion.find((a: any) => String(a.idJugador || a.jugador?.idJugador) === String(pId));
+        
+        let stats = {
+            idJugador: pId,
             nombre: player.usuario?.nombre,
             apellidos: player.usuario?.apellidos,
             dorsal: player.dorsal,
             fotoUrl: player.usuario?.fotoUrl,
             posicion: player.posicion,
-            
             esTitular: false,
             minutos: 0,
             goles: 0,
-            asistencias: 0,
-            amarilla: false,
-            roja: false,
             minutoEntrada: null,
             minutoSalida: null
+        };
+
+        if (existingRecord) {
+          stats = {
+            ...stats,
+            ...existingRecord, // Sobrescribimos con lo que venga del backend
+            nombre: player.usuario?.nombre, 
+            apellidos: player.usuario?.apellidos,
+            fotoUrl: player.usuario?.fotoUrl
           };
+          // Aseguramos números
+          stats.goles = existingRecord.goles || 0;
+          stats.minutos = (existingRecord.minutosJugados !== undefined) ? existingRecord.minutosJugados : (stats.esTitular ? 90 : 0);
         }
+
+        return stats;
       });
 
-      // Separar y Ordenar
       this.starters = this.fullSquadStats.filter(p => p.esTitular);
-      // En el banquillo, mostramos primero a los que han jugado (tienen minutos)
-      this.bench = this.fullSquadStats.filter(p => !p.esTitular)
-                       .sort((a, b) => (b.minutos || 0) - (a.minutos || 0));
+      this.bench = this.fullSquadStats.filter(p => !p.esTitular).sort((a, b) => (b.minutos || 0) - (a.minutos || 0));
 
       loading.dismiss();
 
@@ -145,55 +139,85 @@ export class EditMatchPage implements OnInit {
     });
   }
 
-  // --- FUNCIÓN HELPER PARA LIMPIAR DATOS ---
-  // Convierte cualquier cosa a un Entero válido o devuelve el valor por defecto
   private safeInt(value: any, defaultValue: any = 0): number | null {
-    if (value === null || value === undefined || value === '') {
-      return defaultValue;
-    }
+    if (value === null || value === undefined || value === '') return defaultValue;
     const num = Number(value);
     return isNaN(num) ? defaultValue : num;
   }
 
-  async saveActa() {
-    const loading = await this.loadingCtrl.create({ message: 'Guardando acta...' });
-    await loading.present();
+  // 🔥 MÉTODO CLAVE: Prepara los datos para enviarlos al Backend
+  private construirPayload() {
+      const allStats = [...this.starters, ...this.bench];
+      return {
+          idPartido: this.matchId,
+          golesFavor: this.safeInt(this.matchStats.golesFavor),
+          golesContra: this.safeInt(this.matchStats.golesContra),
+          // Enviamos la lista completa de jugadores con sus stats
+          estadisticas: allStats.map(p => ({
+            idJugador: p.idJugador,
+            goles: this.safeInt(p.goles),
+            minutos: this.safeInt(p.minutos),
+            esTitular: !!p.esTitular,
+            minutoEntrada: this.safeInt(p.minutoEntrada, null),
+            minutoSalida: this.safeInt(p.minutoSalida, null)
+          }))
+      };
+  }
 
-    const allStats = [...this.starters, ...this.bench];
+  // --- ENTRENADOR: SOLO GUARDAR ---
+  async guardarAlineacion() {
+    this.saving = true;
+    const payload = this.construirPayload();
 
-    // Construimos el Payload con limpieza de datos para evitar el error 400
-    const actaPayload = {
-      idPartido: this.matchId,
-      golesFavor: this.safeInt(this.matchStats.golesFavor),
-      golesContra: this.safeInt(this.matchStats.golesContra),
-      estadisticas: allStats.map(p => ({
-        idJugador: p.idJugador, // Este ID ya lo aseguramos al cargar
-        goles: this.safeInt(p.goles),
-        asistencias: this.safeInt(p.asistencias),
-        minutos: this.safeInt(p.minutos),
-        amarilla: !!p.amarilla, // Forzar booleano puro
-        roja: !!p.roja,         // Forzar booleano puro
-        esTitular: !!p.esTitular,
-        
-        // Para entrada/salida enviamos null si no hay dato, para que la BD lo guarde como NULL
-        minutoEntrada: this.safeInt(p.minutoEntrada, null), 
-        minutoSalida: this.safeInt(p.minutoSalida, null)
-      }))
-    };
-
-    console.log("Enviando Payload Limpio:", actaPayload);
-
-    this.matchSvc.closeMatchReport(actaPayload).subscribe({
+    this.matchSvc.saveLineupOnly(payload).subscribe({
       next: async () => {
-        await loading.dismiss();
-        this.presentToast('Acta actualizada correctamente 📝', 'success');
+        this.saving = false;
+        this.presentToast('Alineación guardada 📋', 'success');
         this.router.navigate(['/coach-dashboard']);
       },
       error: async (err) => {
-        await loading.dismiss();
-        console.error("Error backend:", err);
-        this.presentToast('Error al guardar. Revisa los datos.', 'danger');
+        this.saving = false;
+        this.presentToast('Error al guardar.', 'danger');
       }
+    });
+  }
+
+  // --- ADMIN: CONFIRMAR CIERRE ---
+  async confirmarCierreActa() {
+      const alert = await this.alertCtrl.create({
+          header: 'Cerrar Acta Oficial',
+          message: `Resultado: ${this.matchStats.golesFavor} - ${this.matchStats.golesContra}\n\nSe guardarán los minutos y goles asignados a los jugadores.\n¿Finalizar partido?`,
+          buttons: [
+              { text: 'Cancelar', role: 'cancel' },
+              { 
+                  text: 'Finalizar', 
+                  handler: () => {
+                      this.cerrarActaOficial();
+                  }
+              }
+          ]
+      });
+      await alert.present();
+  }
+
+  // --- ADMIN: ENVIAR DATOS Y CERRAR ---
+  async cerrarActaOficial() {
+    this.saving = true;
+    
+    // Aquí enviamos el payload COMPLETO (Resultado + Jugadores)
+    const payload = this.construirPayload();
+
+    this.matchSvc.closeMatchReport(payload).subscribe({
+        next: () => {
+            this.saving = false;
+            this.presentToast('Partido finalizado correctamente 🏁', 'success');
+            this.router.navigate(['/admin']);
+        },
+        error: (err) => {
+            this.saving = false;
+            console.error(err);
+            this.presentToast('Error al cerrar el acta', 'danger');
+        }
     });
   }
 

@@ -11,6 +11,7 @@ export class MatchService {
 
   constructor(private http: HttpClient) { }
 
+  // --- MÉTODOS BÁSICOS ---
   createMatch(matchData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/partidos`, matchData);
   }
@@ -27,15 +28,6 @@ export class MatchService {
     return this.http.get<any[]>(`${this.apiUrl}/alineaciones/partido/${matchId}`);
   }
 
-  saveLineup(matchId: number, lineupData: any[]): Observable<any> {
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    return this.http.post(
-      `${this.apiUrl}/alineaciones/guardar/${matchId}`, 
-      lineupData, 
-      { headers: headers }
-    );
-  }
-  
   getMatches(filters?: any): Observable<any[]> {
     if (filters && filters.teamId) {
         return this.getMatchesByTeam(filters.teamId);
@@ -43,8 +35,24 @@ export class MatchService {
     return this.http.get<any[]>(`${this.apiUrl}/partidos`);
   }
 
-  // ✅ CRÍTICO: Debe apuntar al endpoint nuevo que hace upsert
+  // --- MÉTODOS ENTRENADOR ---
+  
+  // Guardar alineación (El entrenador NO finaliza, solo guarda)
+  saveLineupOnly(actaData: any): Observable<any> {
+    // Usamos el endpoint de alineaciones normal
+    return this.http.post(`${this.apiUrl}/alineaciones/guardar/${actaData.idPartido}`, actaData.estadisticas);
+  }
+
+  // Legacy (por si acaso)
+  saveLineup(matchId: number, lineupData: any[]): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.post(`${this.apiUrl}/alineaciones/guardar/${matchId}`, lineupData, { headers });
+  }
+
+  // --- MÉTODOS ADMIN ---
+
+  // 🔥 CERRAR ACTA (Exclusivo Admin: Pone resultado y estado FINALIZADO)
   closeMatchReport(actaData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/alineaciones/cerrar`, actaData);
+    return this.http.post(`${this.apiUrl}/admin/cerrar-acta`, actaData);
   }
 }

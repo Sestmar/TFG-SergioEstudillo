@@ -11,8 +11,13 @@ import java.util.List;
 @Repository
 public interface EquipoEntrenadorRepository extends JpaRepository<EquipoEntrenador, EquipoEntrenadorId> {
 
-    // Busca todas las asignaciones de un entrenador usando su ID
-    // Spring navega: Objeto 'entrenador' -> Campo 'idEntrenador'
+    // 1. Busca asignaciones por Entrenador (Para el dashboard del coach)
     List<EquipoEntrenador> findByEntrenador_IdEntrenador(Integer idEntrenador);
+
+    // 2. 🔥 NUEVO: Busca asignaciones por Equipo (Para el detalle del Admin)
+    // Esto busca dentro de la Clave Compuesta (EmbeddedId) el campo idEquipo
+    List<EquipoEntrenador> findById_IdEquipo(Integer idEquipo);
+
+    // 3. Para borrar en cascada
     void deleteByEntrenador(Entrenador entrenador);
 }

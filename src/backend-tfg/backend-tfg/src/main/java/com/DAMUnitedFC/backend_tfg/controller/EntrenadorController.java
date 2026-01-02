@@ -7,7 +7,7 @@ import com.DAMUnitedFC.backend_tfg.model.EquipoEntrenador;
 import com.DAMUnitedFC.backend_tfg.repository.EntrenadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
-import com.DAMUnitedFC.backend_tfg.repository.EquipoEntrenadorRepository; // 🔥 Recuperamos esto
+import com.DAMUnitedFC.backend_tfg.repository.EquipoEntrenadorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +24,7 @@ public class EntrenadorController {
     private final EntrenadorRepository repo;
     private final UsuarioRepository usuarioRepo;
     private final EquipoRepository equipoRepo;
-    private final EquipoEntrenadorRepository equipoEntrenadorRepo; // 🔥 Inyección
+    private final EquipoEntrenadorRepository equipoEntrenadorRepo;
 
     @Autowired
     public EntrenadorController(EntrenadorRepository repo,
@@ -42,6 +42,12 @@ public class EntrenadorController {
     @GetMapping
     public List<Entrenador> listar() {
         return repo.findAll();
+    }
+
+    // 🔥 NUEVO ENDPOINT: Para cargar la lista en "Solicitudes" o "Asignar Entrenador"
+    @GetMapping("/sin-equipo")
+    public ResponseEntity<List<Entrenador>> listarSinEquipo() {
+        return ResponseEntity.ok(repo.findEntrenadoresSinEquipo());
     }
 
     @GetMapping("/{id}")
@@ -85,10 +91,7 @@ public class EntrenadorController {
         repo.deleteById(id);
     }
 
-    // --- ✅ ENDPOINT INTELIGENTE (LECTOR UNIVERSAL) ---
-    // Busca tanto si es Jefe (Tabla Equipo) como si es Staff (Tabla Intermedia)
-
-    // --- ✅ ENDPOINT ACTUALIZADO: Devuelve Equipo + Rol Específico ---
+    // --- LOGICA DE EQUIPO Y ROL ---
 
     @GetMapping("/usuario/{idUsuario}/equipo")
     public ResponseEntity<?> getEquipoDelUsuario(@PathVariable Integer idUsuario) {
@@ -99,28 +102,26 @@ public class EntrenadorController {
         }
         Entrenador entrenador = entrenadorOpt.get();
 
-        // 1. INTENTO A: Buscar en Staff (Tabla Intermedia) -> Sacamos el Rol Específico
+        // 1. Buscar en Staff (Tabla Intermedia)
         List<EquipoEntrenador> staffAssignments = equipoEntrenadorRepo.findByEntrenador_IdEntrenador(entrenador.getIdEntrenador());
 
         if (!staffAssignments.isEmpty()) {
             EquipoEntrenador asignacion = staffAssignments.get(0);
-
-            // Construimos la respuesta compuesta
             java.util.Map<String, Object> response = new java.util.HashMap<>();
             response.put("equipo", asignacion.getEquipo());
-            response.put("rol", asignacion.getRol()); // Ej: "Segundo Entrenador"
-            response.put("entrenadorId", entrenador.getIdEntrenador()); // Útil para el perfil
+            response.put("rol", asignacion.getRol());
+            response.put("entrenadorId", entrenador.getIdEntrenador());
 
             return ResponseEntity.ok(response);
         }
 
-        // 2. INTENTO B: Buscar como Jefe Directo (Legacy)
+        // 2. Buscar como Jefe Directo (Legacy)
         Optional<Equipo> equipoJefe = equipoRepo.findByEntrenador_Usuario_IdUsuario(idUsuario);
 
         if (equipoJefe.isPresent()) {
             java.util.Map<String, Object> response = new java.util.HashMap<>();
             response.put("equipo", equipoJefe.get());
-            response.put("rol", "Entrenador Principal"); // Por defecto si es relación directa
+            response.put("rol", "Entrenador Principal");
             response.put("entrenadorId", entrenador.getIdEntrenador());
 
             return ResponseEntity.ok(response);

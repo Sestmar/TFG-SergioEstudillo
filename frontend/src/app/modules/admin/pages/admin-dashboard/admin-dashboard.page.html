@@ -33,7 +33,7 @@
         
         <div class="sub-filter">
             <ion-chip [outline]="userSegment !== 'pending'" [color]="userSegment === 'pending' ? 'warning' : 'medium'" (click)="userSegment = 'pending'">
-                Solicitudes ({{ candidates.length }})
+                Solicitudes ({{ candidates.length + coachCandidates.length }})
             </ion-chip>
             <ion-chip [outline]="userSegment !== 'active'" [color]="userSegment === 'active' ? 'primary' : 'medium'" (click)="userSegment = 'active'">
                 Base de Datos
@@ -47,26 +47,59 @@
         </div>
 
         <div *ngIf="userSegment === 'pending'">
-            <div class="admin-card" *ngFor="let candidate of candidates">
-                <div class="user-row">
-                    <div class="avatar-circle">{{ candidate.nombre.charAt(0) }}</div>
-                    <div class="info">
-                        <h4>{{ candidate.nombre }} {{ candidate.apellidos }}</h4>
-                        <p>{{ candidate.email }}</p>
-                        <span class="tag-pending">Pendiente de Asignación</span>
+            
+            <div *ngIf="candidates.length > 0">
+                <h6 class="section-label">Jugadores Nuevos</h6>
+                <div class="admin-card" *ngFor="let candidate of candidates">
+                    <div class="user-row">
+                        <div class="avatar-circle">{{ candidate.nombre.charAt(0) }}</div>
+                        <div class="info">
+                            <h4>{{ candidate.nombre }} {{ candidate.apellidos }}</h4>
+                            <p>{{ candidate.email }}</p>
+                            <span class="tag-pending">Jugador</span>
+                        </div>
+                    </div>
+                    <div class="action-row">
+                        <ion-select placeholder="Asignar Equipo..." [(ngModel)]="candidate.selectedTeamId" interface="popover" class="dark-select">
+                            <ion-select-option *ngFor="let t of teams" [value]="t.idEquipo">{{ t.nombre }}</ion-select-option>
+                        </ion-select>
+                        <ion-button (click)="onAssignPlayer(candidate)" color="success" size="small">
+                            <ion-icon name="checkmark"></ion-icon>
+                        </ion-button>
                     </div>
                 </div>
-                <div class="action-row">
-                    <ion-select placeholder="Asignar Equipo..." [(ngModel)]="candidate.selectedTeamId" interface="popover" class="dark-select">
-                        <ion-select-option *ngFor="let t of teams" [value]="t.idEquipo">{{ t.nombre }}</ion-select-option>
-                    </ion-select>
-                    <ion-button (click)="onAssignPlayer(candidate)" color="success" size="small">
-                        <ion-icon name="checkmark"></ion-icon>
-                    </ion-button>
+            </div>
+
+            <div *ngIf="coachCandidates.length > 0">
+                <h6 class="section-label mt-3">Staff Técnico Nuevo</h6>
+                <div class="admin-card staff-card" *ngFor="let coach of coachCandidates">
+                    <div class="user-row">
+                        <div class="avatar-circle staff-avatar">{{ coach.usuario.nombre.charAt(0) }}</div>
+                        <div class="info">
+                            <h4>{{ coach.usuario.nombre }} {{ coach.usuario.apellidos }}</h4>
+                            <p>{{ coach.usuario.email }}</p>
+                            <span class="tag-pending staff-tag">Staff Técnico</span>
+                        </div>
+                    </div>
+                    <div class="action-row column-layout">
+                        <ion-select placeholder="Seleccionar Equipo..." [(ngModel)]="coach.selectedTeamId" interface="popover" class="dark-select w-100 mb-2">
+                            <ion-select-option *ngFor="let t of teams" [value]="t.idEquipo">{{ t.nombre }}</ion-select-option>
+                        </ion-select>
+                        
+                        <div class="flex-row w-100">
+                             <ion-select placeholder="Rol (Ej: Entrenador)" [(ngModel)]="coach.selectedRole" interface="popover" class="dark-select flex-grow">
+                                <ion-select-option *ngFor="let role of staffRoles" [value]="role">{{ role }}</ion-select-option>
+                            </ion-select>
+                            
+                            <ion-button (click)="onAssignCoach(coach)" color="tertiary" size="small" class="ml-2">
+                                <ion-icon name="briefcase"></ion-icon>
+                            </ion-button>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <div *ngIf="candidates.length === 0" class="empty-state">
+            <div *ngIf="candidates.length === 0 && coachCandidates.length === 0" class="empty-state">
                 <ion-icon name="checkmark-done-circle-outline"></ion-icon>
                 <p>Todo al día. No hay solicitudes pendientes.</p>
             </div>
@@ -110,7 +143,6 @@
     </div>
 
     <div *ngIf="currentView === 'competition'" class="view-section animate-fade-in">
-        
         <div class="hero-action-card" (click)="isMatchModalOpen = true">
             <div class="icon-box"><ion-icon name="calendar-number"></ion-icon></div>
             <div class="text">
@@ -146,15 +178,16 @@
             <h3>Nuevo Fichaje</h3>
             <ion-list class="dark-list">
                 <ion-item><ion-label position="stacked">Nombre</ion-label><ion-input [(ngModel)]="newUser.nombre"></ion-input></ion-item>
+                <ion-item><ion-label position="stacked">Apellidos</ion-label><ion-input [(ngModel)]="newUser.apellidos"></ion-input></ion-item>
                 <ion-item><ion-label position="stacked">Email</ion-label><ion-input type="email" [(ngModel)]="newUser.email"></ion-input></ion-item>
                 <ion-item>
                     <ion-label position="stacked">Rol</ion-label>
                     <ion-select [(ngModel)]="newUser.rol" interface="popover">
                         <ion-select-option value="JUGADOR">Jugador</ion-select-option>
-                        <ion-select-option value="ENTRENADOR">Entrenador</ion-select-option>
+                        <ion-select-option value="ENTRENADOR">Entrenador / Staff</ion-select-option>
                     </ion-select>
                 </ion-item>
-                <p class="hint">* Contraseña por defecto: "123"</p>
+                <p class="hint">* Contraseña por defecto: "123456"</p>
             </ion-list>
             <ion-button expand="block" color="primary" class="mt-4" (click)="createNewUser()">Crear Usuario</ion-button>
         </div>
@@ -185,14 +218,22 @@
                         <ion-select-option *ngFor="let t of teams" [value]="t.idEquipo">{{ t.nombre }}</ion-select-option>
                     </ion-select>
                 </ion-item>
+                
                 <ion-item>
                     <ion-label position="stacked">Rival</ion-label>
                     <ion-input [(ngModel)]="newMatch.rival" placeholder="Ej: Real Betis"></ion-input>
                 </ion-item>
+
+                <ion-item>
+                    <ion-label position="stacked">Escudo Rival</ion-label>
+                    <input type="file" (change)="onFileSelected($event)" accept="image/*" style="margin-top: 10px; color: white;">
+                </ion-item>
+
                 <ion-item>
                     <ion-label position="stacked">Lugar</ion-label>
                     <ion-input [(ngModel)]="newMatch.lugar" placeholder="Ej: Ciudad Deportiva"></ion-input>
                 </ion-item>
+                
                 <ion-item>
                     <ion-label position="stacked">Fecha y Hora</ion-label>
                     <ion-datetime-button datetime="datetime"></ion-datetime-button>

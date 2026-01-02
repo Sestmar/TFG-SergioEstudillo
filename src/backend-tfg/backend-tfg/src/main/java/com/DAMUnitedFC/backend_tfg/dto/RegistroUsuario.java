@@ -9,4 +9,5 @@ public class RegistroUsuario {
     private String email;
     private String password;
     private String telefono;
+    private String rol;
 }

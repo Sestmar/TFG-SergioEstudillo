@@ -20,7 +20,7 @@ export class LoginPage implements OnInit {
     private authService: AuthService,
     private router: Router,
     private notificationService: NotificationService,
-    private loadingCtrl: LoadingController // Añadido para feedback visual nativo
+    private loadingCtrl: LoadingController
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -40,7 +40,6 @@ export class LoginPage implements OnInit {
 
     this.isLoading = true;
     
-    // Opcional: Loader nativo de Ionic
     const loading = await this.loadingCtrl.create({
       message: 'Accediendo al estadio...',
       spinner: 'crescent',
@@ -58,6 +57,7 @@ export class LoginPage implements OnInit {
         this.isLoading = false;
         await loading.dismiss();
         
+        // Normalizamos los roles para que siempre sea un array
         const roles = user.roles || [];
         const rolesArray = typeof user.rol === 'string' ? [user.rol] : roles;
 
@@ -68,23 +68,31 @@ export class LoginPage implements OnInit {
         this.isLoading = false;
         await loading.dismiss();
         console.error('Error login:', error);
-        // Aquí podrías usar tu notificationService para mostrar error
+        // Aquí podrías mostrar un toast de error
       }
     });
   }
 
+  // 🔥 CORREGIDO: Lógica de detección de roles más robusta
   private redirectByRole(roles: string[]): void {
+    // Convertimos todo a mayúsculas para evitar problemas de case-sensitive
     const upperRoles = roles.map(r => r.toUpperCase());
 
-    if (upperRoles.includes('ADMIN')) {
-      // ❌ ANTES: this.router.navigate(['/user-dashboard']);
-      // ✅ AHORA:
+    // 1. Check ADMIN (Busca si contiene la palabra ADMIN)
+    if (upperRoles.some(r => r.includes('ADMIN'))) {
       this.router.navigate(['/admin']); 
-    } else if (upperRoles.includes('ENTRENADOR')) {
+      return;
+    } 
+    
+    // 2. Check ENTRENADOR (Busca 'ENTRENADOR', 'COACH' o 'STAFF')
+    // Esto hace que funcione tanto "ENTRENADOR" como "ROLE_ENTRENADOR"
+    if (upperRoles.some(r => r.includes('ENTRENADOR') || r.includes('COACH') || r.includes('STAFF'))) {
       this.router.navigate(['/coach-dashboard']);
-    } else {
-      this.router.navigate(['/player-dashboard']);
-    }
+      return;
+    } 
+    
+    // 3. Default: JUGADOR
+    this.router.navigate(['/player-dashboard']);
   }
 
   // --- Helpers UI ---

@@ -9,8 +9,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Mapea la URL /uploads/** a la carpeta física "uploads" en la raíz del proyecto
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:uploads/");
+        // 1. Mapeamos la URL que usa el AdminController (/api/uploads/...)
+        registry.addResourceHandler("/api/uploads/**")
+                // 2. Apuntamos a la carpeta REAL donde vimos las fotos (target/uploads)
+                .addResourceLocations("file:./target/uploads/");
     }
 }

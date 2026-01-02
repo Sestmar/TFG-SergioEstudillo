@@ -1,0 +1,87 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Ficha del Equipo</ion-title>
+    <ion-buttons slot="end">
+        <ion-button (click)="goToCalendar()">
+            <ion-icon name="calendar-number"></ion-icon>
+        </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="detail-bg">
+  
+  <div *ngIf="loading" class="spinner-center">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <div *ngIf="!loading && teamData" class="content-wrapper animate-fade-in">
+    
+    <div class="team-header-card">
+        <img [src]="teamData.escudoUrl || 'assets/img/mi-club-logo.png'" class="team-logo-big">
+        <div class="team-info">
+            <h1>{{ teamData.nombre }}</h1>
+            <span class="category-badge">{{ teamData.categoria?.nombre || 'Categoría Base' }}</span>
+        </div>
+    </div>
+
+    <div class="custom-segment">
+        <ion-segment [(ngModel)]="selectedSegment" mode="ios">
+            <ion-segment-button value="squad">
+                <ion-label>Plantilla</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="staff">
+                <ion-label>Cuerpo Técnico</ion-label>
+            </ion-segment-button>
+        </ion-segment>
+    </div>
+
+    <div *ngIf="selectedSegment === 'squad'" class="list-section">
+        <h3 class="section-title">Jugadores ({{ players.length }})</h3>
+        
+        <div class="player-card" *ngFor="let p of players">
+            <div class="player-left">
+                <span class="dorsal">{{ p.dorsal || '-' }}</span>
+                <img [src]="p.fotoUrl || 'https://ui-avatars.com/api/?name='+p.nombre" class="player-avatar">
+            </div>
+            <div class="player-center">
+                <h4>{{ p.nombre }} {{ p.apellidos }}</h4>
+                <p>{{ p.posicion || 'Sin Demarcación' }}</p>
+            </div>
+            <div class="player-right">
+                <div class="mini-stat">
+                    <ion-icon name="football"></ion-icon> {{ p.goles || 0 }}
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="players.length === 0" class="empty-msg">
+            No hay jugadores asignados.
+        </div>
+    </div>
+
+    <div *ngIf="selectedSegment === 'staff'" class="list-section">
+        <h3 class="section-title">Staff Técnico ({{ staff.length }})</h3>
+        
+        <div class="player-card" *ngFor="let s of staff">
+            <div class="player-left">
+                <img [src]="s.fotoUrl || 'https://ui-avatars.com/api/?name='+s.nombre" class="player-avatar staff-img">
+            </div>
+            <div class="player-center">
+                <h4>{{ s.nombre }} {{ s.apellidos }}</h4>
+                <p class="role-badge-text">{{ s.rol }}</p>
+            </div>
+        </div>
+        
+        <div *ngIf="staff.length === 0" class="empty-msg">
+            No hay cuerpo técnico asignado.
+        </div>
+    </div>
+
+  </div>
+</ion-content>

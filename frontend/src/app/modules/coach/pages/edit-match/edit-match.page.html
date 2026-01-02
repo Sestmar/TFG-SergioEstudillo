@@ -1,11 +1,12 @@
 <ion-header class="ion-no-border">
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/coach-dashboard"></ion-back-button>
+      <ion-back-button [defaultHref]="isAdmin ? '/admin' : '/coach-dashboard'"></ion-back-button>
     </ion-buttons>
-    <ion-title>Cerrar Acta</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="saveActa()" [disabled]="saving">
+    <ion-title>{{ isAdmin ? 'Cerrar Acta Oficial' : 'Gestionar Partido' }}</ion-title>
+    
+    <ion-buttons slot="end" *ngIf="isCoach">
+      <ion-button (click)="guardarAlineacion()" [disabled]="saving">
         <span *ngIf="!saving">Guardar</span>
         <ion-spinner *ngIf="saving" name="crescent"></ion-spinner>
       </ion-button>
@@ -17,31 +18,20 @@
 
   <div *ngIf="match" class="match-header-edit">
     <div class="teams-row">
-      
       <div class="team-col">
         <div class="logo-box">
-          <img src="assets/img/mi-club-logo.png" alt="DAM United" class="team-logo">
+          <img [src]="match.escudoLocalUrl || 'assets/img/mi-club-logo.png'" class="team-logo">
         </div>
-        <h3 class="team-name">DAM United</h3>
+        <h3 class="team-name">{{ match.equipo?.nombre || 'Local' }}</h3>
       </div>
 
       <div class="score-col">
         <div class="score-inputs">
-          <ion-input 
-            type="number" 
-            [(ngModel)]="matchStats.golesFavor" 
-            class="score-input"
-            inputmode="numeric">
-          </ion-input>
+          <ion-input type="number" [(ngModel)]="matchStats.golesFavor" class="score-input" [readonly]="!isAdmin" [class.readonly]="!isAdmin"></ion-input>
           <span class="divider">-</span>
-          <ion-input 
-            type="number" 
-            [(ngModel)]="matchStats.golesContra" 
-            class="score-input"
-            inputmode="numeric">
-          </ion-input>
+          <ion-input type="number" [(ngModel)]="matchStats.golesContra" class="score-input" [readonly]="!isAdmin" [class.readonly]="!isAdmin"></ion-input>
         </div>
-        <div class="match-status">FINALIZADO</div>
+        <div class="match-status">{{ match.estado || 'PENDIENTE' }}</div>
       </div>
 
       <div class="team-col">
@@ -51,78 +41,89 @@
         </div>
         <h3 class="team-name">{{ match.rival }}</h3>
       </div>
-
     </div>
   </div>
 
-  <div class="section-divider mt-4">
-    <ion-icon name="shirt-outline"></ion-icon> ONCE INICIAL
-  </div>
-
-  <div class="squad-list">
-    <div *ngFor="let player of starters" class="player-edit-card starter">
+  <div *ngIf="isAdmin" class="ion-padding admin-zone">
+      <div class="admin-notice">
+          <ion-icon name="information-circle"></ion-icon>
+          <p><strong>Zona Arbitral:</strong> Revisa o corrige los minutos y goles de los jugadores abajo antes de cerrar el acta.</p>
+      </div>
       
-      <div class="card-left">
-        <ion-avatar class="player-avatar">
-          <img [src]="player.fotoUrl" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
-        </ion-avatar>
-        
-        <div class="names">
-          <strong>{{ player.nombre }} {{ player.apellidos }}</strong>
-          <span>#{{ player.dorsal }} • <span class="text-success">Titular</span></span>
-        </div>
-      </div>
-
-      <div class="card-inputs">
-        <div class="input-group">
-          <label>MIN</label>
-          <ion-input type="number" [(ngModel)]="player.minutos"></ion-input>
-        </div>
-        <div class="input-group info">
-          <label>OUT</label>
-          <ion-input type="number" [(ngModel)]="player.minutoSalida" placeholder="--"></ion-input>
-        </div>
-        <div class="input-group success">
-          <label>GOL</label>
-          <ion-input type="number" [(ngModel)]="player.goles"></ion-input>
-        </div>
-      </div>
-    </div>
+      <ion-button expand="block" color="warning" (click)="confirmarCierreActa()" [disabled]="saving" class="mt-4 main-action-btn">
+          <ion-icon name="lock-closed" slot="start"></ion-icon>
+          <span *ngIf="!saving">CERRAR ACTA Y FINALIZAR</span>
+          <ion-spinner *ngIf="saving"></ion-spinner>
+      </ion-button>
   </div>
 
-  <div class="section-divider mt-4">
-    <ion-icon name="people-outline"></ion-icon> BANQUILLO / SUPLENTES
-  </div>
-
-  <div class="squad-list">
-    <div *ngFor="let player of bench" class="player-edit-card bench" [class.played]="player.minutos > 0">
+  <div *ngIf="isCoach || isAdmin">
       
-      <div class="card-left">
-        <ion-avatar class="player-avatar">
-          <img [src]="player.fotoUrl" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
-        </ion-avatar>
+      <div class="section-divider mt-4">
+        <ion-icon name="shirt-outline"></ion-icon> ONCE INICIAL
+      </div>
 
-        <div class="names">
-          <strong>{{ player.nombre }} {{ player.apellidos }}</strong>
-          <span>#{{ player.dorsal }} • Suplente</span>
+      <div class="squad-list">
+        <div *ngFor="let player of starters" class="player-edit-card starter">
+          <div class="card-left">
+            <ion-avatar class="player-avatar">
+              <img [src]="player.fotoUrl" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
+            </ion-avatar>
+            <div class="names">
+              <strong>{{ player.nombre }} {{ player.apellidos }}</strong>
+              <span>#{{ player.dorsal }} • <span class="text-success">Titular</span></span>
+            </div>
+          </div>
+
+          <div class="card-inputs">
+            <div class="input-group">
+              <label>MIN</label>
+              <ion-input type="number" [(ngModel)]="player.minutos"></ion-input>
+            </div>
+            <div class="input-group info">
+              <label>OUT</label>
+              <ion-input type="number" [(ngModel)]="player.minutoSalida" placeholder="--"></ion-input>
+            </div>
+            <div class="input-group success">
+              <label>GOL</label>
+              <ion-input type="number" [(ngModel)]="player.goles"></ion-input>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="card-inputs">
-        <div class="input-group">
-          <label>MIN</label>
-          <ion-input type="number" [(ngModel)]="player.minutos"></ion-input>
-        </div>
-        <div class="input-group info">
-          <label>IN</label>
-          <ion-input type="number" [(ngModel)]="player.minutoEntrada" placeholder="--"></ion-input>
-        </div>
-        <div class="input-group success">
-          <label>GOL</label>
-          <ion-input type="number" [(ngModel)]="player.goles"></ion-input>
+      <div class="section-divider mt-4">
+        <ion-icon name="people-outline"></ion-icon> BANQUILLO / SUPLENTES
+      </div>
+
+      <div class="squad-list">
+        <div *ngFor="let player of bench" class="player-edit-card bench" [class.played]="player.minutos > 0">
+          <div class="card-left">
+            <ion-avatar class="player-avatar">
+              <img [src]="player.fotoUrl" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
+            </ion-avatar>
+            <div class="names">
+              <strong>{{ player.nombre }} {{ player.apellidos }}</strong>
+              <span>#{{ player.dorsal }} • Suplente</span>
+            </div>
+          </div>
+
+          <div class="card-inputs">
+            <div class="input-group">
+              <label>MIN</label>
+              <ion-input type="number" [(ngModel)]="player.minutos"></ion-input>
+            </div>
+            <div class="input-group info">
+              <label>IN</label>
+              <ion-input type="number" [(ngModel)]="player.minutoEntrada" placeholder="--"></ion-input>
+            </div>
+            <div class="input-group success">
+              <label>GOL</label>
+              <ion-input type="number" [(ngModel)]="player.goles"></ion-input>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
   </div>
 
   <div class="spacer" style="height: 50px"></div>

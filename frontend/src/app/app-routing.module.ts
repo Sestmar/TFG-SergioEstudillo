@@ -83,17 +83,22 @@ const routes: Routes = [
     loadChildren: () => import('./modules/admin/admin.module').then(m => m.AdminModule)
   },
 
-  // 🔥 RUTA DE PERFIL DE ENTRENADOR (CORREGIDA)
-  // Verificamos la ruta: src/app/modules/coach/pages/coach-profile/coach-profile.module.ts
   {
     path: 'coach/profile/:id',
     loadChildren: () => import('./modules/coach/pages/coach-profile/coach-profile.module').then( m => m.CoachProfilePageModule)
   },
 
+  // 🔥 CORRECCIÓN 1: Quitamos el .ts de la importación
   {
-  path: 'calendar',
-  loadChildren: () => import('./modules/calendar/calendar.module').then( m => m.CalendarPageModule)
-},
+    path: 'calendar',
+    loadChildren: () => import('./modules/calendar/calendar.module').then( m => m.CalendarPageModule)
+  },
+
+  // 🔥 CORRECCIÓN 2: Aseguramos la ruta correcta (sin .ts y verificando path)
+  {
+    path: 'team-detail/:id',
+    loadChildren: () => import('./modules/admin/pages/team-detail/team-detail.module').then( m => m.TeamDetailPageModule)
+  },
 
   // COMODÍN (Siempre al final)
   { path: '**', redirectTo: 'landing' }
