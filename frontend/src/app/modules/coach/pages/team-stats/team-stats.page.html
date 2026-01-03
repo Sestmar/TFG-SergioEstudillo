@@ -1,0 +1,86 @@
+<ion-content [fullscreen]="true" class="stats-bg">
+  
+  <div class="header">
+    <ion-button fill="clear" color="light" (click)="goBack()">
+      <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+    </ion-button>
+    <h1>Rendimiento Real</h1>
+  </div>
+
+  <div *ngIf="loading" class="loading-center">
+    <ion-spinner name="crescent" color="secondary"></ion-spinner>
+  </div>
+
+  <div class="content" *ngIf="!loading">
+    
+    <div class="section-card overview animate-fade-in-down">
+      <h2>{{ teamName }}</h2>
+      <div class="big-stat">{{ seasonStats.played }} <small>Partidos</small></div>
+      
+      <div class="results-bar">
+        <div class="result win" [style.flex]="seasonStats.wins || 0.1">
+            <span *ngIf="seasonStats.wins > 0">{{ seasonStats.wins }}W</span>
+        </div>
+        <div class="result draw" [style.flex]="seasonStats.draws || 0.1">
+            <span *ngIf="seasonStats.draws > 0">{{ seasonStats.draws }}D</span>
+        </div>
+        <div class="result loss" [style.flex]="seasonStats.losses || 0.1">
+            <span *ngIf="seasonStats.losses > 0">{{ seasonStats.losses }}L</span>
+        </div>
+      </div>
+
+      <div class="goals-row">
+         <div class="goal-item">
+            <span class="val success">{{ seasonStats.goalsFor }}</span>
+            <span class="lbl">Goles Favor</span>
+         </div>
+         <div class="divider"></div>
+         <div class="goal-item">
+            <span class="val danger">{{ seasonStats.goalsAgainst }}</span>
+            <span class="lbl">Goles Contra</span>
+         </div>
+      </div>
+    </div>
+
+    <h3 class="section-title animate-fade-in-up delay-1">⚽ Máximos Goleadores</h3>
+    <div class="player-list animate-fade-in-up delay-1">
+       <div class="player-item" *ngFor="let item of topScorers; let i = index">
+          <span class="rank">{{ i + 1 }}</span>
+          
+          <img [src]="getAvatarUrl(item)" class="avatar">
+          
+          <div class="info">
+             <span class="name">{{ item.player.usuario?.nombre }} {{ item.player.usuario?.apellidos }}</span>
+             <span class="pos">{{ item.player.posicion }}</span>
+          </div>
+          <span class="stat-value">{{ item.goals }}</span>
+       </div>
+       
+       <div *ngIf="topScorers.length === 0" class="empty">
+           <ion-icon name="football-outline"></ion-icon>
+           <p>Aún no hay goles registrados.</p>
+       </div>
+    </div>
+
+    <h3 class="section-title animate-fade-in-up delay-2">⏱️ Más Minutos</h3>
+    <div class="player-list animate-fade-in-up delay-2">
+       <div class="player-item" *ngFor="let item of topMinutes; let i = index">
+          <span class="rank">{{ i + 1 }}</span>
+          
+          <img [src]="getAvatarUrl(item)" class="avatar">
+          
+          <div class="info">
+             <span class="name">{{ item.player.usuario?.nombre }}</span>
+             <span class="pos">#{{ item.player.dorsal || '-' }}</span>
+          </div>
+          <span class="stat-value min">{{ item.minutes }}'</span>
+       </div>
+       
+       <div *ngIf="topMinutes.length === 0" class="empty">
+           <ion-icon name="time-outline"></ion-icon>
+           <p>Aún no hay minutos registrados.</p>
+       </div>
+    </div>
+
+  </div>
+</ion-content>

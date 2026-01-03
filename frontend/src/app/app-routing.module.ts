@@ -28,49 +28,66 @@ const routes: Routes = [
     loadChildren: () => import('./modules/players/pages/player-dashboard/player-dashboard.module').then(m => m.PlayerDashboardPageModule)
   },
 
-  // ENTRENADOR
+  // ENTRENADOR (DASHBOARD)
   {
     path: 'coach-dashboard',
     loadChildren: () => import('./modules/coach/pages/coach-dashboard/coach-dashboard.module').then(m => m.CoachDashboardPageModule)
   },
 
-  // RUTA CREAR CONVOCATORIA
+  // --- OTRAS RUTAS DE COACH ---
+
+  // 🔥 NUEVA RUTA: ESTADÍSTICAS DE EQUIPO
   {
-    path: 'convocations/create',
-    loadChildren: () => import('./modules/coach/pages/convocations/create-convocation.module').then( m => m.CreateConvocationPageModule)
+    path: 'coach/stats',
+    loadChildren: () => import('./modules/coach/pages/team-stats/team-stats.module').then( m => m.TeamStatsPageModule)
   },
 
-  // RUTA DE DETALLE (Con parámetro ID)
-  {
-    path: 'convocations/:id',
-    loadChildren: () => import('./modules/coach/pages/convocations/convocation-details/convocation-details.module').then( m => m.ConvocationDetailsPageModule)
-  },
-
-  // RUTA GESTIONAR PLANTILLA
+  // GESTIONAR PLANTILLA
   {
     path: 'coach/my-team',
     loadChildren: () => import('./modules/coach/pages/my-team/my-team.module').then( m => m.MyTeamPageModule)
   },
 
-  // RUTA DE PERFIL DE USUARIO GENÉRICO
+  // PERFIL ENTRENADOR
+  {
+    path: 'coach/profile/:id',
+    loadChildren: () => import('./modules/coach/pages/coach-profile/coach-profile.module').then( m => m.CoachProfilePageModule)
+  },
+
+  // CREAR CONVOCATORIA
+  {
+    path: 'convocations/create',
+    loadChildren: () => import('./modules/coach/pages/convocations/create-convocation.module').then( m => m.CreateConvocationPageModule)
+  },
+
+  // DETALLE CONVOCATORIA
+  {
+    path: 'convocations/:id',
+    loadChildren: () => import('./modules/coach/pages/convocations/convocation-details/convocation-details.module').then( m => m.ConvocationDetailsPageModule)
+  },
+
+  // PIZARRA TÁCTICA
+  {
+    path: 'tactics/:matchId',
+    loadChildren: () => import('./modules/coach/pages/tactics/tactics.module').then( m => m.TacticsPageModule)
+  },
+
+  // EDITAR PARTIDO (ALINEACIÓN)
+  {
+    path: 'edit-match/:id',
+    loadChildren: () => import('./modules/coach/pages/edit-match/edit-match.module').then( m => m.EditMatchPageModule)
+  },
+
+  // --- COMUNES / ADMIN ---
+
   {
     path: 'profile',
     loadChildren: () => import('./modules/user/pages/profile/profile.module').then( m => m.ProfilePageModule)
   },
 
   {
-    path: 'tactics/:matchId',
-    loadChildren: () => import('./modules/coach/pages/tactics/tactics.module').then( m => m.TacticsPageModule)
-  },
-
-  {
     path: 'match-detail/:id',
     loadChildren: () => import('./modules/match-detail/match-detail.module').then( m => m.MatchDetailPageModule)
-  },
-
-  {
-    path: 'edit-match/:id',
-    loadChildren: () => import('./modules/coach/pages/edit-match/edit-match.module').then( m => m.EditMatchPageModule)
   },
 
   {
@@ -84,22 +101,15 @@ const routes: Routes = [
   },
 
   {
-    path: 'coach/profile/:id',
-    loadChildren: () => import('./modules/coach/pages/coach-profile/coach-profile.module').then( m => m.CoachProfilePageModule)
-  },
-
-  // 🔥 CORRECCIÓN 1: Quitamos el .ts de la importación
-  {
     path: 'calendar',
     loadChildren: () => import('./modules/calendar/calendar.module').then( m => m.CalendarPageModule)
   },
 
-  // 🔥 CORRECCIÓN 2: Aseguramos la ruta correcta (sin .ts y verificando path)
   {
     path: 'team-detail/:id',
     loadChildren: () => import('./modules/admin/pages/team-detail/team-detail.module').then( m => m.TeamDetailPageModule)
   },
-
+  
   // COMODÍN (Siempre al final)
   { path: '**', redirectTo: 'landing' }
 ];

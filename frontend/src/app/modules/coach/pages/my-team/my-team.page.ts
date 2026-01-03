@@ -4,8 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { TeamService } from 'src/app/core/services/team/team.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
-import { Player } from 'src/app/shared/models/models'; // Eliminado Team si no se usa
-// 🔥 IMPORTS CLAVE PARA CORREGIR EL ERROR DE CARGA
+import { Player } from 'src/app/shared/models/models';
 import { filter, switchMap } from 'rxjs/operators';
 
 @Component({
@@ -15,19 +14,22 @@ import { filter, switchMap } from 'rxjs/operators';
 })
 export class MyTeamPage implements OnInit {
   
+  // 🔥 LISTAS SEPARADAS
+  injuredPlayers: Player[] = []; 
+  
   keepers: Player[] = [];
   defenders: Player[] = [];
   midfielders: Player[] = [];
   forwards: Player[] = [];
-  others: Player[] = []; // 🔥 NUEVO: Para jugadores PENDIENTES o sin posición
+  others: Player[] = []; 
   
   allPlayersCount: number = 0;
   coachTeamId: number | null = null; 
   coachTeamName: string = ''; 
   
   loading: boolean = true;
-  isModalOpen = false;      // Modal de Lesión
-  isEditModalOpen = false;  // Modal de Ficha Técnica
+  isModalOpen = false;      
+  isEditModalOpen = false;  
   selectedPlayer: Player | null = null;
   
   injuryData = { tipo: '', duracion: '', notas: '' };
@@ -43,14 +45,12 @@ export class MyTeamPage implements OnInit {
     'MEDIOCENTRO', 'EXTREMO', 'DELANTERO', 'PIVOTE', 'MEDIA_PUNTA'
   ];
 
-  // Opciones para que el popover del select se vea oscuro
   customPopoverOptions: any = {
     cssClass: 'custom-dark-popover'
   };
 
   constructor(
     private playerService: PlayerService,
-    private teamService: TeamService,
     private authSvc: AuthService,
     private http: HttpClient,
     private alertCtrl: AlertController,
@@ -62,45 +62,30 @@ export class MyTeamPage implements OnInit {
     this.detectCoachTeam();
   }
 
-  // 🔥 MÉTODO BLINDADO CON SWITCHMAP
   detectCoachTeam() {
     this.loading = true;
-
-    // 1. Esperamos a que el usuario NO sea null
     this.authSvc.currentUser$
       .pipe(
-        filter(user => !!user), // Semáforo: Si es null, espera.
+        filter(user => !!user), 
         switchMap(user => {
-          // 2. Una vez pasa, sacamos ID seguro
           const u = user as any;
           const userId = u.id || u.idUsuario || u.sub;
-          
-          console.log('MyTeam - Usuario detectado:', userId);
-
-          // 3. Devolvemos la petición para encadenarla
           return this.http.get(`http://localhost:8080/api/entrenadores/usuario/${userId}/equipo`);
         })
       )
       .subscribe({
         next: (response: any) => {
-          // 4. Procesamos respuesta
           const equipo = response.equipo; 
-          
           if (equipo) {
              this.coachTeamId = Number(equipo.idEquipo || equipo.id); 
              this.coachTeamName = equipo.nombre;
-             
-             console.log('Equipo cargado:', this.coachTeamName, 'ID:', this.coachTeamId);
-
-             // 5. Cargamos jugadores
              this.loadPlayers();
           } else {
-             console.warn('El entrenador no tiene equipo asignado.');
              this.loading = false;
           }
         },
         error: (err) => {
-          console.error('Error cargando equipo del entrenador:', err);
+          console.error('Error cargando equipo:', err);
           this.loading = false;
         }
       });
@@ -129,26 +114,37 @@ export class MyTeamPage implements OnInit {
     });
   }
 
-  // 🔥 LÓGICA CORREGIDA PARA MOSTRAR "PENDIENTES"
+  // 🔥 LÓGICA DE FILTRADO (Con Cast 'as any' para TypeScript)
   private organizeByPosition(players: Player[]) {
-      this.keepers = players.filter(p => this.checkPos(p, ['PORTERO']));
-      
-      this.defenders = players.filter(p => this.checkPos(p, ['DEFENSA', 'CENTRAL', 'LATERAL_DERECHO', 'LATERAL_IZQUIERDO']));
-      
-      this.midfielders = players.filter(p => this.checkPos(p, ['MEDIOCENTRO', 'PIVOTE', 'MEDIA_PUNTA']));
-      
-      this.forwards = players.filter(p => this.checkPos(p, ['DELANTERO', 'EXTREMO']));
+      // 1. Separar Lesionados
+      this.injuredPlayers = players.filter(p => {
+          const estado = (p as any).estado;
+          return estado === 'LESIONADO' || estado === 'BAJA';
+      });
 
-      // 🔥 CAPTURAMOS EL RESTO (PENDIENTES, NUEVOS, ETC)
-      this.others = players.filter(p => {
-         const pos = (p as any).posicion ? (p as any).posicion.toUpperCase() : '';
-         const esPortero = ['PORTERO'].includes(pos);
-         const esDefensa = ['DEFENSA', 'CENTRAL', 'LATERAL_DERECHO', 'LATERAL_IZQUIERDO'].includes(pos);
-         const esMedio = ['MEDIOCENTRO', 'PIVOTE', 'MEDIA_PUNTA'].includes(pos);
-         const esDelantero = ['DELANTERO', 'EXTREMO'].includes(pos);
-         
-         // Si no es ninguno de los anteriores, va a "Others"
-         return !esPortero && !esDefensa && !esMedio && !esDelantero;
+      // 2. Filtrar Disponibles (Para el resto de listas)
+      const available = players.filter(p => {
+          const estado = (p as any).estado;
+          return estado !== 'LESIONADO' && estado !== 'BAJA';
+      });
+
+      // 3. Organizar Disponibles por Posición
+      this.keepers = available.filter(p => this.checkPos(p, ['PORTERO']));
+      
+      this.defenders = available.filter(p => this.checkPos(p, ['DEFENSA', 'CENTRAL', 'LATERAL_DERECHO', 'LATERAL_IZQUIERDO']));
+      
+      this.midfielders = available.filter(p => this.checkPos(p, ['MEDIOCENTRO', 'PIVOTE', 'MEDIA_PUNTA']));
+      
+      this.forwards = available.filter(p => this.checkPos(p, ['DELANTERO', 'EXTREMO']));
+
+      // 4. Los que sobran
+      this.others = available.filter(p => {
+          const pos = (p as any).posicion ? (p as any).posicion.toUpperCase() : '';
+          const esPortero = ['PORTERO'].includes(pos);
+          const esDefensa = ['DEFENSA', 'CENTRAL', 'LATERAL_DERECHO', 'LATERAL_IZQUIERDO'].includes(pos);
+          const esMedio = ['MEDIOCENTRO', 'PIVOTE', 'MEDIA_PUNTA'].includes(pos);
+          const esDelantero = ['DELANTERO', 'EXTREMO'].includes(pos);
+          return !esPortero && !esDefensa && !esMedio && !esDelantero;
       });
   }
 
@@ -167,7 +163,7 @@ export class MyTeamPage implements OnInit {
     return null;
   }
 
-  // --- GESTIÓN DE MODALES (Sin cambios) ---
+  // --- MODALES ---
   openEditModal(player: Player) {
     this.selectedPlayer = player;
     const raw = player as any;
@@ -182,11 +178,8 @@ export class MyTeamPage implements OnInit {
   switchToInjuryModal() {
     const playerToReport = this.selectedPlayer;
     this.isEditModalOpen = false;
-
     setTimeout(() => {
-        if(playerToReport) {
-            this.openInjuryModal(playerToReport);
-        }
+        if(playerToReport) this.openInjuryModal(playerToReport);
     }, 200); 
   }
 
@@ -243,7 +236,8 @@ export class MyTeamPage implements OnInit {
     const loading = await this.loadingCtrl.create({ message: 'Registrando...' });
     await loading.present();
     
-    const cambios = { estado: 'LESIONADO', observaciones: `Baja: ${this.injuryData.tipo}` };
+    // Cambiamos estado a LESIONADO
+    const cambios = { estado: 'LESIONADO', observaciones: `Baja: ${this.injuryData.tipo} (${this.injuryData.duracion})` };
     const payload = this.prepareDto(this.selectedPlayer, cambios);
     const playerId = (this.selectedPlayer as any).id || (this.selectedPlayer as any).idJugador;
 
@@ -252,7 +246,7 @@ export class MyTeamPage implements OnInit {
         await loading.dismiss();
         this.closeModals(); 
         this.loadPlayers(); 
-        this.showToast('Baja registrada', 'warning');
+        this.showToast('Baja registrada en enfermería', 'warning');
       },
       error: async () => { await loading.dismiss(); }
     });
@@ -278,12 +272,12 @@ export class MyTeamPage implements OnInit {
         {
           text: 'Confirmar Alta',
           handler: () => {
-            const payload = this.prepareDto(player, { estado: 'ACTIVO' });
+            const payload = this.prepareDto(player, { estado: 'ACTIVO', observaciones: 'Alta médica' });
             const id = (player as any).id || (player as any).idJugador;
             this.playerService.updatePlayer(id, payload).subscribe(() => {
                 this.closeModals(); 
                 this.loadPlayers();
-                this.showToast('Jugador recuperado', 'success');
+                this.showToast('Jugador recuperado y disponible', 'success');
             });
           }
         }

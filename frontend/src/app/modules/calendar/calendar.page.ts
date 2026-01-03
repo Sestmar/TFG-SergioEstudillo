@@ -94,8 +94,19 @@ export class CalendarPage implements OnInit {
           const u = user as any;
           const rol = (u.rol || '').toUpperCase();
           
-          if (rol.includes('ADMIN') || rol.includes('ENTRENADOR') || rol.includes('COACH')) {
-              this.router.navigate(['/edit-match', match.idPartido || match.id]); 
+          const matchId = match.idPartido || match.id;
+
+          // ADMIN: Va a editar/cerrar acta
+          if (rol.includes('ADMIN')) {
+              this.router.navigate(['/edit-match', matchId]); 
+          } 
+          // ENTRENADOR: Va a VER DETALLES (Como pediste)
+          else if (rol.includes('ENTRENADOR') || rol.includes('COACH')) {
+              this.router.navigate(['/match-detail', matchId]);
+          } 
+          // JUGADOR / OTROS
+          else {
+              this.router.navigate(['/match-detail', matchId]);
           }
       });
   }
