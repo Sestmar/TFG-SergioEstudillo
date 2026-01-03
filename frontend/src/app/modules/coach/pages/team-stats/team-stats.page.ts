@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { NavController, LoadingController } from '@ionic/angular';
+import { NavController } from '@ionic/angular';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
 import { filter, switchMap, catchError } from 'rxjs/operators';
-import { of, forkJoin } from 'rxjs'; // Importante para peticiones paralelas
+import { of, forkJoin } from 'rxjs';
 
 interface AggregatedPlayerStats {
     player: any;
@@ -27,8 +27,11 @@ export class TeamStatsPage implements OnInit {
     played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0
   };
 
-  topScorers: AggregatedPlayerStats[] = [];
+  // Listas para la Vista
+  topScorerMVP: AggregatedPlayerStats | null = null; // El nº1
+  restScorers: AggregatedPlayerStats[] = [];         // Del 2º al 10º
   topMinutes: AggregatedPlayerStats[] = [];
+  maxMinutes: number = 1;
 
   constructor(
     private navCtrl: NavController,
@@ -63,12 +66,12 @@ export class TeamStatsPage implements OnInit {
             this.teamName = res.equipo.nombre;
             const teamId = res.equipo.idEquipo || res.equipo.id;
             
-            // 1. Cargar Partidos (para el resumen global)
+            // 1. Partidos
             this.matchSvc.getMatchesByTeam(teamId).subscribe(matches => {
                 this.calculateSeasonStats(matches || []);
             });
 
-            // 2. Cargar Jugadores y sus Stats individuales
+            // 2. Jugadores y Stats
             this.loadPlayersWithStats(teamId);
 
           } else {
@@ -95,26 +98,19 @@ export class TeamStatsPage implements OnInit {
       });
   }
 
-  // 🔥 NUEVA LÓGICA: Pedir stats al backend para cada jugador
   loadPlayersWithStats(teamId: number) {
       this.playerSvc.getAllPlayers().subscribe((res: any) => {
           const allPlayersRaw = Array.isArray(res) ? res : (res.data || []);
           
-          // Filtrar mis jugadores
           const myPlayers = allPlayersRaw.filter((p: any) => {
               const tId = this.getTeamIdSafe(p);
               return tId == teamId;
           });
 
-          console.log(`👥 Solicitando estadísticas para ${myPlayers.length} jugadores...`);
-
-          // Crear un array de Observables: una petición por cada jugador
           const statsRequests = myPlayers.map((player: any) => {
               const pId = player.id || player.idJugador;
-              // Usamos catchError para que si falla uno no rompa todo
               return this.playerSvc.getPlayerStats(pId).pipe(
-                  catchError(err => of({ golesTotales: 0, minutosJugados: 0 })), // Fallback si falla
-                  // Devolvemos objeto combinado
+                  catchError(() => of({ golesTotales: 0, minutosJugados: 0 })),
                   switchMap(stats => of({
                       player: player,
                       goals: stats.golesTotales || 0,
@@ -123,29 +119,41 @@ export class TeamStatsPage implements OnInit {
               );
           });
 
-          // Ejecutar todas las peticiones en paralelo
           if (statsRequests.length > 0) {
               forkJoin(statsRequests).subscribe((results: AggregatedPlayerStats[]) => {
                   
-                  // Ordenar Top Goleadores
-                  this.topScorers = [...results]
+                  // Procesar Goleadores (MVP + Lista)
+                  const allScorers = [...results]
                       .sort((a, b) => b.goals - a.goals)
-                      .slice(0, 10)
                       .filter(s => s.goals > 0);
+                  
+                  if (allScorers.length > 0) {
+                      this.topScorerMVP = allScorers[0];
+                      this.restScorers = allScorers.slice(1);
+                  }
 
-                  // Ordenar Top Minutos
+                  // Procesar Minutos
                   this.topMinutes = [...results]
                       .sort((a, b) => b.minutes - a.minutes)
                       .slice(0, 10)
                       .filter(s => s.minutes > 0);
+                  
+                  if (this.topMinutes.length > 0) {
+                      this.maxMinutes = this.topMinutes[0].minutes;
+                  }
 
-                  console.log("🏆 Goleadores cargados:", this.topScorers);
                   this.loading = false;
               });
           } else {
               this.loading = false;
           }
       });
+  }
+
+  // Helper para anchos de barra de minutos
+  getBarWidth(mins: number): string {
+      const percent = (mins / this.maxMinutes) * 100;
+      return `${percent}%`;
   }
 
   private getTeamIdSafe(p: any): number | null {
@@ -162,6 +170,6 @@ export class TeamStatsPage implements OnInit {
           return p.usuario.fotoUrl || p.usuario.fotoPerfil;
       }
       const name = p.usuario?.nombre || p.nombre || 'Player';
-      return `https://ui-avatars.com/api/?name=${name}&background=random&color=fff`;
+      return `https://ui-avatars.com/api/?name=${name}&background=random&color=fff&size=128`;
   }
 }
