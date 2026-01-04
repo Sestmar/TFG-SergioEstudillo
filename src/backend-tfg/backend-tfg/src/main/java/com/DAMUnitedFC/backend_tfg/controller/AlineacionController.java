@@ -5,11 +5,11 @@ import com.DAMUnitedFC.backend_tfg.dto.AlineacionResponseDto;
 import com.DAMUnitedFC.backend_tfg.model.Alineacion;
 import com.DAMUnitedFC.backend_tfg.model.Partido;
 import com.DAMUnitedFC.backend_tfg.model.Jugador;
-import com.DAMUnitedFC.backend_tfg.model.Equipo; // Importante
+import com.DAMUnitedFC.backend_tfg.model.Equipo;
 import com.DAMUnitedFC.backend_tfg.repository.AlineacionRepository;
 import com.DAMUnitedFC.backend_tfg.repository.PartidoRepository;
 import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
-import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository; // Importante
+import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +33,7 @@ public class AlineacionController {
     @Autowired
     private JugadorRepository jugadorRepo;
     @Autowired
-    private EquipoRepository equipoRepo; // Necesitamos el repo de equipo
+    private EquipoRepository equipoRepo;
 
     // Helper para evitar nulos
     private Integer safeInt(Object value) {
@@ -85,6 +85,11 @@ public class AlineacionController {
             dto.setMinutoEntrada(a.getMinutoEntrada());
             dto.setMinutoSalida(a.getMinutoSalida());
 
+            // 🔥 DEVOLVER ROLES
+            dto.setEsCapitan(a.getEsCapitan());
+            dto.setEsLanzadorPenaltis(a.getEsLanzadorPenaltis());
+            dto.setEsLanzadorFaltas(a.getEsLanzadorFaltas());
+
             response.add(dto);
         }
         return ResponseEntity.ok(response);
@@ -113,19 +118,19 @@ public class AlineacionController {
                 alineacion.setPartido(p);
                 alineacion.setJugador(j);
 
-                // 🔥 ASIGNACIÓN SEGURA DE EQUIPO (ENTIDAD)
                 if (j.getEquipoPrincipal() != null) {
                     alineacion.setEquipo(j.getEquipoPrincipal());
                 } else if (p.getEquipo() != null) {
                     alineacion.setEquipo(p.getEquipo());
-                } else {
-                    // Si no hay equipo, esto podría fallar si la BD tiene NOT NULL.
-                    // Idealmente deberías asignar un equipo por defecto o lanzar error.
-                    // alineacion.setEquipo(null);
                 }
 
                 alineacion.setSlotId(ficha.getSlotId());
-                alineacion.setEsTitular(true);
+
+                // 🔥 CORRECCIÓN CRÍTICA AQUÍ 🔥
+                // Si el slot empieza por "BENCH", NO es titular
+                boolean esSuplente = ficha.getSlotId() != null && ficha.getSlotId().startsWith("BENCH");
+                alineacion.setEsTitular(!esSuplente);
+
                 alineacion.setGoles(0);
                 alineacion.setAsistencias(0);
                 alineacion.setMinutosJugados(0);
@@ -133,8 +138,14 @@ public class AlineacionController {
                 alineacion.setTarjetaRoja(false);
                 alineacion.setMinutoEntrada(0);
 
+                // Roles
+                alineacion.setEsCapitan(ficha.getEsCapitan() != null ? ficha.getEsCapitan() : false);
+                alineacion.setEsLanzadorPenaltis(ficha.getEsLanzadorPenaltis() != null ? ficha.getEsLanzadorPenaltis() : false);
+                alineacion.setEsLanzadorFaltas(ficha.getEsLanzadorFaltas() != null ? ficha.getEsLanzadorFaltas() : false);
+
                 alineacionRepo.save(alineacion);
             }
+
             response.put("success", true);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -164,28 +175,23 @@ public class AlineacionController {
                 for (Map<String, Object> stat : stats) {
                     Integer idJugador = safeInt(stat.get("idJugador"));
 
-                    // Importante: asegúrate de que el método findFichaExacta o findByPartidoAndJugador exista
                     Optional<Alineacion> fichaOpt = alineacionRepo.findFichaExacta(idPartido, idJugador);
 
                     Alineacion alineacion;
                     if (fichaOpt.isPresent()) {
                         alineacion = fichaOpt.get();
                     } else {
-                        // NUEVO REGISTRO (SUPLENTE)
+                        // NUEVO REGISTRO (SUPLENTE QUE ENTRÓ Y NO ESTABA EN LISTA PREVIA)
                         alineacion = new Alineacion();
                         alineacion.setPartido(p);
                         Jugador j = jugadorRepo.findById(idJugador).orElseThrow();
                         alineacion.setJugador(j);
 
-                        // ASIGNACIÓN SEGURA DE EQUIPO
                         if (p.getEquipo() != null) {
                             alineacion.setEquipo(p.getEquipo());
-                        } else {
-                            // Manejo si equipo es null (opcional, lanzar excepción)
                         }
 
                         alineacion.setEsTitular(false);
-                        // 🔥 CORRECCIÓN: Asignar slot_id
                         alineacion.setSlotId("BENCH_" + idJugador);
                     }
 
@@ -193,8 +199,15 @@ public class AlineacionController {
                     alineacion.setAsistencias(safeInt(stat.get("asistencias"), 0));
                     alineacion.setMinutosJugados(safeInt(stat.get("minutos"), 0));
 
-                    Object am = stat.get("amarilla");
-                    Object ro = stat.get("roja");
+                    // 🔥 CAMBIO CLAVE AQUÍ 🔥
+                    // Ahora buscamos "tarjetaAmarilla" y "tarjetaRoja" que es lo que envía el frontend
+                    Object am = stat.get("tarjetaAmarilla");
+                    Object ro = stat.get("tarjetaRoja");
+
+                    // Fallback: Si no vienen con ese nombre, intentamos con el corto "amarilla"/"roja" por si acaso
+                    if (am == null) am = stat.get("amarilla");
+                    if (ro == null) ro = stat.get("roja");
+
                     alineacion.setTarjetaAmarilla(am != null && (Boolean) am);
                     alineacion.setTarjetaRoja(ro != null && (Boolean) ro);
 

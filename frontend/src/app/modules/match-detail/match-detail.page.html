@@ -71,8 +71,17 @@
           </ion-avatar>
 
           <ion-label>
-            <h2>{{ player.nombre }} {{ player.apellidos }}</h2>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <h2>{{ player.nombre }} {{ player.apellidos }}</h2>
+                <span *ngIf="player.esCapitan" class="role-icon captain" title="Capitán">©</span>
+            </div>
+            
             <p>{{ player.posicion || 'JUG' }} • #{{ player.dorsal || '--' }}</p>
+            
+            <div class="roles-mini" *ngIf="player.esLanzadorPenaltis || player.esLanzadorFaltas">
+                <span *ngIf="player.esLanzadorPenaltis" class="role-tag p">Penaltis</span>
+                <span *ngIf="player.esLanzadorFaltas" class="role-tag f">Faltas</span>
+            </div>
           </ion-label>
           
           <div slot="end" class="mini-stats" style="display:flex; gap:5px; align-items:center;">
@@ -92,8 +101,8 @@
                 <ion-icon name="arrow-down"></ion-icon> {{ player.minutoSalida }}'
             </ion-badge>
 
-            <div *ngIf="player.tarjetaAmarilla" style="width:10px; height:14px; background:gold; border-radius:2px; border:1px solid #eab308; margin-left:5px;"></div>
-            <div *ngIf="player.tarjetaRoja" style="width:10px; height:14px; background:red; border-radius:2px; border:1px solid #dc2626; margin-left:2px;"></div>
+            <div *ngIf="player.tarjetaAmarilla" class="card-display yellow"></div>
+            <div *ngIf="player.tarjetaRoja" class="card-display red"></div>
           
           </div>
 

@@ -11,6 +11,11 @@
       </ion-select>
     </div>
 
+    <ion-button (click)="openConvocation()" class="save-btn" color="tertiary" size="small" style="margin-right: 10px;">
+        <ion-icon name="list" slot="start"></ion-icon>
+        CONVOCAR
+    </ion-button>
+
     <ion-button (click)="saveTactics()" [disabled]="saving" class="save-btn" color="success" size="small">
       <ion-icon name="save" slot="start"></ion-icon>
       <span *ngIf="!saving">GUARDAR</span>
@@ -47,10 +52,20 @@
                  (cdkDropListDropped)="drop($event)" 
                  class="drop-zone">
               
-              <div class="player-chip on-field" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
+              <div class="player-chip on-field" 
+                   *ngIf="slot.player" 
+                   cdkDrag 
+                   [cdkDragData]="slot.player"
+                   (click)="openPlayerOptions(slot)">
+                
                 <div class="avatar-ring" [style.border-color]="getBorderColor(slot.player.posicion)">
                   <img [src]="slot.player.usuario.fotoUrl || 'https://ionicframework.com/docs/img/demos/avatar.svg'" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
                   <div class="dorsal-tag">{{ slot.player.dorsal }}</div>
+                  
+                  <div class="captain-badge" *ngIf="slot.isCaptain">C</div>
+                  <div class="role-badge penalty" *ngIf="slot.isPenaltyTaker">P</div>
+                  <div class="role-badge freekick" *ngIf="slot.isFreeKickTaker">F</div>
+
                 </div>
                 <div class="name-badge">{{ getShortName(slot.player.usuario.nombre) }}</div>
                 <div *cdkDragPlaceholder class="ghost-placeholder"></div>
@@ -63,10 +78,14 @@
         <div class="tactical-row">
           <div class="slot-wrapper" *ngFor="let slot of midfielders">
             <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="drop-zone">
-               <div class="player-chip on-field" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
+               <div class="player-chip on-field" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player" (click)="openPlayerOptions(slot)">
                 <div class="avatar-ring" [style.border-color]="getBorderColor(slot.player.posicion)">
                   <img [src]="slot.player.usuario.fotoUrl || 'https://ionicframework.com/docs/img/demos/avatar.svg'" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
                   <div class="dorsal-tag">{{ slot.player.dorsal }}</div>
+                  
+                  <div class="captain-badge" *ngIf="slot.isCaptain">C</div>
+                  <div class="role-badge penalty" *ngIf="slot.isPenaltyTaker">P</div>
+                  <div class="role-badge freekick" *ngIf="slot.isFreeKickTaker">F</div>
                 </div>
                 <div class="name-badge">{{ getShortName(slot.player.usuario.nombre) }}</div>
                 <div *cdkDragPlaceholder class="ghost-placeholder"></div>
@@ -78,10 +97,14 @@
         <div class="tactical-row">
           <div class="slot-wrapper" *ngFor="let slot of defenders">
             <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="drop-zone">
-               <div class="player-chip on-field" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
+               <div class="player-chip on-field" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player" (click)="openPlayerOptions(slot)">
                 <div class="avatar-ring" [style.border-color]="getBorderColor(slot.player.posicion)">
                   <img [src]="slot.player.usuario.fotoUrl || 'https://ionicframework.com/docs/img/demos/avatar.svg'" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
                   <div class="dorsal-tag">{{ slot.player.dorsal }}</div>
+
+                  <div class="captain-badge" *ngIf="slot.isCaptain">C</div>
+                  <div class="role-badge penalty" *ngIf="slot.isPenaltyTaker">P</div>
+                  <div class="role-badge freekick" *ngIf="slot.isFreeKickTaker">F</div>
                 </div>
                 <div class="name-badge">{{ getShortName(slot.player.usuario.nombre) }}</div>
                 <div *cdkDragPlaceholder class="ghost-placeholder"></div>
@@ -93,10 +116,14 @@
         <div class="tactical-row gk-row">
           <div class="slot-wrapper" *ngFor="let slot of goalkeeper">
             <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="drop-zone">
-               <div class="player-chip on-field" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
+               <div class="player-chip on-field" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player" (click)="openPlayerOptions(slot)">
                 <div class="avatar-ring" [style.border-color]="getBorderColor(slot.player.posicion)">
                   <img [src]="slot.player.usuario.fotoUrl || 'https://ionicframework.com/docs/img/demos/avatar.svg'" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
                   <div class="dorsal-tag">{{ slot.player.dorsal }}</div>
+
+                  <div class="captain-badge" *ngIf="slot.isCaptain">C</div>
+                  <div class="role-badge penalty" *ngIf="slot.isPenaltyTaker">P</div>
+                  <div class="role-badge freekick" *ngIf="slot.isFreeKickTaker">F</div>
                 </div>
                 <div class="name-badge">{{ getShortName(slot.player.usuario.nombre) }}</div>
                 <div *cdkDragPlaceholder class="ghost-placeholder"></div>
@@ -126,7 +153,10 @@
                 <div *cdkDragPlaceholder class="ghost-placeholder"></div>
           </div>
         </div>
-        <div *ngIf="bench.length === 0" class="empty-state">Plantilla vacía o completa en campo</div>
+        <div *ngIf="bench.length === 0" class="empty-state">
+            <span *ngIf="allTeamPlayers.length > 0">Pulsa 'CONVOCAR' para seleccionar jugadores.</span>
+            <span *ngIf="allTeamPlayers.length === 0">No hay jugadores disponibles.</span>
+        </div>
       </div>
     </div>
 

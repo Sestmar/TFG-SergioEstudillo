@@ -40,7 +40,7 @@ export class MatchDetailPage implements OnInit {
     
     this.matchSvc.getMatchById(id).subscribe({
       next: (data) => {
-        this.match = data; // ✅ Aquí 'data' ya trae escudoRivalUrl
+        this.match = data; 
         
         this.matchSvc.getLineup(id).subscribe({
           next: (alineacionDtos: any[]) => {
@@ -63,7 +63,12 @@ export class MatchDetailPage implements OnInit {
                     idJugador: dto.idJugador,
                     
                     minutoEntrada: dto.minutoEntrada,
-                    minutoSalida: dto.minutoSalida
+                    minutoSalida: dto.minutoSalida,
+
+                    // 🔥 NUEVOS CAMPOS MAPEAOS
+                    esCapitan: dto.esCapitan,
+                    esLanzadorPenaltis: dto.esLanzadorPenaltis,
+                    esLanzadorFaltas: dto.esLanzadorFaltas
                 };
               });
 

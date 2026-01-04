@@ -26,7 +26,6 @@ $bg-app: #121212;
 
     ion-button, .formation-selector { pointer-events: auto; }
     
-    // Estilo del selector de formación
     .formation-selector {
         background: rgba(255,255,255,0.1); border-radius: 20px; padding: 0 15px;
         backdrop-filter: blur(5px);
@@ -92,10 +91,28 @@ $bg-app: #121212;
         border: 3px solid #fff; position: relative;
         box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        
         .dorsal-tag {
             position: absolute; bottom: -2px; right: -4px; background: white; color: black; font-weight: 900;
             font-size: 0.65rem; width: 18px; height: 18px; border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; border: 1px solid #999;
+        }
+
+        // 🔥 BADGES DE ROLES
+        .captain-badge {
+            position: absolute; top: -5px; left: -5px;
+            background: #fbbf24; color: #000; font-weight: 900; font-size: 0.65rem;
+            width: 18px; height: 18px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10;
+        }
+        .role-badge {
+            position: absolute; top: -5px; right: -5px;
+            background: #ef4444; color: #fff; font-weight: 900; font-size: 0.6rem;
+            width: 16px; height: 16px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; border: 2px solid #fff;
+            z-index: 10;
+            &.freekick { background: #3b82f6; right: auto; left: 15px; top: -8px;} // Posición alternativa
         }
     }
 
@@ -133,4 +150,55 @@ $bg-app: #121212;
 .loading-overlay { 
     height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111;
     p { color: #666; margin-top: 15px; }
+}
+
+// Esta clase 'tactics-action-sheet' la definimos en el .ts al crear el menú
+.tactics-action-sheet {
+    // Variables de Ionic para cambiar colores del componente
+    --background: #1f2937; // Fondo oscuro (gris azulado profesional)
+    --color: #f3f4f6;      // Texto claro
+    --button-color: #f3f4f6;
+
+    // Estilo para el grupo de botones (para redondear esquinas)
+    .action-sheet-group {
+        border-radius: 16px; // Bordes redondeados modernos
+        overflow: hidden;
+        margin-bottom: 10px; // Separación del botón cancelar
+        background: #1f2937;
+    }
+
+    // Estilo de cada botón individual
+    .action-sheet-button {
+        font-weight: 600;
+        font-size: 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1); // Separador sutil
+
+        // Color de los iconos
+        ion-icon {
+            font-size: 1.4rem;
+            margin-inline-end: 15px;
+        }
+
+        // Colores específicos para los iconos según la acción
+        &[innerhtml*="Capitán"] ion-icon { color: #fbbf24; } // Dorado
+        &[innerhtml*="Penaltis"] ion-icon { color: #ef4444; } // Rojo
+        &[innerhtml*="Faltas"] ion-icon { color: #3b82f6; }   // Azul
+    }
+
+    // Estilo específico para el botón "Cancelar"
+    .action-sheet-cancel {
+        margin-top: 0; // Pegarlo si se quiere, o dejar margen
+        background: #111827; // Un poco más oscuro
+        --color: #ef4444;    // Texto rojo
+        font-weight: 800;
+        border-radius: 16px; // Redondear también el cancelar
+    }
+
+    // El título del menú
+    .action-sheet-title {
+        color: #9ca3af; // Gris más claro
+        font-weight: 700;
+        font-size: 0.9rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
 }

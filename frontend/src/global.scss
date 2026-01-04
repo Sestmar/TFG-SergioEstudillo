@@ -253,15 +253,12 @@ ion-alert {
 
 /* ==========================================================================
    CORRECCIÓN DARK MODE PARA ION-SELECT (POPOVER & ALERT)
-   ==========================================================================
-   Esto fuerza los estilos oscuros en los componentes flotantes que se renderizan
-   fuera del DOM de la página (en el root de la app).
-*/
+   ========================================================================== */
 
 .custom-dark-popover {
   /* 1. Fondo general del contenedor y texto */
   --background: #1f2937; /* Gris Oscuro alineado con modales */
-  --color: white;         /* Texto Blanco */
+  --color: white;        /* Texto Blanco */
 
   /* 2. Estilos específicos si se abre como ALERTA (Centro de pantalla) */
   .alert-wrapper {
@@ -328,4 +325,87 @@ ion-alert {
   ion-item:hover {
     --background: #374151; /* Un poco más claro al pasar el mouse */
   }
+}
+
+/* =========================================
+   ESTILOS GLOBALES PARA EL MENÚ TÁCTICO (ACTION SHEET)
+   ========================================= */
+
+.tactics-action-sheet {
+    // Variables de Ionic para personalizar el componente nativo
+    --background: #1f2937; // Fondo oscuro (gris azulado profesional)
+    --color: #f3f4f6;      // Texto claro
+    --button-color: #f3f4f6; // Color base de botones
+
+    // Grupo de botones principales (Opciones)
+    .action-sheet-group {
+        border-radius: 14px; // Bordes redondeados modernos
+        overflow: hidden;
+        margin-bottom: 10px; // Separación del botón cancelar
+        background: #1f2937;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4); // Sombra suave para dar profundidad
+    }
+
+    // Estilo de cada botón individual
+    .action-sheet-button {
+        font-weight: 600;
+        font-size: 1rem;
+        background: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05); // Línea divisoria muy sutil
+        padding-inline-start: 20px; // Un poco más de margen a la izquierda
+
+        // Quitar borde al último botón del grupo
+        &:last-child {
+            border-bottom: none;
+        }
+
+        // Estilo de los Iconos
+        ion-icon {
+            font-size: 1.4rem;
+            margin-inline-end: 15px;
+            opacity: 0.9; 
+        }
+
+        // --- COLORES ESPECÍFICOS POR ACCIÓN ---
+        // Capitán (Dorado)
+        &.button-has-icon-only:first-child ion-icon, 
+        &[ng-reflect-icon="ribbon-outline"] ion-icon { 
+            color: #fbbf24; 
+        }
+        
+        // Penaltis (Rojo/Naranja)
+        &[ng-reflect-icon="football-outline"] ion-icon { 
+            color: #ef4444; 
+        }
+        
+        // Faltas (Azul)
+        &[ng-reflect-icon="alert-circle-outline"] ion-icon { 
+            color: #3b82f6; 
+        }
+    }
+
+    // Estilo específico para el botón "Cancelar"
+    .action-sheet-cancel {
+        margin-top: 0; 
+        background: #111827; // Un tono más oscuro para diferenciarlo
+        color: #ef4444;      // Texto rojo para indicar "salir"
+        font-weight: 800;
+        border-radius: 14px; // Redondear también el cancelar
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        
+        &::after {
+            background: transparent !important; // Quitar efecto de hover gris feo
+        }
+    }
+
+    // El título del menú (si lo hubiera)
+    .action-sheet-title {
+        color: #9ca3af; // Gris más claro
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 15px;
+    }
 }

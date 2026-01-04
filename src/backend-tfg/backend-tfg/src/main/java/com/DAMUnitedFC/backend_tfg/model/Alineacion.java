@@ -62,5 +62,15 @@ public class Alineacion {
     @Column(name = "minuto_salida")
     private Integer minutoSalida;
 
+    // 🔥 NUEVOS CAMPOS DE ROLES
+    @Column(name = "es_capitan")
+    private Boolean esCapitan = false;
+
+    @Column(name = "es_lanzador_penaltis")
+    private Boolean esLanzadorPenaltis = false;
+
+    @Column(name = "es_lanzador_faltas")
+    private Boolean esLanzadorFaltas = false;
+
     public Alineacion() {}
 }

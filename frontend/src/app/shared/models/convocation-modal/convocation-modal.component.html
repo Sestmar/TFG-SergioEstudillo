@@ -1,0 +1,46 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title>Convocatoria</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="modal-content">
+  <div class="stats-bar">
+    <span>Convocados: <strong>{{ getSelectedCount() }}</strong></span>
+    <span>Disponibles: <strong>{{ players.length }}</strong></span>
+  </div>
+
+  <ion-list lines="full">
+    <ion-item *ngFor="let p of players" (click)="toggleSelection(p)" class="player-item" [class.selected]="p.selected">
+      
+      <ion-checkbox slot="start" [(ngModel)]="p.selected" (click)="$event.stopPropagation()"></ion-checkbox>
+      
+      <ion-avatar slot="start">
+        <img [src]="p.fotoUrl || 'assets/img/default-avatar.svg'" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'">
+      </ion-avatar>
+
+      <ion-label>
+        <h2>{{ p.usuario.nombre }} {{ p.usuario.apellidos }}</h2>
+        <p>{{ p.posicion }}</p>
+      </ion-label>
+
+      <ion-badge color="danger" *ngIf="p.lesionado" slot="end" class="status-badge">
+        <ion-icon name="medkit"></ion-icon> Lesionado
+      </ion-badge>
+      
+      </ion-item>
+  </ion-list>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-button expand="block" (click)="save()" class="confirm-btn">
+      CONFIRMAR CONVOCATORIA
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

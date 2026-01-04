@@ -67,7 +67,6 @@ export class EditMatchPage implements OnInit {
         this.matchStats.golesFavor = m.golesFavor || 0;
         this.matchStats.golesContra = m.golesContra || 0;
         
-        // Determinar ID del equipo local
         const teamId = m.idEquipo || (m.equipo ? m.equipo.idEquipo : null);
         
         if (teamId) {
@@ -81,9 +80,7 @@ export class EditMatchPage implements OnInit {
   }
 
   loadPlayersAndMerge(teamId: number, loading: HTMLIonLoadingElement) {
-    // 1. Obtener lo que ya hay guardado en BD (si se guardó antes)
     const p1 = this.matchSvc.getLineup(this.matchId).toPromise();
-    // 2. Obtener toda la plantilla para mostrar también a los que no jugaron
     const p2 = this.playerService.getAllPlayers().toPromise(); 
 
     Promise.all([p1, p2]).then(([lineupData, allPlayersData]: [any, any]) => {
@@ -91,22 +88,20 @@ export class EditMatchPage implements OnInit {
       const alineacionGuardada = lineupData || []; 
       const allPlayers = Array.isArray(allPlayersData) ? allPlayersData : (allPlayersData.data || []);
 
-      // Filtrar plantilla del equipo local
       const myTeamPlayers = allPlayers.filter((p: any) => {
          const pTeamId = p.equipoPrincipal?.id || p.equipoPrincipal?.idEquipo || p.equipoPrincipal;
          return pTeamId == teamId;
       });
 
-      // Fusionar datos
       this.fullSquadStats = myTeamPlayers.map((player: any) => {
         const pId = player.idJugador || player.id;
         
-        // ¿Existe ya en la alineación?
         const savedData = alineacionGuardada.find((a: any) => {
             const savedId = a.jugador?.id || a.jugador?.idJugador || a.idJugador;
             return String(savedId) === String(pId);
         });
         
+        // Objeto interno para el formulario (usamos nombres cortos 'amarilla', 'roja')
         let stats = {
             idJugador: pId,
             nombre: player.usuario?.nombre || player.nombre,
@@ -115,12 +110,13 @@ export class EditMatchPage implements OnInit {
             fotoUrl: player.usuario?.fotoUrl || player.fotoUrl,
             posicion: player.posicion,
             
-            // Valores por defecto
             esTitular: false,
             minutos: 0,
             goles: 0,
             minutoEntrada: null,
-            minutoSalida: null
+            minutoSalida: null,
+            amarilla: false, 
+            roja: false      
         };
 
         if (savedData) {
@@ -129,15 +125,16 @@ export class EditMatchPage implements OnInit {
             stats.minutos = savedData.minutosJugados || 0;
             stats.minutoEntrada = savedData.minutoEntrada;
             stats.minutoSalida = savedData.minutoSalida;
+            // Mapear lo que viene del backend a nuestro modelo interno
+            stats.amarilla = savedData.tarjetaAmarilla || false; 
+            stats.roja = savedData.tarjetaRoja || false;         
             
-            // Fix visual: si es titular y minutos es 0, sugerir 90 (solo visual, no guardar aún)
             if(stats.esTitular && stats.minutos === 0) stats.minutos = 90;
         }
 
         return stats;
       });
 
-      // Separar listas
       this.starters = this.fullSquadStats.filter(p => p.esTitular);
       this.bench = this.fullSquadStats.filter(p => !p.esTitular);
 
@@ -149,7 +146,6 @@ export class EditMatchPage implements OnInit {
     });
   }
 
-  // Convierte cualquier input a Entero seguro
   private safeInt(value: any, defaultValue: number = 0): number {
     if (value === null || value === undefined || value === '') return defaultValue;
     const num = parseInt(value, 10);
@@ -165,18 +161,15 @@ export class EditMatchPage implements OnInit {
           golesContra: this.safeInt(this.matchStats.golesContra),
           
           estadisticas: allStats.map(p => {
-            // Lógica de autocompletar minutos
             let minJugados = this.safeInt(p.minutos);
             const esTitular = !!p.esTitular;
             const minEntrada = this.safeInt(p.minutoEntrada, 0);
             const minSalida = this.safeInt(p.minutoSalida, 0);
 
-            // CASO 1: Suplente entra (tiene minuto entrada pero minutos jugados es 0 o vacio)
             if (!esTitular && minEntrada > 0 && minJugados === 0) {
                 minJugados = 90 - minEntrada;
             }
             
-            // CASO 2: Titular sale (tiene minuto salida pero minutos jugados es 90 o 0)
             if (esTitular && minSalida > 0) {
                 minJugados = minSalida;
             }
@@ -184,23 +177,17 @@ export class EditMatchPage implements OnInit {
             return {
                 idJugador: p.idJugador,
                 goles: this.safeInt(p.goles),
-                minutos: minJugados,
+                minutos: minJugados, // Asegúrate si tu backend espera "minutos" o "minutosJugados"
                 esTitular: esTitular,
                 minutoEntrada: minEntrada > 0 ? minEntrada : null,
-                minutoSalida: minSalida > 0 ? minSalida : null
+                minutoSalida: minSalida > 0 ? minSalida : null,
+                
+                // 🔥 CAMBIO CLAVE AQUÍ: Usar nombres que el Backend espera 🔥
+                tarjetaAmarilla: p.amarilla || false, // Antes enviábamos "amarilla"
+                tarjetaRoja: p.roja || false          // Antes enviábamos "roja"
             };
           })
       };
-  }
-
-  async guardarAlineacion() {
-    this.saving = true;
-    // Para el coach, solo guardamos alineación base, no cerramos acta
-    // Podrías tener un endpoint específico saveLineupOnly si quieres, 
-    // pero usar el mismo con cuidado está bien si el backend lo soporta.
-    // Asumiremos que el coach solo guarda posiciones en la otra pantalla (Tactics).
-    // Esta pantalla es más para el acta.
-    this.saving = false;
   }
 
   async confirmarCierreActa() {
@@ -228,7 +215,8 @@ export class EditMatchPage implements OnInit {
         next: () => {
             this.saving = false;
             this.presentToast('Acta cerrada y estadísticas actualizadas 🏆', 'success');
-            this.router.navigate(['/admin']);
+            // Recargamos los datos para verificar que se guardó bien
+            this.loadData(); 
         },
         error: (err) => {
             this.saving = false;

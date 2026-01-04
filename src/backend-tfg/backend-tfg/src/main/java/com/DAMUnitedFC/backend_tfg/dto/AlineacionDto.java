@@ -6,15 +6,21 @@ import lombok.Data;
 public class AlineacionDto {
 
     private Long idPartido;
-    private Integer idJugador; // Integer porque el ID del jugador suele ser Integer
-    private String slotId;     // Posición en la pizarra (ej: "FWD-1")
+    private Integer idJugador;
+    private String slotId;
 
-    // Constructor vacío (Obligatorio para Jackson)
+    // 🔥 NUEVOS CAMPOS
+    private Boolean esCapitan;
+    private Boolean esLanzadorPenaltis;
+    private Boolean esLanzadorFaltas;
+
     public AlineacionDto() {}
 
-    public AlineacionDto(Long idPartido, Integer idJugador, String slotId) {
+    // Constructor completo actualizado
+    public AlineacionDto(Long idPartido, Integer idJugador, String slotId, Boolean esCapitan) {
         this.idPartido = idPartido;
         this.idJugador = idJugador;
         this.slotId = slotId;
+        this.esCapitan = esCapitan;
     }
 }
