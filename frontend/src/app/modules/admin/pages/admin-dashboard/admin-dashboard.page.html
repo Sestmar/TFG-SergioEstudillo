@@ -52,11 +52,11 @@
                 <h6 class="section-label">Jugadores Nuevos</h6>
                 <div class="admin-card" *ngFor="let candidate of candidates">
                     <div class="user-row">
-                        <div class="avatar-circle">{{ candidate.nombre.charAt(0) }}</div>
+                        <div class="avatar-circle">{{ (candidate.nombre || 'U').charAt(0) | uppercase }}</div>
                         <div class="info">
                             <h4>{{ candidate.nombre }} {{ candidate.apellidos }}</h4>
                             <p>{{ candidate.email }}</p>
-                            <span class="tag-pending">Jugador</span>
+                            <span class="tag-pending">{{ cleanRoleName(candidate.rol) }}</span>
                         </div>
                     </div>
                     <div class="action-row">
@@ -74,11 +74,11 @@
                 <h6 class="section-label mt-3">Staff Técnico Nuevo</h6>
                 <div class="admin-card staff-card" *ngFor="let coach of coachCandidates">
                     <div class="user-row">
-                        <div class="avatar-circle staff-avatar">{{ coach.usuario.nombre.charAt(0) }}</div>
+                        <div class="avatar-circle staff-avatar">{{ (coach.nombre || 'S').charAt(0) | uppercase }}</div>
                         <div class="info">
-                            <h4>{{ coach.usuario.nombre }} {{ coach.usuario.apellidos }}</h4>
-                            <p>{{ coach.usuario.email }}</p>
-                            <span class="tag-pending staff-tag">Staff Técnico</span>
+                            <h4>{{ coach.nombre }} {{ coach.apellidos }}</h4>
+                            <p>{{ coach.email }}</p>
+                            <span class="tag-pending staff-tag">{{ cleanRoleName(coach.rol) }}</span>
                         </div>
                     </div>
                     <div class="action-row column-layout">
@@ -108,10 +108,10 @@
         <div *ngIf="userSegment === 'active'">
             <div class="admin-card compact" *ngFor="let user of activeUsers">
                 <div class="user-row">
-                    <img [src]="user.fotoUrl || 'https://ui-avatars.com/api/?name='+user.nombre" class="avatar-img">
+                    <img [src]="user.fotoUrl || 'https://ui-avatars.com/api/?name=' + user.nombre" class="avatar-img">
                     <div class="info">
-                        <h4>{{ user.nombre }}</h4>
-                        <p class="role-text">{{ user.rol }} • {{ user.equipoNombre }}</p>
+                        <h4>{{ user.nombre }} {{ user.apellidos }}</h4>
+                        <p class="role-text">{{ cleanRoleName(user.rol) }} • {{ user.equipoNombre || 'Sin Equipo' }}</p>
                     </div>
                     
                     <ion-button fill="clear" color="danger" (click)="deleteUser(user)">
@@ -129,15 +129,12 @@
                 <ion-icon name="add" slot="start"></ion-icon> Nuevo
             </ion-button>
         </div>
-
         <div class="teams-grid">
             <div class="team-card" *ngFor="let team of teams" (click)="openTeamDetail(team)">
                 <img [src]="team.escudoUrl || 'assets/img/mi-club-logo.png'" class="team-logo">
                 <h4>{{ team.nombre }}</h4>
                 <p>{{ team.categoriaNombre }}</p>
-                <div class="team-stats">
-                    <span>{{ team.jugadoresCount || 0 }} Jug.</span>
-                </div>
+                <div class="team-stats"><span>{{ team.jugadoresCount || 0 }} Jug.</span></div>
             </div>
         </div>
     </div>
@@ -151,21 +148,12 @@
             </div>
             <ion-icon name="add-circle" class="arrow"></ion-icon>
         </div>
-
         <div class="section-title"><h3>Calendarios de Equipo</h3></div>
-        
         <div class="teams-grid">
             <div class="team-calendar-card" *ngFor="let team of teams" (click)="goToTeamCalendar(team)">
-                <div class="card-left">
-                    <img [src]="team.escudoUrl || 'assets/img/mi-club-logo.png'" class="team-mini-logo">
-                </div>
-                <div class="card-center">
-                    <h4>{{ team.nombre }}</h4>
-                    <span class="category-badge">{{ team.categoriaNombre || 'General' }}</span>
-                </div>
-                <div class="card-right">
-                    <ion-icon name="calendar-outline"></ion-icon>
-                </div>
+                <div class="card-left"><img [src]="team.escudoUrl || 'assets/img/mi-club-logo.png'" class="team-mini-logo"></div>
+                <div class="card-center"><h4>{{ team.nombre }}</h4><span class="category-badge">{{ team.categoriaNombre || 'General' }}</span></div>
+                <div class="card-right"><ion-icon name="calendar-outline"></ion-icon></div>
             </div>
         </div>
     </div>
@@ -218,34 +206,12 @@
                         <ion-select-option *ngFor="let t of teams" [value]="t.idEquipo">{{ t.nombre }}</ion-select-option>
                     </ion-select>
                 </ion-item>
-                
-                <ion-item>
-                    <ion-label position="stacked">Rival</ion-label>
-                    <ion-input [(ngModel)]="newMatch.rival" placeholder="Ej: Real Betis"></ion-input>
-                </ion-item>
-
-                <ion-item>
-                    <ion-label position="stacked">Escudo Rival</ion-label>
-                    <input type="file" (change)="onFileSelected($event)" accept="image/*" style="margin-top: 10px; color: white;">
-                </ion-item>
-
-                <ion-item>
-                    <ion-label position="stacked">Lugar</ion-label>
-                    <ion-input [(ngModel)]="newMatch.lugar" placeholder="Ej: Ciudad Deportiva"></ion-input>
-                </ion-item>
-                
-                <ion-item>
-                    <ion-label position="stacked">Fecha y Hora</ion-label>
-                    <ion-datetime-button datetime="datetime"></ion-datetime-button>
-                </ion-item>
+                <ion-item><ion-label position="stacked">Rival</ion-label><ion-input [(ngModel)]="newMatch.rival" placeholder="Ej: Real Betis"></ion-input></ion-item>
+                <ion-item><ion-label position="stacked">Escudo Rival</ion-label><input type="file" (change)="onFileSelected($event)" accept="image/*" style="margin-top: 10px; color: white;"></ion-item>
+                <ion-item><ion-label position="stacked">Lugar</ion-label><ion-input [(ngModel)]="newMatch.lugar" placeholder="Ej: Ciudad Deportiva"></ion-input></ion-item>
+                <ion-item><ion-label position="stacked">Fecha y Hora</ion-label><ion-datetime-button datetime="datetime"></ion-datetime-button></ion-item>
             </ion-list>
-            
-            <ion-modal [keepContentsMounted]="true">
-                <ng-template>
-                    <ion-datetime id="datetime" presentation="date-time" [(ngModel)]="newMatch.fechaHora"></ion-datetime>
-                </ng-template>
-            </ion-modal>
-
+            <ion-modal [keepContentsMounted]="true"><ng-template><ion-datetime id="datetime" presentation="date-time" [(ngModel)]="newMatch.fechaHora"></ion-datetime></ng-template></ion-modal>
             <ion-button expand="block" color="success" class="mt-4" (click)="createMatch()">Agendar Partido</ion-button>
         </div>
     </ng-template>

@@ -13,18 +13,24 @@ public class Alineacion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Relación con el Partido
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_partido", nullable = false)
     @JsonIgnoreProperties({"alineaciones", "equipoLocal", "equipoVisitante", "hibernateLazyInitializer", "handler"})
     private Partido partido;
 
+    // Relación con el Jugador
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_jugador", nullable = false)
     @JsonIgnoreProperties({"equipoPrincipal", "alineaciones", "estadisticas", "equipos", "partidos", "hibernateLazyInitializer", "handler"})
     private Jugador jugador;
 
-    @Column(name = "id_equipo", nullable = false)
-    private Long idEquipo;
+    // 🔥 CORRECCIÓN: Relación directa con Equipo en lugar de solo Long
+    // Esto habilita setEquipo(Equipo e) y soluciona el error de compilación y de BD
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_equipo", nullable = false)
+    @JsonIgnoreProperties({"jugadores", "entrenador", "hibernateLazyInitializer", "handler"})
+    private Equipo equipo;
 
     @Column(name = "slot_id")
     private String slotId;
@@ -49,12 +55,12 @@ public class Alineacion {
     @Column(name = "tarjeta_roja")
     private Boolean tarjetaRoja = false;
 
-    // 🔥 NUEVOS CAMPOS PARA SUSTITUCIONES 🔥
+    // 🔥 NUEVOS CAMPOS PARA SUSTITUCIONES
     @Column(name = "minuto_entrada")
-    private Integer minutoEntrada = 0; // 0 para titulares
+    private Integer minutoEntrada; // Nullable para mayor claridad
 
     @Column(name = "minuto_salida")
-    private Integer minutoSalida = null; // null si termina el partido
+    private Integer minutoSalida;
 
     public Alineacion() {}
 }

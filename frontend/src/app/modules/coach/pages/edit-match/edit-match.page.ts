@@ -14,10 +14,12 @@ export class EditMatchPage implements OnInit {
   matchId: number = 0;
   match: any = null;
   
+  // Listas de jugadores
   starters: any[] = [];
   bench: any[] = [];
   fullSquadStats: any[] = [];
 
+  // Marcador
   matchStats = {
     golesFavor: 0,
     golesContra: 0
@@ -45,19 +47,18 @@ export class EditMatchPage implements OnInit {
       this.loadData();
     }
 
-    // Detección de roles segura
     this.authSvc.currentUser$.subscribe(user => {
         const u = user as any;
         if (u && u.rol) {
             const r = String(u.rol).toUpperCase();
             this.isAdmin = r.includes('ADMIN'); 
-            this.isCoach = r.includes('ENTRENADOR') || r.includes('COACH') || r.includes('STAFF') || r.includes('DELEGADO');
+            this.isCoach = r.includes('ENTRENADOR') || r.includes('STAFF');
         }
     });
   }
 
   async loadData() {
-    const loading = await this.loadingCtrl.create({ message: 'Cargando datos...' });
+    const loading = await this.loadingCtrl.create({ message: 'Cargando acta...', spinner: 'crescent' });
     await loading.present();
 
     this.matchSvc.getMatchById(this.matchId).subscribe({
@@ -66,8 +67,9 @@ export class EditMatchPage implements OnInit {
         this.matchStats.golesFavor = m.golesFavor || 0;
         this.matchStats.golesContra = m.golesContra || 0;
         
-        // Si hay equipo asignado, cargamos jugadores
+        // Determinar ID del equipo local
         const teamId = m.idEquipo || (m.equipo ? m.equipo.idEquipo : null);
+        
         if (teamId) {
              this.loadPlayersAndMerge(teamId, loading);
         } else {
@@ -79,32 +81,41 @@ export class EditMatchPage implements OnInit {
   }
 
   loadPlayersAndMerge(teamId: number, loading: HTMLIonLoadingElement) {
+    // 1. Obtener lo que ya hay guardado en BD (si se guardó antes)
     const p1 = this.matchSvc.getLineup(this.matchId).toPromise();
+    // 2. Obtener toda la plantilla para mostrar también a los que no jugaron
     const p2 = this.playerService.getAllPlayers().toPromise(); 
 
     Promise.all([p1, p2]).then(([lineupData, allPlayersData]: [any, any]) => {
       
-      const alineacion = lineupData || [];
+      const alineacionGuardada = lineupData || []; 
       const allPlayers = Array.isArray(allPlayersData) ? allPlayersData : (allPlayersData.data || []);
 
-      // Filtramos solo los jugadores de ESTE equipo
+      // Filtrar plantilla del equipo local
       const myTeamPlayers = allPlayers.filter((p: any) => {
          const pTeamId = p.equipoPrincipal?.id || p.equipoPrincipal?.idEquipo || p.equipoPrincipal;
          return pTeamId == teamId;
       });
 
+      // Fusionar datos
       this.fullSquadStats = myTeamPlayers.map((player: any) => {
         const pId = player.idJugador || player.id;
-        // Buscamos si ya tiene datos guardados en la alineación
-        const existingRecord = alineacion.find((a: any) => String(a.idJugador || a.jugador?.idJugador) === String(pId));
+        
+        // ¿Existe ya en la alineación?
+        const savedData = alineacionGuardada.find((a: any) => {
+            const savedId = a.jugador?.id || a.jugador?.idJugador || a.idJugador;
+            return String(savedId) === String(pId);
+        });
         
         let stats = {
             idJugador: pId,
-            nombre: player.usuario?.nombre,
-            apellidos: player.usuario?.apellidos,
+            nombre: player.usuario?.nombre || player.nombre,
+            apellidos: player.usuario?.apellidos || player.apellidos,
             dorsal: player.dorsal,
-            fotoUrl: player.usuario?.fotoUrl,
+            fotoUrl: player.usuario?.fotoUrl || player.fotoUrl,
             posicion: player.posicion,
+            
+            // Valores por defecto
             esTitular: false,
             minutos: 0,
             goles: 0,
@@ -112,24 +123,23 @@ export class EditMatchPage implements OnInit {
             minutoSalida: null
         };
 
-        if (existingRecord) {
-          stats = {
-            ...stats,
-            ...existingRecord, // Sobrescribimos con lo que venga del backend
-            nombre: player.usuario?.nombre, 
-            apellidos: player.usuario?.apellidos,
-            fotoUrl: player.usuario?.fotoUrl
-          };
-          // Aseguramos números
-          stats.goles = existingRecord.goles || 0;
-          stats.minutos = (existingRecord.minutosJugados !== undefined) ? existingRecord.minutosJugados : (stats.esTitular ? 90 : 0);
+        if (savedData) {
+            stats.esTitular = !!savedData.esTitular;
+            stats.goles = savedData.goles || 0;
+            stats.minutos = savedData.minutosJugados || 0;
+            stats.minutoEntrada = savedData.minutoEntrada;
+            stats.minutoSalida = savedData.minutoSalida;
+            
+            // Fix visual: si es titular y minutos es 0, sugerir 90 (solo visual, no guardar aún)
+            if(stats.esTitular && stats.minutos === 0) stats.minutos = 90;
         }
 
         return stats;
       });
 
+      // Separar listas
       this.starters = this.fullSquadStats.filter(p => p.esTitular);
-      this.bench = this.fullSquadStats.filter(p => !p.esTitular).sort((a, b) => (b.minutos || 0) - (a.minutos || 0));
+      this.bench = this.fullSquadStats.filter(p => !p.esTitular);
 
       loading.dismiss();
 
@@ -139,90 +149,97 @@ export class EditMatchPage implements OnInit {
     });
   }
 
-  private safeInt(value: any, defaultValue: any = 0): number | null {
+  // Convierte cualquier input a Entero seguro
+  private safeInt(value: any, defaultValue: number = 0): number {
     if (value === null || value === undefined || value === '') return defaultValue;
-    const num = Number(value);
+    const num = parseInt(value, 10);
     return isNaN(num) ? defaultValue : num;
   }
 
-  // 🔥 MÉTODO CLAVE: Prepara los datos para enviarlos al Backend
   private construirPayload() {
       const allStats = [...this.starters, ...this.bench];
+      
       return {
           idPartido: this.matchId,
           golesFavor: this.safeInt(this.matchStats.golesFavor),
           golesContra: this.safeInt(this.matchStats.golesContra),
-          // Enviamos la lista completa de jugadores con sus stats
-          estadisticas: allStats.map(p => ({
-            idJugador: p.idJugador,
-            goles: this.safeInt(p.goles),
-            minutos: this.safeInt(p.minutos),
-            esTitular: !!p.esTitular,
-            minutoEntrada: this.safeInt(p.minutoEntrada, null),
-            minutoSalida: this.safeInt(p.minutoSalida, null)
-          }))
+          
+          estadisticas: allStats.map(p => {
+            // Lógica de autocompletar minutos
+            let minJugados = this.safeInt(p.minutos);
+            const esTitular = !!p.esTitular;
+            const minEntrada = this.safeInt(p.minutoEntrada, 0);
+            const minSalida = this.safeInt(p.minutoSalida, 0);
+
+            // CASO 1: Suplente entra (tiene minuto entrada pero minutos jugados es 0 o vacio)
+            if (!esTitular && minEntrada > 0 && minJugados === 0) {
+                minJugados = 90 - minEntrada;
+            }
+            
+            // CASO 2: Titular sale (tiene minuto salida pero minutos jugados es 90 o 0)
+            if (esTitular && minSalida > 0) {
+                minJugados = minSalida;
+            }
+
+            return {
+                idJugador: p.idJugador,
+                goles: this.safeInt(p.goles),
+                minutos: minJugados,
+                esTitular: esTitular,
+                minutoEntrada: minEntrada > 0 ? minEntrada : null,
+                minutoSalida: minSalida > 0 ? minSalida : null
+            };
+          })
       };
   }
 
-  // --- ENTRENADOR: SOLO GUARDAR ---
   async guardarAlineacion() {
     this.saving = true;
-    const payload = this.construirPayload();
-
-    this.matchSvc.saveLineupOnly(payload).subscribe({
-      next: async () => {
-        this.saving = false;
-        this.presentToast('Alineación guardada 📋', 'success');
-        this.router.navigate(['/coach-dashboard']);
-      },
-      error: async (err) => {
-        this.saving = false;
-        this.presentToast('Error al guardar.', 'danger');
-      }
-    });
+    // Para el coach, solo guardamos alineación base, no cerramos acta
+    // Podrías tener un endpoint específico saveLineupOnly si quieres, 
+    // pero usar el mismo con cuidado está bien si el backend lo soporta.
+    // Asumiremos que el coach solo guarda posiciones en la otra pantalla (Tactics).
+    // Esta pantalla es más para el acta.
+    this.saving = false;
   }
 
-  // --- ADMIN: CONFIRMAR CIERRE ---
   async confirmarCierreActa() {
       const alert = await this.alertCtrl.create({
           header: 'Cerrar Acta Oficial',
-          message: `Resultado: ${this.matchStats.golesFavor} - ${this.matchStats.golesContra}\n\nSe guardarán los minutos y goles asignados a los jugadores.\n¿Finalizar partido?`,
+          message: `Resultado: ${this.matchStats.golesFavor} - ${this.matchStats.golesContra}\n\n¿Seguro que quieres finalizar el partido?`,
           buttons: [
               { text: 'Cancelar', role: 'cancel' },
               { 
                   text: 'Finalizar', 
-                  handler: () => {
-                      this.cerrarActaOficial();
-                  }
+                  handler: () => { this.cerrarActaOficial(); }
               }
           ]
       });
       await alert.present();
   }
 
-  // --- ADMIN: ENVIAR DATOS Y CERRAR ---
   async cerrarActaOficial() {
     this.saving = true;
-    
-    // Aquí enviamos el payload COMPLETO (Resultado + Jugadores)
     const payload = this.construirPayload();
+
+    console.log("📤 Enviando cierre de acta:", payload); 
 
     this.matchSvc.closeMatchReport(payload).subscribe({
         next: () => {
             this.saving = false;
-            this.presentToast('Partido finalizado correctamente 🏁', 'success');
+            this.presentToast('Acta cerrada y estadísticas actualizadas 🏆', 'success');
             this.router.navigate(['/admin']);
         },
         error: (err) => {
             this.saving = false;
             console.error(err);
-            this.presentToast('Error al cerrar el acta', 'danger');
+            this.presentToast('Error al cerrar acta. Verifica la consola.', 'danger');
         }
     });
   }
 
   async presentToast(msg: string, color: string) {
-    const t = await this.toastCtrl.create({ message: msg, duration: 2000, color });
+    const t = await this.toastCtrl.create({ message: msg, duration: 2500, color, position: 'top' });
     t.present();
   }
 }

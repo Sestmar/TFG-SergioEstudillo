@@ -10,18 +10,18 @@ import { Router } from '@angular/router';
 })
 export class AdminDashboardPage implements OnInit {
 
-  // Datos
+  // Listas de datos
   candidates: any[] = []; 
   coachCandidates: any[] = [];
   activeUsers: any[] = [];
   teams: any[] = [];
   
-  // Vista actual
+  // Control de vista
   currentView = 'users';
   userSegment = 'pending';
   loading = false;
 
-  // Modales
+  // Control de Modales
   isUserModalOpen = false;
   isTeamModalOpen = false;
   isMatchModalOpen = false;
@@ -29,18 +29,9 @@ export class AdminDashboardPage implements OnInit {
   // Formularios
   newUser = { nombre: '', apellidos: '', email: '', rol: 'JUGADOR', password: '123456' };
   newTeam = { nombre: '', categoria: '' };
+  newMatch = { idEquipo: null, rival: '', lugar: '', fechaHora: new Date().toISOString() };
   
-  // Objeto para el formulario (ya no tiene escudoRivalUrl string)
-  newMatch = { 
-      idEquipo: null, 
-      rival: '', 
-      lugar: '', 
-      fechaHora: new Date().toISOString() 
-  };
-  
-  // 🔥 Variable para guardar el archivo seleccionado
   selectedFile: File | null = null;
-
   staffRoles = ['Entrenador Principal', 'Segundo Entrenador', 'Preparador Físico', 'Delegado', 'Entrenador de Porteros'];
 
   constructor(
@@ -57,64 +48,111 @@ export class AdminDashboardPage implements OnInit {
 
   async loadData() {
     this.loading = true;
+    
+    // 1. Cargar Equipos
     this.adminSvc.getTeams().subscribe({
-      next: (res) => {
-        this.teams = res;
-        this.loadCandidates();
-      },
+      next: (res) => { this.teams = res; },
       error: () => this.loading = false
     });
-    this.loadActiveUsers();
+
+    // 2. Cargar Usuarios y calcular candidatos manualmente
+    this.loadUsersAndCalculateCandidates();
   }
 
-  loadCandidates() {
-    this.adminSvc.getCandidates().subscribe({
-        next: (res) => { this.candidates = res.map(c => ({...c, selectedTeamId: null})); }
-    });
-    this.adminSvc.getCoachCandidates().subscribe({
-        next: (res) => {
-            this.coachCandidates = res.map(c => ({...c, selectedTeamId: null, selectedRole: 'Entrenador Principal'}));
-            this.loading = false;
-        },
-        error: () => this.loading = false
-    });
+  // 🔥 LÓGICA MAESTRA: Usamos la lista completa para evitar problemas del backend
+  loadUsersAndCalculateCandidates() {
+      this.adminSvc.getAllActiveUsers().subscribe({
+          next: (res: any[]) => {
+              console.log("👥 Usuarios Totales recibidos:", res.length);
+              this.activeUsers = res;
+
+              // Reiniciamos las listas de pendientes
+              this.candidates = [];
+              this.coachCandidates = [];
+
+              res.forEach(user => {
+                  // Normalizamos datos para evitar errores de mayúsculas/nulos
+                  const rol = (user.rol || '').toUpperCase();
+                  const equipo = user.equipoNombre; 
+                  
+                  // ¿Tiene equipo asignado?
+                  // En tu backend, si no tiene equipo, devuelve "Sin Equipo" o "Staff Técnico"
+                  // Ojo: "Staff Técnico" no es un equipo real, es un placeholder.
+                  const hasRealTeam = equipo && equipo !== 'Sin Equipo' && equipo !== 'Staff Técnico';
+
+                  if (!hasRealTeam) {
+                      // ES UN CANDIDATO (Pendiente de asignar)
+                      
+                      // 1. Es Jugador?
+                      if (rol.includes('JUGADOR')) {
+                          this.candidates.push({ ...user, selectedTeamId: null });
+                      } 
+                      // 2. Es Entrenador?
+                      else if (rol.includes('ENTRENADOR') || rol.includes('STAFF')) {
+                          this.coachCandidates.push({ ...user, selectedTeamId: null, selectedRole: 'Entrenador Principal' });
+                      }
+                  }
+              });
+
+              console.log(`✅ Calculados: ${this.candidates.length} Jugadores y ${this.coachCandidates.length} Staff pendientes.`);
+              this.loading = false;
+          },
+          error: (err) => {
+              console.error("Error cargando usuarios", err);
+              this.loading = false;
+          }
+      });
   }
 
-  loadActiveUsers() {
-      this.adminSvc.getAllActiveUsers().subscribe(res => this.activeUsers = res);
+  // Helper para limpiar el nombre del rol en la vista
+  cleanRoleName(rol: string): string {
+      if (!rol) return '';
+      return rol.replace('ROLE_', '').replace('_', ' ');
   }
+
+  // --- ACCIONES ---
 
   async onAssignPlayer(user: any) {
     if (!user.selectedTeamId) return this.presentToast('⚠️ Selecciona un equipo primero', 'warning');
+    
+    // En la lista de activeUsers, el ID viene como 'id' (mira tu Java: map.put("id", ...))
+    const uid = user.id; 
+    
     await this.processRequest(
-        this.adminSvc.assignTeam(user.idUsuario, user.selectedTeamId), 
+        this.adminSvc.assignTeam(uid, user.selectedTeamId), 
         'Jugador fichado correctamente ⚽'
     );
-    this.loadCandidates();
-    this.loadActiveUsers();
+    this.loadUsersAndCalculateCandidates();
   }
 
   async onAssignCoach(coach: any) {
       if (!coach.selectedTeamId) return this.presentToast('⚠️ Selecciona un equipo', 'warning');
       if (!coach.selectedRole) return this.presentToast('⚠️ Selecciona un rol', 'warning');
-      const userId = coach.usuario.idUsuario; 
+      
+      const userId = coach.id; // Igual que arriba, viene como 'id'
+      
       await this.processRequest(
           this.adminSvc.assignCoach(userId, coach.selectedTeamId, coach.selectedRole),
           'Staff asignado correctamente 📋'
       );
-      this.loadCandidates();
-      this.loadActiveUsers();
+      this.loadUsersAndCalculateCandidates();
   }
 
   async createNewUser() {
       if(!this.newUser.nombre || !this.newUser.email) return this.presentToast('Datos incompletos', 'warning');
+      
       await this.processRequest(
           this.adminSvc.createUser(this.newUser), 
-          'Usuario creado.'
+          'Usuario creado con éxito'
       );
+      
       this.isUserModalOpen = false;
-      this.newUser = { nombre: '', apellidos: '', email: '', rol: 'JUGADOR', password: '123' }; 
-      this.loadCandidates(); 
+      this.newUser = { nombre: '', apellidos: '', email: '', rol: 'JUGADOR', password: '123456' }; 
+      
+      // Damos un respiro al backend para que guarde antes de recargar
+      setTimeout(() => {
+          this.loadUsersAndCalculateCandidates();
+      }, 500);
   }
 
   async deleteUser(user: any) {
@@ -129,13 +167,18 @@ export class AdminDashboardPage implements OnInit {
                   handler: () => {
                       this.processRequest(
                           this.adminSvc.deleteUser(user.id), 'Usuario eliminado'
-                      ).then(() => this.loadActiveUsers());
+                      ).then(() => {
+                          this.loadUsersAndCalculateCandidates();
+                      });
                   }
               }
           ]
       });
       await alert.present();
   }
+
+  // --- RESTO DE FUNCIONES (Equipos, Partidos) ---
+  // (Sin cambios, funcionan bien)
 
   async createNewTeam() {
       if(!this.newTeam.nombre) return this.presentToast('Nombre obligatorio', 'warning');
@@ -146,17 +189,17 @@ export class AdminDashboardPage implements OnInit {
   }
 
   openTeamDetail(team: any) {
-      if (!team || !team.idEquipo) return;
-      this.router.navigate(['/team-detail', team.idEquipo]);
+      if (!team) return;
+      const tid = team.idEquipo || team.id;
+      if(tid) this.router.navigate(['/team-detail', tid]);
   }
 
   goToTeamCalendar(team: any) {
-      if (!team || (!team.idEquipo && !team.id)) return;
+      if (!team) return;
       const teamId = team.idEquipo || team.id;
-      this.router.navigate(['/calendar'], { queryParams: { teamId: teamId } });
+      if(teamId) this.router.navigate(['/calendar'], { queryParams: { teamId: teamId } });
   }
 
-  // 🔥 NUEVO: Manejar la selección del archivo
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
@@ -164,13 +207,11 @@ export class AdminDashboardPage implements OnInit {
     }
   }
 
-  // 🔥 MODIFICADO: Enviar FormData
   async createMatch() {
       if(!this.newMatch.idEquipo || !this.newMatch.rival) {
           return this.presentToast('Completa los datos del partido', 'warning');
       }
 
-      // Convertimos a FormData para enviar archivo + datos
       const formData = new FormData();
       formData.append('idEquipo', String(this.newMatch.idEquipo));
       formData.append('rival', this.newMatch.rival);

@@ -44,27 +44,57 @@ public class AdminController {
         return ResponseEntity.ok(entrenadorRepo.findEntrenadoresSinEquipo());
     }
 
+    // 🔥 MÉTODO CORREGIDO PARA VER A TODOS LOS USUARIOS (INCLUIDOS NUEVOS)
     @GetMapping("/usuarios-activos")
     public ResponseEntity<List<Map<String, Object>>> getUsuariosActivos() {
         List<Map<String, Object>> activos = new ArrayList<>();
-        List<Jugador> jugadores = jugadorRepo.findAll();
-        for (Jugador j : jugadores) {
+
+        // 1. Buscamos TODOS los usuarios registrados
+        List<Usuario> todosLosUsuarios = usuarioRepo.findAll();
+
+        for (Usuario u : todosLosUsuarios) {
+            // Ignoramos al admin para no ensuciar la lista
+            if ("ADMIN".equals(u.getRol()) || "ROLE_ADMIN".equals(u.getRol())) continue;
+
             Map<String, Object> map = new HashMap<>();
-            map.put("id", j.getUsuario().getIdUsuario());
-            map.put("nombre", j.getUsuario().getNombre() + " " + j.getUsuario().getApellidos());
-            map.put("fotoUrl", j.getUsuario().getFotoUrl());
-            map.put("rol", "JUGADOR");
-            map.put("equipoNombre", j.getEquipoPrincipal() != null ? j.getEquipoPrincipal().getNombre() : "Sin Equipo");
-            activos.add(map);
-        }
-        List<Entrenador> entrenadores = entrenadorRepo.findAll();
-        for (Entrenador e : entrenadores) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", e.getUsuario().getIdUsuario());
-            map.put("nombre", e.getUsuario().getNombre() + " " + e.getUsuario().getApellidos());
-            map.put("fotoUrl", e.getUsuario().getFotoUrl());
-            map.put("rol", "STAFF");
-            map.put("equipoNombre", "Staff Técnico");
+            map.put("id", u.getIdUsuario());
+            map.put("nombre", u.getNombre() + " " + (u.getApellidos() != null ? u.getApellidos() : ""));
+            map.put("fotoUrl", u.getFotoUrl());
+            map.put("rol", u.getRol());
+
+            // 2. Intentamos averiguar si tiene equipo buscando en Jugadores
+            Optional<Jugador> jugOpt = jugadorRepo.findByUsuario_IdUsuario(u.getIdUsuario());
+            if (jugOpt.isPresent()) {
+                Equipo eq = jugOpt.get().getEquipoPrincipal();
+                map.put("equipoNombre", eq != null ? eq.getNombre() : "Sin Equipo");
+                map.put("equipoId", eq != null ? eq.getIdEquipo() : null);
+            } else {
+                // 3. Si no es jugador, miramos si es entrenador
+                Optional<Entrenador> entOpt = entrenadorRepo.findByUsuario_IdUsuario(u.getIdUsuario());
+
+                if (entOpt.isPresent()) {
+                    Entrenador entrenador = entOpt.get();
+
+                    // 🔥 BUSCAMOS SI TIENE EQUIPOS ASIGNADOS REALMENTE
+                    List<EquipoEntrenador> vinculaciones = equipoEntrenadorRepo.findByEntrenador_IdEntrenador(entrenador.getIdEntrenador());
+
+                    if (!vinculaciones.isEmpty()) {
+                        // Si tiene al menos un equipo, mostramos el nombre del primero
+                        // Esto hará que el Frontend sepa que YA TIENE EQUIPO
+                        String nombreEquipo = vinculaciones.get(0).getEquipo().getNombre();
+                        map.put("equipoNombre", nombreEquipo);
+                        map.put("equipoId", vinculaciones.get(0).getEquipo().getIdEquipo());
+                    } else {
+                        // Si no tiene vinculaciones, entonces sí es un candidato libre
+                        map.put("equipoNombre", "Sin Equipo"); // Cambiamos "Staff Técnico" por "Sin Equipo" para que el filtro lo atrape
+                    }
+
+                } else {
+                    // 4. Si no está en ninguno, es un usuario NUEVO sin asignar
+                    map.put("equipoNombre", "Sin Equipo");
+                }
+            }
+
             activos.add(map);
         }
         return ResponseEntity.ok(activos);
@@ -245,7 +275,7 @@ public class AdminController {
         } catch (Exception e) { e.printStackTrace(); return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage())); }
     }
 
-    // 🔥 CERRAR ACTA (LÓGICA MEJORADA)
+    // 🔥 CERRAR ACTA (LÓGICA CORREGIDA Y PROFESIONAL)
     @PostMapping("/cerrar-acta")
     @Transactional
     public ResponseEntity<?> cerrarActaAdmin(@RequestBody Map<String, Object> payload) {
@@ -265,13 +295,20 @@ public class AdminController {
             if (estadisticas != null) {
                 for (Map<String, Object> stat : estadisticas) {
                     Integer idJugador = ((Number) stat.get("idJugador")).intValue();
+
+                    // Datos básicos
                     Integer goles = stat.get("goles") != null ? ((Number) stat.get("goles")).intValue() : 0;
                     Integer minutos = stat.get("minutos") != null ? ((Number) stat.get("minutos")).intValue() : 0;
+
+                    // Datos avanzados (Sustituciones y Titularidad)
+                    Boolean esTitular = (Boolean) stat.get("esTitular");
+                    Integer minEntrada = stat.get("minutoEntrada") != null ? ((Number) stat.get("minutoEntrada")).intValue() : null;
+                    Integer minSalida = stat.get("minutoSalida") != null ? ((Number) stat.get("minutoSalida")).intValue() : null;
 
                     Jugador jugador = jugadorRepo.findById(idJugador).orElse(null);
 
                     if (jugador != null) {
-                        // Usamos el método compatible que acabamos de definir en el Repo
+                        // Importante: asegúrate de que el método findByPartidoAndJugador exista en tu AlineacionRepository
                         Optional<Alineacion> alineacionOpt = alineacionRepo.findByPartidoAndJugador(p, jugador);
                         Alineacion alineacion;
 
@@ -281,17 +318,27 @@ public class AdminController {
                             alineacion = new Alineacion();
                             alineacion.setPartido(p);
                             alineacion.setJugador(jugador);
+                            // Asignar el equipo para evitar el error NULL
+                            alineacion.setEquipo(p.getEquipo());
+
+                            // 🔥 CORRECCIÓN: Asignar slot_id por defecto si es nuevo (suplente)
+                            // Usamos un identificador único basado en BENCH + ID para cumplir la restricción NOT NULL
+                            alineacion.setSlotId("BENCH_" + jugador.getIdJugador());
                         }
 
+                        // Actualizamos todos los campos
                         alineacion.setGoles(goles);
                         alineacion.setMinutosJugados(minutos);
+                        alineacion.setEsTitular(esTitular != null && esTitular);
+                        alineacion.setMinutoEntrada(minEntrada);
+                        alineacion.setMinutoSalida(minSalida);
 
                         alineacionRepo.save(alineacion);
                     }
                 }
             }
 
-            return ResponseEntity.ok(Collections.singletonMap("message", "Acta cerrada y goles guardados"));
+            return ResponseEntity.ok(Collections.singletonMap("message", "Acta cerrada y estadísticas guardadas correctamente."));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage()));

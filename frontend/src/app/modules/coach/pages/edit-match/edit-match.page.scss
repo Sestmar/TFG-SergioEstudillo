@@ -1,184 +1,141 @@
-// VARIABLES DE COLOR
 :host {
-  --ion-background-color: #f8fafc;
+  --ion-background-color: #f1f5f9; // Fondo gris suave general
   --text-main: #1e293b;
-  --card-bg: #ffffff;
 }
 
-// CABECERA DE EDICIÓN (MARCADOR)
+// --- MARCADOR Y CABECERA ---
 .match-header-edit {
   background: white;
   padding: 20px 10px 30px 10px;
   border-radius: 0 0 30px 30px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  margin-bottom: 25px;
 
   .teams-row {
-    display: flex;
-    justify-content: space-around;
-    align-items: flex-start;
-
+    display: flex; justify-content: space-around; align-items: flex-start;
+    
     .team-col {
-      width: 30%;
-      display: flex; flex-direction: column; align-items: center;
-      
+      width: 32%; display: flex; flex-direction: column; align-items: center;
       .logo-box {
-        width: 60px; height: 60px;
-        background: #f1f5f9;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        margin-bottom: 8px;
-        border: 2px solid white;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        overflow: hidden;
-
+        width: 64px; height: 64px; background: #fff; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; margin-bottom: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08); overflow: hidden;
         img { width: 100%; height: 100%; object-fit: cover; }
-        .placeholder-icon { font-size: 2rem; color: #94a3b8; }
       }
-
-      .team-name {
-        margin: 0;
-        font-size: 0.85rem;
-        font-weight: 800;
-        color: var(--text-main);
-        text-align: center;
-        line-height: 1.2;
+      .team-name { 
+          margin: 0; font-size: 0.8rem; font-weight: 800; color: var(--text-main); 
+          text-align: center; line-height: 1.2; text-transform: uppercase;
       }
     }
 
     .score-col {
-      display: flex; flex-direction: column; align-items: center;
-      margin-top: 10px;
-
+      display: flex; flex-direction: column; align-items: center; margin-top: 10px;
       .score-inputs {
-        display: flex; align-items: center; gap: 10px;
+        display: flex; align-items: center; gap: 8px;
         
+        // INPUTS DEL MARCADOR
         .score-input {
-          width: 50px; height: 50px;
-          --background: #f1f5f9;
-          --padding-start: 0; --padding-end: 0;
-          font-size: 1.8rem; font-weight: 800;
-          text-align: center;
-          border-radius: 10px;
-          color: var(--text-main);
-          --padding-top: 0; --padding-bottom: 0;
-          display: flex; justify-content: center; 
+          width: 55px; height: 55px; --background: #f8fafc; 
+          font-size: 2rem; font-weight: 900; text-align: center;
+          border-radius: 12px; border: 2px solid #e2e8f0;
           
-          // Estilo si es solo lectura (Coach)
-          &.readonly {
-             --background: transparent;
-             border: none;
-             pointer-events: none; // No clicable
-          }
+          // 🔥 IMPORTANTE: Forzamos color oscuro
+          color: #0f172a !important; --color: #0f172a !important;
+          
+          &.readonly { --background: transparent; border: none; pointer-events: none; }
         }
         
-        .score-input::part(native) {
-            text-align: center;
-        }
-
-        .divider { font-size: 1.5rem; font-weight: 700; color: #cbd5e1; }
+        .divider { font-size: 2rem; font-weight: 300; color: #94a3b8; margin-top: -5px; }
       }
-
-      .match-status {
-        margin-top: 5px;
-        font-size: 0.65rem; font-weight: 800;
-        color: #64748b; letter-spacing: 1px;
+      .match-status { 
+          margin-top: 8px; font-size: 0.65rem; font-weight: 700; 
+          color: #fff; background: #64748b; padding: 2px 8px; border-radius: 10px;
       }
     }
   }
 }
 
-// 🔥 ZONA ADMIN
+// --- ZONA ADMIN ---
 .admin-zone {
-    background: #fff;
-    border-radius: 20px;
-    margin: 0 15px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    border: 1px solid #fce7f3; // Toque rojizo sutil
+    background: #fff; border-radius: 16px; margin: 0 15px 25px 15px; 
+    box-shadow: 0 2px 15px rgba(0,0,0,0.03); border: 1px solid #fee2e2; // Borde rojo suave
+    padding: 20px;
 
     .admin-notice {
-        display: flex; gap: 10px; align-items: flex-start;
-        background: #fff1f2; // Fondo rojizo muy suave
-        padding: 15px; border-radius: 12px;
-        color: #be123c;
-        font-size: 0.85rem;
-        ion-icon { font-size: 1.2rem; min-width: 20px; margin-top: 2px; }
-        p { margin: 0; line-height: 1.4; }
+        display: flex; gap: 12px; align-items: flex-start;
+        color: #b91c1c; font-size: 0.85rem;
+        ion-icon { font-size: 1.4rem; min-width: 24px; margin-top: -2px; }
+        p { margin: 0; line-height: 1.5; font-weight: 500;}
     }
     
-    .main-action-btn {
-        margin-top: 20px;
-        --border-radius: 12px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
+    .main-action-btn { 
+        margin-top: 20px; --border-radius: 12px; font-weight: 800; letter-spacing: 0.5px; 
+        --box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
     }
 }
 
-// SEPARADORES
+// --- SEPARADORES ---
 .section-divider {
-  padding: 10px 20px;
-  font-size: 0.8rem; font-weight: 800;
-  color: #64748b;
-  text-transform: uppercase; letter-spacing: 1px;
-  display: flex; align-items: center; gap: 8px;
-  &.mt-4 { margin-top: 1.5rem; }
+  padding: 5px 20px; font-size: 0.75rem; font-weight: 800; color: #64748b; 
+  text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;
+  &.mt-4 { margin-top: 1.5rem; margin-bottom: 0.5rem; }
 }
 
-// TARJETAS DE JUGADOR (EDITABLE)
-.player-edit-card {
-  display: flex; justify-content: space-between; align-items: center;
-  background: white;
-  padding: 10px 15px;
-  margin: 0 15px 10px 15px; // Márgenes laterales
-  border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-  border-left: 4px solid transparent;
+// --- TARJETAS DE JUGADOR ---
+.squad-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; }
 
-  &.starter { border-left-color: var(--ion-color-success); }
-  &.bench { border-left-color: #cbd5e1; opacity: 0.8; }
-  &.bench.played { opacity: 1; border-left-color: var(--ion-color-warning); background: white; }
+.player-edit-card {
+  display: flex; justify-content: space-between; align-items: center; background: white;
+  padding: 12px 15px; margin: 0 15px; border-radius: 14px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03); position: relative; overflow: hidden;
+
+  // Barra lateral de estado
+  &::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+  }
+  &.starter::before { background: var(--ion-color-success); }
+  &.bench::before { background: #cbd5e1; }
+  &.bench.played { background: #fffbeb; } // Fondo amarillo suave si jugó
+  &.bench.played::before { background: var(--ion-color-warning); }
 
   .card-left {
-    display: flex; align-items: center; gap: 12px; width: 50%;
-    
-    .player-avatar {
-      width: 40px; height: 40px;
-      background: #f1f5f9;
-      border: 1px solid #e2e8f0;
-      img { object-fit: cover; }
+    display: flex; align-items: center; gap: 12px; width: 45%;
+    .player-avatar { 
+        width: 42px; height: 42px; background: #f1f5f9; border: 1px solid #e2e8f0; 
+        border-radius: 50%; 
+        img { object-fit: cover; } 
     }
-
     .names {
       display: flex; flex-direction: column; font-size: 0.9rem;
-      strong { color: var(--text-main); font-weight: 700; }
-      span { font-size: 0.7rem; color: #64748b; }
-      .text-success { color: var(--ion-color-success); font-weight: 700; }
+      strong { color: var(--text-main); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;}
+      span { font-size: 0.7rem; color: #64748b; font-weight: 500;}
+      .text-success { color: var(--ion-color-success); font-weight: 800; }
     }
   }
 
   .card-inputs {
-    display: flex; gap: 8px;
+    display: flex; gap: 8px; justify-content: flex-end; flex: 1;
     
     .input-group {
-      display: flex; flex-direction: column; align-items: center; width: 40px;
-      
-      label { font-size: 0.6rem; margin-bottom: 2px; color: #94a3b8; font-weight: 700; }
+      display: flex; flex-direction: column; align-items: center; width: 48px;
+      label { font-size: 0.55rem; margin-bottom: 3px; color: #94a3b8; font-weight: 800; text-transform: uppercase;}
       
       ion-input {
-        --background: #f8fafc;
-        border-radius: 6px;
-        font-weight: 700; font-size: 0.9rem;
-        text-align: center;
-        height: 32px;
-        min-height: 32px;
-        border: 1px solid #e2e8f0;
+        --background: #f8fafc; border-radius: 8px; font-weight: 700; font-size: 0.95rem;
+        text-align: center; height: 36px; min-height: 36px; border: 1px solid #cbd5e1;
         --padding-start: 0; --padding-end: 0;
+        
+        // 🔥 TEXTO NEGRO ASEGURADO 🔥
+        color: #0f172a !important; --color: #0f172a !important;
       }
       
-      ion-input::part(native) { text-align: center; }
-
-      &.success ion-input { color: var(--ion-color-success); background: #f0fdf4; border-color: #bbf7d0; }
-      &.info ion-input { color: var(--ion-color-tertiary); background: #ecfeff; border-color: #a5f3fc; }
+      // Estilos específicos por tipo de dato
+      &.min ion-input { border-color: #cbd5e1; }
+      &.gol ion-input { --background: #f0fdf4; border-color: #86efac; color: #15803d !important; --color: #15803d !important;}
+      &.in ion-input  { --background: #ecfeff; border-color: #a5f3fc; color: #0e7490 !important; --color: #0e7490 !important;}
+      &.out ion-input { --background: #fff1f2; border-color: #fecdd3; color: #be123c !important; --color: #be123c !important;}
     }
   }
 }
+
+.spacer { height: 80px; }

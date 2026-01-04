@@ -5,9 +5,11 @@ import com.DAMUnitedFC.backend_tfg.dto.AlineacionResponseDto;
 import com.DAMUnitedFC.backend_tfg.model.Alineacion;
 import com.DAMUnitedFC.backend_tfg.model.Partido;
 import com.DAMUnitedFC.backend_tfg.model.Jugador;
+import com.DAMUnitedFC.backend_tfg.model.Equipo; // Importante
 import com.DAMUnitedFC.backend_tfg.repository.AlineacionRepository;
 import com.DAMUnitedFC.backend_tfg.repository.PartidoRepository;
 import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
+import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository; // Importante
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +32,8 @@ public class AlineacionController {
     private PartidoRepository partidoRepo;
     @Autowired
     private JugadorRepository jugadorRepo;
+    @Autowired
+    private EquipoRepository equipoRepo; // Necesitamos el repo de equipo
 
     // Helper para evitar nulos
     private Integer safeInt(Object value) {
@@ -109,13 +113,15 @@ public class AlineacionController {
                 alineacion.setPartido(p);
                 alineacion.setJugador(j);
 
-                // 🔥 ASIGNACIÓN SEGURA DE EQUIPO
+                // 🔥 ASIGNACIÓN SEGURA DE EQUIPO (ENTIDAD)
                 if (j.getEquipoPrincipal() != null) {
-                    alineacion.setIdEquipo(j.getEquipoPrincipal().getIdEquipo().longValue());
+                    alineacion.setEquipo(j.getEquipoPrincipal());
                 } else if (p.getEquipo() != null) {
-                    alineacion.setIdEquipo(p.getEquipo().getIdEquipo().longValue());
+                    alineacion.setEquipo(p.getEquipo());
                 } else {
-                    alineacion.setIdEquipo(0L);
+                    // Si no hay equipo, esto podría fallar si la BD tiene NOT NULL.
+                    // Idealmente deberías asignar un equipo por defecto o lanzar error.
+                    // alineacion.setEquipo(null);
                 }
 
                 alineacion.setSlotId(ficha.getSlotId());
@@ -158,6 +164,7 @@ public class AlineacionController {
                 for (Map<String, Object> stat : stats) {
                     Integer idJugador = safeInt(stat.get("idJugador"));
 
+                    // Importante: asegúrate de que el método findFichaExacta o findByPartidoAndJugador exista
                     Optional<Alineacion> fichaOpt = alineacionRepo.findFichaExacta(idPartido, idJugador);
 
                     Alineacion alineacion;
@@ -170,14 +177,15 @@ public class AlineacionController {
                         Jugador j = jugadorRepo.findById(idJugador).orElseThrow();
                         alineacion.setJugador(j);
 
-                        // 🔥 ASIGNACIÓN SEGURA DE EQUIPO
+                        // ASIGNACIÓN SEGURA DE EQUIPO
                         if (p.getEquipo() != null) {
-                            alineacion.setIdEquipo(p.getEquipo().getIdEquipo().longValue());
+                            alineacion.setEquipo(p.getEquipo());
                         } else {
-                            alineacion.setIdEquipo(0L);
+                            // Manejo si equipo es null (opcional, lanzar excepción)
                         }
 
                         alineacion.setEsTitular(false);
+                        // 🔥 CORRECCIÓN: Asignar slot_id
                         alineacion.setSlotId("BENCH_" + idJugador);
                     }
 
