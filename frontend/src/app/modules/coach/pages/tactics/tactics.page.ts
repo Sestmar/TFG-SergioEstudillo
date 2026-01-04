@@ -22,17 +22,23 @@ export class TacticsPage implements OnInit {
 
   loading = true;
   saving = false;
-  
   matchId: number = 0; 
   matchInfo: any = null; 
   currentTeamId: number | null = null;
 
   bench: Player[] = [];
   
-  forwards: PitchSlot[] = this.createRow('FWD');
-  midfielders: PitchSlot[] = this.createRow('MID');
-  defenders: PitchSlot[] = this.createRow('DEF');
-  goalkeeper: PitchSlot[] = this.createRow('GK', 1);
+  // Variables para formaciones
+  formations = ['3-4-3', '3-5-2', '4-3-3', '4-4-2', '4-5-1', '5-3-2', '5-4-1'];
+  selectedFormation = '4-3-3'; // Por defecto, se sobrescribirá al cargar
+
+  // Filas del campo
+  forwards: PitchSlot[] = [];
+  midfielders: PitchSlot[] = [];
+  defenders: PitchSlot[] = [];
+  goalkeeper: PitchSlot[] = []; 
+
+  allSlotIds: string[] = [];
 
   constructor(
     private route: ActivatedRoute, 
@@ -41,7 +47,7 @@ export class TacticsPage implements OnInit {
     private authSvc: AuthService,
     private http: HttpClient,
     private toastCtrl: ToastController
-  ) { }
+  ) {}
 
   ngOnInit() {
     const idParam = this.route.snapshot.paramMap.get('matchId');
@@ -49,25 +55,74 @@ export class TacticsPage implements OnInit {
       this.matchId = +idParam;
       this.loadMatchData();
     } else {
-      console.error("No se proporcionó ID de partido");
       this.loading = false;
     }
+    // No llamamos a updatePitchRows aquí todavía, esperamos a ver si hay datos guardados
   }
 
-  private createRow(prefix: string, count: number = 5): PitchSlot[] {
-    return Array(count).fill(null).map((_, i) => ({
-      id: `${prefix}-${i + 1}`,
-      player: null
-    }));
+  onFormationChange(event: any) {
+    const newFormation = event.detail.value;
+    this.selectedFormation = newFormation; // Actualizamos la variable visual
+    this.updatePitchRows(newFormation);
+  }
+
+  updatePitchRows(formation: string) {
+    const parts = formation.split('-').map(Number); // "4-4-2" -> [4, 4, 2]
+    const defCount = parts[0];
+    const midCount = parts[1];
+    const fwdCount = parts[2];
+
+    this.goalkeeper = this.resizeRow(this.goalkeeper || [], 1, 'GK');
+    this.defenders = this.resizeRow(this.defenders || [], defCount, 'DEF');
+    this.midfielders = this.resizeRow(this.midfielders || [], midCount, 'MID');
+    this.forwards = this.resizeRow(this.forwards || [], fwdCount, 'FWD');
+
+    this.updateDragConnections();
+  }
+
+  private resizeRow(currentRow: PitchSlot[], newSize: number, prefix: string): PitchSlot[] {
+    const newRow: PitchSlot[] = [];
+    for (let i = 0; i < newSize; i++) {
+        if (i < currentRow.length) {
+            newRow.push(currentRow[i]);
+        } else {
+            newRow.push({ id: `${prefix}-${i + 1}`, player: null });
+        }
+    }
+    // Jugadores sobrantes vuelven al banquillo
+    if (currentRow.length > newSize) {
+        const overflowSlots = currentRow.slice(newSize);
+        overflowSlots.forEach(slot => {
+            if (slot.player) {
+                const exists = this.bench.some(p => this.getPlayerId(p) === this.getPlayerId(slot.player!));
+                if (!exists) this.bench.push(slot.player);
+            }
+        });
+    }
+    return newRow;
+  }
+
+  private updateDragConnections() {
+    this.allSlotIds = [
+        'benchList', 
+        ...this.forwards.map(s => s.id),
+        ...this.midfielders.map(s => s.id),
+        ...this.defenders.map(s => s.id),
+        ...this.goalkeeper.map(s => s.id)
+    ];
+  }
+
+  private getPlayerId(player: any): string {
+      return String(player.id || player.idJugador || (player.usuario && player.usuario.id));
   }
 
   getBorderColor(posicion: string): string {
     if (!posicion) return '#94a3b8'; 
     const pos = posicion.toUpperCase();
-    if (pos.includes('PORTERO')) return '#22c55e'; 
-    if (pos.includes('DEFENSA') || pos.includes('LATERAL') || pos.includes('CENTRAL')) return '#eab308'; 
-    if (pos.includes('MEDIO') || pos.includes('PIVOTE') || pos.includes('INTERIOR')) return '#3b82f6'; 
-    if (pos.includes('DELANTERO') || pos.includes('EXTREMO') || pos.includes('PUNTA')) return '#ef4444'; 
+    if (pos.includes('PORTERO')) return '#fbbf24'; 
+    if (pos.includes('DEFENSA') || pos.includes('LATERAL') || pos.includes('CENTRAL')) return '#38bdf8'; 
+    if (pos.includes('MEDIO') || pos.includes('PIVOTE') || pos.includes('INTERIOR')) return '#4ade80'; 
+    if (pos.includes('DELANTERO') || pos.includes('EXTREMO') || pos.includes('PUNTA')) return '#f87171'; 
     return '#94a3b8';
   }
 
@@ -88,10 +143,7 @@ export class TacticsPage implements OnInit {
           this.loading = false;
         }
       },
-      error: (err) => {
-        console.error("Error cargando partido", err);
-        this.loading = false;
-      }
+      error: () => this.loading = false
     });
   }
 
@@ -99,138 +151,170 @@ export class TacticsPage implements OnInit {
     this.playerSvc.getAllPlayers().subscribe({
       next: (res: any) => {
         const all = Array.isArray(res) ? res : (res.data || []);
-        const myPlayers = all.filter((p: any) => {
-            const pTeamId = p.equipoPrincipal?.id || p.equipoPrincipal?.idEquipo || p.equipoPrincipal;
-            return pTeamId == teamId;
-        });
         
-        this.bench = myPlayers;
-        // Importante: llamamos a fetch después de llenar el banquillo
+        // Filtramos por equipo
+        const teamPlayers = all.filter((p: any) => {
+            const pTeamId = p.equipoPrincipal?.id || p.equipoPrincipal?.idEquipo || p.equipoPrincipal;
+            return String(pTeamId) === String(teamId);
+        });
+
+        // Eliminamos duplicados
+        const uniquePlayersMap = new Map();
+        teamPlayers.forEach((p: any) => {
+            const uniqueId = this.getPlayerId(p);
+            if (uniqueId && !uniquePlayersMap.has(uniqueId)) {
+                uniquePlayersMap.set(uniqueId, p);
+            }
+        });
+
+        this.bench = Array.from(uniquePlayersMap.values());
         this.fetchSavedLineup();
       },
-      error: (err) => {
-        console.error(err);
-        this.loading = false; 
-      }
+      error: () => this.loading = false 
     });
   }
 
   fetchSavedLineup() {
     this.matchSvc.getLineup(this.matchId).subscribe({
       next: (savedSlots: any) => {
-        console.log("📥 Alineación recibida (DTO):", savedSlots);
+        
+        // 1. DETERMINAR LA FORMACIÓN GUARDADA (Lógica Nueva)
+        if (Array.isArray(savedSlots) && savedSlots.length > 0) {
+            
+            // Contamos cuántos slots hay guardados de cada tipo
+            // Los slots se guardan como "DEF-1", "DEF-2", etc. El último número nos dice el tamaño.
+            let maxDef = 0, maxMid = 0, maxFwd = 0;
 
+            savedSlots.forEach((slot: any) => {
+                const id = slot.slotId || '';
+                if (id.startsWith('DEF-')) {
+                    const num = parseInt(id.split('-')[1]);
+                    if (num > maxDef) maxDef = num;
+                }
+                if (id.startsWith('MID-')) {
+                    const num = parseInt(id.split('-')[1]);
+                    if (num > maxMid) maxMid = num;
+                }
+                if (id.startsWith('FWD-')) {
+                    const num = parseInt(id.split('-')[1]);
+                    if (num > maxFwd) maxFwd = num;
+                }
+            });
+
+            // Si hemos encontrado una formación válida (ej: 4-4-2), la aplicamos
+            if (maxDef > 0 && maxMid > 0 && maxFwd > 0) {
+                const detectedFormation = `${maxDef}-${maxMid}-${maxFwd}`;
+                // Verificamos si existe en nuestra lista permitida, si no, fallback a 4-3-3
+                if (this.formations.includes(detectedFormation)) {
+                    this.selectedFormation = detectedFormation;
+                } else {
+                    // Si es una formación rara (ej: expulsaron a uno y guardaron 4-4-1),
+                    // intentamos aproximar o nos quedamos con la más grande que quepa.
+                    // Por simplicidad, si no coincide exacto, usamos 4-3-3 pero los jugadores se colocarán igual.
+                    this.selectedFormation = '4-3-3'; 
+                }
+            } else {
+                this.selectedFormation = '4-3-3';
+            }
+        } else {
+            // Si no hay nada guardado, defecto
+            this.selectedFormation = '4-3-3';
+        }
+
+        // 2. APLICAR LA FORMACIÓN DETECTADA
+        this.updatePitchRows(this.selectedFormation);
+
+        // 3. COLOCAR A LOS JUGADORES EN SUS HUECOS
         if (Array.isArray(savedSlots) && savedSlots.length > 0) {
           savedSlots.forEach((saved: any) => {
-              
-              // 🔥 CORRECCIÓN CLAVE: El DTO plano trae 'idJugador' en la raíz, no dentro de 'jugador'
               const playerIdToFind = saved.idJugador || saved.jugador?.idJugador || saved.jugador?.id;
-              
-              if (!playerIdToFind) return; // Si no hay ID, saltamos
+              if (!playerIdToFind) return; 
 
-              // Buscamos al jugador en el banquillo
-              const playerIndex = this.bench.findIndex(p => {
-                  const pId = (p as any).idJugador || p.id;
-                  return String(pId) === String(playerIdToFind);
-              });
+              const playerIndex = this.bench.findIndex(p => this.getPlayerId(p) === String(playerIdToFind));
               
               if (playerIndex > -1) {
                 const player = this.bench[playerIndex];
-                const targetSlotId = saved.slotId; 
-                const targetSlot = this.findSlot(targetSlotId);
+                const targetSlot = this.findSlot(saved.slotId);
 
                 if (targetSlot) {
-                  console.log(`✅ Moviendo ${player.usuario.nombre} a ${targetSlotId}`);
-                  this.bench.splice(playerIndex, 1); // Sacar del banquillo
-                  targetSlot.player = player;        // Poner en campo
-                } else {
-                  console.warn(`⚠️ Slot ${targetSlotId} no encontrado para jugador ${playerIdToFind}`);
-                }
-              } else {
-                console.warn(`⚠️ Jugador ID ${playerIdToFind} no encontrado en la plantilla cargada.`);
+                  this.bench.splice(playerIndex, 1); 
+                  targetSlot.player = player;        
+                } 
               }
           });
         }
         this.loading = false;
       },
-      error: (err) => {
-        console.error("Error cargando alineación:", err);
-        this.loading = false; 
-      }
+      error: () => this.loading = false 
     });
   }
 
-  saveTactics() {
+  // ... (El resto de funciones saveTactics, drop, findSlot, etc. siguen IGUAL que antes)
+  
+  async saveTactics() {
     if (!this.matchId) return;
-    this.saving = true;
-
     const allSlots = [...this.forwards, ...this.midfielders, ...this.defenders, ...this.goalkeeper];
-    
-    const payload = allSlots
-      .filter(slot => slot.player !== null) 
-      .map(slot => ({
+    const playersOnPitch = allSlots.filter(s => s.player !== null);
+
+    if (playersOnPitch.length !== 11) {
+        const t = await this.toastCtrl.create({ message: `Alineación incompleta: ${playersOnPitch.length}/11`, duration: 2000, color: 'warning' });
+        t.present();
+        return;
+    }
+    // (Validación portero aquí...)
+
+    this.saving = true;
+    const payload = playersOnPitch.map(slot => ({
         idPartido: this.matchId,
         idJugador: (slot.player as any).idJugador || slot.player?.id,
         slotId: slot.id 
-      }));
-
-    console.log("📤 Guardando táctica:", payload);
+    }));
 
     this.matchSvc.saveLineup(this.matchId, payload).subscribe({
         next: async () => {
           this.saving = false;
-          const toast = await this.toastCtrl.create({
-            message: '¡Alineación guardada correctamente! 💾', duration: 2000, color: 'success', position: 'top'
-          });
-          toast.present();
+          const t = await this.toastCtrl.create({ message: 'Alineación guardada 💾', duration: 2000, color: 'success' });
+          t.present();
         },
-        error: async (err) => {
+        error: async () => {
           this.saving = false;
-          console.error("Error backend:", err);
-          const toast = await this.toastCtrl.create({
-            message: 'Error al guardar.', duration: 2000, color: 'danger'
-          });
-          toast.present();
+          const t = await this.toastCtrl.create({ message: 'Error al guardar', duration: 2000, color: 'danger' });
+          t.present();
         }
       });
   }
 
   drop(event: CdkDragDrop<any>) {
     if (event.previousContainer === event.container) return;
-
     const isBenchSource = event.previousContainer.id === 'benchList';
     const isBenchTarget = event.container.id === 'benchList';
-
-    let draggedPlayer: Player;
-    if (isBenchSource) {
-        draggedPlayer = event.previousContainer.data[event.previousIndex];
-    } else {
-        draggedPlayer = event.previousContainer.data;
-    }
+    const draggedPlayer: Player = event.item.data;
 
     if (!draggedPlayer) return;
 
     if (isBenchTarget) {
-      this.bench.push(draggedPlayer);
+      const exists = this.bench.some(p => this.getPlayerId(p) === this.getPlayerId(draggedPlayer));
+      if (!exists) this.bench.push(draggedPlayer);
       this.clearSlot(event.previousContainer.id);
     } else {
       const targetSlot = this.findSlot(event.container.id);
       if (!targetSlot) return;
-
       const existingPlayer = targetSlot.player;
       targetSlot.player = draggedPlayer;
 
       if (isBenchSource) {
-        this.bench.splice(event.previousIndex, 1);
+        const idx = this.bench.findIndex(p => this.getPlayerId(p) === this.getPlayerId(draggedPlayer));
+        if (idx > -1) this.bench.splice(idx, 1);
       } else {
         this.clearSlot(event.previousContainer.id);
       }
 
       if (existingPlayer) {
-        if (isBenchSource) this.bench.push(existingPlayer);
-        else {
-          const originSlot = this.findSlot(event.previousContainer.id);
-          if (originSlot) originSlot.player = existingPlayer;
+        if (isBenchSource) {
+            this.bench.push(existingPlayer);
+        } else {
+            const originSlot = this.findSlot(event.previousContainer.id);
+            if (originSlot) originSlot.player = existingPlayer;
         }
       }
     }

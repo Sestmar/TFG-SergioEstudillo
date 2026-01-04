@@ -1,137 +1,132 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/coach-dashboard"></ion-back-button>
-    </ion-buttons>
-    
-    <ion-title>
-      {{ matchInfo?.rival ? 'VS ' + matchInfo.rival : 'Pizarra Táctica' }}
-    </ion-title>
-    
-    <ion-buttons slot="end">
-      <ion-button (click)="saveTactics()" [disabled]="saving">
-        <ion-icon name="save-outline" *ngIf="!saving"></ion-icon>
-        <ion-spinner name="crescent" color="light" *ngIf="saving"></ion-spinner>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content [scrollY]="false">
+<ion-content [scrollY]="false" class="tactics-content">
   
-  <div *ngIf="loading" class="ion-text-center ion-padding" style="margin-top: 50px;">
-    <ion-spinner color="primary"></ion-spinner>
-    <p>Cargando partido...</p>
-  </div>
-
-  <div class="drag-wrapper" cdkDropListGroup *ngIf="!loading">
-
-    <div class="football-pitch">
-      <div class="half-way-line"></div>
-      <div class="center-circle"></div>
-      <div class="penalty-box top"></div>
-      <div class="penalty-box bottom"></div>
-
-      <div class="tactical-line">
-        <div class="slot-container" *ngFor="let slot of forwards">
-          <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" (cdkDropListDropped)="drop($event)" class="player-slot">
-            
-            <div class="player-token on-pitch" 
-                 *ngIf="slot.player" 
-                 cdkDrag 
-                 [cdkDragData]="slot.player"
-                 [style.border-color]="getBorderColor(slot.player.posicion)">
-              
-              <img *ngIf="slot.player.usuario.fotoUrl" [src]="slot.player.usuario.fotoUrl" class="token-img">
-              
-              <div *ngIf="!slot.player.usuario.fotoUrl" class="token-initials">
-                 {{ slot.player.dorsal }}
-              </div>
-
-              <span class="name">{{ getShortName(slot.player.usuario.nombre) }}</span>
-              
-              <div *cdkDragPlaceholder class="token-placeholder"></div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      <div class="tactical-line">
-        <div class="slot-container" *ngFor="let slot of midfielders">
-          <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" (cdkDropListDropped)="drop($event)" class="player-slot">
-            <div class="player-token on-pitch" 
-                 *ngIf="slot.player" 
-                 cdkDrag 
-                 [cdkDragData]="slot.player"
-                 [style.border-color]="getBorderColor(slot.player.posicion)">
-              
-              <img *ngIf="slot.player.usuario.fotoUrl" [src]="slot.player.usuario.fotoUrl" class="token-img">
-              <div *ngIf="!slot.player.usuario.fotoUrl" class="token-initials">{{ slot.player.dorsal }}</div>
-              
-              <span class="name">{{ getShortName(slot.player.usuario.nombre) }}</span>
-              <div *cdkDragPlaceholder class="token-placeholder"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="tactical-line">
-        <div class="slot-container" *ngFor="let slot of defenders">
-          <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" (cdkDropListDropped)="drop($event)" class="player-slot">
-            <div class="player-token on-pitch" 
-                 *ngIf="slot.player" 
-                 cdkDrag 
-                 [cdkDragData]="slot.player"
-                 [style.border-color]="getBorderColor(slot.player.posicion)">
-                 
-              <img *ngIf="slot.player.usuario.fotoUrl" [src]="slot.player.usuario.fotoUrl" class="token-img">
-              <div *ngIf="!slot.player.usuario.fotoUrl" class="token-initials">{{ slot.player.dorsal }}</div>
-
-              <span class="name">{{ getShortName(slot.player.usuario.nombre) }}</span>
-              <div *cdkDragPlaceholder class="token-placeholder"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="tactical-line">
-        <div class="slot-container" *ngFor="let slot of goalkeeper">
-          <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" (cdkDropListDropped)="drop($event)" class="player-slot">
-            <div class="player-token on-pitch" 
-                 *ngIf="slot.player" 
-                 cdkDrag 
-                 [cdkDragData]="slot.player"
-                 [style.border-color]="getBorderColor(slot.player.posicion)">
-              
-              <img *ngIf="slot.player.usuario.fotoUrl" [src]="slot.player.usuario.fotoUrl" class="token-img">
-              <div *ngIf="!slot.player.usuario.fotoUrl" class="token-initials">{{ slot.player.dorsal }}</div>
-
-              <span class="name">{{ getShortName(slot.player.usuario.nombre) }}</span>
-              <div *cdkDragPlaceholder class="token-placeholder"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+  <div class="hud-header">
+    <ion-button fill="clear" color="light" routerLink="/coach-dashboard">
+      <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+    </ion-button>
+    
+    <div class="formation-selector">
+      <ion-select [value]="selectedFormation" (ionChange)="onFormationChange($event)" interface="popover" class="custom-select">
+        <ion-select-option *ngFor="let f of formations" [value]="f">{{ f }}</ion-select-option>
+      </ion-select>
     </div>
 
-    <div class="bench-container">
-      <h3>PLANTILLA DISPONIBLE</h3>
-      <div cdkDropList id="benchList" [cdkDropListData]="bench" (cdkDropListDropped)="drop($event)" class="bench-list">
+    <ion-button (click)="saveTactics()" [disabled]="saving" class="save-btn" color="success" size="small">
+      <ion-icon name="save" slot="start"></ion-icon>
+      <span *ngIf="!saving">GUARDAR</span>
+      <ion-spinner name="crescent" *ngIf="saving"></ion-spinner>
+    </ion-button>
+  </div>
+
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Preparando vestuario...</p>
+  </div>
+
+  <div class="main-layout" *ngIf="!loading">
+
+    <div class="pitch-container">
+      <div class="pitch-background">
+        <div class="grass-stripes"></div>
+        <div class="pitch-lines">
+          <div class="box top-box"></div>
+          <div class="box bottom-box"></div>
+          <div class="center-line"></div>
+          <div class="center-circle"></div>
+        </div>
+      </div>
+
+      <div class="tactical-grid">
         
-        <div class="player-token" 
-             *ngFor="let p of bench" 
-             cdkDrag 
-             [cdkDragData]="p"
-             [style.border-color]="getBorderColor(p.posicion)">
-          
-          <img *ngIf="p.usuario.fotoUrl" [src]="p.usuario.fotoUrl" class="token-img">
-          <div *ngIf="!p.usuario.fotoUrl" class="token-initials">{{ p.dorsal }}</div>
-          
-          <div *cdkDragPlaceholder class="token-placeholder"></div>
+        <div class="tactical-row">
+          <div class="slot-wrapper" *ngFor="let slot of forwards">
+            <div cdkDropList 
+                 [id]="slot.id" 
+                 [cdkDropListData]="slot.player" 
+                 [cdkDropListConnectedTo]="allSlotIds"
+                 (cdkDropListDropped)="drop($event)" 
+                 class="drop-zone">
+              
+              <div class="player-chip on-field" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
+                <div class="avatar-ring" [style.border-color]="getBorderColor(slot.player.posicion)">
+                  <img [src]="slot.player.usuario.fotoUrl || 'https://ionicframework.com/docs/img/demos/avatar.svg'" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
+                  <div class="dorsal-tag">{{ slot.player.dorsal }}</div>
+                </div>
+                <div class="name-badge">{{ getShortName(slot.player.usuario.nombre) }}</div>
+                <div *cdkDragPlaceholder class="ghost-placeholder"></div>
+              </div>
+
+            </div>
+          </div>
         </div>
 
+        <div class="tactical-row">
+          <div class="slot-wrapper" *ngFor="let slot of midfielders">
+            <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="drop-zone">
+               <div class="player-chip on-field" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
+                <div class="avatar-ring" [style.border-color]="getBorderColor(slot.player.posicion)">
+                  <img [src]="slot.player.usuario.fotoUrl || 'https://ionicframework.com/docs/img/demos/avatar.svg'" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
+                  <div class="dorsal-tag">{{ slot.player.dorsal }}</div>
+                </div>
+                <div class="name-badge">{{ getShortName(slot.player.usuario.nombre) }}</div>
+                <div *cdkDragPlaceholder class="ghost-placeholder"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tactical-row">
+          <div class="slot-wrapper" *ngFor="let slot of defenders">
+            <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="drop-zone">
+               <div class="player-chip on-field" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
+                <div class="avatar-ring" [style.border-color]="getBorderColor(slot.player.posicion)">
+                  <img [src]="slot.player.usuario.fotoUrl || 'https://ionicframework.com/docs/img/demos/avatar.svg'" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
+                  <div class="dorsal-tag">{{ slot.player.dorsal }}</div>
+                </div>
+                <div class="name-badge">{{ getShortName(slot.player.usuario.nombre) }}</div>
+                <div *cdkDragPlaceholder class="ghost-placeholder"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tactical-row gk-row">
+          <div class="slot-wrapper" *ngFor="let slot of goalkeeper">
+            <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player" [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="drop-zone">
+               <div class="player-chip on-field" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player">
+                <div class="avatar-ring" [style.border-color]="getBorderColor(slot.player.posicion)">
+                  <img [src]="slot.player.usuario.fotoUrl || 'https://ionicframework.com/docs/img/demos/avatar.svg'" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
+                  <div class="dorsal-tag">{{ slot.player.dorsal }}</div>
+                </div>
+                <div class="name-badge">{{ getShortName(slot.player.usuario.nombre) }}</div>
+                <div *cdkDragPlaceholder class="ghost-placeholder"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="bench-panel">
+      <div class="bench-label">SUPLENTES</div>
+      <div cdkDropList 
+           id="benchList" 
+           [cdkDropListData]="bench" 
+           [cdkDropListConnectedTo]="allSlotIds"
+           (cdkDropListDropped)="drop($event)" 
+           class="bench-scroll">
+        <div class="bench-item" *ngFor="let p of bench">
+          <div class="player-chip" cdkDrag [cdkDragData]="p">
+             <div class="avatar-ring" [style.border-color]="getBorderColor(p.posicion)">
+                  <img [src]="p.usuario.fotoUrl || 'https://ionicframework.com/docs/img/demos/avatar.svg'" onError="this.src='https://ionicframework.com/docs/img/demos/avatar.svg';">
+                  <div class="dorsal-tag">{{ p.dorsal }}</div>
+                </div>
+                <div class="name-badge">{{ getShortName(p.usuario.nombre) }}</div>
+                <div *cdkDragPlaceholder class="ghost-placeholder"></div>
+          </div>
+        </div>
+        <div *ngIf="bench.length === 0" class="empty-state">Plantilla vacía o completa en campo</div>
       </div>
     </div>
 
