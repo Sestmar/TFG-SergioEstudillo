@@ -1,121 +1,138 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar color="primary">
+  <ion-toolbar class="transparent-toolbar">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/admin"></ion-back-button>
+      <ion-back-button defaultHref="/admin" color="light"></ion-back-button>
     </ion-buttons>
-    <ion-title>Cerrar Acta Oficial</ion-title>
+    <ion-title>CERRAR ACTA OFICIAL</ion-title>
+    <ion-buttons slot="end">
+        <div class="status-dot"></div>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding-bottom">
+<ion-content [fullscreen]="true">
 
-  <div *ngIf="match" class="match-header-edit">
-    <div class="teams-row">
-      <div class="team-col">
-        <div class="logo-box">
-          <img [src]="match.escudoLocalUrl || 'assets/img/mi-club-logo.png'">
-        </div>
-        <h3 class="team-name">{{ match.equipo?.nombre }}</h3>
-      </div>
-
-      <div class="score-col">
-        <div class="score-inputs">
-          <ion-input type="number" [(ngModel)]="matchStats.golesFavor" class="score-input"></ion-input>
-          <span class="divider">-</span>
-          <ion-input type="number" [(ngModel)]="matchStats.golesContra" class="score-input"></ion-input>
-        </div>
-        <div class="match-status">FINALIZAR</div>
-      </div>
-
-      <div class="team-col">
-        <div class="logo-box">
-          <img [src]="match.escudoRivalUrl || 'assets/img/icon-shield.png'">
-        </div>
-        <h3 class="team-name">{{ match.rival }}</h3>
-      </div>
-    </div>
-  </div>
-
-  <div *ngIf="isAdmin" class="admin-zone">
-      <div class="admin-notice">
-          <ion-icon name="alert-circle"></ion-icon>
-          <p><strong>Instrucciones:</strong> Introduce el minuto de entrada ("IN") para los suplentes y el sistema calculará los minutos jugados. Introduce "OUT" para titulares sustituidos.</p>
-      </div>
+  <div *ngIf="match" class="main-container animate-fade-in">
+    
+    <div class="scoreboard-neon">
       
-      <ion-button expand="block" color="danger" (click)="confirmarCierreActa()" [disabled]="saving" class="main-action-btn">
-          <ion-icon name="checkmark-done-circle" slot="start"></ion-icon>
-          <span *ngIf="!saving">CONFIRMAR Y CERRAR ACTA</span>
-          <ion-spinner *ngIf="saving"></ion-spinner>
-      </ion-button>
-  </div>
+      <div class="team-block">
+        <div class="logo-free">
+            <img [src]="match.escudoLocalUrl" 
+                 (error)="handleImgError($event, 'local')" 
+                 alt="Local">
+        </div>
+        <span class="team-name">{{ match.equipo?.nombre }}</span>
+      </div>
 
-  <div class="section-divider mt-4">
-    <ion-icon name="shirt"></ion-icon> ONCE TITULAR
-  </div>
-
-  <div class="squad-list">
-    <div *ngFor="let player of starters" class="player-edit-card starter">
-      <div class="card-left">
-        <ion-avatar class="player-avatar">
-          <img [src]="player.fotoUrl || 'https://ui-avatars.com/api/?name='+player.nombre">
-        </ion-avatar>
-        <div class="names">
-          <strong>{{ player.nombre }} {{ player.apellidos }}</strong>
-          <span>#{{ player.dorsal }} • <span class="text-success">Titular</span></span>
+      <div class="score-center">
+        <div class="score-inputs-wrapper">
+          <input type="number" [(ngModel)]="matchStats.golesFavor" class="neon-input">
+          <span class="dash">-</span>
+          <input type="number" [(ngModel)]="matchStats.golesContra" class="neon-input">
+        </div>
+        <div class="final-badge">
+            {{ match.estado === 'FINALIZADO' ? 'ACTA CERRADA' : 'EN JUEGO' }}
         </div>
       </div>
 
-      <div class="card-inputs">
-        <div class="input-group min">
-          <label>JUGADOS</label>
-          <ion-input type="number" [(ngModel)]="player.minutos"></ion-input>
+      <div class="team-block">
+        <div class="logo-free">
+            <img [src]="match.escudoRivalUrl" 
+                 (error)="handleImgError($event, 'rival')" 
+                 alt="Rival">
         </div>
-        <div class="input-group out">
-          <label>SALE</label>
-          <ion-input type="number" [(ngModel)]="player.minutoSalida" placeholder="--"></ion-input>
-        </div>
-        <div class="input-group gol">
-          <label>GOLES</label>
-          <ion-input type="number" [(ngModel)]="player.goles"></ion-input>
-        </div>
-        </div>
-    </div>
-  </div>
-
-  <div class="section-divider mt-4">
-    <ion-icon name="people"></ion-icon> SUPLENTES / RESERVAS
-  </div>
-
-  <div class="squad-list">
-    <div *ngFor="let player of bench" class="player-edit-card bench" 
-          [class.played]="player.minutoEntrada > 0 || player.minutos > 0">
-      <div class="card-left">
-        <ion-avatar class="player-avatar">
-          <img [src]="player.fotoUrl || 'https://ui-avatars.com/api/?name='+player.nombre">
-        </ion-avatar>
-        <div class="names">
-          <strong>{{ player.nombre }} {{ player.apellidos }}</strong>
-          <span>#{{ player.dorsal }} • Suplente</span>
-        </div>
+        <span class="team-name">{{ match.rival }}</span>
       </div>
 
-      <div class="card-inputs">
-        <div class="input-group min">
-          <label>JUGADOS</label>
-          <ion-input type="number" [(ngModel)]="player.minutos" placeholder="0"></ion-input>
-        </div>
-        <div class="input-group in">
-          <label>ENTRA</label>
-          <ion-input type="number" [(ngModel)]="player.minutoEntrada" placeholder="--"></ion-input>
-        </div>
-        <div class="input-group gol">
-          <label>GOLES</label>
-          <ion-input type="number" [(ngModel)]="player.goles"></ion-input>
-        </div>
+    </div>
+
+    <div class="instruction-banner">
+        <div class="icon-side"><ion-icon name="information-circle"></ion-icon></div>
+        <div class="text-side">
+            <strong>GESTIÓN DE ACTA</strong>
+            <p>Introduce el resultado arriba. Para los jugadores, indica minutos de entrada/salida y goles. El sistema calculará el resto.</p>
         </div>
     </div>
-  </div>
 
-  <div class="spacer"></div>
+    <button class="confirm-btn" (click)="confirmarCierreActa()" [disabled]="saving">
+        <ion-icon name="save-outline" *ngIf="!saving"></ion-icon>
+        <span *ngIf="!saving">GUARDAR ACTA</span>
+        <ion-spinner name="dots" *ngIf="saving"></ion-spinner>
+    </button>
+
+    <div class="section-title">
+        <ion-icon name="shirt-outline"></ion-icon> ONCE TITULAR
+    </div>
+
+    <div class="players-grid">
+        <div *ngFor="let player of starters" class="player-row starter">
+            <div class="player-info">
+                <div class="avatar-circle">
+                    <img [src]="player.fotoUrl" 
+                         (error)="handleImgError($event, 'player', player.nombre + ' ' + player.apellidos)">
+                    <span class="dorsal">#{{ player.dorsal }}</span>
+                </div>
+                <div class="names">
+                    <h4>{{ player.nombre }} {{ player.apellidos }}</h4>
+                    <span class="role-tag">TITULAR</span>
+                </div>
+            </div>
+
+            <div class="stats-inputs">
+                <div class="input-col">
+                    <label>JUGADOS</label>
+                    <input type="number" [(ngModel)]="player.minutos" class="dark-input">
+                </div>
+                <div class="input-col">
+                    <label>SALE</label>
+                    <input type="number" [(ngModel)]="player.minutoSalida" placeholder="--" class="dark-input">
+                </div>
+                <div class="input-col">
+                    <label>GOLES</label>
+                    <input type="number" [(ngModel)]="player.goles" class="dark-input highlight">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-title mt-4">
+        <ion-icon name="people-outline"></ion-icon> SUPLENTES
+    </div>
+
+    <div class="players-grid">
+        <div *ngFor="let player of bench" class="player-row bench" [class.played]="player.minutoEntrada > 0 || player.minutos > 0">
+            <div class="player-info">
+                <div class="avatar-circle">
+                    <img [src]="player.fotoUrl" 
+                         (error)="handleImgError($event, 'player', player.nombre + ' ' + player.apellidos)">
+                    <span class="dorsal">#{{ player.dorsal }}</span>
+                </div>
+                <div class="names">
+                    <h4>{{ player.nombre }} {{ player.apellidos }}</h4>
+                    <span class="role-tag sub">SUPLENTE</span>
+                </div>
+            </div>
+
+            <div class="stats-inputs">
+                <div class="input-col">
+                    <label>JUGADOS</label>
+                    <input type="number" [(ngModel)]="player.minutos" placeholder="0" class="dark-input">
+                </div>
+                <div class="input-col">
+                    <label>ENTRA</label>
+                    <input type="number" [(ngModel)]="player.minutoEntrada" placeholder="--" class="dark-input">
+                </div>
+                <div class="input-col">
+                    <label>GOLES</label>
+                    <input type="number" [(ngModel)]="player.goles" class="dark-input highlight">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="spacer"></div>
+
+  </div>
 
 </ion-content>

@@ -92,7 +92,6 @@ export class TacticsPage implements OnInit {
   applyNewConvocation(selectedPlayers: Player[]) {
     const selectedIds = new Set(selectedPlayers.map(p => this.getPlayerId(p)));
 
-    // Limpiar titulares desconvocados
     const allSlots = [...this.forwards, ...this.midfielders, ...this.defenders, ...this.goalkeeper];
     allSlots.forEach(slot => {
         if (slot.player && !selectedIds.has(this.getPlayerId(slot.player))) {
@@ -100,13 +99,11 @@ export class TacticsPage implements OnInit {
         }
     });
 
-    // Reconstruir banquillo
     this.bench = selectedPlayers.filter(p => {
         const isOnPitch = allSlots.some(slot => slot.player && this.getPlayerId(slot.player) === this.getPlayerId(p));
         return !isOnPitch; 
     });
 
-    // Guardar indicando que es una convocatoria (true)
     this.saveTactics(true); 
   }
 
@@ -115,26 +112,26 @@ export class TacticsPage implements OnInit {
     if (!slot.player) return;
 
     const actionSheet = await this.actionSheetCtrl.create({
-      header: `Opciones para ${slot.player.usuario.nombre}`,
+      header: `Instrucciones para ${slot.player.usuario.nombre}`, // Cabecera traducida
       cssClass: 'tactics-action-sheet',
       buttons: [
         {
-          text: slot.isCaptain ? 'Quitar Capitanía' : 'Hacer Capitán (C)',
+          text: slot.isCaptain ? 'Quitar Capitanía' : 'Hacer Capitán (C)', // Traducido
           icon: 'ribbon-outline',
           handler: () => { this.setCaptain(slot); }
         },
         {
-          text: slot.isPenaltyTaker ? 'Quitar Penaltis' : 'Lanzador de Penaltis (P)',
+          text: slot.isPenaltyTaker ? 'Quitar Penaltis' : 'Lanzador de Penaltis (P)', // Traducido
           icon: 'football-outline',
           handler: () => { slot.isPenaltyTaker = !slot.isPenaltyTaker; }
         },
         {
-          text: slot.isFreeKickTaker ? 'Quitar Faltas' : 'Lanzador de Faltas (F)',
+          text: slot.isFreeKickTaker ? 'Quitar Faltas' : 'Lanzador de Faltas (F)', // Traducido
           icon: 'alert-circle-outline',
           handler: () => { slot.isFreeKickTaker = !slot.isFreeKickTaker; }
         },
         {
-          text: 'Cancelar',
+          text: 'Cancelar', // Traducido
           icon: 'close',
           role: 'cancel'
         }
@@ -210,17 +207,17 @@ export class TacticsPage implements OnInit {
   }
 
   getBorderColor(posicion: string): string {
-    if (!posicion) return '#94a3b8'; 
+    if (!posicion) return '#9ca3af'; 
     const pos = posicion.toUpperCase();
-    if (pos.includes('PORTERO')) return '#fbbf24'; 
-    if (pos.includes('DEFENSA') || pos.includes('LATERAL') || pos.includes('CENTRAL')) return '#38bdf8'; 
-    if (pos.includes('MEDIO') || pos.includes('PIVOTE') || pos.includes('INTERIOR')) return '#4ade80'; 
-    if (pos.includes('DELANTERO') || pos.includes('EXTREMO') || pos.includes('PUNTA')) return '#f87171'; 
-    return '#94a3b8';
+    if (pos.includes('PORTERO') || pos.includes('GOALKEEPER')) return '#fbbf24'; // Amarillo
+    if (pos.includes('DEFENSA') || pos.includes('DEFENDER')) return '#38bdf8'; // Azul claro
+    if (pos.includes('MEDIO') || pos.includes('MIDFIELDER')) return '#4ade80'; // Verde
+    if (pos.includes('DELANTERO') || pos.includes('FORWARD') || pos.includes('STRIKER')) return '#f87171'; // Rojo
+    return '#9ca3af';
   }
 
   getShortName(nombre: string): string {
-      return nombre ? nombre.split(' ')[0] : '';
+      return nombre ? nombre.split(' ')[0] : 'Player';
   }
 
   loadMatchData() {
@@ -287,7 +284,6 @@ export class TacticsPage implements OnInit {
             } else { this.selectedFormation = '4-3-3'; }
         } else {
             this.selectedFormation = '4-3-3';
-            // Si no hay datos, convocamos a TODOS por defecto
             this.bench = [...this.allTeamPlayers];
         }
 
@@ -326,13 +322,11 @@ export class TacticsPage implements OnInit {
     });
   }
 
-  // 🔥 ARREGLADO: PARAMETRO OPCIONAL isConvocation
   async saveTactics(isConvocation: boolean = false) {
     if (!this.matchId) return;
     const allPitchSlots = [...this.forwards, ...this.midfielders, ...this.defenders, ...this.goalkeeper];
     const playersOnPitch = allPitchSlots.filter(s => s.player !== null);
 
-    // Solo validamos 11 jugadores si NO es una convocatoria (es decir, si le das al botón verde "Guardar")
     if (!isConvocation) {
         if (playersOnPitch.length !== 11) {
             const t = await this.toastCtrl.create({ message: `Alineación incompleta: ${playersOnPitch.length}/11`, duration: 2000, color: 'warning' });
@@ -372,14 +366,13 @@ export class TacticsPage implements OnInit {
     this.matchSvc.saveLineup(this.matchId, fullPayload).subscribe({
         next: async () => {
           this.saving = false;
-          // Mensaje distinto según la acción
-          const msg = isConvocation ? 'Convocatoria actualizada ✅' : 'Alineación guardada 💾';
+          const msg = isConvocation ? 'Squad List Updated ✅' : 'Tácticas guardadas. 💾';
           const t = await this.toastCtrl.create({ message: msg, duration: 2000, color: 'success' });
           t.present();
         },
         error: async () => {
           this.saving = false;
-          const t = await this.toastCtrl.create({ message: 'Error al guardar', duration: 2000, color: 'danger' });
+          const t = await this.toastCtrl.create({ message: 'Error al guardar tácticas', duration: 2000, color: 'danger' });
           t.present();
         }
       });
@@ -445,5 +438,21 @@ export class TacticsPage implements OnInit {
         slot.isPenaltyTaker = false;
         slot.isFreeKickTaker = false;
     }
+  }
+
+  // 🔥 NUEVO MÉTODO PARA GESTIONAR IMÁGENES Y EVITAR PARPADEO
+  getProfileImage(player: any): string {
+    // 1. Si tiene foto de usuario válida, la usamos
+    if (player && player.usuario && player.usuario.fotoUrl) {
+        return player.usuario.fotoUrl;
+    }
+    // 2. Si no, devolvemos una imagen LOCAL (esto evita el parpadeo de red)
+    // Asegúrate de tener esta imagen o usa el escudo del equipo si prefieres
+    return 'assets/img/default-player.png'; 
+  }
+
+  // Helper para mostrar el nombre del rival en el HTML
+  getRivalName(): string {
+      return this.matchInfo ? this.matchInfo.rival : 'Partido';
   }
 }

@@ -1,178 +1,185 @@
+// --- CONFIGURACIÓN DARK ---
 :host {
-  --ion-background-color: #f1f5f9; // Fondo gris suave general
-  --text-main: #1e293b;
+    --bg-app: #050505;      
+    --bg-card: #0f0f0f;     
+    --primary: #8b5cf6;     // Morado Neon
+    --secondary: #10b981;   // Verde Neon
+    --text-white: #ffffff;
+    --text-gray: #9ca3af;
 }
 
-// --- MARCADOR Y CABECERA ---
-.match-header-edit {
-  background: white;
-  padding: 20px 10px 30px 10px;
-  border-radius: 0 0 30px 30px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-  margin-bottom: 25px;
+ion-content { --background: var(--bg-app); }
 
-  .teams-row {
-    display: flex; justify-content: space-around; align-items: flex-start;
+.transparent-toolbar {
+    --background: var(--bg-app);
+    --color: var(--text-white);
+    --border-width: 0;
+    ion-title { font-weight: 800; letter-spacing: 1px; font-size: 0.9rem; text-transform: uppercase; }
     
-    .team-col {
-      width: 32%; display: flex; flex-direction: column; align-items: center;
-      .logo-box {
-        width: 64px; height: 64px; background: #fff; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center; margin-bottom: 8px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08); overflow: hidden;
-        img { width: 100%; height: 100%; object-fit: cover; }
-      }
-      .team-name { 
-          margin: 0; font-size: 0.8rem; font-weight: 800; color: var(--text-main); 
-          text-align: center; line-height: 1.2; text-transform: uppercase;
-      }
-    }
-
-    .score-col {
-      display: flex; flex-direction: column; align-items: center; margin-top: 10px;
-      .score-inputs {
-        display: flex; align-items: center; gap: 8px;
-        
-        // INPUTS DEL MARCADOR
-        .score-input {
-          width: 55px; height: 55px; --background: #f8fafc; 
-          font-size: 2rem; font-weight: 900; text-align: center;
-          border-radius: 12px; border: 2px solid #e2e8f0;
-          
-          // 🔥 IMPORTANTE: Forzamos color oscuro
-          color: #0f172a !important; --color: #0f172a !important;
-          
-          &.readonly { --background: transparent; border: none; pointer-events: none; }
-        }
-        
-        .divider { font-size: 2rem; font-weight: 300; color: #94a3b8; margin-top: -5px; }
-      }
-      .match-status { 
-          margin-top: 8px; font-size: 0.65rem; font-weight: 700; 
-          color: #fff; background: #64748b; padding: 2px 8px; border-radius: 10px;
-      }
-    }
-  }
-}
-
-// --- ZONA ADMIN ---
-.admin-zone {
-    background: #fff; border-radius: 16px; margin: 0 15px 25px 15px; 
-    box-shadow: 0 2px 15px rgba(0,0,0,0.03); border: 1px solid #fee2e2; // Borde rojo suave
-    padding: 20px;
-
-    .admin-notice {
-        display: flex; gap: 12px; align-items: flex-start;
-        color: #b91c1c; font-size: 0.85rem;
-        ion-icon { font-size: 1.4rem; min-width: 24px; margin-top: -2px; }
-        p { margin: 0; line-height: 1.5; font-weight: 500;}
-    }
-    
-    .main-action-btn { 
-        margin-top: 20px; --border-radius: 12px; font-weight: 800; letter-spacing: 0.5px; 
-        --box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+    .status-dot {
+        width: 8px; height: 8px; background: var(--secondary);
+        border-radius: 50%; margin-right: 15px;
+        box-shadow: 0 0 10px var(--secondary);
     }
 }
 
-// --- SEPARADORES ---
-.section-divider {
-  padding: 5px 20px; font-size: 0.75rem; font-weight: 800; color: #64748b; 
-  text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;
-  &.mt-4 { margin-top: 1.5rem; margin-bottom: 0.5rem; }
-}
+.main-container { padding: 10px 16px; }
 
-// --- TARJETAS DE JUGADOR ---
-.squad-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; }
+// 1. SCOREBOARD NEON
+.scoreboard-neon {
+    background: linear-gradient(180deg, #181e30 0%, #111520 100%);
+    border-radius: 20px;
+    padding: 30px 10px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start; 
+    position: relative;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.1); 
+    margin-bottom: 25px;
 
-.player-edit-card {
-  display: flex; justify-content: space-between; align-items: center; background: white;
-  padding: 12px 15px; margin: 0 15px; border-radius: 14px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.03); position: relative; overflow: hidden;
-
-  // Barra lateral de estado
-  &::before {
-      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
-  }
-  &.starter::before { background: var(--ion-color-success); }
-  &.bench::before { background: #cbd5e1; }
-  &.bench.played { background: #fffbeb; } // Fondo amarillo suave si jugó
-  &.bench.played::before { background: var(--ion-color-warning); }
-
-  .card-left {
-    display: flex; align-items: center; gap: 12px; width: 45%;
-    .player-avatar { 
-        width: 42px; height: 42px; background: #f1f5f9; border: 1px solid #e2e8f0; 
-        border-radius: 50%; 
-        img { object-fit: cover; } 
-    }
-    .names {
-      display: flex; flex-direction: column; font-size: 0.9rem;
-      strong { color: var(--text-main); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;}
-      span { font-size: 0.7rem; color: #64748b; font-weight: 500;}
-      .text-success { color: var(--ion-color-success); font-weight: 800; }
-    }
-  }
-
-  .card-inputs {
-    display: flex; gap: 8px; justify-content: flex-end; flex: 1;
-    
-    .input-group {
-      display: flex; flex-direction: column; align-items: center; width: 48px;
-      label { font-size: 0.55rem; margin-bottom: 3px; color: #94a3b8; font-weight: 800; text-transform: uppercase;}
-      
-      ion-input {
-        --background: #f8fafc; border-radius: 8px; font-weight: 700; font-size: 0.95rem;
-        text-align: center; height: 36px; min-height: 36px; border: 1px solid #cbd5e1;
-        --padding-start: 0; --padding-end: 0;
+    .team-block {
+        display: flex; flex-direction: column; align-items: center; width: 35%;
         
-        // 🔥 TEXTO NEGRO ASEGURADO 🔥
-        color: #0f172a !important; --color: #0f172a !important;
-      }
-      
-      // Estilos específicos por tipo de dato
-      &.min ion-input { border-color: #cbd5e1; }
-      &.gol ion-input { --background: #f0fdf4; border-color: #86efac; color: #15803d !important; --color: #15803d !important;}
-      &.in ion-input  { --background: #ecfeff; border-color: #a5f3fc; color: #0e7490 !important; --color: #0e7490 !important;}
-      &.out ion-input { --background: #fff1f2; border-color: #fecdd3; color: #be123c !important; --color: #be123c !important;}
-    }
-
-    // 🔥 ESTILOS PARA LAS TARJETAS
-    .cards-group {
-        display: flex;
-        flex-direction: column; 
-        gap: 4px;
-        margin-left: 8px;
-        padding-left: 8px;
-        border-left: 1px solid #e5e7eb;
-        justify-content: center;
-
-        ion-button {
-            --padding-start: 0; --padding-end: 0; margin: 0; height: 18px;
-        }
-
-        .card {
-            width: 14px;
-            height: 18px;
-            border-radius: 2px;
-            background-color: #e5e7eb; // Gris apagado por defecto
-            border: 1px solid #d1d5db;
-            transition: all 0.2s;
-            cursor: pointer;
-
-            &.yellow.active {
-                background-color: #fbbf24; // Amarillo activo
-                border-color: #d97706;
-                box-shadow: 0 0 4px rgba(251, 191, 36, 0.6);
+        // 🔥 LOGO GRANDE Y LIBRE (110px) - Igual que en Match Detail
+        .logo-free {
+            width: 110px; height: 110px; 
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 12px;
+            
+            img { 
+                width: 100%; height: 100%; object-fit: contain; 
+                filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); 
             }
+        }
 
-            &.red.active {
-                background-color: #ef4444; // Rojo activo
-                border-color: #b91c1c;
-                box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);
+        .team-name { 
+            font-size: 0.85rem; font-weight: 700; color: white; 
+            text-transform: uppercase; text-align: center; line-height: 1.2;
+            padding: 0 5px;
+        }
+    }
+
+    .score-center {
+        display: flex; flex-direction: column; align-items: center; width: 30%;
+        margin-top: 25px; 
+
+        .score-inputs-wrapper {
+            display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;
+            
+            .neon-input {
+                width: 50px; height: 60px; 
+                background: #0b0f19; border: 1px solid #2d3748;
+                border-radius: 8px; color: white; font-size: 2.5rem; font-weight: 800;
+                text-align: center; outline: none; transition: all 0.2s;
+                
+                &:focus { 
+                    border-color: var(--primary); 
+                    box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); 
+                }
+            }
+            
+            .dash { font-size: 2rem; color: #4b5563; font-weight: 300; }
+        }
+
+        .final-badge {
+            background: rgba(139, 92, 246, 0.15); color: #a78bfa;
+            font-size: 0.6rem; font-weight: 800; padding: 4px 10px;
+            border-radius: 12px; letter-spacing: 1px; border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+    }
+}
+
+// 2. INSTRUCTION BANNER
+.instruction-banner {
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    padding: 15px; border-radius: 12px; margin-bottom: 25px;
+    display: flex; gap: 12px; align-items: center;
+    
+    .icon-side ion-icon { color: #f87171; font-size: 1.8rem; }
+    .text-side {
+        strong { color: #f87171; font-size: 0.8rem; letter-spacing: 1px; display: block; margin-bottom: 2px; }
+        p { color: #cbd5e1; font-size: 0.75rem; margin: 0; line-height: 1.4; }
+    }
+}
+
+// 3. BOTÓN CONFIRMAR
+.confirm-btn {
+    width: 100%; padding: 16px; border: none; outline: none;
+    background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%); 
+    border-radius: 12px; color: white; font-weight: 800; letter-spacing: 1px; font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+    margin-bottom: 30px; transition: transform 0.1s;
+    
+    &:active { transform: scale(0.98); }
+    ion-icon { font-size: 1.2rem; }
+}
+
+// 4. SECCIONES Y GRID
+.section-title {
+    color: #a78bfa; font-size: 0.8rem; font-weight: 800; letter-spacing: 1px; 
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px; padding-left: 5px;
+    &.mt-4 { margin-top: 30px; }
+}
+
+.players-grid {
+    display: flex; flex-direction: column; gap: 10px;
+}
+
+.player-row {
+    background: #0f0f0f; border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px; padding: 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    
+    &.starter { border-left: 3px solid var(--secondary); }
+    &.bench { 
+        border-left: 3px solid #4b5563; opacity: 0.7; 
+        &.played { opacity: 1; border-left-color: #f59e0b; background: #131313; }
+    }
+
+    .player-info {
+        display: flex; align-items: center; gap: 12px; width: 45%;
+        .avatar-circle {
+            width: 42px; height: 42px; background: #222; border-radius: 50%; position: relative;
+            img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+            .dorsal { 
+                position: absolute; bottom: -2px; right: -2px; 
+                background: #333; color: white; font-size: 0.6rem; font-weight: 700;
+                padding: 1px 4px; border-radius: 4px; border: 1px solid #555;
+            }
+        }
+        .names {
+            h4 { color: white; font-size: 0.9rem; margin: 0; font-weight: 600; }
+            .role-tag { 
+                font-size: 0.6rem; color: var(--secondary); font-weight: 700; 
+                &.sub { color: #9ca3af; }
             }
         }
     }
-  }
+
+    .stats-inputs {
+        display: flex; gap: 6px; flex: 1; justify-content: flex-end;
+        
+        .input-col {
+            display: flex; flex-direction: column; align-items: center; width: 50px;
+            label { font-size: 0.5rem; color: #666; font-weight: 800; margin-bottom: 4px; }
+            
+            .dark-input {
+                width: 100%; height: 35px; background: #050505; border: 1px solid #333;
+                border-radius: 6px; color: white; font-weight: 700; text-align: center;
+                font-size: 0.9rem; outline: none;
+                
+                &:focus { border-color: var(--primary); }
+                &.highlight { color: var(--secondary); border-color: rgba(16, 185, 129, 0.3); }
+            }
+        }
+    }
 }
 
-.spacer { height: 80px; }
+.spacer { height: 50px; }
+
+// ANIMACIÓN
+.animate-fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

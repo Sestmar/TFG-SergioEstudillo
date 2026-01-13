@@ -13,7 +13,6 @@ export class MatchDetailPage implements OnInit {
   
   match: any = null;
   players: any[] = []; 
-  myStats: any = null; 
   loading = true;
   currentUserId: number | null = null;
 
@@ -44,38 +43,32 @@ export class MatchDetailPage implements OnInit {
         
         this.matchSvc.getLineup(id).subscribe({
           next: (alineacionDtos: any[]) => {
-            console.log('📋 Alineación recibida (DTO):', alineacionDtos);
-
             if (alineacionDtos && alineacionDtos.length > 0) {
               this.players = alineacionDtos.map(dto => {
+                // Generamos una imagen segura si no hay foto
+                const safeImg = dto.fotoUrl || `https://ui-avatars.com/api/?name=${dto.nombre}&background=random&color=fff`;
+
                 return {
+                    ...dto, // Copiamos todo lo que venga del DTO
                     nombre: dto.nombre || 'Jugador',
                     apellidos: dto.apellidos || '',
-                    fotoUrl: dto.fotoUrl, 
+                    fotoUrl: safeImg, // Usamos la imagen segura
                     dorsal: dto.dorsal || '--',
-                    posicion: dto.posicion || 'Sin Demarcación',
-                    esTitular: dto.esTitular,
-                    goles: dto.goles,
-                    asistencias: dto.asistencias,
-                    minutos: dto.minutosJugados,
-                    tarjetaAmarilla: dto.tarjetaAmarilla,
-                    tarjetaRoja: dto.tarjetaRoja,
-                    idJugador: dto.idJugador,
+                    posicion: dto.posicion || 'JUG',
                     
-                    minutoEntrada: dto.minutoEntrada,
-                    minutoSalida: dto.minutoSalida,
-
-                    // 🔥 NUEVOS CAMPOS MAPEAOS
-                    esCapitan: dto.esCapitan,
-                    esLanzadorPenaltis: dto.esLanzadorPenaltis,
-                    esLanzadorFaltas: dto.esLanzadorFaltas
+                    // Aseguramos que existan para evitar errores en HTML
+                    esCapitan: !!dto.esCapitan,
+                    esLanzadorPenaltis: !!dto.esLanzadorPenaltis,
+                    esLanzadorFaltas: !!dto.esLanzadorFaltas,
+                    goles: dto.goles || 0
                 };
               });
 
+              // Ordenar: Titulares primero, luego por goles
               this.players.sort((a, b) => {
                   if (a.esTitular && !b.esTitular) return -1;
                   if (!a.esTitular && b.esTitular) return 1;
-                  return (b.goles || 0) - (a.goles || 0);
+                  return 0;
               });
 
             } else {
@@ -84,17 +77,22 @@ export class MatchDetailPage implements OnInit {
             this.loading = false;
           },
           error: (err) => {
-            console.error("❌ Error cargando alineación", err);
+            console.error("❌ Error alineación", err);
             this.players = [];
             this.loading = false;
           }
         });
       },
       error: (err) => {
-         console.error("❌ Error cargando partido", err);
+         console.error("❌ Error partido", err);
          this.loading = false;
       }
     });
+  }
+
+  // 🔥 ESTO EVITA EL PARPADEO INFINITO
+  handleImgError(event: any, nombre: string) {
+      event.target.src = `https://ui-avatars.com/api/?name=${nombre}&background=333&color=fff`;
   }
 
   goBack() {

@@ -86,31 +86,26 @@ export class CalendarPage implements OnInit {
     });
   }
 
-  // 🔥 MÉTODO PARA NAVEGAR AL DETALLE/EDICIÓN
+  // 🔥 MÉTODO INTELIGENTE DE REDIRECCIÓN
   onEventClick(match: any) {
       if (match.tipo !== 'PARTIDO') return;
 
       this.authSvc.currentUser$.subscribe(user => {
           const u = user as any;
           const rol = (u.rol || '').toUpperCase();
-          
           const matchId = match.idPartido || match.id;
+          
+          console.log(`[Calendar] Clic en partido ${matchId}. Rol detectado: ${rol}`); // DEPURA AQUÍ
 
-          // ADMIN: Va a editar/cerrar acta
           if (rol.includes('ADMIN')) {
               this.router.navigate(['/edit-match', matchId]); 
-          } 
-          // ENTRENADOR: Va a VER DETALLES (Como pediste)
-          else if (rol.includes('ENTRENADOR') || rol.includes('COACH')) {
-              this.router.navigate(['/match-detail', matchId]);
-          } 
-          // JUGADOR / OTROS
-          else {
+          } else {
               this.router.navigate(['/match-detail', matchId]);
           }
       });
   }
 
+  // RESTO DE MÉTODOS DEL CALENDARIO
   generateCalendar() {
     const year = this.viewDate.getFullYear();
     const month = this.viewDate.getMonth();

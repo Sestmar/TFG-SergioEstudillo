@@ -1,144 +1,134 @@
+// Variables globales
+:host {
+  --ion-background-color: #121212; 
+  --text-main: #e2e8f0; // Texto claro
+}
+
 .detail-bg {
-    --background: #121212;
+  --background: #121212;
 }
 
 .spinner-center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
+  display: flex; justify-content: center; align-items: center; height: 100%;
 }
 
+// HEADER TEAM
 .team-header-card {
-    background: linear-gradient(135deg, #1e1e28 0%, #2a2a35 100%);
-    padding: 30px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: linear-gradient(135deg, #1e1e28 0%, #2a2a35 100%);
+  padding: 30px 20px; display: flex; flex-direction: column; align-items: center;
+  text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);
 
-    .team-logo-big {
-        width: 80px;
-        height: 80px;
-        object-fit: contain;
-        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-        margin-bottom: 15px;
-    }
+  .team-logo-big {
+    width: 80px; height: 80px; object-fit: contain;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); margin-bottom: 15px;
+  }
 
-    h1 {
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #fff;
-    }
+  h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #fff; }
 
-    .category-badge {
-        display: inline-block;
-        margin-top: 5px;
-        background: rgba(var(--ion-color-primary-rgb), 0.2);
-        color: var(--ion-color-primary);
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
+  .category-badge {
+    display: inline-block; margin-top: 5px;
+    background: rgba(var(--ion-color-primary-rgb), 0.2); color: var(--ion-color-primary);
+    padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 600;
+  }
 }
 
+// SEGMENTO
 .custom-segment {
-    padding: 15px;
-    background: #121212;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+  padding: 15px; background: #121212; position: sticky; top: 0; z-index: 10;
 }
 
 .list-section {
-    padding: 0 15px 20px 15px;
-
-    .section-title {
-        color: #888;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 15px;
-        margin-left: 5px;
-    }
+  padding: 0 15px 20px 15px;
+  .section-title {
+    color: #94a3b8; font-size: 0.9rem; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 15px; margin-left: 5px; font-weight: 700;
+  }
 }
 
+// TARJETA JUGADOR / STAFF (Modo Oscuro)
 .player-card {
-    background: #1e1e28;
-    border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    border: 1px solid rgba(255,255,255,0.03);
+  background: #1e1e28; border-radius: 12px; padding: 12px; margin-bottom: 10px;
+  display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.05);
 
-    .player-left {
-        display: flex;
-        align-items: center;
-        margin-right: 15px;
-        
-        .dorsal {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: #555;
-            width: 25px;
-            text-align: center;
-            margin-right: 10px;
-        }
-
-        .player-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #2a2a35;
-            
-            &.staff {
-                border-radius: 8px; /* Staff un poco más cuadrado para diferenciar */
-            }
-        }
+  .player-left {
+    display: flex; align-items: center; margin-right: 15px;
+    .dorsal { font-size: 1.2rem; font-weight: 800; color: #64748b; width: 25px; text-align: center; margin-right: 10px; }
+    .player-avatar {
+      width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #2a2a35;
+      &.staff { border-radius: 8px; }
     }
+  }
 
-    .player-center {
-        flex: 1;
-        h4 {
-            margin: 0;
-            font-size: 1rem;
-            color: #eee;
-            font-weight: 600;
-        }
-        p {
-            margin: 2px 0 0 0;
-            font-size: 0.85rem;
-            color: #aaa;
-        }
-        .role-badge-text {
-            color: var(--ion-color-tertiary);
-        }
-    }
+  .player-center {
+    flex: 1;
+    h4 { margin: 0; font-size: 1rem; color: #f1f5f9; font-weight: 600; }
+    p { margin: 2px 0 0 0; font-size: 0.85rem; color: #94a3b8; }
+    .role-badge-text { color: var(--ion-color-tertiary); font-weight: 700; }
+  }
 
-    .player-right {
-        .mini-stat {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.9rem;
-            color: #ddd;
-            background: rgba(255,255,255,0.05);
-            padding: 4px 8px;
-            border-radius: 6px;
-            
-            ion-icon { color: #ffd700; }
-        }
+  .player-right {
+    .mini-stat {
+      display: flex; align-items: center; gap: 4px; font-size: 0.9rem; color: #e2e8f0;
+      background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px;
+      ion-icon { color: #ffd700; }
     }
+  }
 }
 
-.empty-msg {
-    text-align: center;
-    padding: 40px;
-    color: #666;
-    font-style: italic;
+.empty-msg { text-align: center; padding: 40px; color: #64748b; font-style: italic; }
+
+
+// 🔥 TARJETA DE PARTIDO (ESTILO OSCURO UNIFICADO)
+.match-list-item {
+  display: flex; align-items: center; 
+  background: #1f2937; // Fondo Gris Oscuro
+  border: 1px solid rgba(255,255,255,0.08); 
+  border-radius: 12px;
+  padding: 12px 10px; 
+  margin-bottom: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease;
+
+  // Fecha
+  .match-date {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.05); 
+    border-radius: 8px; width: 50px; height: 50px;
+    margin-right: 12px; border: 1px solid rgba(255,255,255,0.1);
+    
+    .day { font-size: 1.2rem; font-weight: 800; color: #f1f5f9; line-height: 1; }
+    .month { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-top: 2px; }
+  }
+
+  // Info Central
+  .match-info {
+    flex: 1; display: flex; flex-direction: column;
+    .vs-text { font-size: 0.95rem; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+    
+    .match-status { 
+      font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+      color: #fbbf24; // Amarillo (Pendiente)
+      &.finished { color: #34d399; } // Verde (Finalizado)
+    }
+  }
+
+  // Acciones (Botones)
+  .match-action {
+    display: flex; 
+    align-items: center; 
+    gap: 0px; 
+
+    ion-button { 
+      --padding-start: 8px; 
+      --padding-end: 8px; 
+      height: 40px;
+      margin: 0; // Reset margin
+    }
+    
+    ion-icon { 
+        font-size: 1.5rem; 
+        &[name="create-outline"] { color: #fbbf24; } // Lápiz dorado brillante
+        &[name="eye-outline"] { color: #94a3b8; }   // Ojo gris claro
+    }
+  }
 }

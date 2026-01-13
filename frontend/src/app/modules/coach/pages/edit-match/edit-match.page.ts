@@ -14,12 +14,10 @@ export class EditMatchPage implements OnInit {
   matchId: number = 0;
   match: any = null;
   
-  // Listas de jugadores
   starters: any[] = [];
   bench: any[] = [];
   fullSquadStats: any[] = [];
 
-  // Marcador
   matchStats = {
     golesFavor: 0,
     golesContra: 0
@@ -100,13 +98,19 @@ export class EditMatchPage implements OnInit {
             const savedId = a.jugador?.id || a.jugador?.idJugador || a.idJugador;
             return String(savedId) === String(pId);
         });
+
+        // 🔥 GENERAR IMAGEN SEGURA (INICIALES) SI NO HAY FOTO
+        const originalFoto = player.usuario?.fotoUrl || player.fotoUrl;
+        const nombreCompleto = (player.usuario?.nombre || player.nombre) + ' ' + (player.usuario?.apellidos || player.apellidos);
+        // Si no hay foto, usamos UI Avatars con fondo aleatorio
+        const safeImg = originalFoto || `https://ui-avatars.com/api/?name=${nombreCompleto}&background=random&color=fff&size=128`;
         
         let stats = {
             idJugador: pId,
             nombre: player.usuario?.nombre || player.nombre,
             apellidos: player.usuario?.apellidos || player.apellidos,
             dorsal: player.dorsal,
-            fotoUrl: player.usuario?.fotoUrl || player.fotoUrl,
+            fotoUrl: safeImg, // Usamos la imagen procesada
             posicion: player.posicion,
             
             esTitular: false,
@@ -149,8 +153,6 @@ export class EditMatchPage implements OnInit {
   private construirPayload() {
       const allStats = [...this.starters, ...this.bench];
       
-      console.log("---- ENVIANDO DATOS (SIN TARJETAS) ----");
-
       return {
           idPartido: this.matchId,
           golesFavor: this.safeInt(this.matchStats.golesFavor),
@@ -172,8 +174,6 @@ export class EditMatchPage implements OnInit {
                 esTitular: esTitular,
                 minutoEntrada: minEntrada > 0 ? minEntrada : null,
                 minutoSalida: minSalida > 0 ? minSalida : null,
-                
-                // Forzamos 0 para no romper el backend
                 tarjetaAmarilla: 0,
                 tarjetaRoja: 0
             };
@@ -200,8 +200,6 @@ export class EditMatchPage implements OnInit {
     this.saving = true;
     const payload = this.construirPayload();
 
-    console.log("📤 Enviando cierre de acta:", payload); 
-
     this.matchSvc.closeMatchReport(payload).subscribe({
         next: () => {
             this.saving = false;
@@ -219,5 +217,26 @@ export class EditMatchPage implements OnInit {
   async presentToast(msg: string, color: string) {
     const t = await this.toastCtrl.create({ message: msg, duration: 2500, color, position: 'top' });
     t.present();
+  }
+
+  goBack() {
+    this.router.navigate(['/admin']); 
+  }
+
+  // 🔥 MANEJO DE ERRORES DE IMAGEN DIFERENCIADO
+  handleImgError(event: any, type: string, name: string = '') {
+    event.target.onerror = null; // Parar bucle infinito
+    
+    if (type === 'local') {
+        // Tu equipo: Logo del club
+        event.target.src = 'assets/img/mi-club-logo.png';
+    } else if (type === 'rival') {
+        // Rival: Escudo gris genérico
+        event.target.src = 'assets/img/icon-shield.png'; 
+    } else {
+        // Jugador: Iniciales con UI Avatars
+        const nombreParaAvatar = name || 'Jugador';
+        event.target.src = `https://ui-avatars.com/api/?name=${nombreParaAvatar}&background=random&color=fff&size=128`;
+    }
   }
 }
