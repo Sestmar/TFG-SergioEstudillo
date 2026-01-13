@@ -26,19 +26,25 @@ public class SecurityConfig {
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, AuthenticationProvider authenticationProvider) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.authenticationProvider = authenticationProvider;
+        System.out.println("🔒 [SECURITY CONFIG] Cargando configuración de seguridad...");
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("🔓 [SECURITY] Aplicando reglas de acceso público a /api/uploads/**");
+
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Rutas públicas
-                        .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
+                        // 🔥 ESTA ES LA LÍNEA CLAVE PARA LAS IMÁGENES
                         .requestMatchers("/api/uploads/**", "/uploads/**").permitAll()
+
+                        // Otras rutas públicas
+                        .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        // Resto protegido
+
+                        // Todo lo demás requiere login
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

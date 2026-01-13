@@ -3,15 +3,21 @@ package com.DAMUnitedFC.backend_tfg.config;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import java.nio.file.Paths;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 1. Mapeamos la URL que usa el AdminController (/api/uploads/...)
+        // Obtenemos la ruta absoluta del proyecto
+        String projectDir = System.getProperty("user.dir");
+        // Construimos la ruta hacia target/uploads de forma segura para Windows
+        String uploadPath = Paths.get(projectDir, "target", "uploads").toUri().toString();
+
+        System.out.println("📂 [WEBCONFIG] Sirviendo imágenes desde: " + uploadPath);
+
         registry.addResourceHandler("/api/uploads/**")
-                // 2. Apuntamos a la carpeta REAL donde vimos las fotos (target/uploads)
-                .addResourceLocations("file:./target/uploads/");
+                .addResourceLocations(uploadPath);
     }
 }

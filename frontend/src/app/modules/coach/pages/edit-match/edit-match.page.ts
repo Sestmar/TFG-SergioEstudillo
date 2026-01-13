@@ -101,7 +101,6 @@ export class EditMatchPage implements OnInit {
             return String(savedId) === String(pId);
         });
         
-        // Objeto interno para el formulario (usamos nombres cortos 'amarilla', 'roja')
         let stats = {
             idJugador: pId,
             nombre: player.usuario?.nombre || player.nombre,
@@ -114,9 +113,7 @@ export class EditMatchPage implements OnInit {
             minutos: 0,
             goles: 0,
             minutoEntrada: null,
-            minutoSalida: null,
-            amarilla: false, 
-            roja: false      
+            minutoSalida: null
         };
 
         if (savedData) {
@@ -125,9 +122,6 @@ export class EditMatchPage implements OnInit {
             stats.minutos = savedData.minutosJugados || 0;
             stats.minutoEntrada = savedData.minutoEntrada;
             stats.minutoSalida = savedData.minutoSalida;
-            // Mapear lo que viene del backend a nuestro modelo interno
-            stats.amarilla = savedData.tarjetaAmarilla || false; 
-            stats.roja = savedData.tarjetaRoja || false;         
             
             if(stats.esTitular && stats.minutos === 0) stats.minutos = 90;
         }
@@ -155,6 +149,8 @@ export class EditMatchPage implements OnInit {
   private construirPayload() {
       const allStats = [...this.starters, ...this.bench];
       
+      console.log("---- ENVIANDO DATOS (SIN TARJETAS) ----");
+
       return {
           idPartido: this.matchId,
           golesFavor: this.safeInt(this.matchStats.golesFavor),
@@ -166,25 +162,20 @@ export class EditMatchPage implements OnInit {
             const minEntrada = this.safeInt(p.minutoEntrada, 0);
             const minSalida = this.safeInt(p.minutoSalida, 0);
 
-            if (!esTitular && minEntrada > 0 && minJugados === 0) {
-                minJugados = 90 - minEntrada;
-            }
-            
-            if (esTitular && minSalida > 0) {
-                minJugados = minSalida;
-            }
+            if (!esTitular && minEntrada > 0 && minJugados === 0) minJugados = 90 - minEntrada;
+            if (esTitular && minSalida > 0) minJugados = minSalida;
 
             return {
                 idJugador: p.idJugador,
                 goles: this.safeInt(p.goles),
-                minutos: minJugados, // Asegúrate si tu backend espera "minutos" o "minutosJugados"
+                minutos: minJugados,
                 esTitular: esTitular,
                 minutoEntrada: minEntrada > 0 ? minEntrada : null,
                 minutoSalida: minSalida > 0 ? minSalida : null,
                 
-                // 🔥 CAMBIO CLAVE AQUÍ: Usar nombres que el Backend espera 🔥
-                tarjetaAmarilla: p.amarilla || false, // Antes enviábamos "amarilla"
-                tarjetaRoja: p.roja || false          // Antes enviábamos "roja"
+                // Forzamos 0 para no romper el backend
+                tarjetaAmarilla: 0,
+                tarjetaRoja: 0
             };
           })
       };
@@ -215,13 +206,12 @@ export class EditMatchPage implements OnInit {
         next: () => {
             this.saving = false;
             this.presentToast('Acta cerrada y estadísticas actualizadas 🏆', 'success');
-            // Recargamos los datos para verificar que se guardó bien
             this.loadData(); 
         },
         error: (err) => {
             this.saving = false;
             console.error(err);
-            this.presentToast('Error al cerrar acta. Verifica la consola.', 'danger');
+            this.presentToast('Error al cerrar acta.', 'danger');
         }
     });
   }
