@@ -1,67 +1,76 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar color="primary">
+  <ion-toolbar class="transparent-toolbar">
     <ion-buttons slot="start">
-      <ion-button (click)="goBack()">
-        <ion-icon name="arrow-back-outline"></ion-icon>
+      <ion-button (click)="goBack()" color="light">
+        <ion-icon name="arrow-back"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Mi Perfil Técnico</ion-title>
+    <ion-title>MI PERFIL TÉCNICO</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="saveProfile()" class="save-btn-neon">
+        <ion-icon name="checkmark" slot="start"></ion-icon>
+        GUARDAR
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="profile-bg">
-  <div class="profile-container">
+<ion-content [fullscreen]="true">
+
+  <div class="main-container animate-fade-in">
     
     <div class="profile-header">
-      
       <div class="avatar-wrapper" (click)="fileInput.click()">
-        <img *ngIf="coachData.usuario.fotoUrl" [src]="coachData.usuario.fotoUrl" class="profile-img">
-        
-        <div *ngIf="!coachData.usuario.fotoUrl" class="initials">
-          {{ coachData.usuario.nombre?.charAt(0) || 'C' }}
+        <div class="glow-ring">
+            <img *ngIf="coachData.usuario.fotoUrl" [src]="coachData.usuario.fotoUrl" class="profile-img">
+            <div *ngIf="!coachData.usuario.fotoUrl" class="initials-placeholder">
+                {{ coachData.usuario.nombre?.charAt(0) || 'C' }}
+            </div>
         </div>
-
-        <div class="camera-badge">
+        <div class="camera-btn">
           <ion-icon name="camera"></ion-icon>
         </div>
       </div>
-
-      <input 
-        #fileInput 
-        type="file" 
-        accept="image/*" 
-        (change)="onFileSelected($event)" 
-        style="display: none;"
-      >
+      
+      <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
 
       <h2>{{ coachData.usuario.nombre }} {{ coachData.usuario.apellidos }}</h2>
       <p>{{ coachData.usuario.email }}</p>
     </div>
 
-    <div class="form-card">
-      
-      <ion-item lines="none" class="custom-input">
-        <ion-label position="stacked">Teléfono de Contacto</ion-label>
-        <ion-input [(ngModel)]="coachData.telefonoContacto" placeholder="+34 600..."></ion-input>
-        <ion-icon name="call-outline" slot="start"></ion-icon>
-      </ion-item>
+    <div class="section-title">
+        <ion-icon name="id-card-outline"></ion-icon> DATOS PROFESIONALES
+    </div>
 
-      <ion-item lines="none" class="custom-input">
-        <ion-label position="stacked">Licencia / Título</ion-label>
-        <ion-input [(ngModel)]="coachData.licencia" placeholder="Ej: UEFA Pro"></ion-input>
-        <ion-icon name="ribbon-outline" slot="start"></ion-icon>
-      </ion-item>
+    <div class="dark-card padding-lg">
+        
+        <div class="input-group">
+            <label>TELÉFONO DE CONTACTO</label>
+            <div class="input-wrapper">
+                <input type="tel" [(ngModel)]="coachData.telefonoContacto" placeholder="+34 600 000 000" class="neon-input">
+                <ion-icon name="call-outline"></ion-icon>
+            </div>
+        </div>
 
-      <ion-item lines="none" class="custom-input">
-        <ion-label position="stacked">Especialidad</ion-label>
-        <ion-input [(ngModel)]="coachData.especialidad" placeholder="Ej: Táctica, Porteros..."></ion-input>
-        <ion-icon name="football-outline" slot="start"></ion-icon>
-      </ion-item>
+        <div class="input-group">
+            <label>LICENCIA / TÍTULO</label>
+            <div class="input-wrapper">
+                <input type="text" [(ngModel)]="coachData.licencia" placeholder="Ej: UEFA Pro, Nivel 1..." class="neon-input">
+                <ion-icon name="ribbon-outline"></ion-icon>
+            </div>
+        </div>
 
-      <ion-button expand="block" class="save-btn" (click)="saveProfile()">
-        Guardar Cambios
-      </ion-button>
+        <div class="input-group">
+            <label>ESPECIALIDAD</label>
+            <div class="input-wrapper">
+                <input type="text" [(ngModel)]="coachData.especialidad" placeholder="Ej: Táctica, Porteros, Prep. Física" class="neon-input">
+                <ion-icon name="football-outline"></ion-icon>
+            </div>
+        </div>
 
     </div>
+
+    <div class="spacer"></div>
+
   </div>
 </ion-content>

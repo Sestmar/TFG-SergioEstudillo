@@ -1,52 +1,119 @@
-/* Estilos para la página de registro.
-  Se pueden compartir con login.page.scss si se mueven a un archivo global.
-*/
-
-.auth-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
+// --- CONFIGURACIÓN DARK ---
+:host {
+    --bg-app: #050505;
+    --primary: #8b5cf6; // Morado
+    --secondary: #10b981; // Verde
+    --text-white: #ffffff;
+    --text-gray: #9ca3af;
 }
 
-.auth-icon {
-  font-size: 4rem; // Icono grande
-  margin-bottom: 0.5rem;
+ion-content {
+    --background: linear-gradient(180deg, #111827 0%, #050505 100%);
 }
 
-/* Estilo para los campos de entrada */
-.auth-item {
-  border-radius: 8px;
-  --background: var(--ion-color-light, #f4f5f7);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.2s ease-in-out;
+.transparent-toolbar {
+    --background: transparent;
+    --color: var(--text-white);
+    --border-width: 0;
+    ion-title { font-weight: 800; letter-spacing: 1px; font-size: 0.9rem; }
 }
 
-/* Efecto visual al enfocar un campo */
-.auth-item.item-interactive.ion-focused {
-  --background: #ffffff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.auth-wrapper {
+    padding: 20px 24px 40px;
+    max-width: 500px; margin: 0 auto; // Centrado en pantallas grandes
 }
 
-/* Mensajes de error de validación */
-.validation-error {
-  color: var(--ion-color-danger);
-  font-size: 0.8rem;
-  padding-left: 1rem; // Alinear con el texto del input
-  margin-top: -0.75rem; // Acercar al campo
-  margin-bottom: 0.5rem;
-  font-weight: 500;
+// 1. HEADER (LOGO GRANDE)
+.header-section {
+    text-align: center; margin-bottom: 30px;
+    
+    .logo-wrapper {
+        width: 120px; height: 120px; // Tamaño grande
+        margin: 0 auto 15px;
+        display: flex; align-items: center; justify-content: center;
+        
+        img {
+            width: 100%; height: 100%; object-fit: contain;
+            filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)); // Brillo neón
+        }
+    }
+
+    h2 { margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--text-white); margin-bottom: 5px; }
+    p { margin: 0; color: var(--text-gray); font-size: 0.95rem; }
 }
 
-/* Botón de envío */
-ion-button[type="submit"] {
-  --border-radius: 8px;
-  font-weight: 600;
+// 2. FILE UPLOAD ZONE
+.file-upload-zone {
+    border: 2px dashed #2d3748;
+    border-radius: 12px; padding: 20px;
+    text-align: center; cursor: pointer;
+    margin-bottom: 25px; transition: all 0.2s;
+    background: rgba(255,255,255,0.02);
+
+    ion-icon { font-size: 2rem; color: var(--text-gray); display: block; margin: 0 auto 5px; }
+    span { color: var(--text-gray); font-size: 0.8rem; font-weight: 600; }
+
+    &:active { background: rgba(255,255,255,0.05); border-color: var(--primary); }
 }
 
-/* Enlace inferior (a login) */
-a {
-  text-decoration: none;
-  font-weight: 600;
-  color: var(--ion-color-primary);
+// 3. INPUTS
+.input-group {
+    margin-bottom: 20px;
+
+    label { 
+        display: block; font-size: 0.7rem; color: var(--primary); 
+        font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px;
+    }
+
+    .input-container {
+        position: relative;
+        
+        .neon-input {
+            width: 100%; height: 50px;
+            background: #0f0f0f; border: 1px solid #2d3748;
+            border-radius: 10px; padding: 0 45px 0 15px;
+            color: white; font-weight: 500; font-size: 0.95rem;
+            outline: none; transition: all 0.3s;
+
+            &::placeholder { color: #4b5563; }
+            &:focus { 
+                border-color: var(--primary); 
+                box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); 
+            }
+        }
+
+        ion-icon {
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+            color: #6b7280; font-size: 1.3rem; pointer-events: none;
+        }
+    }
+
+    .error-msg {
+        color: #f87171; font-size: 0.75rem; margin-top: 5px; font-weight: 500; display: flex; align-items: center;
+        &::before { content: '•'; margin-right: 5px; }
+    }
 }
+
+// 4. BOTÓN SUBMIT
+.submit-btn {
+    width: 100%; height: 55px; border: none; outline: none;
+    background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%);
+    border-radius: 12px; color: white; font-weight: 800; letter-spacing: 1px; font-size: 1rem;
+    margin-top: 10px; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+    transition: transform 0.1s;
+
+    &:active { transform: scale(0.98); }
+    &:disabled { opacity: 0.7; cursor: not-allowed; }
+}
+
+// 5. FOOTER
+.footer-link {
+    text-align: center; margin-top: 30px;
+    p { color: var(--text-gray); font-size: 0.9rem; }
+    a { color: var(--secondary); text-decoration: none; font-weight: 700; margin-left: 5px; }
+}
+
+// Animación
+.animate-fade-in { animation: fadeIn 0.5s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }

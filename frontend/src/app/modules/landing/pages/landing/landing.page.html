@@ -1,9 +1,18 @@
 <ion-content class="landing-content">
 
-  <div class="hero-section">
-    <div class="hero-content">
+  <div class="background-layer"></div>
+
+  <div class="main-wrapper">
+    
+    <div class="hero-section">
+      <div class="app-logo">
+        <img src="assets/img/mi-club-logo.png" alt="Logo Club" style="width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));">
+     </div>
+  
       <h1>DAM United F.C</h1>
-      <p>La plataforma integral para la gestión deportiva profesional. Entrenadores, jugadores y afición unidos en un solo lugar.</p>
+      
+      <p>La plataforma integral para la gestión deportiva profesional.<br>
+         Entrenadores, jugadores y afición unidos en un solo lugar.</p>
       
       <div class="hero-actions">
         <ion-button class="btn-primary" routerLink="/auth/login">
@@ -17,49 +26,31 @@
         </ion-button>
       </div>
     </div>
-  </div>
 
-  <div class="section-container" style="padding-top: 0;">
-    <div class="club-preview">
-      <h3>Zona del Aficionado</h3>
-      <p>Consulta las plantillas, estadísticas y resultados de todas nuestras categorías (Alevín, Infantil, Cadete...) sin necesidad de registro.</p>
-      
-      <ion-button class="btn-club" routerLink="/club" size="large">
-        <ion-icon name="people-circle-outline" slot="start"></ion-icon>
-        Ver Equipos y Plantillas
-      </ion-button>
-    </div>
-  </div>
-
-  <div class="section-container">
-    <div class="section-title">
-      <h2>¿Por qué elegirnos?</h2>
-      <p>Tecnología al servicio del deporte base y profesional</p>
-    </div>
-
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="icon-circle"><ion-icon name="football-outline"></ion-icon></div>
-        <h3>Gestión Deportiva</h3>
-        <p>Control total de plantillas, dorsales y fichas de jugadores.</p>
+    <div class="club-card-glass">
+      <div class="badge-pill">
+        <div class="dot"></div> Acceso Libre
       </div>
       
-      <div class="feature-card">
-        <div class="icon-circle"><ion-icon name="easel-outline"></ion-icon></div>
-        <h3>Pizarra Táctica</h3>
-        <p>Diseña alineaciones y estrategias interactivas para cada partido.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="icon-circle"><ion-icon name="stats-chart-outline"></ion-icon></div>
-        <h3>Estadísticas Reales</h3>
-        <p>Seguimiento de goles, asistencias y minutos jugados en tiempo real.</p>
+      <div class="card-content">
+        <div class="text-side">
+            <h3>Zona del Aficionado</h3>
+            <p>Consulta las plantillas, estadísticas y resultados de todas nuestras categorías (Alevín, Infantil, Cadete...) sin necesidad de registro.</p>
+        </div>
+        
+        <div class="action-side">
+            <ion-button class="btn-club" routerLink="/club">
+                <ion-icon name="people" slot="start"></ion-icon>
+                Ver Equipos y Plantillas
+            </ion-button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div style="text-align: center; padding: 40px; color: #999; font-size: 0.9rem;">
-    <p>&copy; 2025 Club de Fútbol Pro. TFG Desarrollo de Aplicaciones Multiplataforma.</p>
+    <div class="footer-text">
+      <p>&copy; 2025 DAM United F.C. Todos los derechos reservados.</p>
+    </div>
+
   </div>
 
 </ion-content>

@@ -5,13 +5,13 @@
     <div class="glow glow-2"></div>
   </div>
 
-  <div class="auth-wrapper">
+  <div class="auth-wrapper animate-fade-in">
     
     <div class="glass-card">
       
       <div class="auth-header">
-        <div class="logo-container">
-          <ion-icon name="football-outline"></ion-icon>
+        <div class="logo-wrapper">
+          <img src="assets/img/mi-club-logo.png" alt="Logo Club">
         </div>
         <h1>DAM United F.C</h1>
         <p>Acceso al Estadio</p>
@@ -19,64 +19,49 @@
 
       <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="auth-form">
         
-        <ion-input
-          class="neon-input"
-          label="Correo Electrónico"
-          label-placement="floating"
-          fill="outline"
-          type="email"
-          formControlName="email"
-          placeholder="ejemplo@futchain.com"
-          errorText="Email inválido o requerido"
-          [class.ion-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
-        >
-          <ion-icon slot="start" name="mail-outline"></ion-icon>
-        </ion-input>
+        <div class="input-group">
+            <label>CORREO ELECTRÓNICO</label>
+            <div class="input-container">
+                <input type="email" formControlName="email" placeholder="ejemplo@futchain.com" class="neon-input">
+                <ion-icon name="mail-outline"></ion-icon>
+            </div>
+            <div class="error-msg" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+                Introduce un email válido.
+            </div>
+        </div>
 
-        <div class="password-wrapper">
-          <ion-input
-            class="neon-input"
-            label="Contraseña"
-            label-placement="floating"
-            fill="outline"
-            [type]="showPassword ? 'text' : 'password'"
-            formControlName="password"
-            errorText="Mínimo 4 caracteres"
-            [class.ion-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-          >
-            <ion-icon slot="start" name="lock-closed-outline"></ion-icon>
-          </ion-input>
-          
-          <ion-button 
-            fill="clear" 
-            class="eye-btn" 
-            (click)="togglePasswordVisibility()" 
-            slot="end">
-            <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
-          </ion-button>
+        <div class="input-group">
+            <label>CONTRASEÑA</label>
+            <div class="input-container">
+                <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="******" class="neon-input">
+                <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" (click)="togglePasswordVisibility()" class="eye-icon"></ion-icon>
+            </div>
+            <div class="error-msg" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+                La contraseña es requerida.
+            </div>
         </div>
 
         <div class="form-options">
-          <ion-checkbox formControlName="rememberMe" justify="start" labelPlacement="end">Recordarme</ion-checkbox>
+          <label class="checkbox-container">
+            <input type="checkbox" formControlName="rememberMe">
+            <span class="checkmark"></span>
+            Recordarme
+          </label>
           <a class="forgot-link" routerLink="/auth/forgot-password">¿Olvidaste tu contraseña?</a>
         </div>
 
-        <ion-button 
-          expand="block" 
-          type="submit" 
-          class="neon-button" 
-          [disabled]="loginForm.invalid || isLoading">
+        <button type="submit" class="neon-button" [disabled]="loginForm.invalid || isLoading">
           <span *ngIf="!isLoading">INGRESAR</span>
           <ion-spinner name="dots" *ngIf="isLoading"></ion-spinner>
-        </ion-button>
+        </button>
 
       </form>
 
       <div class="auth-footer">
         <p>¿Nuevo fichaje?</p>
-        <ion-button fill="outline" routerLink="/auth/register" class="register-btn" expand="block">
+        <button class="register-btn" routerLink="/auth/register">
           Registrarse en el Club
-        </ion-button>
+        </button>
       </div>
 
     </div>

@@ -1,104 +1,122 @@
-.profile-bg {
-  --background: #f1f5f9;
+// --- CONFIGURACIÓN DE COLORES ---
+:host {
+    --bg-app: #050505;
+    --bg-card: #0f0f0f;
+    --primary: #8b5cf6; // Morado Neon (Igual que jugador)
+    --secondary: #10b981; // Verde Neon
+    --text-white: #ffffff;
+    --text-gray: #9ca3af;
 }
 
-.profile-container {
-  padding: 20px;
+ion-content {
+    --background: linear-gradient(180deg, #1a1a2e 0%, #050505 100%);
 }
 
-.profile-header {
-  text-align: center;
-  margin-bottom: 30px;
-  background: white;
-  padding: 30px 20px;
-  border-radius: 0 0 24px 24px;
-  margin: -20px -20px 30px -20px; // Pegado al header
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-
-  // 🔥 ESTILOS AVATAR ACTUALIZADOS
-  .avatar-wrapper {
-    width: 90px; height: 90px;
-    margin: 0 auto 15px;
-    position: relative;
-    cursor: pointer;
-    
-    // Contenedor base (círculo)
-    background: #0f766e;
-    border-radius: 50%;
-    box-shadow: 0 0 0 4px #ccfbf1;
-    display: flex; align-items: center; justify-content: center;
-
-    // Si hay imagen
-    .profile-img {
-      width: 100%; height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid white;
-    }
-
-    // Si son iniciales
-    .initials {
-      color: white;
-      font-size: 2.2rem; 
-      font-weight: bold;
-    }
-
-    // Icono de cámara flotante
-    .camera-badge {
-      position: absolute;
-      bottom: 0; right: 0;
-      background: #0f766e;
-      color: white;
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      border: 2px solid white;
-      font-size: 0.9rem;
-    }
-  }
-
-  h2 { margin: 0; font-size: 1.4rem; font-weight: 700; color: #1e293b; }
-  p { margin: 5px 0; color: #64748b; }
+.transparent-toolbar {
+    --background: transparent;
+    --color: var(--text-white);
+    --border-width: 0;
+    ion-title { font-weight: 800; letter-spacing: 1px; font-size: 0.9rem; text-transform: uppercase; }
 }
 
-.form-card {
-  
-  .custom-input {
-    --background: white; 
-    --color: #1e293b;    
-    --placeholder-color: #94a3b8;
-    
-    border-radius: 12px;
-    margin-bottom: 15px;
-    border: 1px solid #e2e8f0;
-    
-    ion-label { 
-      color: #64748b !important; 
-      font-weight: 700; 
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 5px; 
-    }
-    
-    ion-icon { 
-      color: #0f766e; 
-      margin-top: 25px; 
-      margin-right: 15px; 
-    }
-    
-    ion-input { 
-      --padding-start: 0; 
-      font-weight: 600;
-    }
-  }
-
-  .save-btn {
-    margin-top: 30px;
-    --background: #0f766e;
-    --border-radius: 12px;
+.save-btn-neon {
+    --background: var(--primary);
+    --border-radius: 20px;
+    --color: white;
     font-weight: 700;
-    height: 50px;
-    --box-shadow: 0 4px 12px rgba(15, 118, 110, 0.3);
-  }
+    font-size: 0.75rem;
+    height: 32px;
+    --box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
 }
+
+.main-container { padding: 10px 16px 40px; }
+
+// 1. HEADER PERFIL (Avatar)
+.profile-header {
+    text-align: center; margin-bottom: 30px; margin-top: 10px;
+
+    .avatar-wrapper {
+        position: relative; width: 120px; height: 120px; margin: 0 auto 15px;
+        
+        .glow-ring {
+            width: 100%; height: 100%; border-radius: 50%;
+            padding: 4px; 
+            background: transparent;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); 
+            
+            .profile-img, .initials-placeholder {
+                width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+                background: #2d3748;
+            }
+            .initials-placeholder {
+                display: flex; align-items: center; justify-content: center;
+                font-size: 2.5rem; font-weight: 800; color: var(--primary);
+                background: rgba(139, 92, 246, 0.1);
+            }
+        }
+
+        .camera-btn {
+            position: absolute; bottom: 5px; right: 5px;
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--primary); color: white;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #050505;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+    }
+
+    h2 { margin: 0; font-size: 1.3rem; font-weight: 700; color: var(--text-white); }
+    p { margin: 4px 0 0; color: var(--primary); font-size: 0.85rem; font-weight: 500; }
+}
+
+// 2. SECCIONES Y TARJETAS
+.section-title {
+    color: var(--text-white); font-size: 0.8rem; font-weight: 800; letter-spacing: 1px;
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    ion-icon { color: var(--primary); font-size: 1.1rem; }
+}
+
+.dark-card {
+    background: rgba(15, 15, 15, 0.6); 
+    border: 1px solid rgba(139, 92, 246, 0.2); 
+    border-radius: 16px; padding: 20px;
+    position: relative;
+    backdrop-filter: blur(10px);
+
+    &.padding-lg { padding: 25px 20px; }
+}
+
+// 3. INPUTS
+.input-group {
+    margin-bottom: 20px;
+    &:last-child { margin-bottom: 0; }
+
+    label { display: block; font-size: 0.65rem; color: var(--primary); font-weight: 800; margin-bottom: 8px; text-transform: uppercase; }
+
+    .input-wrapper {
+        position: relative;
+        
+        .neon-input {
+            width: 100%; height: 45px;
+            background: #050505; border: 1px solid #2d3748;
+            border-radius: 10px; padding: 0 40px 0 15px;
+            color: white; font-weight: 500; font-size: 0.95rem;
+            outline: none; transition: all 0.3s;
+
+            &::placeholder { color: #4b5563; }
+            &:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(139, 92, 246, 0.1); }
+        }
+
+        ion-icon {
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+            color: #4b5563; font-size: 1.2rem;
+        }
+    }
+}
+
+.spacer { height: 50px; }
+
+// Animación
+.animate-fade-in { animation: fadeIn 0.5s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

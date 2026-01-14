@@ -1,58 +1,88 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar color="primary">
+  <ion-toolbar class="transparent-toolbar">
     <ion-buttons slot="start">
-      <ion-button (click)="closeTeam()" *ngIf="selectedTeam">
+      <ion-button (click)="closeTeam()" *ngIf="selectedTeam" color="light">
         <ion-icon name="arrow-back"></ion-icon>
       </ion-button>
-      <ion-back-button defaultHref="/landing" *ngIf="!selectedTeam"></ion-back-button>
+      <ion-back-button defaultHref="/landing" *ngIf="!selectedTeam" color="light"></ion-back-button>
     </ion-buttons>
-    <ion-title>{{ selectedTeam ? selectedTeam.nombre : 'Nuestros Equipos' }}</ion-title>
+    <ion-title>{{ selectedTeam ? selectedTeam.nombre : 'NUESTROS EQUIPOS' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="bg-light">
+<ion-content [fullscreen]="true">
 
-  <div *ngIf="loading" class="ion-text-center ion-padding">
-    <ion-spinner></ion-spinner>
+  <div *ngIf="loading" class="spinner-container">
+    <ion-spinner name="crescent" color="secondary"></ion-spinner>
   </div>
 
-  <div *ngIf="!loading && !selectedTeam" class="teams-grid">
-    <ion-card *ngFor="let team of teams" (click)="openTeam(team)" class="team-card">
-      <img [src]="team.fotoUrl || 'assets/img/team-placeholder.jpg'" alt="Equipo">
-      <div class="card-overlay">
-        <h2>{{ team.nombre }}</h2>
-        <p>{{ team.categoria }}</p>
+  <div class="main-container animate-fade-in" *ngIf="!loading">
+
+    <div *ngIf="!selectedTeam" class="teams-grid">
+      <div class="team-card" *ngFor="let team of teams" (click)="openTeam(team)">
+        <div class="card-bg" [style.backgroundImage]="'url(' + (team.fotoUrl || 'assets/img/default-team-bg.jpg') + ')'"></div>
+        <div class="overlay"></div>
+        
+        <div class="team-info">
+          <div class="team-badge">
+            <img src="assets/img/mi-club-logo.png" alt="Escudo">
+          </div>
+          <div class="text-content">
+            <h3>{{ team.nombre }}</h3>
+            <span class="category">{{ team.categoria || 'Categoría Base' }}</span>
+          </div>
+          <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
+        </div>
       </div>
-    </ion-card>
-  </div>
 
-  <div *ngIf="selectedTeam && roster" class="roster-view">
-    
-    <div class="team-header">
-      <h3>Plantilla {{ selectedTeam.temporada }}</h3> <p>Entrenador: {{ selectedTeam.entrenadorNombre }}</p>
+      <div *ngIf="teams.length === 0" class="empty-msg">
+        <ion-icon name="shield-half-outline"></ion-icon>
+        <p>No hay equipos públicos disponibles.</p>
+      </div>
     </div>
 
-    <ion-list>
-      <ion-item *ngFor="let p of roster" lines="full">
-        <ion-avatar slot="start">
-          <img [src]="p.fotoUrl || 'assets/img/placeholder.png'">
-        </ion-avatar>
-        <ion-label>
-          <h2>{{ p.nombreCompleto }}</h2>
-          <p>{{ p.posicion }}</p>
-        </ion-label>
-        <div slot="end" class="stats-badge" *ngIf="p.goles > 0">
-          ⚽ {{ p.goles }}
+    <div *ngIf="selectedTeam && roster" class="roster-view">
+      
+      <div class="team-glass-header">
+        <div class="info">
+            <h2>{{ selectedTeam.nombre }}</h2>
+            <div class="meta">
+                <span class="pill"><ion-icon name="calendar-outline"></ion-icon> {{ selectedTeam.temporada }}</span>
+                <span class="pill outline"><ion-icon name="person-outline"></ion-icon> {{ selectedTeam.entrenadorNombre || 'Sin Míster' }}</span>
+            </div>
         </div>
-        <div slot="end" class="dorsal-circle">
-          {{ p.dorsal || '-' }}
-        </div>
-      </ion-item>
-    </ion-list>
+      </div>
 
-    <div class="empty-state" *ngIf="roster.length === 0">
-      <p>No hay jugadores registrados en este equipo.</p>
+      <div class="player-list">
+        <div class="player-row" *ngFor="let p of roster">
+            
+            <div class="left-info">
+                <div class="avatar-circle">
+                    <img [src]="p.fotoUrl || 'assets/img/default-avatar.png'" 
+                         (error)="p.fotoUrl = 'https://ui-avatars.com/api/?name='+p.nombreCompleto+'&background=random&color=fff'">
+                    <span class="dorsal-badge">{{ p.dorsal || '-' }}</span>
+                </div>
+                <div class="names">
+                    <h4>{{ p.nombreCompleto }}</h4>
+                    <span class="pos">{{ p.posicion }}</span>
+                </div>
+            </div>
+
+            <div class="right-stats">
+                <div class="stat-pill" *ngIf="p.goles > 0">
+                    <ion-icon name="football"></ion-icon> {{ p.goles }}
+                </div>
+            </div>
+
+        </div>
+      </div>
+
+      <div class="empty-msg" *ngIf="roster.length === 0">
+        <p>No hay jugadores registrados en este equipo.</p>
+      </div>
+
     </div>
+
   </div>
 
 </ion-content>

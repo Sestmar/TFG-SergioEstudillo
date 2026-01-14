@@ -1,99 +1,96 @@
-<ion-header translucent="true">
-  <ion-toolbar>
+<ion-header class="ion-no-border">
+  <ion-toolbar class="transparent-toolbar">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/auth/login" text="Volver"></ion-back-button>
+      <ion-back-button defaultHref="/auth/login" color="light"></ion-back-button>
     </ion-buttons>
-    <ion-title>Crear Cuenta</ion-title>
+    <ion-title>CREAR CUENTA</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding" [fullscreen]="true">
-  <div class="auth-container">
-    <ion-grid>
-      <ion-row class="ion-justify-content-center">
-        <ion-col size="12" size-md="8" size-lg="6">
+<ion-content [fullscreen]="true">
+  <div class="auth-wrapper animate-fade-in">
+    
+    <div class="header-section">
+      <div class="logo-wrapper">
+        <img src="assets/img/mi-club-logo.png" alt="Logo Club">
+      </div>
+      <h2>Únete al Club</h2>
+      <p>Completa tus datos para registrarte en la plataforma.</p>
+    </div>
 
-          <div class="ion-text-center ion-margin-bottom">
-            <ion-icon name="person-add-outline" size="large" color="primary" class="auth-icon"></ion-icon>
-            <h2>Únete al Club</h2>
-            <p>Completa tus datos para registrarte.</p>
-          </div>
+    <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
+      
+      <div class="file-upload-zone" (click)="fileInput.click()">
+        <ion-icon name="camera-outline"></ion-icon>
+        <span>Subir Foto de Perfil</span>
+        <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+      </div>
 
-          <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
-            
-            <!-- Campo Nombre -->
-            <ion-item lines="full" class="ion-margin-bottom auth-item">
-              <ion-icon name="person-outline" slot="start" aria-hidden="true"></ion-icon>
-              <ion-input label="Nombre" labelPlacement="stacked" formControlName="nombre" required></ion-input>
-            </ion-item>
-            <div *ngIf="nombre?.invalid && (nombre?.dirty || nombre?.touched)" class="validation-error">
-              <span *ngIf="nombre?.errors?.['required']">El nombre es requerido.</span>
-            </div>
+      <div class="input-group">
+        <label>NOMBRE</label>
+        <div class="input-container">
+            <input type="text" formControlName="nombre" placeholder="Tu nombre" class="neon-input">
+            <ion-icon name="person-outline"></ion-icon>
+        </div>
+        <div class="error-msg" *ngIf="nombre?.invalid && (nombre?.dirty || nombre?.touched)">
+            El nombre es requerido.
+        </div>
+      </div>
 
-            <ion-item class="ion-margin-bottom">
-              <ion-label position="stacked">Foto de Perfil / Escudo</ion-label>
-              <ion-input type="file" accept="image/*" (change)="onFileSelected($event)"></ion-input>
-            </ion-item>
-            
-            <!-- Campo Apellidos -->
-            <ion-item lines="full" class="ion-margin-bottom auth-item">
-              <ion-icon name="people-outline" slot="start" aria-hidden="true"></ion-icon>
-              <ion-input label="Apellidos" labelPlacement="stacked" formControlName="apellidos" required></ion-input>
-            </ion-item>
-             <div *ngIf="apellidos?.invalid && (apellidos?.dirty || apellidos?.touched)" class="validation-error">
-              <span *ngIf="apellidos?.errors?.['required']">Los apellidos son requeridos.</span>
-            </div>
+      <div class="input-group">
+        <label>APELLIDOS</label>
+        <div class="input-container">
+            <input type="text" formControlName="apellidos" placeholder="Tus apellidos" class="neon-input">
+            <ion-icon name="people-outline"></ion-icon>
+        </div>
+        <div class="error-msg" *ngIf="apellidos?.invalid && (apellidos?.dirty || apellidos?.touched)">
+            Los apellidos son requeridos.
+        </div>
+      </div>
 
-            <!-- Campo Email -->
-            <ion-item lines="full" class="ion-margin-bottom auth-item">
-              <ion-icon name="mail-outline" slot="start" aria-hidden="true"></ion-icon>
-              <ion-input label="Email" labelPlacement="stacked" type="email" formControlName="email" required></ion-input>
-            </ion-item>
-            <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="validation-error">
-              <span *ngIf="email?.errors?.['required']">El email es requerido.</span>
-              <span *ngIf="email?.errors?.['email']">El formato del email no es válido.</span>
-            </div>
+      <div class="input-group">
+        <label>CORREO ELECTRÓNICO</label>
+        <div class="input-container">
+            <input type="email" formControlName="email" placeholder="ejemplo@email.com" class="neon-input">
+            <ion-icon name="mail-outline"></ion-icon>
+        </div>
+        <div class="error-msg" *ngIf="email?.invalid && (email?.dirty || email?.touched)">
+            Introduce un email válido.
+        </div>
+      </div>
 
-            <!-- Campo Contraseña -->
-            <ion-item lines="full" class="ion-margin-bottom auth-item">
-              <ion-icon name="lock-closed-outline" slot="start" aria-hidden="true"></ion-icon>
-              <ion-input label="Contraseña" labelPlacement="stacked" type="password" formControlName="password" required></ion-input>
-            </ion-item>
-             <div *ngIf="password?.invalid && (password?.dirty || password?.touched)" class="validation-error">
-              <span *ngIf="password?.errors?.['required']">La contraseña es requerida.</span>
-              <span *ngIf="password?.errors?.['minlength']">Debe tener al menos 6 caracteres.</span>
-            </div>
+      <div class="input-group">
+        <label>CONTRASEÑA</label>
+        <div class="input-container">
+            <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="******" class="neon-input">
+            <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" (click)="showPassword = !showPassword" style="cursor: pointer; pointer-events: auto;"></ion-icon>
+        </div>
+        <div class="error-msg" *ngIf="password?.invalid && (password?.dirty || password?.touched)">
+            Mínimo 6 caracteres.
+        </div>
+      </div>
 
-            <!-- Campo Confirmar Contraseña -->
-            <ion-item lines="full" class="ion-margin-bottom auth-item">
-              <ion-icon name="shield-checkmark-outline" slot="start" aria-hidden="true"></ion-icon>
-              <ion-input label="Confirmar Contraseña" labelPlacement="stacked" type="password" formControlName="confirmPassword" required></ion-input>
-            </ion-item>
-            
-            <!-- 
-              Estas dos 'div' ahora están cerradas correctamente.
-            -->
-            <div *ngIf="confirmPassword?.errors?.['required'] && (confirmPassword?.dirty || confirmPassword?.touched)" class="validation-error">
-              <span>Debes confirmar la contraseña.</span>
-            </div>
-            
-            <div *ngIf="registerForm.errors?.['passwordMismatch'] && (confirmPassword?.dirty || confirmPassword?.touched)" class="validation-error">
-              <span>Las contraseñas no coinciden.</span>
-            </div>
+      <div class="input-group">
+        <label>CONFIRMAR CONTRASEÑA</label>
+        <div class="input-container">
+            <input type="password" formControlName="confirmPassword" placeholder="******" class="neon-input">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+        </div>
+        <div class="error-msg" *ngIf="registerForm.errors?.['passwordMismatch'] && (confirmPassword?.dirty || confirmPassword?.touched)">
+            Las contraseñas no coinciden.
+        </div>
+      </div>
 
-            <!-- Botón de Envío -->
-            <ion-button type="submit" expand="block" class="ion-margin-top" [disabled]="registerForm.invalid || isLoading">
-              <span *ngIf="!isLoading">Crear Cuenta</span>
-              <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
-            </ion-button>
-          </form>
+      <button type="submit" class="submit-btn" [disabled]="registerForm.invalid || isLoading">
+        <span *ngIf="!isLoading">REGISTRARSE</span>
+        <ion-spinner *ngIf="isLoading" name="dots"></ion-spinner>
+      </button>
 
-          <div class="ion-text-center ion-margin-top">
-            <p>¿Ya tienes cuenta? <a routerLink="/auth/login">Inicia sesión</a></p>
-          </div>
+    </form>
 
-        </ion-col>
-      </ion-row>
-    </ion-grid>
+    <div class="footer-link">
+      <p>¿Ya tienes cuenta? <a routerLink="/auth/login">Inicia sesión</a></p>
+    </div>
+
   </div>
 </ion-content>

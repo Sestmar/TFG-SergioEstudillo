@@ -1,208 +1,132 @@
-// Variables de colores Neon
-$neon-blue: #0ea5e9;
-$neon-purple: #8b5cf6;
-$dark-bg: #0f172a;
-$card-bg: rgba(30, 41, 59, 0.7);
+// --- CONFIGURACIÓN DARK NEON ---
+:host {
+    --bg-app: #050505;
+    --primary: #8b5cf6; // Morado Neon
+    --secondary: #10b981; // Verde Neon
+    --accent: #0ea5e9; // Azul Neon
+    --text-white: #ffffff;
+    --text-gray: #9ca3af;
+}
 
 .login-content {
-  --background: #{$dark-bg};
-  position: relative;
-
-  // 1. Fondo Animado
-  .background-glows {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    z-index: 0;
-
-    .glow {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.4;
-      animation: float 10s infinite alternate;
-    }
-
-    .glow-1 {
-      width: 300px;
-      height: 300px;
-      background: $neon-blue;
-      top: -50px;
-      left: -50px;
-    }
-
-    .glow-2 {
-      width: 400px;
-      height: 400px;
-      background: $neon-purple;
-      bottom: -100px;
-      right: -100px;
-      animation-delay: 2s;
-    }
-  }
-
-  @keyframes float {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(30px, 30px); }
-  }
-
-  // 2. Contenedor Central
-  .auth-wrapper {
+    --background: #050505; // Fondo negro profundo
     position: relative;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100%;
-    padding: 20px;
-  }
+    overflow: hidden;
 
-  // 3. Tarjeta de Cristal (Glassmorphism)
-  .glass-card {
-    width: 100%;
-    max-width: 420px;
-    background: $card-bg;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    padding: 40px 30px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-
-    // Cabecera
-    .auth-header {
-      text-align: center;
-      margin-bottom: 40px;
-
-      .logo-container {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 20px;
-        background: linear-gradient(135deg, $neon-blue, $neon-purple);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 0 20px rgba($neon-blue, 0.5);
-
-        ion-icon {
-          font-size: 40px;
-          color: white;
+    // 1. FONDO ANIMADO (Glows)
+    .background-glows {
+        position: absolute; width: 100%; height: 100%; z-index: 0; pointer-events: none;
+        .glow {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.3;
+            animation: float 10s infinite alternate;
         }
-      }
+        .glow-1 { width: 300px; height: 300px; background: var(--primary); top: -10%; left: -10%; }
+        .glow-2 { width: 400px; height: 400px; background: var(--accent); bottom: -10%; right: -10%; animation-delay: 2s; }
+    }
+    @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(30px, 30px); } }
 
-      h1 {
-        color: white;
-        font-size: 1.8rem;
-        font-weight: 700;
-        margin: 0 0 5px;
-        letter-spacing: 0.5px;
-      }
-
-      p {
-        color: #94a3b8;
-        margin: 0;
-        font-size: 1rem;
-      }
+    // 2. WRAPPER CENTRAL
+    .auth-wrapper {
+        position: relative; z-index: 1; display: flex; align-items: center; justify-content: center;
+        min-height: 100%; padding: 20px;
     }
 
-    // Formulario
-    .auth-form {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+    // 3. TARJETA DE CRISTAL
+    .glass-card {
+        width: 100%; max-width: 420px;
+        background: rgba(30, 41, 59, 0.4); // Más transparente
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px; padding: 40px 30px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 
-      // Estilos Input Moderno (Ionic 7)
-      .neon-input {
-        --background: rgba(15, 23, 42, 0.6);
-        --color: white;
-        --placeholder-color: #64748b;
-        --border-color: #334155;
-        --border-radius: 12px;
-        --padding-start: 15px;
-        --highlight-color-focused: #{$neon-blue}; // Color del borde al enfocar
-        font-size: 1rem;
-
-        ion-icon {
-          color: #94a3b8;
-          margin-right: 10px;
+        // HEADER
+        .auth-header {
+            text-align: center; margin-bottom: 30px;
+            .logo-wrapper {
+                width: 100px; height: 100px; margin: 0 auto 15px;
+                display: flex; align-items: center; justify-content: center;
+                img { 
+                    width: 100%; height: 100%; object-fit: contain; 
+                    filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)); // Brillo neón
+                }
+            }
+            h1 { color: var(--text-white); font-size: 1.8rem; font-weight: 800; margin: 0 0 5px; letter-spacing: 0.5px; }
+            p { color: var(--text-gray); margin: 0; font-size: 1rem; }
         }
 
-        &.ion-focused ion-icon {
-          color: $neon-blue;
+        // FORMULARIO
+        .auth-form {
+            display: flex; flex-direction: column; gap: 20px;
+
+            // INPUTS NEON
+            .input-group {
+                label { 
+                    display: block; font-size: 0.7rem; color: var(--primary); 
+                    font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px; 
+                }
+                .input-container {
+                    position: relative;
+                    .neon-input {
+                        width: 100%; height: 50px; background: rgba(15, 23, 42, 0.6); 
+                        border: 1px solid #334155; border-radius: 12px; padding: 0 45px 0 15px;
+                        color: var(--text-white); font-size: 1rem; outline: none; transition: all 0.3s;
+                        &::placeholder { color: #64748b; }
+                        &:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(139, 92, 246, 0.2); }
+                    }
+                    ion-icon {
+                        position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+                        color: #94a3b8; font-size: 1.3rem; pointer-events: none;
+                    }
+                    ion-icon.eye-icon { pointer-events: auto; cursor: pointer; } // El ojo sí es clickable
+                }
+                .error-msg { color: #f87171; font-size: 0.75rem; margin-top: 5px; }
+            }
+
+            // OPCIONES
+            .form-options {
+                display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;
+                
+                // Checkbox custom (opcional, simple)
+                .checkbox-container {
+                    display: flex; align-items: center; color: var(--text-gray); gap: 8px; cursor: pointer;
+                    input { accent-color: var(--primary); width: 16px; height: 16px; }
+                }
+                
+                .forgot-link {
+                    color: var(--accent); text-decoration: none; font-weight: 600;
+                    &:hover { text-decoration: underline; }
+                }
+            }
+
+            // BOTÓN LOGIN
+            .neon-button {
+                width: 100%; height: 54px; border: none; outline: none; margin-top: 10px;
+                background: linear-gradient(90deg, var(--accent), var(--primary));
+                border-radius: 14px; color: white; font-weight: 800; letter-spacing: 1px; font-size: 1.1rem;
+                cursor: pointer; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+                transition: transform 0.1s;
+                &:active { transform: scale(0.98); }
+                &:disabled { opacity: 0.7; cursor: not-allowed; }
+            }
         }
-      }
 
-      .password-wrapper {
-        position: relative;
-        .eye-btn {
-          position: absolute;
-          right: 5px;
-          top: 15px; // Ajuste vertical
-          z-index: 10;
-          --color: #94a3b8;
+        // FOOTER
+        .auth-footer {
+            margin-top: 40px; text-align: center; 
+            border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 20px;
+            p { color: var(--text-gray); margin-bottom: 15px; font-size: 0.9rem; }
+            
+            .register-btn {
+                background: transparent; border: 1px solid #334155; color: var(--text-white);
+                border-radius: 14px; height: 48px; width: 100%; font-weight: 600; font-size: 0.95rem;
+                cursor: pointer; transition: background 0.2s;
+                &:hover { background: rgba(255, 255, 255, 0.05); }
+            }
         }
-      }
-
-      .form-options {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.9rem;
-
-        ion-checkbox {
-          --checkbox-background: rgba(15, 23, 42, 0.6);
-          --checkbox-background-checked: #{$neon-blue};
-          --border-color: #334155;
-          --label-color: #94a3b8;
-        }
-
-        .forgot-link {
-          color: $neon-blue;
-          text-decoration: none;
-          &:hover { text-decoration: underline; }
-        }
-      }
-
-      // Botón Principal
-      .neon-button {
-        margin-top: 10px;
-        height: 54px;
-        --border-radius: 14px;
-        --background: linear-gradient(90deg, #{$neon-blue}, #{$neon-purple});
-        --box-shadow: 0 0 15px rgba($neon-blue, 0.4);
-        font-weight: 700;
-        letter-spacing: 1px;
-        font-size: 1.1rem;
-        transition: transform 0.2s;
-
-        &:active {
-          transform: scale(0.98);
-        }
-      }
     }
-
-    // Footer
-    .auth-footer {
-      margin-top: 40px;
-      text-align: center;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      padding-top: 20px;
-
-      p {
-        color: #94a3b8;
-        margin-bottom: 15px;
-      }
-
-      .register-btn {
-        --border-color: #334155;
-        --color: white;
-        --border-radius: 14px;
-        height: 48px;
-        font-weight: 600;
-        --background-hover: rgba(255,255,255,0.05);
-      }
-    }
-  }
 }
+
+// Animación Fade In
+.animate-fade-in { animation: fadeIn 0.6s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
