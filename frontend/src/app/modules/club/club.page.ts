@@ -12,7 +12,7 @@ export class ClubPage implements OnInit {
 
   teams: PublicTeam[] = [];
   selectedTeam: PublicTeam | null = null;
-  roster: PublicPlayer[] = [];
+  roster: any[] = [];
   loading = true;
 
   constructor(
@@ -26,24 +26,36 @@ export class ClubPage implements OnInit {
 
   loadTeams() {
     this.loading = true;
-    this.publicSvc.getPublicTeams().subscribe(data => {
-      this.teams = data;
-      this.loading = false;
+    this.publicSvc.getPublicTeams().subscribe({
+        next: (data) => {
+            this.teams = data;
+            this.loading = false;
+        },
+        error: () => this.loading = false
     });
   }
 
   async openTeam(team: PublicTeam) {
     this.selectedTeam = team;
-    const loading = await this.loadingCtrl.create({ message: 'Cargando plantilla...' });
+    
+    const loading = await this.loadingCtrl.create({ message: 'Cargando plantilla...', spinner: 'crescent' });
     await loading.present();
 
     this.publicSvc.getTeamRoster(team.idEquipo).subscribe({
       next: (players) => {
-        // Ordenamos por dorsal
-        this.roster = players.sort((a, b) => (a.dorsal || 99) - (b.dorsal || 99));
+        this.roster = players
+            .map((p: any) => ({
+                ...p,
+                goles: p.goles || 0,
+                asistencias: p.asistencias || 0, // Mapeamos asistencias
+                fotoUrl: p.fotoUrl || null
+            }))
+            .sort((a, b) => (a.dorsal || 99) - (b.dorsal || 99));
+        
         loading.dismiss();
       },
       error: () => {
+        this.roster = [];
         loading.dismiss();
       }
     });

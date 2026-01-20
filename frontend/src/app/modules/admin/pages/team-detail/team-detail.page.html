@@ -1,37 +1,43 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar color="dark">
+  <ion-toolbar class="transparent-toolbar">
     <ion-buttons slot="start">
-      <ion-button (click)="goBack()">
+      <ion-button (click)="goBack()" color="light">
         <ion-icon name="arrow-back"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Ficha del Equipo</ion-title>
+    <ion-title>FICHA DEL EQUIPO</ion-title>
     <ion-buttons slot="end">
-        <ion-button (click)="goToCalendar()">
+        <ion-button (click)="goToCalendar()" color="light">
             <ion-icon name="calendar-number"></ion-icon>
         </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="detail-bg">
+<ion-content [fullscreen]="true">
   
   <div *ngIf="loading" class="spinner-center">
-    <ion-spinner name="crescent"></ion-spinner>
+    <ion-spinner name="crescent" color="secondary"></ion-spinner>
   </div>
 
-  <div *ngIf="!loading && teamData" class="content-wrapper animate-fade-in">
+  <div *ngIf="!loading && teamData" class="main-container animate-fade-in">
     
-    <div class="team-header-card">
-        <img [src]="teamData.escudoUrl || 'assets/img/mi-club-logo.png'" class="team-logo-big">
-        <div class="team-info">
+    <div class="team-banner-pro">
+        <div class="team-identity">
+            <span class="label">EQUIPO</span>
             <h1>{{ teamData.nombre }}</h1>
-            <span class="category-badge">{{ teamData.categoria?.nombre || 'Categoría Base' }}</span>
+            <p>{{ teamData.categoria?.nombre || 'Categoría Base' }}</p>
+        </div>
+
+        <div class="team-meta-boxes">
+            <div class="logo-box">
+                <img [src]="teamData.escudoUrl || 'assets/img/mi-club-logo.png'" alt="Escudo">
+            </div>
         </div>
     </div>
 
-    <div class="custom-segment">
-        <ion-segment [(ngModel)]="selectedSegment" mode="ios">
+    <div class="segment-wrapper">
+        <ion-segment [(ngModel)]="selectedSegment" mode="ios" class="custom-segment">
             <ion-segment-button value="squad">
                 <ion-label>Plantilla</ion-label>
             </ion-segment-button>
@@ -44,71 +50,102 @@
         </ion-segment>
     </div>
 
-    <div *ngIf="selectedSegment === 'squad'" class="list-section">
-        <h3 class="section-title">Jugadores ({{ players.length }})</h3>
-        <div class="player-card" *ngFor="let p of players">
-            <div class="player-left">
-                <span class="dorsal">{{ p.dorsal || '-' }}</span>
-                <img [src]="p.fotoUrl || 'https://ui-avatars.com/api/?name='+p.nombre" class="player-avatar">
-            </div>
-            <div class="player-center">
-                <h4>{{ p.nombre }} {{ p.apellidos }}</h4>
-                <p>{{ p.posicion || 'Sin Demarcación' }}</p>
-            </div>
-            <div class="player-right">
-                <div class="mini-stat">
-                    <ion-icon name="football"></ion-icon> {{ p.goles || 0 }}
+    <div *ngIf="selectedSegment === 'squad'" class="content-section">
+        <div class="section-header">JUGADORES ({{ players.length }})</div>
+        
+        <div class="roster-grid">
+            <div class="player-card-pro" *ngFor="let p of players">
+                <div class="card-top">
+                    <div class="avatar-container">
+                        <img [src]="p.fotoUrl || 'https://ui-avatars.com/api/?name='+p.nombre+'&background=random'" 
+                             (error)="p.fotoUrl = 'https://ui-avatars.com/api/?name='+p.nombre+'&background=random'">
+                        <div class="dorsal-bubble">{{ p.dorsal || '-' }}</div>
+                    </div>
+                    <div class="info-container">
+                        <h3>{{ p.nombre }} {{ p.apellidos }}</h3>
+                        <div class="role-badge">{{ p.posicion || 'JUGADOR' }}</div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="card-stats">
+                    <div class="stat">
+                        <span class="label">GOLES</span>
+                        <span class="val">{{ p.goles || 0 }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">ASISTENCIAS</span>
+                        <span class="val">{{ p.asistencias || 0 }}</span>
+                    </div>
+                    <div class="status-dot">
+                        <div class="dot"></div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div *ngIf="players.length === 0" class="empty-msg">No hay jugadores asignados.</div>
+
+        <div *ngIf="players.length === 0" class="empty-msg">
+            <ion-icon name="people-outline"></ion-icon>
+            <p>No hay jugadores asignados.</p>
+        </div>
     </div>
 
-    <div *ngIf="selectedSegment === 'staff'" class="list-section">
-        <h3 class="section-title">Staff Técnico ({{ staff.length }})</h3>
-        <div class="player-card" *ngFor="let s of staff">
-            <div class="player-left">
-                <img [src]="s.fotoUrl || 'https://ui-avatars.com/api/?name='+s.nombre" class="player-avatar staff-img">
-            </div>
-            <div class="player-center">
-                <h4>{{ s.nombre }} {{ s.apellidos }}</h4>
-                <p class="role-badge-text">{{ s.rol }}</p>
+    <div *ngIf="selectedSegment === 'staff'" class="content-section">
+        <div class="section-header">CUERPO TÉCNICO ({{ staff.length }})</div>
+        
+        <div class="roster-grid">
+            <div class="player-card-pro staff-card" *ngFor="let s of staff">
+                <div class="card-top">
+                    <div class="avatar-container">
+                        <img [src]="s.fotoUrl || 'https://ui-avatars.com/api/?name='+s.nombre+'&background=random'">
+                    </div>
+                    <div class="info-container">
+                        <h3>{{ s.nombre }} {{ s.apellidos }}</h3>
+                        <div class="role-badge blue">{{ s.rol || 'TÉCNICO' }}</div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div *ngIf="staff.length === 0" class="empty-msg">No hay cuerpo técnico asignado.</div>
+
+        <div *ngIf="staff.length === 0" class="empty-msg">
+            <ion-icon name="briefcase-outline"></ion-icon>
+            <p>No hay staff asignado.</p>
+        </div>
     </div>
 
-    <div *ngIf="selectedSegment === 'matches'" class="list-section">
-        <h3 class="section-title">Encuentros y Actas</h3>
+    <div *ngIf="selectedSegment === 'matches'" class="content-section">
+        <div class="section-header">CALENDARIO</div>
 
-        <div class="match-list-item" *ngFor="let m of matches">
-            
-            <div class="match-date">
-                <span class="day">{{ m.fechaHora | date:'dd' }}</span>
-                <span class="month">{{ m.fechaHora | date:'MMM' }}</span>
-            </div>
-            
-            <div class="match-info">
-                <span class="vs-text">VS {{ m.rival }}</span>
-                <span class="match-status" [class.finished]="m.estado === 'FINALIZADO'">
-                    {{ m.estado === 'FINALIZADO' ? 'ACTA CERRADA' : (m.fechaHora | date:'HH:mm') }}
-                </span>
-            </div>
-
-            <div class="match-action">
+        <div class="matches-list">
+            <div class="match-card-neon" *ngFor="let m of matches">
+                <div class="date-box">
+                    <span class="day">{{ m.fechaHora | date:'dd' }}</span>
+                    <span class="month">{{ m.fechaHora | date:'MMM' }}</span>
+                </div>
                 
-                <ion-button *ngIf="isAdmin" fill="clear" (click)="goToEditMatch(m)">
-                    <ion-icon name="create-outline" slot="icon-only"></ion-icon>
-                </ion-button>
+                <div class="match-info">
+                    <span class="rival">VS {{ m.rival }}</span>
+                    <span class="status" [class.finished]="m.estado === 'FINALIZADO'">
+                        {{ m.estado === 'FINALIZADO' ? 'FINALIZADO' : (m.fechaHora | date:'HH:mm') }}
+                    </span>
+                </div>
 
-                <ion-button fill="clear" (click)="goToViewMatch(m)">
-                    <ion-icon name="eye-outline" slot="icon-only"></ion-icon>
-                </ion-button>
-
+                <div class="actions">
+                    <ion-button *ngIf="isAdmin" fill="clear" (click)="goToEditMatch(m)">
+                        <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+                    </ion-button>
+                    <ion-button fill="clear" (click)="goToViewMatch(m)">
+                        <ion-icon name="eye-outline" slot="icon-only"></ion-icon>
+                    </ion-button>
+                </div>
             </div>
         </div>
 
-        <div *ngIf="matches.length === 0" class="empty-msg">No hay partidos programados.</div>
+        <div *ngIf="matches.length === 0" class="empty-msg">
+            <ion-icon name="calendar-clear-outline"></ion-icon>
+            <p>No hay partidos programados.</p>
+        </div>
     </div>
 
   </div>

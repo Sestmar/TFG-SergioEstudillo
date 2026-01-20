@@ -36,11 +36,22 @@ public class PublicController {
             dto.setIdEquipo(e.getIdEquipo() != null ? e.getIdEquipo().longValue() : null);
 
             dto.setNombre(e.getNombre());
-            dto.setFotoUrl(e.getFotoUrl());
+            dto.setFotoUrl(e.getFotoUrl()); // Asegúrate de que esto mapea a tu nuevo campo escudo_url si es necesario, o fotoUrl si usas ese.
+
             if (e.getCategoria() != null) {
                 dto.setCategoria(e.getCategoria().getNombre());
             }
-            dto.setEntrenadorNombre("Staff Técnico");
+
+            // 🔥 CORRECCIÓN: Obtener nombre real del entrenador
+            // Accedemos a Equipo -> Entrenador -> Usuario -> Nombre/Apellidos
+            if (e.getEntrenador() != null && e.getEntrenador().getUsuario() != null) {
+                String nombreCompleto = e.getEntrenador().getUsuario().getNombre() + " " +
+                        e.getEntrenador().getUsuario().getApellidos();
+                dto.setEntrenadorNombre(nombreCompleto);
+            } else {
+                dto.setEntrenadorNombre("Sin Asignar");
+            }
+
             return dto;
         }).collect(Collectors.toList());
 
@@ -51,7 +62,7 @@ public class PublicController {
     @GetMapping("/equipos/{idEquipo}/plantilla")
     public ResponseEntity<List<PublicPlayerDto>> getPublicRoster(@PathVariable Long idEquipo) {
 
-        // 🔥 CORRECCIÓN: Casteamos Long a Integer porque el repositorio usa Integer
+        // Casteamos Long a Integer porque el repositorio usa Integer
         List<Jugador> jugadores = jugadorRepo.findByEquipoPrincipal_IdEquipo(idEquipo.intValue());
 
         List<PublicPlayerDto> roster = jugadores.stream().map(j -> {
@@ -70,7 +81,7 @@ public class PublicController {
             dto.setPosicion(j.getPosicion());
             dto.setDorsal(j.getDorsal());
 
-            // ⚡ CÁLCULO DE ESTADÍSTICAS
+            // CÁLCULO DE ESTADÍSTICAS
             List<Alineacion> participaciones = alineacionRepo.findByJugador(j);
 
             int totalGoles = participaciones.stream().mapToInt(a -> a.getGoles() != null ? a.getGoles() : 0).sum();

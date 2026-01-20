@@ -51,7 +51,7 @@
         <div class="icon-side"><ion-icon name="information-circle"></ion-icon></div>
         <div class="text-side">
             <strong>GESTIÓN DE ACTA</strong>
-            <p>Introduce el resultado arriba. Para los jugadores, indica minutos de entrada/salida y goles. El sistema calculará el resto.</p>
+            <p>Introduce el resultado arriba. Para los jugadores, indica minutos, asistencias y goles. El sistema calculará el resto.</p>
         </div>
     </div>
 
@@ -69,8 +69,7 @@
         <div *ngFor="let player of starters" class="player-row starter">
             <div class="player-info">
                 <div class="avatar-circle">
-                    <img [src]="player.fotoUrl" 
-                         (error)="handleImgError($event, 'player', player.nombre + ' ' + player.apellidos)">
+                    <img [src]="player.fotoUrl" (error)="handleImgError($event, 'player', player.nombre)">
                     <span class="dorsal">#{{ player.dorsal }}</span>
                 </div>
                 <div class="names">
@@ -88,6 +87,12 @@
                     <label>SALE</label>
                     <input type="number" [(ngModel)]="player.minutoSalida" placeholder="--" class="dark-input">
                 </div>
+                
+                <div class="input-col">
+                    <label>ASIST</label>
+                    <input type="number" [(ngModel)]="player.asistencias" class="dark-input info">
+                </div>
+
                 <div class="input-col">
                     <label>GOLES</label>
                     <input type="number" [(ngModel)]="player.goles" class="dark-input highlight">
@@ -104,8 +109,7 @@
         <div *ngFor="let player of bench" class="player-row bench" [class.played]="player.minutoEntrada > 0 || player.minutos > 0">
             <div class="player-info">
                 <div class="avatar-circle">
-                    <img [src]="player.fotoUrl" 
-                         (error)="handleImgError($event, 'player', player.nombre + ' ' + player.apellidos)">
+                    <img [src]="player.fotoUrl" (error)="handleImgError($event, 'player', player.nombre)">
                     <span class="dorsal">#{{ player.dorsal }}</span>
                 </div>
                 <div class="names">
@@ -123,6 +127,12 @@
                     <label>ENTRA</label>
                     <input type="number" [(ngModel)]="player.minutoEntrada" placeholder="--" class="dark-input">
                 </div>
+
+                <div class="input-col">
+                    <label>ASIST</label>
+                    <input type="number" [(ngModel)]="player.asistencias" class="dark-input info">
+                </div>
+
                 <div class="input-col">
                     <label>GOLES</label>
                     <input type="number" [(ngModel)]="player.goles" class="dark-input highlight">

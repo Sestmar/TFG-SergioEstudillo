@@ -43,7 +43,7 @@ public class AdminController {
         return ResponseEntity.ok(entrenadorRepo.findEntrenadoresSinEquipo());
     }
 
-    // 🔥 MÉTODO CORREGIDO PARA VER A TODOS LOS USUARIOS (INCLUIDOS NUEVOS)
+    // MÉTODO PARA VER A TODOS LOS USUARIOS (INCLUIDOS NUEVOS)
     @GetMapping("/usuarios-activos")
     public ResponseEntity<List<Map<String, Object>>> getUsuariosActivos() {
         List<Map<String, Object>> activos = new ArrayList<>();
@@ -74,18 +74,15 @@ public class AdminController {
                 if (entOpt.isPresent()) {
                     Entrenador entrenador = entOpt.get();
 
-                    // 🔥 BUSCAMOS SI TIENE EQUIPOS ASIGNADOS REALMENTE
+                    // BUSCAMOS SI TIENE EQUIPOS ASIGNADOS REALMENTE
                     List<EquipoEntrenador> vinculaciones = equipoEntrenadorRepo.findByEntrenador_IdEntrenador(entrenador.getIdEntrenador());
 
                     if (!vinculaciones.isEmpty()) {
-                        // Si tiene al menos un equipo, mostramos el nombre del primero
-                        // Esto hará que el Frontend sepa que YA TIENE EQUIPO
                         String nombreEquipo = vinculaciones.get(0).getEquipo().getNombre();
                         map.put("equipoNombre", nombreEquipo);
                         map.put("equipoId", vinculaciones.get(0).getEquipo().getIdEquipo());
                     } else {
-                        // Si no tiene vinculaciones, entonces sí es un candidato libre
-                        map.put("equipoNombre", "Sin Equipo"); // Cambiamos "Staff Técnico" por "Sin Equipo" para que el filtro lo atrape
+                        map.put("equipoNombre", "Sin Equipo");
                     }
 
                 } else {
@@ -274,7 +271,7 @@ public class AdminController {
         } catch (Exception e) { e.printStackTrace(); return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage())); }
     }
 
-    // 🔥 CERRAR ACTA (LÓGICA CORREGIDA Y PROFESIONAL)
+    // 🔥 CERRAR ACTA (ACTUALIZADO CON ASISTENCIAS)
     @PostMapping("/cerrar-acta")
     @Transactional
     public ResponseEntity<?> cerrarActaAdmin(@RequestBody Map<String, Object> payload) {
@@ -298,8 +295,10 @@ public class AdminController {
                     // Datos básicos
                     Integer goles = stat.get("goles") != null ? ((Number) stat.get("goles")).intValue() : 0;
                     Integer minutos = stat.get("minutos") != null ? ((Number) stat.get("minutos")).intValue() : 0;
+                    // 🔥 LECTURA DE ASISTENCIAS
+                    Integer asistencias = stat.get("asistencias") != null ? ((Number) stat.get("asistencias")).intValue() : 0;
 
-                    // Datos avanzados (Sustituciones y Titularidad)
+                    // Datos avanzados
                     Boolean esTitular = (Boolean) stat.get("esTitular");
                     Integer minEntrada = stat.get("minutoEntrada") != null ? ((Number) stat.get("minutoEntrada")).intValue() : null;
                     Integer minSalida = stat.get("minutoSalida") != null ? ((Number) stat.get("minutoSalida")).intValue() : null;
@@ -307,7 +306,6 @@ public class AdminController {
                     Jugador jugador = jugadorRepo.findById(idJugador).orElse(null);
 
                     if (jugador != null) {
-                        // Importante: asegúrate de que el método findByPartidoAndJugador exista en tu AlineacionRepository
                         Optional<Alineacion> alineacionOpt = alineacionRepo.findByPartidoAndJugador(p, jugador);
                         Alineacion alineacion;
 
@@ -317,16 +315,13 @@ public class AdminController {
                             alineacion = new Alineacion();
                             alineacion.setPartido(p);
                             alineacion.setJugador(jugador);
-                            // Asignar el equipo para evitar el error NULL
                             alineacion.setEquipo(p.getEquipo());
-
-                            // 🔥 CORRECCIÓN: Asignar slot_id por defecto si es nuevo (suplente)
-                            // Usamos un identificador único basado en BENCH + ID para cumplir la restricción NOT NULL
                             alineacion.setSlotId("BENCH_" + jugador.getIdJugador());
                         }
 
-                        // Actualizamos todos los campos
+                        // Guardamos todos los datos (incluidas asistencias)
                         alineacion.setGoles(goles);
+                        alineacion.setAsistencias(asistencias);
                         alineacion.setMinutosJugados(minutos);
                         alineacion.setEsTitular(esTitular != null && esTitular);
                         alineacion.setMinutoEntrada(minEntrada);
@@ -344,6 +339,7 @@ public class AdminController {
         }
     }
 
+    // 🔥 DETALLE EQUIPO (ACTUALIZADO CON ASISTENCIAS PARA EL FRONTEND)
     @GetMapping("/equipo/{id}/detalle")
     public ResponseEntity<Map<String, Object>> getEquipoDetalle(@PathVariable Integer id) {
         Equipo equipo = equipoRepo.findById(id).orElseThrow();
@@ -352,6 +348,7 @@ public class AdminController {
 
         List<Jugador> jugadores = jugadorRepo.findByEquipoPrincipal_IdEquipo(id);
         List<Map<String, Object>> jugadoresDto = new ArrayList<>();
+
         for (Jugador j : jugadores) {
             Map<String, Object> p = new HashMap<>();
             p.put("id", j.getIdJugador());
@@ -362,13 +359,25 @@ public class AdminController {
             p.put("fotoUrl", j.getFotoUrl() != null ? j.getFotoUrl() : j.getUsuario().getFotoUrl());
 
             int goles = 0;
+            int asistencias = 0; // 🔥 NUEVO
+
             try {
-                goles = alineacionRepo.findByJugador(j).stream()
+                // Obtenemos todas las alineaciones del jugador
+                List<Alineacion> alineaciones = alineacionRepo.findByJugador(j);
+
+                goles = alineaciones.stream()
                         .mapToInt(a -> a.getGoles() == null ? 0 : a.getGoles())
                         .sum();
+
+                // 🔥 Calculamos el total de asistencias
+                asistencias = alineaciones.stream()
+                        .mapToInt(a -> a.getAsistencias() == null ? 0 : a.getAsistencias())
+                        .sum();
+
             } catch (Exception ignored) {}
 
             p.put("goles", goles);
+            p.put("asistencias", asistencias); // 🔥 Enviamos al frontend
             jugadoresDto.add(p);
         }
         response.put("jugadores", jugadoresDto);

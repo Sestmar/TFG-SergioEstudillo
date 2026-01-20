@@ -99,10 +99,8 @@ export class EditMatchPage implements OnInit {
             return String(savedId) === String(pId);
         });
 
-        // 🔥 GENERAR IMAGEN SEGURA (INICIALES) SI NO HAY FOTO
         const originalFoto = player.usuario?.fotoUrl || player.fotoUrl;
         const nombreCompleto = (player.usuario?.nombre || player.nombre) + ' ' + (player.usuario?.apellidos || player.apellidos);
-        // Si no hay foto, usamos UI Avatars con fondo aleatorio
         const safeImg = originalFoto || `https://ui-avatars.com/api/?name=${nombreCompleto}&background=random&color=fff&size=128`;
         
         let stats = {
@@ -110,12 +108,13 @@ export class EditMatchPage implements OnInit {
             nombre: player.usuario?.nombre || player.nombre,
             apellidos: player.usuario?.apellidos || player.apellidos,
             dorsal: player.dorsal,
-            fotoUrl: safeImg, // Usamos la imagen procesada
+            fotoUrl: safeImg,
             posicion: player.posicion,
             
             esTitular: false,
             minutos: 0,
             goles: 0,
+            asistencias: 0, // 🔥 NUEVO CAMPO
             minutoEntrada: null,
             minutoSalida: null
         };
@@ -123,6 +122,7 @@ export class EditMatchPage implements OnInit {
         if (savedData) {
             stats.esTitular = !!savedData.esTitular;
             stats.goles = savedData.goles || 0;
+            stats.asistencias = savedData.asistencias || 0; // 🔥 CARGAR
             stats.minutos = savedData.minutosJugados || 0;
             stats.minutoEntrada = savedData.minutoEntrada;
             stats.minutoSalida = savedData.minutoSalida;
@@ -170,6 +170,7 @@ export class EditMatchPage implements OnInit {
             return {
                 idJugador: p.idJugador,
                 goles: this.safeInt(p.goles),
+                asistencias: this.safeInt(p.asistencias), // 🔥 ENVIAR
                 minutos: minJugados,
                 esTitular: esTitular,
                 minutoEntrada: minEntrada > 0 ? minEntrada : null,
@@ -223,18 +224,14 @@ export class EditMatchPage implements OnInit {
     this.router.navigate(['/admin']); 
   }
 
-  // 🔥 MANEJO DE ERRORES DE IMAGEN DIFERENCIADO
   handleImgError(event: any, type: string, name: string = '') {
-    event.target.onerror = null; // Parar bucle infinito
+    event.target.onerror = null; 
     
     if (type === 'local') {
-        // Tu equipo: Logo del club
         event.target.src = 'assets/img/mi-club-logo.png';
     } else if (type === 'rival') {
-        // Rival: Escudo gris genérico
         event.target.src = 'assets/img/icon-shield.png'; 
     } else {
-        // Jugador: Iniciales con UI Avatars
         const nombreParaAvatar = name || 'Jugador';
         event.target.src = `https://ui-avatars.com/api/?name=${nombreParaAvatar}&background=random&color=fff&size=128`;
     }
