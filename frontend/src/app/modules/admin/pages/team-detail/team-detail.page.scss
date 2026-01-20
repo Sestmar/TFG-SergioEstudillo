@@ -7,6 +7,7 @@
     --text-white: #ffffff;
     --text-gray: #9ca3af;
     --card-bg: #0f172a;     // Fondo tarjeta (Slate 900)
+    --highlight: #facc15;   // Amarillo Neón
     
     // Sobrescribimos variables de Ionic para el fondo global
     --ion-background-color: var(--bg-app);
@@ -23,7 +24,18 @@
     --border-width: 0;
     
     ion-title { font-weight: 800; letter-spacing: 1px; font-size: 0.9rem; text-transform: uppercase; }
-    ion-button { --color: var(--text-white); }
+    
+    // 🔥 CAMBIO 1: Resaltar botón de calendario
+    ion-button { 
+        --color: var(--text-white);
+        
+        // Si el botón contiene el icono de calendario
+        &[color="light"] ion-icon[name="calendar-number"] {
+            color: var(--highlight);
+            font-size: 1.6rem;
+            filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.4));
+        }
+    }
 }
 
 .spinner-center { height: 80vh; display: flex; justify-content: center; align-items: center; }
@@ -198,9 +210,31 @@
         }
     }
 
+    // 🔥 CAMBIO 2: Acciones destacadas
     .actions {
-        display: flex; gap: 8px;
-        ion-button { --color: #94a3b8; --color-hover: white; }
+        display: flex; gap: 8px; align-items: center;
+        
+        // Botón editar (lápiz) - Sutil
+        ion-button:first-child { 
+            --color: #94a3b8; 
+            --color-hover: var(--highlight);
+        }
+
+        // Botón ver (ojo) - Destacado
+        ion-button:last-child {
+            --background: rgba(255,255,255,0.08); // Fondo gris suave
+            --border-radius: 8px;
+            --padding-start: 8px; --padding-end: 8px;
+            height: 36px;
+            border: 1px solid rgba(255,255,255,0.1);
+            
+            ion-icon { color: var(--primary); font-size: 1.2rem; } // Morado neón
+            
+            &:hover {
+                --background: rgba(139, 92, 246, 0.2); // Fondo morado al hover
+                border-color: var(--primary);
+            }
+        }
     }
 }
 
