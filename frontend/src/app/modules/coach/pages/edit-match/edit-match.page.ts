@@ -224,14 +224,20 @@ export class EditMatchPage implements OnInit {
     this.router.navigate(['/admin']); 
   }
 
+  // Sustituye tu método handleImgError por este:
   handleImgError(event: any, type: string, name: string = '') {
+    // 1. Detener el bucle infinito inmediatamente
     event.target.onerror = null; 
     
+    // 2. Asignar imagen de respaldo según el tipo
     if (type === 'local') {
         event.target.src = 'assets/img/mi-club-logo.png';
     } else if (type === 'rival') {
-        event.target.src = 'assets/img/icon-shield.png'; 
+        // 🔥 CORRECCIÓN: Asegúrate de que este archivo exista en tu carpeta assets
+        // Si no tienes 'icon-shield.png', usa una URL externa segura o un svg
+        event.target.src = 'https://cdn-icons-png.flaticon.com/512/16/16480.png'; 
     } else {
+        // Jugador
         const nombreParaAvatar = name || 'Jugador';
         event.target.src = `https://ui-avatars.com/api/?name=${nombreParaAvatar}&background=random&color=fff&size=128`;
     }

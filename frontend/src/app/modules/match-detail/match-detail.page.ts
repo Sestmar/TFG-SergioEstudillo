@@ -60,7 +60,8 @@ export class MatchDetailPage implements OnInit {
                     esCapitan: !!dto.esCapitan,
                     esLanzadorPenaltis: !!dto.esLanzadorPenaltis,
                     esLanzadorFaltas: !!dto.esLanzadorFaltas,
-                    goles: dto.goles || 0
+                    goles: dto.goles || 0,
+                    asistencias: dto.asistencias || 0 // 🔥 NUEVO: Mapeo explícito de asistencias
                 };
               });
 
@@ -90,9 +91,16 @@ export class MatchDetailPage implements OnInit {
     });
   }
 
-  // 🔥 ESTO EVITA EL PARPADEO INFINITO
-  handleImgError(event: any, nombre: string) {
-      event.target.src = `https://ui-avatars.com/api/?name=${nombre}&background=333&color=fff`;
+  handleImgError(event: any, context: string) {
+    event.target.onerror = null; // Parar bucle
+
+    if (context === 'rival') {
+        // Escudo por defecto para rivales
+        event.target.src = 'https://cdn-icons-png.flaticon.com/512/16/16480.png'; 
+    } else {
+        // Es un jugador (context es el nombre)
+        event.target.src = `https://ui-avatars.com/api/?name=${context}&background=333&color=fff`;
+    }
   }
 
   goBack() {

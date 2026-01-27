@@ -38,8 +38,9 @@
 
         <div class="team-col">
           <div class="logo-box rival">
-            <img *ngIf="match?.escudoRivalUrl" [src]="match.escudoRivalUrl">
-            <ion-icon *ngIf="!match?.escudoRivalUrl" name="shield"></ion-icon>
+            <img [src]="match?.escudoRivalUrl" 
+            alt="Escudo Rival"
+            (error)="handleImgError($event, 'rival')">
           </div>
           <span class="team-name">{{ match.rival }}</span>
         </div>
@@ -79,6 +80,11 @@
 
         <div class="right-stats">
           
+          <div class="stat-pill" *ngIf="player.asistencias > 0" style="color: #22d3ee; border-color: rgba(34, 211, 238, 0.3); background: rgba(34, 211, 238, 0.1);">
+            <ion-icon name="footsteps"></ion-icon> 
+            <span>x{{ player.asistencias }}</span>
+          </div>
+
           <div class="stat-pill goals" *ngIf="player.goles > 0">
             <ion-icon name="football"></ion-icon> 
             <span>x{{ player.goles }}</span>
@@ -105,9 +111,6 @@
       <div *ngIf="players.length === 0" class="empty-msg">
         Alineación no disponible.
       </div>
-
     </div>
-
   </div>
-
 </ion-content>
