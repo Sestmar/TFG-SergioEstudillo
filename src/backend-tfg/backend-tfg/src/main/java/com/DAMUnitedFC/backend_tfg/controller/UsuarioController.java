@@ -13,7 +13,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,9 +24,8 @@ public class UsuarioController {
     private final UsuarioRepository usuarioRepository;
     private final AuthService authService;
     private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager; // Nueva inyección necesaria
+    private final AuthenticationManager authenticationManager;
 
-    // Constructor actualizado con AuthenticationManager
     public UsuarioController(UsuarioRepository usuarioRepository,
                              AuthService authService,
                              JwtService jwtService,
@@ -41,8 +39,12 @@ public class UsuarioController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegistroUsuario registroDto) {
         try {
+            // 🧹 LIMPIEZA PREVENTIVA: Guardamos siempre en minúsculas y sin espacios
+            if (registroDto.getEmail() != null) {
+                registroDto.setEmail(registroDto.getEmail().trim().toLowerCase());
+            }
+
             Usuario newUser = authService.registerNewUser(registroDto);
-            // Opcional: Podrías devolver también el token aquí si quisieras autologin al registrar
             return new ResponseEntity<>(newUser, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -52,29 +54,38 @@ public class UsuarioController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@RequestBody LoginDto loginDto) {
         try {
-            // 1. Validar credenciales usando AuthenticationManager (Estándar de Spring Security)
+            // 🧹 LIMPIEZA CRÍTICA: El usuario puede escribir " Sergio@Gmail.com "
+            // Nosotros lo convertimos a "sergio@gmail.com" antes de buscar.
+            String emailLimpio = "";
+
+            if (loginDto.getEmail() != null) {
+                emailLimpio = loginDto.getEmail().trim().toLowerCase();
+            }
+
+            // 1. Validar credenciales usando el email limpio
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            loginDto.getEmail(),
+                            emailLimpio,
                             loginDto.getPassword()
                     )
             );
 
-            // 2. Si la autenticación pasa, buscamos al usuario para generar el token
-            // Buscamos por email, lanzamos error si no existe (aunque authManager ya lo habrá validado)
-            Usuario user = usuarioRepository.findByEmail(loginDto.getEmail())
+            // 2. Si la autenticación pasa, buscamos al usuario
+            Usuario user = usuarioRepository.findByEmail(emailLimpio)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-            // 3. Generar el Token compatible con la v0.12.3
+            // 3. Generar Token
             String token = jwtService.generateToken(user);
 
-            // 4. Devolver la respuesta usando tu DTO
+            // 4. Obtener roles de forma segura (para enviarlos en el login si quieres, o dejarlo como estaba)
+            // Tu AuthResponseDto parece que solo pide token, así que lo dejamos así.
             return ResponseEntity.ok(AuthResponseDto.builder()
                     .token(token)
                     .build());
 
         } catch (AuthenticationException e) {
-            // Si la contraseña o usuario están mal, salta esto
+            // Este es el error 403 que veías. Ahora saltará mucho menos.
+            System.out.println("❌ Error de autenticación para: " + loginDto.getEmail());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
