@@ -3,7 +3,7 @@ package com.DAMUnitedFC.backend_tfg.config;
 import com.DAMUnitedFC.backend_tfg.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod; // 👈 IMPORTANTE: Asegúrate de tener este import
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -16,7 +16,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collections; // Importante
 
 @Configuration
 @EnableWebSecurity
@@ -28,42 +28,29 @@ public class SecurityConfig {
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, AuthenticationProvider authenticationProvider) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.authenticationProvider = authenticationProvider;
-        System.out.println("🔒 [SECURITY CONFIG] Cargando configuración de seguridad blindada...");
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("🔓 [SECURITY] Aplicando reglas de acceso y CORS...");
-
         http
-                // 1. CORS: Configuración de orígenes cruzados (Móvil/Web)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // 2. CSRF: Desactivar obligatoriamente para APIs REST
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // 3. Reglas de Autorización
                 .authorizeHttpRequests(auth -> auth
-                        // IMPORTANTE: Permitir peticiones 'preflight' (OPTIONS) de cualquier origen
-                        // Esto evita muchos errores 403 "misteriosos" en CORS
+                        // 1. Permitir OPTIONS (Preflight) para TODO el mundo. CRUCIAL.
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Rutas Públicas (Login, Registro, Imágenes, Swagger)
+                        // 2. Permitir Auth (Login/Registro) explícitamente
                         .requestMatchers("/api/auth/**").permitAll()
+
+                        // 3. Permitir recursos estáticos y Swagger
                         .requestMatchers("/api/uploads/**", "/uploads/**").permitAll()
-                        .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/error").permitAll() // <--- AÑADIDO: Para ver errores 404 reales
 
-                        // Rutas Protegidas (Admin y General)
-                        .requestMatchers("/api/admin/**").authenticated()
-
-                        // Cualquier otra cosa requiere Token
+                        // 4. Todo lo demás cerrado
                         .anyRequest().authenticated()
                 )
-
-                // 4. Sesión Stateless (Sin cookies)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -74,28 +61,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // LISTA DE ORÍGENES PERMITIDOS
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:4200", // web Angular local
-                "http://localhost:8100", // Ionic serve
-                "http://localhost",      // Android Capacitor (interno)
-                "https://localhost",     // iOS
-                "capacitor://localhost"  // Capacitor Nativo
-        ));
+        // CORRECCIÓN: Usar setAllowedOriginPatterns en lugar de setAllowedOrigins
+        // Esto es mucho más flexible y a menudo soluciona problemas con credenciales
+        configuration.setAllowedOriginPatterns(Collections.singletonList("*")); // Permitir TODO para probar (luego lo cierras si quieres)
 
-        // MÉTODOS PERMITIDOS
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-
-        // CABECERAS PERMITIDAS
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "X-Requested-With",
-                "Accept",
-                "Origin",
-                "Access-Control-Allow-Origin"
-        ));
-
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Allow-Origin"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
