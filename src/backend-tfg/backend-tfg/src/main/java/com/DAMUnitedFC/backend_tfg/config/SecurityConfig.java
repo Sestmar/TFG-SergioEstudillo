@@ -58,10 +58,24 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
+
+        // 1. Permitir orígenes (El truco para el móvil es permitir localhost)
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:8100", // Para pruebas en navegador local
+                "http://localhost",      // 👈 IMPORTANTE: Origen interno de Android Capacitor
+                "https://localhost",     // Por si acaso en iOS
+                "capacitor://localhost"  // Origen nativo a veces usado
+        ));
+
+        // 2. Permitir métodos HTTP
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+
+        // 3. Permitir cabeceras (especialmente Authorization para el Token)
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
+
+        // 4. Permitir credenciales
         configuration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
