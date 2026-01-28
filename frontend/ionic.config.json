@@ -1,5 +1,8 @@
 {
-  "name": "club-futbol-fronted",
-  "integrations": {},
-  "type": "angular"
+  "name": "club-futbol-ionic",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular",
+  "defaultProject": "club-futbol-ionic"
 }
