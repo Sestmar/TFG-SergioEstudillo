@@ -3,6 +3,9 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
+// 1. IMPORTANTE: Importamos el environment
+import { environment } from 'src/environments/environment';
+
 /**
  * Servicio centralizado para peticiones HTTP
  */
@@ -12,9 +15,11 @@ import { catchError } from 'rxjs/operators';
 export class ApiService {
 
   // =================================================================
-  // ===           CORRECCIÓN CLAVE: URL explícita                 ===
+  // ===           CORRECCIÓN: Usar variable de entorno            ===
   // =================================================================
-  private readonly apiUrl = 'http://localhost:8080/api';
+  // Antes: 'http://localhost:8080/api'
+  // Ahora: Lee la URL de Render desde environment.ts
+  private readonly apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -25,7 +30,7 @@ export class ApiService {
     const options = {
       params: new HttpParams({ fromObject: params })
     };
-    // El endpoint ahora empieza con "/"
+    // Concatenamos la URL base (Render) con el endpoint (ej: /auth/login)
     return this.http.get<T>(`${this.apiUrl}${endpoint}`, options).pipe(
       catchError(this.handleError)
     );

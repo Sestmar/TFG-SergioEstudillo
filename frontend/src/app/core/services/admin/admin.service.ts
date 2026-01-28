@@ -1,13 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AdminService {
 
-  private apiUrl = 'http://localhost:8080/api/admin';
+  // Usa la variable global + el endpoint específico
+  private apiUrl = `${environment.apiUrl}/admin`;
 
   constructor(private http: HttpClient) { }
 
