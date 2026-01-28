@@ -55,8 +55,21 @@ export class AdminService {
 
   // --- COMPETICIÓN ---
   
-  // 🔥 MODIFICADO: Acepta FormData para la subida de archivos
+  // Acepta FormData para la subida de archivos
   createMatch(matchData: FormData): Observable<any> {
       return this.http.post(`${this.apiUrl}/crear-partido`, matchData);
+  }
+
+  createTraining(data: any) {
+    return this.http.post(`${this.apiUrl}/crear-entrenamiento`, data);
+  }
+
+  // Guardar estadisticas de asistencia en entrenamientos
+  guardarAsistencia(payload: any) {
+    return this.http.post(`${this.apiUrl}/guardar-asistencia`, payload);
+  }
+
+  getAsistencia(trainingId: number) {
+    return this.http.get(`${this.apiUrl}/entrenamiento/${trainingId}/asistencia`);
   }
 }

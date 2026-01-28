@@ -27,4 +27,9 @@ export class CoachService {
   updateProfile(coachId: number, data: any): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/${coachId}`, data);
   }
+
+  // 4. Llamada al endpoint de estadisticas
+  getTeamStats(coachId: number) {
+    return this.http.get(`${this.apiUrl}/${coachId}/estadisticas-equipo`);
+}
 }

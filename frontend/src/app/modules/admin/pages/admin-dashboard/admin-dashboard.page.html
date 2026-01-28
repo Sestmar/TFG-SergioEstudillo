@@ -143,11 +143,12 @@
         <div class="hero-action-card" (click)="isMatchModalOpen = true">
             <div class="icon-box"><ion-icon name="calendar-number"></ion-icon></div>
             <div class="text">
-                <h3>Agendar Partido / Evento</h3>
-                <p>Crear nuevo encuentro para cualquier equipo</p>
+                <h3>Agendar Evento</h3>
+                <p>Crear Partido o Entrenamiento</p>
             </div>
             <ion-icon name="add-circle" class="arrow"></ion-icon>
         </div>
+        
         <div class="section-title"><h3>Calendarios de Equipo</h3></div>
         <div class="teams-grid">
             <div class="team-calendar-card" *ngFor="let team of teams" (click)="goToTeamCalendar(team)">
@@ -198,21 +199,61 @@
   <ion-modal [isOpen]="isMatchModalOpen" (didDismiss)="isMatchModalOpen = false" [initialBreakpoint]="0.85" [breakpoints]="[0, 0.85]">
     <ng-template>
         <div class="modal-content-dark">
-            <h3>Nuevo Partido</h3>
+            
+            <h3>{{ eventType === 'MATCH' ? 'Nuevo Partido' : 'Nuevo Entrenamiento' }}</h3>
+
+            <div style="margin-bottom: 20px;">
+                <ion-segment [(ngModel)]="eventType" mode="ios" (ionChange)="modalSegmentChanged($event)">
+                    <ion-segment-button value="MATCH">
+                        <ion-label>Partido</ion-label>
+                    </ion-segment-button>
+                    <ion-segment-button value="TRAINING">
+                        <ion-label>Entrenamiento</ion-label>
+                    </ion-segment-button>
+                </ion-segment>
+            </div>
+
             <ion-list class="dark-list">
+                
                 <ion-item>
-                    <ion-label position="stacked">Equipo Local</ion-label>
+                    <ion-label position="stacked">Equipo</ion-label>
                     <ion-select [(ngModel)]="newMatch.idEquipo" placeholder="Seleccionar..." interface="popover">
                         <ion-select-option *ngFor="let t of teams" [value]="t.idEquipo">{{ t.nombre }}</ion-select-option>
                     </ion-select>
                 </ion-item>
-                <ion-item><ion-label position="stacked">Rival</ion-label><ion-input [(ngModel)]="newMatch.rival" placeholder="Ej: Real Betis"></ion-input></ion-item>
-                <ion-item><ion-label position="stacked">Escudo Rival</ion-label><input type="file" (change)="onFileSelected($event)" accept="image/*" style="margin-top: 10px; color: white;"></ion-item>
-                <ion-item><ion-label position="stacked">Lugar</ion-label><ion-input [(ngModel)]="newMatch.lugar" placeholder="Ej: Ciudad Deportiva"></ion-input></ion-item>
-                <ion-item><ion-label position="stacked">Fecha y Hora</ion-label><ion-datetime-button datetime="datetime"></ion-datetime-button></ion-item>
+
+                <ng-container *ngIf="eventType === 'MATCH'">
+                    <ion-item>
+                        <ion-label position="stacked">Rival</ion-label>
+                        <ion-input [(ngModel)]="newMatch.rival" placeholder="Ej: Real Betis"></ion-input>
+                    </ion-item>
+                    <ion-item>
+                        <ion-label position="stacked">Escudo Rival</ion-label>
+                        <input type="file" (change)="onFileSelected($event)" accept="image/*" style="margin-top: 10px; color: white;">
+                    </ion-item>
+                </ng-container>
+
+                <ion-item>
+                    <ion-label position="stacked">Lugar</ion-label>
+                    <ion-input [(ngModel)]="newMatch.lugar" [placeholder]="eventType === 'MATCH' ? 'Estadio...' : 'Ciudad Deportiva'"></ion-input>
+                </ion-item>
+                
+                <ion-item>
+                    <ion-label position="stacked">Fecha y Hora</ion-label>
+                    <ion-datetime-button datetime="datetime"></ion-datetime-button>
+                </ion-item>
             </ion-list>
-            <ion-modal [keepContentsMounted]="true"><ng-template><ion-datetime id="datetime" presentation="date-time" [(ngModel)]="newMatch.fechaHora"></ion-datetime></ng-template></ion-modal>
-            <ion-button expand="block" color="success" class="mt-4" (click)="createMatch()">Agendar Partido</ion-button>
+
+            <ion-modal [keepContentsMounted]="true">
+                <ng-template>
+                    <ion-datetime id="datetime" presentation="date-time" [(ngModel)]="newMatch.fechaHora"></ion-datetime>
+                </ng-template>
+            </ion-modal>
+
+            <ion-button expand="block" [color]="eventType === 'MATCH' ? 'success' : 'secondary'" class="mt-4" (click)="crearEvento()">
+                {{ eventType === 'MATCH' ? 'Agendar Partido' : 'Agendar Entrenamiento' }}
+            </ion-button>
+
         </div>
     </ng-template>
   </ion-modal>

@@ -86,21 +86,40 @@ export class CalendarPage implements OnInit {
     });
   }
 
-  // 🔥 MÉTODO INTELIGENTE DE REDIRECCIÓN
-  onEventClick(match: any) {
-      if (match.tipo !== 'PARTIDO') return;
+  // MÉTODO INTELIGENTE DE REDIRECCIÓN
+  onEventClick(event: any) {
+      const eventId = event.idPartido || event.id;
+      const tipo = event.tipo; 
+      
+      // ID del equipo para pasar lista
+      const teamIdToPass = event.idEquipo || (event.equipo ? event.equipo.idEquipo : this.currentTeamId);
 
       this.authSvc.currentUser$.subscribe(user => {
           const u = user as any;
           const rol = (u.rol || '').toUpperCase();
-          const matchId = match.idPartido || match.id;
-          
-          console.log(`[Calendar] Clic en partido ${matchId}. Rol detectado: ${rol}`); // DEPURA AQUÍ
+          const isAdminOrCoach = rol.includes('ADMIN') || rol.includes('ENTRENADOR') || rol.includes('STAFF');
 
-          if (rol.includes('ADMIN')) {
-              this.router.navigate(['/edit-match', matchId]); 
-          } else {
-              this.router.navigate(['/match-detail', matchId]);
+          // 🟢 1. SI ES ENTRENAMIENTO
+          if (tipo === 'TRAINING') {
+              if (isAdminOrCoach) {
+                  // Admin/Entrenador -> Pasan lista
+                  this.router.navigate(['/training-attendance', eventId], {
+                      queryParams: { teamId: teamIdToPass }
+                  });
+              } else {
+                  // Jugador -> No hace nada o ve detalle simple (futuro)
+                  console.log("Entrenamiento (Vista Jugador)");
+              }
+              return;
+          }
+
+          // ⚽ 2. SI ES PARTIDO
+          if (tipo === 'PARTIDO') {
+               if (rol.includes('ADMIN')) {
+                   this.router.navigate(['/edit-match', eventId]); 
+               } else {
+                   this.router.navigate(['/match-detail', eventId]);
+               }
           }
       });
   }
@@ -161,7 +180,10 @@ export class CalendarPage implements OnInit {
 
   hasEvents(day: number): boolean { return this.getEventsForDay(day).length > 0; }
   hasMatch(day: number): boolean { return this.getEventsForDay(day).some(e => e.tipo === 'PARTIDO'); }
-  hasTraining(day: number): boolean { return this.getEventsForDay(day).some(e => e.tipo === 'ENTRENAMIENTO' || e.tipo !== 'PARTIDO'); }
+  hasTraining(day: number): boolean { 
+    // Buscamos 'TRAINING' porque así lo guarda el AdminController
+    return this.getEventsForDay(day).some(e => e.tipo === 'TRAINING'); 
+}
 
   private getEventsForDay(day: number): any[] {
       return this.allEvents.filter(e => {

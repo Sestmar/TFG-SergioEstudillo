@@ -52,7 +52,6 @@
 
     <div *ngIf="selectedSegment === 'squad'" class="content-section">
         <div class="section-header">JUGADORES ({{ players.length }})</div>
-        
         <div class="roster-grid">
             <div class="player-card-pro" *ngFor="let p of players">
                 <div class="card-top">
@@ -66,9 +65,7 @@
                         <div class="role-badge">{{ p.posicion || 'JUGADOR' }}</div>
                     </div>
                 </div>
-
                 <div class="divider"></div>
-
                 <div class="card-stats">
                     <div class="stat">
                         <span class="label">GOLES</span>
@@ -78,13 +75,9 @@
                         <span class="label">ASISTENCIAS</span>
                         <span class="val">{{ p.asistencias || 0 }}</span>
                     </div>
-                    <div class="status-dot">
-                        <div class="dot"></div>
-                    </div>
                 </div>
             </div>
         </div>
-
         <div *ngIf="players.length === 0" class="empty-msg">
             <ion-icon name="people-outline"></ion-icon>
             <p>No hay jugadores asignados.</p>
@@ -93,7 +86,6 @@
 
     <div *ngIf="selectedSegment === 'staff'" class="content-section">
         <div class="section-header">CUERPO TÉCNICO ({{ staff.length }})</div>
-        
         <div class="roster-grid">
             <div class="player-card-pro staff-card" *ngFor="let s of staff">
                 <div class="card-top">
@@ -107,7 +99,6 @@
                 </div>
             </div>
         </div>
-
         <div *ngIf="staff.length === 0" class="empty-msg">
             <ion-icon name="briefcase-outline"></ion-icon>
             <p>No hay staff asignado.</p>
@@ -125,17 +116,20 @@
                 </div>
                 
                 <div class="match-info">
-                    <span class="rival">VS {{ m.rival }}</span>
+                    <span class="rival" *ngIf="m.tipo !== 'TRAINING'">VS {{ m.rival }}</span>
+                    <span class="rival" *ngIf="m.tipo === 'TRAINING'" style="color: #3b82f6">Sesión de Entrenamiento</span>
+
                     <span class="status" [class.finished]="m.estado === 'FINALIZADO'">
                         {{ m.estado === 'FINALIZADO' ? 'FINALIZADO' : (m.fechaHora | date:'HH:mm') }}
                     </span>
                 </div>
 
                 <div class="actions">
-                    <ion-button *ngIf="isAdmin" fill="clear" (click)="goToEditMatch(m)">
-                        <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+                    <ion-button *ngIf="isAdmin" fill="clear" (click)="handleEdit(m)">
+                        <ion-icon [name]="m.tipo === 'TRAINING' ? 'checkbox-outline' : 'create-outline'" slot="icon-only"></ion-icon>
                     </ion-button>
-                    <ion-button fill="clear" (click)="goToViewMatch(m)">
+                    
+                    <ion-button fill="clear" (click)="handleView(m)" *ngIf="m.tipo !== 'TRAINING'">
                         <ion-icon name="eye-outline" slot="icon-only"></ion-icon>
                     </ion-button>
                 </div>

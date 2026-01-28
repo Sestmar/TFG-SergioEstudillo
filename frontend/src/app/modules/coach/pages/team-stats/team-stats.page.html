@@ -63,10 +63,10 @@
         <div class="mvp-content">
             <img [src]="getAvatarUrl(topScorerMVP)" class="mvp-avatar">
             <div class="mvp-info">
-                <h4 class="mvp-name">{{ topScorerMVP.player.usuario?.nombre }} {{ topScorerMVP.player.usuario?.apellidos }}</h4>
-                <span class="mvp-pos">{{ topScorerMVP.player.posicion }}</span>
+                <h4 class="mvp-name">{{ topScorerMVP.nombre }} {{ topScorerMVP.apellidos }}</h4>
+                <span class="mvp-pos">{{ topScorerMVP.posicion }}</span>
                 <div class="mvp-stat">
-                    <span class="num">{{ topScorerMVP.goals }}</span>
+                    <span class="num">{{ topScorerMVP.goles }}</span>
                     <span class="lbl">Goles</span>
                 </div>
             </div>
@@ -78,10 +78,10 @@
             <span class="rank">{{ i + 2 }}</span>
             <img [src]="getAvatarUrl(p)" class="mini-avatar">
             <div class="info">
-                <span class="name">{{ p.player.usuario?.nombre }}</span>
-                <span class="pos">{{ p.player.posicion | slice:0:3 }}</span>
+                <span class="name">{{ p.nombre }}</span>
+                <span class="pos">{{ p.posicion | slice:0:3 }}</span>
             </div>
-            <span class="stat-value">{{ p.goals }}</span>
+            <span class="stat-value">{{ p.goles }}</span>
         </div>
     </div>
 
@@ -90,21 +90,26 @@
     </div>
 
     <div class="section-heading" style="margin-top: 35px;">
-        <h3>Carga de Minutos</h3>
+        <h3>Carga Física</h3>
+    </div>
+
+    <div class="stats-table-header">
+        <span class="col-player">JUGADOR</span>
+        <span class="col-data">PJ</span>
+        <span class="col-data">MIN</span>
+        <span class="col-data highlight">AVG</span>
     </div>
 
     <div class="pro-list animate-slide-up delay-3">
-        <div class="list-item-progress" *ngFor="let p of topMinutes">
-            <img [src]="getAvatarUrl(p)" class="mini-avatar">
-            <div class="progress-info">
-                <div class="top-row">
-                    <span class="name">{{ p.player.usuario?.nombre }}</span>
-                    <span class="value">{{ p.minutes }}'</span>
-                </div>
-                <div class="progress-track-thin">
-                    <div class="progress-fill-blue" [style.width]="getBarWidth(p.minutes)"></div>
-                </div>
+        <div class="list-item-table" *ngFor="let p of topMinutes">
+            <div class="player-cell">
+                <img [src]="getAvatarUrl(p)" class="mini-avatar">
+                <span class="name">{{ p.nombre }}</span>
             </div>
+            
+            <div class="data-cell text-muted">{{ p.partidosJugados }}</div>
+            <div class="data-cell text-white">{{ p.minutos }}'</div>
+            <div class="data-cell font-bold text-blue">{{ p.promedioMinutos }}'</div>
         </div>
         
         <div *ngIf="topMinutes.length === 0" class="empty-state">
@@ -112,6 +117,38 @@
         </div>
     </div>
 
-    <div style="height: 50px;"></div>
+    <div class="section-heading" style="margin-top: 35px;">
+        <h3>Compromiso (Últimas Sesiones)</h3>
+    </div>
+
+    <div class="pro-list animate-slide-up delay-3">
+        <div class="list-item-attendance" *ngFor="let p of topAttendance">
+            
+            <div class="player-info">
+                <img [src]="getAvatarUrl(p)" class="mini-avatar">
+                <div class="text-col">
+                    <span class="name">{{ p.nombre }}</span>
+                    <span class="pct-label" [style.color]="getAttendanceColor(p.asistenciaPct)">
+                        {{ p.asistenciaPct }}% Global
+                    </span>
+                </div>
+            </div>
+
+            <div class="history-dots">
+                <ng-container *ngFor="let status of p.historialAsistencia">
+                    <div class="dot present" *ngIf="status === 'PRESENT'" title="Presente"></div>
+                    <div class="dot absent" *ngIf="status === 'ABSENT'" title="Ausente"></div>
+                    <div class="dot injured" *ngIf="status === 'INJURED'" title="Lesionado"></div>
+                    <div class="dot unknown" *ngIf="status === 'UNKNOWN'" title="Sin datos"></div>
+                </ng-container>
+            </div>
+        </div>
+        
+        <div *ngIf="topAttendance.length === 0" class="empty-state">
+            <p>Aún no hay registros de asistencia.</p>
+        </div>
+    </div>
+
+    <div style="height: 60px;"></div>
   </div>
 </ion-content>

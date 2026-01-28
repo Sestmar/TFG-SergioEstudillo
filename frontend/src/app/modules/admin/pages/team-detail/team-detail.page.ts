@@ -38,7 +38,6 @@ export class TeamDetailPage implements OnInit {
         const u = user as any;
         if (u && u.rol) {
             this.isAdmin = String(u.rol).toUpperCase().includes('ADMIN');
-            console.log("👮‍♂️ TeamDetail - Es Admin:", this.isAdmin);
         }
     });
 
@@ -76,25 +75,35 @@ export class TeamDetailPage implements OnInit {
       this.matchSvc.getMatchesByTeam(this.teamId).subscribe({
           next: (res) => {
               this.matches = res || [];
-              // Ordenar: Próximos primero
               this.matches.sort((a,b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime());
           }
       });
   }
 
-  // 🔥 ACCIÓN 1: IR A CERRAR ACTA (Solo Admin -> Lápiz)
-  goToEditMatch(match: any) {
-      const matchId = match.idPartido || match.id;
-      console.log("✏️ Admin yendo a editar acta:", matchId);
-      // Esto navega a la página de poner goles
-      this.router.navigate(['/edit-match', matchId]);
+  // 🔥 ACCIÓN 1: EDITAR / GESTIONAR (Lápiz)
+  handleEdit(event: any) {
+      const id = event.idPartido || event.id;
+      
+      if (event.tipo === 'TRAINING') {
+          // Si es entrenamiento -> Pasar Lista
+          this.router.navigate(['/training-attendance', id], { queryParams: { teamId: this.teamId } });
+      } else {
+          // Si es partido -> Editar Acta
+          this.router.navigate(['/edit-match', id]);
+      }
   }
 
-  // 🔥 ACCIÓN 2: IR A VER DETALLES (Para todos -> Ojo)
-  goToViewMatch(match: any) {
-      const matchId = match.idPartido || match.id;
-      console.log("👁️ Viendo detalles (solo lectura):", matchId);
-      this.router.navigate(['/match-detail', matchId]);
+  // 🔥 ACCIÓN 2: VER DETALLES (Ojo)
+  handleView(event: any) {
+      const id = event.idPartido || event.id;
+
+      if (event.tipo === 'TRAINING') {
+          // Opcional: Mostrar mensaje o navegar a detalle de entrenamiento si existiera
+          console.log("Vista de entrenamiento");
+      } else {
+          // Si es partido -> Ver Acta pública
+          this.router.navigate(['/match-detail', id]);
+      }
   }
 
   goBack() {

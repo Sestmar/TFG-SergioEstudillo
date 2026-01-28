@@ -109,6 +109,11 @@ const routes: Routes = [
     path: 'team-detail/:id',
     loadChildren: () => import('./modules/admin/pages/team-detail/team-detail.module').then( m => m.TeamDetailPageModule)
   },
+
+  {
+    path: 'training-attendance/:id',
+    loadChildren: () => import('./modules/admin/pages/training-attendance/training-attendance.module').then( m => m.TrainingAttendancePageModule)
+  },
   
   // COMODÍN (Siempre al final)
   { path: '**', redirectTo: 'landing' }

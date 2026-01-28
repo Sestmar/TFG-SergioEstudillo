@@ -1,0 +1,104 @@
+:host {
+    --bg-app: #09090b;
+    --card-bg: #18181b;
+    --text-color: #ffffff;
+    --ion-background-color: var(--bg-app);
+}
+
+.detail-bg { --background: var(--bg-app); }
+.transparent-toolbar { 
+    --background: var(--bg-app); 
+    --color: white; 
+    --border-width: 0; 
+    ion-title { font-weight: 800; font-size: 1.1rem; }
+}
+
+.save-btn { font-weight: 700; letter-spacing: 0.5px; }
+
+.main-container { 
+    padding: 20px; 
+    max-width: 800px; 
+    margin: 0 auto; 
+    
+    /* Añadimos padding superior para bajar el contenido */
+    padding-top: 100px; 
+    padding-bottom: 50px; 
+}
+
+// Tarjeta Informativa Mejorada
+.info-card {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    padding: 24px; 
+    border-radius: 20px; 
+    margin-bottom: 25px;
+    border: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; gap: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+
+    .icon-circle {
+        width: 48px; height: 48px; background: rgba(59, 130, 246, 0.2);
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        ion-icon { font-size: 1.5rem; color: #60a5fa; }
+    }
+
+    .text-content {
+        h2 { color: white; margin: 0 0 4px 0; font-weight: 800; font-size: 1.4rem; }
+        p { color: #94a3b8; margin: 0; font-size: 0.9rem; }
+    }
+}
+
+.attendance-row {
+    background: var(--card-bg); padding: 16px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05);
+    transition: transform 0.1s;
+    
+    &:active { transform: scale(0.99); background: #27272a; }
+
+    .player-info {
+        display: flex; align-items: center; gap: 14px;
+        .avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #334155; }
+        .names {
+            display: flex; flex-direction: column;
+            h4 { margin: 0; color: white; font-size: 1rem; font-weight: 600; }
+            .dorsal { color: #64748b; font-size: 0.8rem; font-weight: 700; margin-top: 2px; }
+        }
+    }
+
+    .status-toggles {
+        display: flex; gap: 10px;
+        
+        .toggle-btn {
+            width: 40px; height: 40px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.05); cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            ion-icon { font-size: 1.5rem; color: #475569; transition: color 0.2s; }
+
+            &:hover { background: rgba(255,255,255,0.1); }
+
+            // ESTADOS ACTIVOS (Colores neón)
+            &.present.active { 
+                background: rgba(16, 185, 129, 0.15); 
+                ion-icon { color: #10b981; } // Verde Esmeralda
+                border: 1px solid #10b981; 
+                box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+            }
+            &.absent.active { 
+                background: rgba(239, 68, 68, 0.15); 
+                ion-icon { color: #ef4444; } // Rojo
+                border: 1px solid #ef4444; 
+                box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+            }
+            &.injured.active { 
+                background: rgba(245, 158, 11, 0.15); 
+                ion-icon { color: #f59e0b; } // Naranja
+                border: 1px solid #f59e0b; 
+                box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+            }
+        }
+    }
+}
+
+.empty-msg { text-align: center; color: #64748b; margin-top: 60px; font-size: 1rem; }
+.animate-fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }

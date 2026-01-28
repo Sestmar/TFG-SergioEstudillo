@@ -16,6 +16,7 @@ public interface EquipoRepository extends JpaRepository<Equipo, Integer> {
     // JOIN Entrenador ent ON e.id_entrenador = ent.id
     // WHERE ent.id_usuario = :idUsuario
     Optional<Equipo> findByEntrenador_Usuario_IdUsuario(Integer idUsuario);
-    // 🔥 NUEVO: Buscar equipos dirigidos por un entrenador
+    // Buscar equipos dirigidos por un entrenador
     List<Equipo> findByEntrenador(Entrenador entrenador);
+    Optional<Equipo> findByEntrenador_IdEntrenador(Integer idEntrenador);
 }

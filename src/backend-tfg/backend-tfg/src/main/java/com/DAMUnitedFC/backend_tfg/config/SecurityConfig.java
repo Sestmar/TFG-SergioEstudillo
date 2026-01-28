@@ -37,12 +37,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // 🔥 ESTA ES LA LÍNEA CLAVE PARA LAS IMÁGENES
+                        // ESTA ES LA LÍNEA CLAVE PARA LAS IMÁGENES
+                        // Rutas públicas
                         .requestMatchers("/api/uploads/**", "/uploads/**").permitAll()
-
-                        // Otras rutas públicas
                         .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        // Aseguramos que todas las rutas de admin requieran autenticación (y no estén bloqueadas por defecto)
+                        .requestMatchers("/api/admin/**").authenticated()
 
                         // Todo lo demás requiere login
                         .anyRequest().authenticated()

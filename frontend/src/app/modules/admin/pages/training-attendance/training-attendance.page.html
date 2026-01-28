@@ -1,0 +1,68 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="transparent-toolbar">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/calendar" color="light"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Pasar Lista</ion-title>
+    <ion-buttons slot="end">
+        <ion-button (click)="guardar()" [disabled]="saving" color="primary" class="save-btn">
+            <span *ngIf="!saving">GUARDAR</span>
+            <ion-spinner name="dots" *ngIf="saving"></ion-spinner>
+        </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="detail-bg">
+  <div class="main-container animate-fade-in">
+    
+    <div class="info-card">
+        <div class="icon-circle">
+            <ion-icon name="football-outline"></ion-icon>
+        </div>
+        <div class="text-content">
+            <h2>Entrenamiento</h2>
+            <p>Selecciona asistencia, ausencia o lesión.</p>
+        </div>
+    </div>
+
+    <div class="player-list">
+        <div class="attendance-row" *ngFor="let p of players">
+            
+            <div class="player-info">
+                <img [src]="p.fotoUrl" class="avatar" (error)="p.fotoUrl = 'https://ui-avatars.com/api/?name='+p.nombre+'&background=random'">
+                <div class="names">
+                    <h4>{{ p.nombre }} {{ p.apellidos }}</h4>
+                    <span class="dorsal">#{{ p.dorsal || '--' }}</span>
+                </div>
+            </div>
+
+            <div class="status-toggles">
+                <div class="toggle-btn present" 
+                     [class.active]="p.estado === 'PRESENT'" 
+                     (click)="setEstado(p, 'PRESENT')">
+                    <ion-icon name="checkmark-circle"></ion-icon>
+                </div>
+
+                <div class="toggle-btn absent" 
+                     [class.active]="p.estado === 'ABSENT'" 
+                     (click)="setEstado(p, 'ABSENT')">
+                    <ion-icon name="close-circle"></ion-icon>
+                </div>
+
+                <div class="toggle-btn injured" 
+                     [class.active]="p.estado === 'INJURED'" 
+                     (click)="setEstado(p, 'INJURED')">
+                    <ion-icon name="medkit"></ion-icon>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <div *ngIf="players.length === 0" class="empty-msg">
+        <p>No se encontraron jugadores para este equipo.</p>
+    </div>
+
+  </div>
+</ion-content>

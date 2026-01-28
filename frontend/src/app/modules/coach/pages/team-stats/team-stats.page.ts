@@ -2,16 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { NavController } from '@ionic/angular';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
-import { PlayerService } from 'src/app/core/services/player/player.service';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
-import { filter, switchMap, catchError } from 'rxjs/operators';
-import { of, forkJoin } from 'rxjs';
-
-interface AggregatedPlayerStats {
-    player: any;
-    goals: number;
-    minutes: number;
-}
+import { filter, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-team-stats',
@@ -28,17 +20,18 @@ export class TeamStatsPage implements OnInit {
   };
 
   // Listas para la Vista
-  topScorerMVP: AggregatedPlayerStats | null = null; // El nº1
-  restScorers: AggregatedPlayerStats[] = [];         // Del 2º al 10º
-  topMinutes: AggregatedPlayerStats[] = [];
+  topScorerMVP: any = null; 
+  restScorers: any[] = []; 
+  topMinutes: any[] = [];
+  topAttendance: any[] = []; // Nueva lista para asistencia
+  
   maxMinutes: number = 1;
 
   constructor(
     private navCtrl: NavController,
     private authSvc: AuthService,
     private coachSvc: CoachService,
-    private matchSvc: MatchService,
-    private playerSvc: PlayerService
+    private matchSvc: MatchService
   ) { }
 
   ngOnInit() {
@@ -56,6 +49,7 @@ export class TeamStatsPage implements OnInit {
       .pipe(
         filter(u => !!u),
         switchMap((u: any) => {
+            // Obtenemos el ID del usuario (Entrenador)
             const id = u.id || u.idUsuario || u.sub;
             return this.coachSvc.getDashboardData(id);
         })
@@ -65,20 +59,59 @@ export class TeamStatsPage implements OnInit {
           if (res.equipo) {
             this.teamName = res.equipo.nombre;
             const teamId = res.equipo.idEquipo || res.equipo.id;
-            
-            // 1. Partidos
+            const coachId = res.entrenadorId; // Asegúrate de que el endpoint dashboard devuelve esto
+
+            // 1. Cargar Partidos (para resumen de temporada)
             this.matchSvc.getMatchesByTeam(teamId).subscribe(matches => {
                 this.calculateSeasonStats(matches || []);
             });
 
-            // 2. Jugadores y Stats
-            this.loadPlayersWithStats(teamId);
+            // 2. Cargar Estadísticas COMPLETAS (Goles, Minutos, Asistencia)
+            if (coachId) {
+                this.loadFullStats(coachId);
+            } else {
+                console.warn("No se encontró ID de entrenador en dashboard");
+                this.loading = false;
+            }
 
           } else {
             this.loading = false;
           }
         },
         error: () => this.loading = false
+      });
+  }
+
+  loadFullStats(coachId: number) {
+      this.coachSvc.getTeamStats(coachId).subscribe({
+          next: (res: any) => {
+              const players = res.jugadores || [];
+
+              // A) Goleadores (Igual)
+              const scorers = [...players]
+                  .sort((a:any, b:any) => b.goles - a.goles)
+                  .filter((p:any) => p.goles > 0);
+              
+              if (scorers.length > 0) {
+                  this.topScorerMVP = scorers[0]; 
+                  this.restScorers = scorers.slice(1, 6);
+              }
+
+              // B) Minutos (Ordenamos por TOTAL, pero mostraremos promedio)
+              this.topMinutes = [...players]
+                  .sort((a:any, b:any) => b.minutos - a.minutos)
+                  .slice(0, 10); // Top 10
+
+              // C) Asistencia
+              this.topAttendance = [...players]
+                  .sort((a:any, b:any) => b.asistenciaPct - a.asistenciaPct);
+
+              this.loading = false;
+          },
+          error: (err) => {
+              console.error(err);
+              this.loading = false;
+          }
       });
   }
 
@@ -98,78 +131,24 @@ export class TeamStatsPage implements OnInit {
       });
   }
 
-  loadPlayersWithStats(teamId: number) {
-      this.playerSvc.getAllPlayers().subscribe((res: any) => {
-          const allPlayersRaw = Array.isArray(res) ? res : (res.data || []);
-          
-          const myPlayers = allPlayersRaw.filter((p: any) => {
-              const tId = this.getTeamIdSafe(p);
-              return tId == teamId;
-          });
-
-          const statsRequests = myPlayers.map((player: any) => {
-              const pId = player.id || player.idJugador;
-              return this.playerSvc.getPlayerStats(pId).pipe(
-                  catchError(() => of({ golesTotales: 0, minutosJugados: 0 })),
-                  switchMap(stats => of({
-                      player: player,
-                      goals: stats.golesTotales || 0,
-                      minutes: stats.minutosJugados || 0
-                  }))
-              );
-          });
-
-          if (statsRequests.length > 0) {
-              forkJoin(statsRequests).subscribe((results: AggregatedPlayerStats[]) => {
-                  
-                  // Procesar Goleadores (MVP + Lista)
-                  const allScorers = [...results]
-                      .sort((a, b) => b.goals - a.goals)
-                      .filter(s => s.goals > 0);
-                  
-                  if (allScorers.length > 0) {
-                      this.topScorerMVP = allScorers[0];
-                      this.restScorers = allScorers.slice(1);
-                  }
-
-                  // Procesar Minutos
-                  this.topMinutes = [...results]
-                      .sort((a, b) => b.minutes - a.minutes)
-                      .slice(0, 10)
-                      .filter(s => s.minutes > 0);
-                  
-                  if (this.topMinutes.length > 0) {
-                      this.maxMinutes = this.topMinutes[0].minutes;
-                  }
-
-                  this.loading = false;
-              });
-          } else {
-              this.loading = false;
-          }
-      });
-  }
-
-  // Helper para anchos de barra de minutos
+  // Helpers visuales
   getBarWidth(mins: number): string {
-      const percent = (mins / this.maxMinutes) * 100;
-      return `${percent}%`;
+      return ((mins / this.maxMinutes) * 100) + '%';
   }
 
-  private getTeamIdSafe(p: any): number | null {
-      if (p.equipoPrincipal) {
-          if (typeof p.equipoPrincipal === 'object') return p.equipoPrincipal.id || p.equipoPrincipal.idEquipo;
-          return Number(p.equipoPrincipal);
-      }
-      return null;
-  }
-
-  getAvatarUrl(playerStat: any): string {
-      const p = playerStat.player;
-      if (p && p.usuario && (p.usuario.fotoUrl || p.usuario.fotoPerfil)) {
-          return p.usuario.fotoUrl || p.usuario.fotoPerfil;
-      }
-      const name = p.usuario?.nombre || p.nombre || 'Player';
+  getAvatarUrl(p: any): string {
+      // El objeto 'p' ahora viene directo del endpoint nuevo
+      if (p.fotoUrl) return p.fotoUrl;
+      const name = p.nombre || 'Player';
       return `https://ui-avatars.com/api/?name=${name}&background=random&color=fff&size=128`;
+  }
+  
+  // Helper para color de asistencia
+  getAttendanceColor(pct: number): string {
+      if (!pct) return '#ef4444'; 
+      if (pct >= 85) return '#10b981'; // Verde
+      if (pct >= 60) return '#3b82f6'; // Azul
+      if (pct >= 40) return '#f59e0b'; // Naranja
+      return '#ef4444'; // Rojo
   }
 }

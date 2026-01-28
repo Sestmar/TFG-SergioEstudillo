@@ -26,9 +26,14 @@ export class AdminDashboardPage implements OnInit {
   isTeamModalOpen = false;
   isMatchModalOpen = false;
 
+  // 🔥 NUEVO: Control del tipo de evento (Partido vs Entrenamiento)
+  eventType: 'MATCH' | 'TRAINING' = 'MATCH';
+
   // Formularios
   newUser = { nombre: '', apellidos: '', email: '', rol: 'JUGADOR', password: '123456' };
   newTeam = { nombre: '', categoria: '' };
+  
+  // Usaremos este objeto para ambos (Partido y Entrenamiento)
   newMatch = { idEquipo: null, rival: '', lugar: '', fechaHora: new Date().toISOString() };
   
   selectedFile: File | null = null;
@@ -76,8 +81,6 @@ export class AdminDashboardPage implements OnInit {
                   const equipo = user.equipoNombre; 
                   
                   // ¿Tiene equipo asignado?
-                  // En tu backend, si no tiene equipo, devuelve "Sin Equipo" o "Staff Técnico"
-                  // Ojo: "Staff Técnico" no es un equipo real, es un placeholder.
                   const hasRealTeam = equipo && equipo !== 'Sin Equipo' && equipo !== 'Staff Técnico';
 
                   if (!hasRealTeam) {
@@ -115,7 +118,6 @@ export class AdminDashboardPage implements OnInit {
   async onAssignPlayer(user: any) {
     if (!user.selectedTeamId) return this.presentToast('⚠️ Selecciona un equipo primero', 'warning');
     
-    // En la lista de activeUsers, el ID viene como 'id' (mira tu Java: map.put("id", ...))
     const uid = user.id; 
     
     await this.processRequest(
@@ -129,7 +131,7 @@ export class AdminDashboardPage implements OnInit {
       if (!coach.selectedTeamId) return this.presentToast('⚠️ Selecciona un equipo', 'warning');
       if (!coach.selectedRole) return this.presentToast('⚠️ Selecciona un rol', 'warning');
       
-      const userId = coach.id; // Igual que arriba, viene como 'id'
+      const userId = coach.id;
       
       await this.processRequest(
           this.adminSvc.assignCoach(userId, coach.selectedTeamId, coach.selectedRole),
@@ -149,7 +151,6 @@ export class AdminDashboardPage implements OnInit {
       this.isUserModalOpen = false;
       this.newUser = { nombre: '', apellidos: '', email: '', rol: 'JUGADOR', password: '123456' }; 
       
-      // Damos un respiro al backend para que guarde antes de recargar
       setTimeout(() => {
           this.loadUsersAndCalculateCandidates();
       }, 500);
@@ -177,8 +178,7 @@ export class AdminDashboardPage implements OnInit {
       await alert.present();
   }
 
-  // --- RESTO DE FUNCIONES (Equipos, Partidos) ---
-  // (Sin cambios, funcionan bien)
+  // --- RESTO DE FUNCIONES (Equipos) ---
 
   async createNewTeam() {
       if(!this.newTeam.nombre) return this.presentToast('Nombre obligatorio', 'warning');
@@ -207,6 +207,17 @@ export class AdminDashboardPage implements OnInit {
     }
   }
 
+  // 🔥 GESTIÓN DE EVENTOS (PARTIDOS Y ENTRENAMIENTOS)
+
+  // Método Maestro: Decide si crear Partido o Entrenamiento
+  crearEvento() {
+      if (this.eventType === 'MATCH') {
+          this.createMatch();
+      } else {
+          this.crearEntrenamiento();
+      }
+  }
+
   async createMatch() {
       if(!this.newMatch.idEquipo || !this.newMatch.rival) {
           return this.presentToast('Completa los datos del partido', 'warning');
@@ -226,9 +237,35 @@ export class AdminDashboardPage implements OnInit {
           this.adminSvc.createMatch(formData),
           'Partido agendado ⚽'
       );
+      this.closeEventModal();
+  }
+
+  // 🔥 NUEVO MÉTODO PARA ENTRENAMIENTOS
+  async crearEntrenamiento() {
+      if (!this.newMatch.idEquipo || !this.newMatch.fechaHora) {
+          return this.presentToast('Faltan datos obligatorios', 'warning');
+      }
+  
+      const payload = {
+          idEquipo: this.newMatch.idEquipo,
+          fechaHora: this.newMatch.fechaHora,
+          lugar: this.newMatch.lugar || 'Ciudad Deportiva',
+          descripcion: 'Sesión de Entrenamiento'
+      };
+  
+      await this.processRequest(
+          this.adminSvc.createTraining(payload),
+          'Entrenamiento agendado 🏋️‍♂️'
+      );
+      this.closeEventModal();
+  }
+
+  // Helper para cerrar y limpiar
+  closeEventModal() {
       this.isMatchModalOpen = false;
       this.newMatch = { idEquipo: null, rival: '', lugar: '', fechaHora: new Date().toISOString() };
       this.selectedFile = null;
+      this.eventType = 'MATCH'; // Resetear a Partido por defecto
   }
 
   async processRequest(observable$: any, successMsg: string) {
@@ -258,5 +295,10 @@ export class AdminDashboardPage implements OnInit {
 
   segmentChanged(ev: any) {
       this.currentView = ev.detail.value;
+  }
+
+  // Para detectar cambio de pestaña en el modal
+  modalSegmentChanged(ev: any) {
+      this.eventType = ev.detail.value;
   }
 }

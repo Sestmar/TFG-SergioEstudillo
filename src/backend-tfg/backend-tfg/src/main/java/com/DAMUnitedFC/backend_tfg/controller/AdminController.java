@@ -28,8 +28,8 @@ public class AdminController {
     @Autowired private CategoriaRepository categoriaRepo;
     @Autowired private PartidoRepository partidoRepo;
     @Autowired private AlineacionRepository alineacionRepo;
-
     @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private AsistenciaRepository asistenciaRepo;
 
     // --- USUARIOS ---
 
@@ -237,7 +237,6 @@ public class AdminController {
     }
 
     // --- COMPETICIÓN ---
-
     @PostMapping(value = "/crear-partido", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> crearPartido(
             @RequestParam("idEquipo") Integer idEquipo,
@@ -269,6 +268,40 @@ public class AdminController {
             partidoRepo.save(partido);
             return ResponseEntity.ok(Collections.singletonMap("message", "Evento creado"));
         } catch (Exception e) { e.printStackTrace(); return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage())); }
+    }
+
+    @PostMapping("/crear-entrenamiento")
+    public ResponseEntity<?> crearEntrenamiento(@RequestBody Map<String, Object> payload) {
+        try {
+            Integer idEquipo = ((Number) payload.get("idEquipo")).intValue();
+            String fechaStr = (String) payload.get("fechaHora");
+            String lugar = (String) payload.get("lugar");
+            // Usamos "Sesión de Entrenamiento" si no viene descripción
+            String descripcion = (String) payload.getOrDefault("descripcion", "Sesión de Entrenamiento");
+
+            Equipo equipo = equipoRepo.findById(idEquipo).orElseThrow();
+
+            Partido training = new Partido();
+            training.setEquipo(equipo);
+            training.setRival(descripcion); // En el calendario se verá como el título
+            training.setLugar(lugar);
+
+            if (fechaStr != null) {
+                // Ajuste de fecha de Ionic (quita la Z)
+                training.setFechaHora(java.time.LocalDateTime.parse(fechaStr.replace("Z", "")));
+            }
+
+            training.setTipo("TRAINING"); // IMPORTANTE: Tipo diferenciado
+            training.setEstado("PENDIENTE");
+            training.setEscudoRivalUrl("assets/img/training-icon.png");
+
+            partidoRepo.save(training);
+
+            return ResponseEntity.ok(Collections.singletonMap("message", "Entrenamiento creado correctamente"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage()));
+        }
     }
 
     // 🔥 CERRAR ACTA (ACTUALIZADO CON ASISTENCIAS)
@@ -395,6 +428,56 @@ public class AdminController {
             staffDto.add(s);
         }
         response.put("staff", staffDto);
+        return ResponseEntity.ok(response);
+    }
+
+    // 🔥 PASAR LISTA (GUARDAR ASISTENCIA)
+    @PostMapping("/guardar-asistencia")
+    @Transactional
+    public ResponseEntity<?> guardarAsistencia(@RequestBody Map<String, Object> payload) {
+        try {
+            Long idEntrenamiento = ((Number) payload.get("idEntrenamiento")).longValue();
+            List<Map<String, Object>> lista = (List<Map<String, Object>>) payload.get("asistencias");
+
+            for (Map<String, Object> item : lista) {
+                Integer idJugador = ((Number) item.get("idJugador")).intValue();
+                String estado = (String) item.get("estado"); // "PRESENT", "ABSENT", "INJURED"
+
+                Jugador jugador = jugadorRepo.findById(idJugador).orElse(null);
+
+                if (jugador != null) {
+                    // Buscamos si ya existe registro para actualizarlo, si no, creamos uno nuevo
+                    Asistencia asistencia = asistenciaRepo.findByIdEntrenamientoAndJugador(idEntrenamiento, jugador)
+                            .orElse(new Asistencia());
+
+                    if (asistencia.getIdAsistencia() == null) {
+                        asistencia.setIdEntrenamiento(idEntrenamiento);
+                        asistencia.setJugador(jugador);
+                    }
+
+                    asistencia.setEstado(estado);
+                    asistenciaRepo.save(asistencia);
+                }
+            }
+            return ResponseEntity.ok(Collections.singletonMap("message", "Asistencia guardada correctamente."));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
+    // 🔥 OBTENER ASISTENCIA (Para cargarla si ya se pasó lista)
+    @GetMapping("/entrenamiento/{id}/asistencia")
+    public ResponseEntity<?> getAsistencia(@PathVariable Long id) {
+        List<Asistencia> lista = asistenciaRepo.findByIdEntrenamiento(id);
+
+        List<Map<String, Object>> response = new ArrayList<>();
+        for(Asistencia a : lista) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("idJugador", a.getJugador().getIdJugador());
+            item.put("estado", a.getEstado());
+            response.add(item);
+        }
         return ResponseEntity.ok(response);
     }
 }
