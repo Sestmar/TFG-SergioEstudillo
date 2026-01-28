@@ -14,16 +14,22 @@
             <h1>{{ user.nombre || 'Jugador' }}</h1>
           </div>
           
-          <div class="profile-pic-wrapper" (click)="navigateTo('/profile')">
-            <img *ngIf="user.fotoPerfil || user.fotoUrl" 
-                 [src]="user.fotoPerfil || user.fotoUrl" 
-                 class="profile-img">
-            
-            <div *ngIf="!(user.fotoPerfil || user.fotoUrl)" class="profile-initials">
-                {{ (user.nombre || 'J')[0] | uppercase }}{{ (user.apellidos || '')[0] | uppercase }}
-            </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+              <ion-button fill="clear" color="danger" (click)="logout()">
+                  <ion-icon name="log-out-outline" slot="icon-only" style="font-size: 1.5rem;"></ion-icon>
+              </ion-button>
 
-            <div class="dorsal-badge" *ngIf="currentPlayer.dorsal">#{{ currentPlayer.dorsal }}</div>
+              <div class="profile-pic-wrapper" (click)="navigateTo('/profile')">
+                <img *ngIf="user.fotoPerfil || user.fotoUrl" 
+                     [src]="user.fotoPerfil || user.fotoUrl" 
+                     class="profile-img">
+                
+                <div *ngIf="!(user.fotoPerfil || user.fotoUrl)" class="profile-initials">
+                    {{ (user.nombre || 'J')[0] | uppercase }}{{ (user.apellidos || '')[0] | uppercase }}
+                </div>
+
+                <div class="dorsal-badge" *ngIf="currentPlayer.dorsal">#{{ currentPlayer.dorsal }}</div>
+              </div>
           </div>
       </ng-container>
     </div>

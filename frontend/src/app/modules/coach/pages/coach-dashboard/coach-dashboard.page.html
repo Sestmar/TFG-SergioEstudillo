@@ -15,12 +15,18 @@
             <h1 *ngIf="currentUser$ | async as user">{{ user.nombre || 'Míster' }}</h1>
           </div>
           
-          <div class="profile-pic-wrapper ripple-effect" (click)="goToProfile()">
-            <ng-container *ngIf="currentUser$ | async as user">
-                <img *ngIf="user.fotoUrl" [src]="user.fotoUrl" class="profile-img">
-                <div *ngIf="!user.fotoUrl" class="profile-initials">DT</div>
-            </ng-container>
-            <div class="badge-edit"><ion-icon name="settings-sharp"></ion-icon></div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+              <ion-button fill="clear" color="danger" (click)="logout()">
+                  <ion-icon name="log-out-outline" slot="icon-only" style="font-size: 1.5rem;"></ion-icon>
+              </ion-button>
+
+              <div class="profile-pic-wrapper ripple-effect" (click)="goToProfile()">
+                <ng-container *ngIf="currentUser$ | async as user">
+                    <img *ngIf="user.fotoUrl" [src]="user.fotoUrl" class="profile-img">
+                    <div *ngIf="!user.fotoUrl" class="profile-initials">DT</div>
+                </ng-container>
+                <div class="badge-edit"><ion-icon name="settings-sharp"></ion-icon></div>
+              </div>
           </div>
         </div>
 
@@ -39,8 +45,8 @@
               </div>
               <h2 class="team-name">{{ teamName }}</h2>
               <div class="league-info">
-                 <ion-icon name="trophy-outline"></ion-icon>
-                 <span>{{ categoryName || 'Liga Oficial' }}</span>
+                  <ion-icon name="trophy-outline"></ion-icon>
+                  <span>{{ categoryName || 'Liga Oficial' }}</span>
               </div>
             </div>
           </div>
@@ -80,7 +86,7 @@
 
           <div class="status-card highlight" *ngIf="topScorer" (click)="goToStats()">
             <div class="player-circle">
-               <img [src]="topScorer.usuario?.fotoUrl || topScorer.fotoUrl" onError="this.src='assets/img/default-avatar.png'">
+                <img [src]="topScorer.usuario?.fotoUrl || topScorer.fotoUrl" onError="this.src='assets/img/default-avatar.png'">
             </div>
             <div class="card-info">
               <span class="label">Goleador</span>

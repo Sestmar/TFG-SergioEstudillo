@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { Observable, Subject, of } from 'rxjs';
 import { takeUntil, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http'; 
-import { AlertController } from '@ionic/angular'; 
+import { AlertController } from '@ionic/angular'; // 🔥 Inyectado
 
 import { User, Player, Team, PlayerStats } from 'src/app/shared/models/models';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
@@ -41,9 +41,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   upcomingConvocations: any[] = []; 
   playerStats: PlayerStats | null = null;
   
-  // 🔥 ACCIONES RÁPIDAS CORREGIDAS
   quickActions = [
-    // El ID 'calendar' coincidirá con el switch en navigateTo
     { id: 'calendar', title: 'Calendario', icon: 'calendar', color: 'primary' },
     { id: 'team', title: 'Mi Equipo', icon: 'shield-checkmark', color: 'secondary' },
     { id: 'profile', title: 'Mi Perfil', icon: 'person', color: 'tertiary' },
@@ -75,6 +73,25 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  // 🔥 MÉTODO LOGOUT AÑADIDO
+  async logout() {
+      const alert = await this.alertCtrl.create({
+          header: 'Desconectar',
+          message: '¿Quieres cerrar sesión?',
+          buttons: [
+              { text: 'No', role: 'cancel' },
+              { 
+                  text: 'Sí, salir', 
+                  role: 'destructive',
+                  handler: () => {
+                      this.authService.logout();
+                  }
+              }
+          ]
+      });
+      await alert.present();
+  }
+
   private loadPlayerData() {
     this.loading = true;
     this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe({
@@ -100,7 +117,6 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     ).subscribe((equipo: any) => {
         if (equipo) {
             this.currentTeam = equipo;
-            
             this.currentPlayer = { 
                 usuario: { id: userId } as any 
             } as Player; 
@@ -125,17 +141,13 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
           
           if (found) {
               this.currentPlayer = found;
-              
               const realPlayerId = (found as any).id || (found as any).idJugador;
-              console.log("✅ Jugador encontrado. ID Deportivo REAL:", realPlayerId);
               
               if (realPlayerId) {
                   if (!this.currentPlayer!.id) {
                       this.currentPlayer!.id = realPlayerId;
                   }
                   this.loadPlayerStats(realPlayerId); 
-              } else {
-                  console.error("❌ Error: El objeto jugador no tiene campo 'id' ni 'idJugador'");
               }
           } else {
               this.loading = false;
@@ -154,7 +166,6 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
 
               this.stats.upcomingConvocations = this.upcomingConvocations.length;
               this.stats.totalConvocations = matches.length; 
-              
               this.loading = false;
           },
           error: (err) => {
@@ -169,23 +180,17 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (stats: PlayerStats) => {
-            console.log("📊 ESTADÍSTICAS RECIBIDAS:", stats); 
             this.playerStats = stats;
         },
         error: (err) => console.error('Error cargando stats', err)
       });
   }
 
-  // 🔥 NAVEGACIÓN BLINDADA
   navigateTo(actionOrRoute: any) {
-    console.log("Navegando a:", actionOrRoute);
-
-    // 1. Caso String directo (desde HTML)
     if (typeof actionOrRoute === 'string') {
         if (actionOrRoute === '/profile') {
              this.goToProfile();
         } else if (actionOrRoute === '/convocations') {
-             // Redirección de compatibilidad al calendario
              this.router.navigate(['/calendar']);
         } else {
              this.router.navigate([actionOrRoute]);
@@ -193,23 +198,19 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
         return;
     }
 
-    // 2. Caso Objeto QuickAction
     const actionId = actionOrRoute.id;
 
     switch (actionId) {
-        case 'calendar':      // Caso nuevo
-        case 'convocations':  // Caso antiguo (por si acaso)
+        case 'calendar':      
+        case 'convocations':  
             this.router.navigate(['/calendar']);
             break;
-            
         case 'team':
             this.router.navigate(['/coach/my-team']); 
             break;
-            
         case 'profile':
             this.goToProfile();
             break;
-            
         case 'stats':
             this.scrollToStats();
             break;
@@ -218,7 +219,6 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
 
   private goToProfile() {
     if (this.currentPlayer && this.currentPlayer.usuario) {
-        // Navegación genérica al perfil, el componente profile ya carga el usuario actual
         this.router.navigate(['/profile']);
     } else {
         console.warn("⚠️ Aún no se ha cargado el jugador.");

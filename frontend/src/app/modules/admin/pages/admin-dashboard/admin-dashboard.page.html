@@ -7,8 +7,15 @@
         <span class="role-badge">DIRECTOR DEPORTIVO</span>
         <h1>Panel de Control</h1>
       </div>
-      <div class="club-logo-wrapper">
-        <img src="assets/img/mi-club-logo.png" alt="Club">
+      
+      <div class="header-right" style="display: flex; align-items: center; gap: 10px;">
+          <div class="club-logo-wrapper">
+            <img src="assets/img/mi-club-logo.png" alt="Club">
+          </div>
+          
+          <ion-button fill="clear" color="danger" (click)="logout()">
+              <ion-icon name="log-out-outline" slot="icon-only" style="font-size: 1.6rem;"></ion-icon>
+          </ion-button>
       </div>
     </div>
 
@@ -47,7 +54,6 @@
         </div>
 
         <div *ngIf="userSegment === 'pending'">
-            
             <div *ngIf="candidates.length > 0">
                 <h6 class="section-label">Jugadores Nuevos</h6>
                 <div class="admin-card" *ngFor="let candidate of candidates">
@@ -90,7 +96,6 @@
                              <ion-select placeholder="Rol (Ej: Entrenador)" [(ngModel)]="coach.selectedRole" interface="popover" class="dark-select flex-grow">
                                 <ion-select-option *ngFor="let role of staffRoles" [value]="role">{{ role }}</ion-select-option>
                             </ion-select>
-                            
                             <ion-button (click)="onAssignCoach(coach)" color="tertiary" size="small" class="ml-2">
                                 <ion-icon name="briefcase"></ion-icon>
                             </ion-button>
@@ -113,7 +118,6 @@
                         <h4>{{ user.nombre }} {{ user.apellidos }}</h4>
                         <p class="role-text">{{ cleanRoleName(user.rol) }} • {{ user.equipoNombre || 'Sin Equipo' }}</p>
                     </div>
-                    
                     <ion-button fill="clear" color="danger" (click)="deleteUser(user)">
                         <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
                     </ion-button>

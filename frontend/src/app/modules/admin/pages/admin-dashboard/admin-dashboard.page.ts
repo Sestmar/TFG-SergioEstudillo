@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AdminService } from 'src/app/core/services/admin/admin.service';
+import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { ToastController, LoadingController, AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
 
@@ -26,7 +27,7 @@ export class AdminDashboardPage implements OnInit {
   isTeamModalOpen = false;
   isMatchModalOpen = false;
 
-  // 🔥 NUEVO: Control del tipo de evento (Partido vs Entrenamiento)
+  // Control del tipo de evento (Partido vs Entrenamiento)
   eventType: 'MATCH' | 'TRAINING' = 'MATCH';
 
   // Formularios
@@ -41,6 +42,7 @@ export class AdminDashboardPage implements OnInit {
 
   constructor(
     private adminSvc: AdminService,
+    private authSvc: AuthService,
     private toastCtrl: ToastController,
     private loadingCtrl: LoadingController,
     private alertCtrl: AlertController,
@@ -49,6 +51,24 @@ export class AdminDashboardPage implements OnInit {
 
   ngOnInit() {
     this.loadData();
+  }
+
+  async logout() {
+      const alert = await this.alertCtrl.create({
+          header: 'Cerrar Sesión',
+          message: '¿Estás seguro de que quieres salir?',
+          buttons: [
+              { text: 'Cancelar', role: 'cancel' },
+              { 
+                  text: 'Salir', 
+                  role: 'destructive',
+                  handler: () => {
+                      this.authSvc.logout();
+                  }
+              }
+          ]
+      });
+      await alert.present();
   }
 
   async loadData() {
@@ -64,7 +84,7 @@ export class AdminDashboardPage implements OnInit {
     this.loadUsersAndCalculateCandidates();
   }
 
-  // 🔥 LÓGICA MAESTRA: Usamos la lista completa para evitar problemas del backend
+  // LÓGICA: Usamos la lista completa para evitar problemas del backend
   loadUsersAndCalculateCandidates() {
       this.adminSvc.getAllActiveUsers().subscribe({
           next: (res: any[]) => {

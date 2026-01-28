@@ -80,15 +80,22 @@ export class AuthService {
     );
   }
 
+  // 🔥 MÉTODO LOGOUT COMPLETADO
   logout(): void {
+    // 1. Limpiar almacenamiento
     this.storageService.removeToken();
     this.storageService.remove(jwtConfig.refreshTokenKey);
+    localStorage.clear(); // Limpieza extra por seguridad
     
+    // 2. Limpiar estado en memoria
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
+    
     if (this.tokenRefreshTimer) {
       clearTimeout(this.tokenRefreshTimer);
     }
+
+    // 3. Redirigir al Login
     this.router.navigate(['/auth/login']);
   }
   
@@ -140,13 +147,10 @@ export class AuthService {
     );
   }
 
-  // 🔥 NUEVO MÉTODO AÑADIDO: Actualizar Usuario (Fundamental para la foto)
+  // Actualizar Usuario (Foto, etc)
   updateUser(id: number, data: Partial<User>): Observable<User> {
-    // Asumimos que tienes un endpoint PUT o PATCH para actualizar usuarios
-    // Si tu endpoint es '/usuarios/{id}', ajústalo aquí.
     return this.apiService.put<User>(`/usuarios/${id}`, data).pipe(
       tap(updatedUser => {
-        // Actualizamos el usuario en memoria para que la foto cambie al instante
         const current = this.currentUserSubject.value;
         if (current && current.idUsuario === id) {
              this.currentUserSubject.next({ ...current, ...updatedUser });

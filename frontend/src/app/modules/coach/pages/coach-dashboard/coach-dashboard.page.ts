@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { filter, switchMap } from 'rxjs/operators';
-import { ModalController, ToastController } from '@ionic/angular';
+import { ModalController, ToastController, AlertController } from '@ionic/angular'; // 🔥 AlertController añadido
 
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
@@ -17,7 +17,6 @@ interface CoachStats {
   injured: number;
 }
 
-// Tipos de vista para el dashboard
 type ViewType = 'dashboard' | 'matches';
 
 @Component({
@@ -29,10 +28,8 @@ export class CoachDashboardPage implements OnInit {
   currentUser$: Observable<User | null>;
   loading: boolean = true;
   
-  // Control de Vista (Dashboard vs Lista de Partidos)
   currentView: ViewType = 'dashboard';
 
-  // Datos del Equipo y Rol
   teamName: string = '';
   categoryName: string = '';
   escudoUrl: string = ''; 
@@ -44,18 +41,17 @@ export class CoachDashboardPage implements OnInit {
   stats: CoachStats = { matches: 0, trainings: 0, squadSize: 0, injured: 0 };
   
   upcomingEvents: any[] = []; 
-  
-  // Contador de partidos futuros para el badge
   futureMatchesCount: number = 0;
 
   constructor(
-    private authService: AuthService,
+    private authService: AuthService, // Ya lo tenías inyectado
     private matchService: MatchService,
     private playerService: PlayerService,
     private coachService: CoachService,
     private router: Router,
     private modalCtrl: ModalController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private alertCtrl: AlertController // 🔥 Nuevo Inyectado
   ) {
     this.currentUser$ = this.authService.currentUser$;
   }
@@ -64,11 +60,28 @@ export class CoachDashboardPage implements OnInit {
 
   ionViewWillEnter() {
     this.loadCoachData();
-    // Siempre volvemos al dashboard principal al entrar
     this.currentView = 'dashboard';
   }
 
-  // Cambiar entre vistas
+  // 🔥 MÉTODO LOGOUT AÑADIDO
+  async logout() {
+      const alert = await this.alertCtrl.create({
+          header: 'Cerrar Sesión',
+          message: '¿Estás seguro de que quieres salir, Míster?',
+          buttons: [
+              { text: 'Cancelar', role: 'cancel' },
+              { 
+                  text: 'Salir', 
+                  role: 'destructive',
+                  handler: () => {
+                      this.authService.logout();
+                  }
+              }
+          ]
+      });
+      await alert.present();
+  }
+
   setView(view: ViewType) {
     this.currentView = view;
   }
@@ -116,13 +129,11 @@ export class CoachDashboardPage implements OnInit {
   private loadMatches(teamId: number) {
     this.matchService.getMatchesByTeam(teamId).subscribe({
       next: (matches) => {
-        // Ordenar por fecha ASC
         this.upcomingEvents = matches.sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime());
         
         this.stats.matches = matches.filter(m => m.tipo === 'PARTIDO').length;
         this.stats.trainings = matches.filter(m => m.tipo === 'ENTRENAMIENTO').length;
 
-        // Calcular cuántos partidos hay en el futuro para poner un numerito en el botón
         const now = new Date();
         this.futureMatchesCount = this.upcomingEvents.filter(m => m.tipo === 'PARTIDO' && new Date(m.fechaHora) > now).length;
       }
@@ -133,7 +144,6 @@ export class CoachDashboardPage implements OnInit {
     this.playerService.getAllPlayers().subscribe((res: any) => {
         const all = Array.isArray(res) ? res : (res.data || []);
         
-        // Filtrar mis jugadores
         const myPlayers = all.filter((p: any) => {
            const tId = p.equipoPrincipal?.id || p.equipoPrincipal?.idEquipo || p.equipoPrincipal;
            return tId == teamId;
@@ -141,26 +151,18 @@ export class CoachDashboardPage implements OnInit {
 
         this.stats.squadSize = myPlayers.length;
 
-        // 1. CALCULAR LESIONADOS
-        // Asumiendo que usas un campo 'estado' o 'lesionado'
-        // Si no tienes el campo exacto, simúlalo o ajusta la condición
         this.stats.injured = myPlayers.filter((p: any) => 
             p.estado === 'LESIONADO' || p.estado === 'BAJA'
         ).length;
 
-        // 2. CALCULAR PICHICHI (TOP SCORER)
         if (myPlayers.length > 0) {
-            // Ordenar por goles de mayor a menor
             const sortedScorers = [...myPlayers].sort((a, b) => (b.golesTemporada || 0) - (a.golesTemporada || 0));
-            // Si el mejor tiene más de 0 goles, lo guardamos
             if (sortedScorers[0] && (sortedScorers[0].golesTemporada || 0) > 0) {
                 this.topScorer = sortedScorers[0];
             }
         }
     });
   }
-
-  // --- NAVEGACIÓN ---
 
   goToProfile() {
     if (this.coachId) {
