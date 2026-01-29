@@ -99,7 +99,7 @@
     </div>
   </div>
 
-  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="onModalDismiss()" [initialBreakpoint]="0.65" [breakpoints]="[0, 0.65, 0.9]">
+  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="onEditModalDismiss()" [initialBreakpoint]="0.65" [breakpoints]="[0, 0.65, 0.9]">
     <ng-template>
       <div class="modal-content-dark">
          
@@ -161,7 +161,7 @@
     </ng-template>
   </ion-modal>
 
-  <ion-modal [isOpen]="isModalOpen" (didDismiss)="onModalDismiss()">
+  <ion-modal [isOpen]="isModalOpen" (didDismiss)="onInjuryModalDismiss()">
     <ng-template>
       <div class="modal-content-dark injury-modal">
         <h3>Reportar Lesión</h3>

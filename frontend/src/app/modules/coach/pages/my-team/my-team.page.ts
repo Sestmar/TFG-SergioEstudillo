@@ -254,9 +254,14 @@ export class MyTeamPage implements OnInit {
     });
   }
 
-  onModalDismiss() {
-      this.isModalOpen = false;
-      this.isEditModalOpen = false;
+  onEditModalDismiss() {
+    this.isEditModalOpen = false;
+    // IMPORTANTE: No tocamos isModalOpen aquí
+  }
+
+  onInjuryModalDismiss() {
+    this.isModalOpen = false;
+    this.selectedPlayer = null; // Limpiamos selección al salir de la lesión
   }
   
   closeModals() {
