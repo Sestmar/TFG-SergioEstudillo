@@ -4,7 +4,7 @@ import { Observable, Subject, of } from 'rxjs';
 import { takeUntil, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http'; 
 import { AlertController } from '@ionic/angular'; // 🔥 Inyectado
-
+import { environment } from 'src/environments/environment';
 import { User, Player, Team, PlayerStats } from 'src/app/shared/models/models';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { UserService } from 'src/app/core/services/user/user.service';
@@ -112,22 +112,25 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   }
 
   private loadPlayerProfile(userId: number) {
-    this.http.get(`http://localhost:8080/api/jugadores/usuario/${userId}/equipo`).pipe(
-        catchError(() => of(null))
+    // ✅ Usamos la URL de Render definida en environment.ts
+    const url = `${environment.apiUrl}/jugadores/usuario/${userId}/equipo`;
+
+    this.http.get(url).pipe(
+      catchError(() => of(null))
     ).subscribe((equipo: any) => {
-        if (equipo) {
-            this.currentTeam = equipo;
-            this.currentPlayer = { 
-                usuario: { id: userId } as any 
-            } as Player; 
-            
-            this.getFullPlayerData(userId);
-            
-            const teamId = equipo.id || equipo.idEquipo;
-            this.loadTeamMatches(teamId);
-        } else {
-            this.loading = false;
-        }
+      if (equipo) {
+          this.currentTeam = equipo;
+          this.currentPlayer = { 
+            usuario: { id: userId } as any 
+          } as Player; 
+          
+          this.getFullPlayerData(userId);
+          
+          const teamId = equipo.id || equipo.idEquipo;
+          this.loadTeamMatches(teamId);
+      } else {
+          this.loading = false;
+      }
     });
   }
 

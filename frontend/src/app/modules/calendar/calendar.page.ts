@@ -5,6 +5,7 @@ import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from 'src/environments/environment'; // ✅ Importado
 
 @Component({
   selector: 'app-calendar',
@@ -40,7 +41,6 @@ export class CalendarPage implements OnInit {
 
     this.route.queryParams.subscribe(params => {
         if (params['teamId']) {
-            console.log('Modo Admin/Visor: Cargando equipo ID', params['teamId']);
             this.currentTeamId = Number(params['teamId']);
             this.loadEvents();
         } else {
@@ -64,7 +64,8 @@ export class CalendarPage implements OnInit {
                 }
             });
         } else if (rol.includes('JUGADOR')) {
-            this.http.get(`http://localhost:8080/api/jugadores/usuario/${userId}/equipo`).subscribe({
+            // ✅ Corregido para usar environment
+            this.http.get(`${environment.apiUrl}/jugadores/usuario/${userId}/equipo`).subscribe({
                 next: (equipo: any) => {
                     if (equipo) {
                         this.currentTeamId = equipo.idEquipo || equipo.id;
@@ -86,12 +87,9 @@ export class CalendarPage implements OnInit {
     });
   }
 
-  // MÉTODO INTELIGENTE DE REDIRECCIÓN
   onEventClick(event: any) {
       const eventId = event.idPartido || event.id;
       const tipo = event.tipo; 
-      
-      // ID del equipo para pasar lista
       const teamIdToPass = event.idEquipo || (event.equipo ? event.equipo.idEquipo : this.currentTeamId);
 
       this.authSvc.currentUser$.subscribe(user => {
@@ -99,21 +97,15 @@ export class CalendarPage implements OnInit {
           const rol = (u.rol || '').toUpperCase();
           const isAdminOrCoach = rol.includes('ADMIN') || rol.includes('ENTRENADOR') || rol.includes('STAFF');
 
-          // 🟢 1. SI ES ENTRENAMIENTO
           if (tipo === 'TRAINING') {
               if (isAdminOrCoach) {
-                  // Admin/Entrenador -> Pasan lista
                   this.router.navigate(['/training-attendance', eventId], {
                       queryParams: { teamId: teamIdToPass }
                   });
-              } else {
-                  // Jugador -> No hace nada o ve detalle simple (futuro)
-                  console.log("Entrenamiento (Vista Jugador)");
               }
               return;
           }
 
-          // ⚽ 2. SI ES PARTIDO
           if (tipo === 'PARTIDO') {
                if (rol.includes('ADMIN')) {
                    this.router.navigate(['/edit-match', eventId]); 
@@ -124,7 +116,6 @@ export class CalendarPage implements OnInit {
       });
   }
 
-  // RESTO DE MÉTODOS DEL CALENDARIO
   generateCalendar() {
     const year = this.viewDate.getFullYear();
     const month = this.viewDate.getMonth();
@@ -180,10 +171,7 @@ export class CalendarPage implements OnInit {
 
   hasEvents(day: number): boolean { return this.getEventsForDay(day).length > 0; }
   hasMatch(day: number): boolean { return this.getEventsForDay(day).some(e => e.tipo === 'PARTIDO'); }
-  hasTraining(day: number): boolean { 
-    // Buscamos 'TRAINING' porque así lo guarda el AdminController
-    return this.getEventsForDay(day).some(e => e.tipo === 'TRAINING'); 
-}
+  hasTraining(day: number): boolean { return this.getEventsForDay(day).some(e => e.tipo === 'TRAINING'); }
 
   private getEventsForDay(day: number): any[] {
       return this.allEvents.filter(e => {

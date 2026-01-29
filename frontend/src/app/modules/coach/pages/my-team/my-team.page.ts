@@ -6,6 +6,7 @@ import { TeamService } from 'src/app/core/services/team/team.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { Player } from 'src/app/shared/models/models';
 import { filter, switchMap } from 'rxjs/operators';
+import { environment } from 'src/environments/environment'; // ✅ Importado para Render
 
 @Component({
   selector: 'app-my-team',
@@ -70,7 +71,8 @@ export class MyTeamPage implements OnInit {
         switchMap(user => {
           const u = user as any;
           const userId = u.id || u.idUsuario || u.sub;
-          return this.http.get(`http://localhost:8080/api/entrenadores/usuario/${userId}/equipo`);
+          // ✅ CORRECCIÓN: Usando environment.apiUrl para Render/Móvil
+          return this.http.get(`${environment.apiUrl}/entrenadores/usuario/${userId}/equipo`);
         })
       )
       .subscribe({
@@ -99,8 +101,8 @@ export class MyTeamPage implements OnInit {
         const all = Array.isArray(res) ? res : (res.data || []);
         
         const myPlayers = all.filter((p: any) => {
-             const playerTeamId = this.getTeamIdFromPlayer(p);
-             return playerTeamId == this.coachTeamId;
+              const playerTeamId = this.getTeamIdFromPlayer(p);
+              return playerTeamId == this.coachTeamId;
         });
 
         this.allPlayersCount = myPlayers.length;

@@ -11,6 +11,7 @@ import { NewsService } from 'src/app/core/services/news/new.service';
 
 // Imports de Modelos
 import { User, News } from 'src/app/shared/models/models';
+import { environment } from 'src/environments/environment'; // ✅ Importado para Render
 
 @Component({
   selector: 'app-user-dashboard',
@@ -76,8 +77,8 @@ export class UserDashboardPage implements OnInit, OnDestroy {
         return;
     }
 
-    // B. 🔥 CORRECCIÓN: Preguntamos a la API de JUGADORES (no entrenadores)
-    this.http.get(`http://localhost:8080/api/jugadores/usuario/${userId}/equipo`).subscribe({
+    // B. 🔥 CORRECCIÓN: Usando environment.apiUrl para Render/Móvil
+    this.http.get(`${environment.apiUrl}/jugadores/usuario/${userId}/equipo`).subscribe({
         next: (equipo: any) => {
             console.log("✅ Equipo de jugador detectado:", equipo);
             this.myTeamId = equipo.idEquipo || equipo.id;

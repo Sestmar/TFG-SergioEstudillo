@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class UploadService {
   // URL del FileController que creaste en el backend
-  private apiUrl = 'http://localhost:8080/api/uploads/img';
+  private apiUrl = '${environment.apiUrl}';
 
   constructor(private http: HttpClient) { }
 
