@@ -7,6 +7,7 @@ import com.DAMUnitedFC.backend_tfg.model.Usuario;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import com.DAMUnitedFC.backend_tfg.service.AuthService;
 import com.DAMUnitedFC.backend_tfg.service.JwtService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,30 +62,37 @@ public class UsuarioController {
     }
 
     @PostMapping("/forgot-password")
+    @Transactional // 🛡️ ESCUDO: Si el email falla, esto deshace el cambio de contraseña
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");
 
-        // 1. Buscar usuario por email
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 2. Generar contraseña temporal aleatoria (8 caracteres)
         String tempPassword = UUID.randomUUID().toString().substring(0, 8);
 
-        // 3. Actualizar usuario con la nueva contraseña (¡ENCRIPTADA!)
-        // Como dijiste, tu entidad usa 'passwordHash', así que usamos ese setter.
+        // 👁️ CHIVATO: Imprimimos la contraseña en los logs de Render por si el email falla
+        System.out.println("⚠️ RECUPERACIÓN SOLICITADA PARA: " + email);
+        System.out.println("🔑 NUEVA CONTRASEÑA GENERADA (Copiar si el email falla): " + tempPassword);
+
+        // 1. Guardamos en DB
         usuario.setPasswordHash(passwordEncoder.encode(tempPassword));
         usuarioRepository.save(usuario);
 
-        // 4. Enviar email
-        emailService.sendEmail(
-                email,
-                "Recuperación de Contraseña - Tu Club de Fútbol",
-                "Hola " + usuario.getNombre() + ",\n\n" +
-                        "Hemos recibido una solicitud para restablecer tu contraseña.\n" +
-                        "Tu nueva contraseña temporal es: " + tempPassword + "\n\n" +
-                        "Por favor, inicia sesión y cámbiala lo antes posible desde tu perfil."
-        );
+        // 2. Enviamos el email
+        try {
+            emailService.sendEmail(
+                    email,
+                    "Recuperación de Contraseña - Tu Club de Fútbol",
+                    "Hola " + usuario.getNombre() + ",\n\n" +
+                            "Tu nueva contraseña temporal es: " + tempPassword + "\n\n" +
+                            "Por favor, entra en la app y cámbiala lo antes posible."
+            );
+        } catch (Exception e) {
+            // 🚨 Si falla el email, lanzamos un error para que @Transactional deshaga el cambio en la DB
+            System.out.println("❌ ERROR ENVIANDO EMAIL: " + e.getMessage());
+            throw new RuntimeException("No se pudo enviar el email. La contraseña NO se ha cambiado.");
+        }
 
         return ResponseEntity.ok(Map.of("message", "Email enviado correctamente"));
     }
