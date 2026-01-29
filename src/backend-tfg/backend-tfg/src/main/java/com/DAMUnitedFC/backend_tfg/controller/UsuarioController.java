@@ -7,43 +7,52 @@ import com.DAMUnitedFC.backend_tfg.model.Usuario;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import com.DAMUnitedFC.backend_tfg.service.AuthService;
 import com.DAMUnitedFC.backend_tfg.service.JwtService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder; // ✅ IMPORT NECESARIO
 import org.springframework.web.bind.annotation.*;
+import com.DAMUnitedFC.backend_tfg.service.EmailService;
 
+import java.util.Map;
+import java.util.UUID;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
 public class UsuarioController {
 
+    @Autowired
+    private EmailService emailService;
+
     private final UsuarioRepository usuarioRepository;
     private final AuthService authService;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder; // ✅ VARIABLE AÑADIDA
 
     public UsuarioController(UsuarioRepository usuarioRepository,
                              AuthService authService,
                              JwtService jwtService,
-                             AuthenticationManager authenticationManager) {
+                             AuthenticationManager authenticationManager,
+                             PasswordEncoder passwordEncoder) { // ✅ INYECCIÓN EN CONSTRUCTOR
         this.usuarioRepository = usuarioRepository;
         this.authService = authService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
+        this.passwordEncoder = passwordEncoder; // ✅ ASIGNACIÓN
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegistroUsuario registroDto) {
         try {
-            // 🧹 LIMPIEZA PREVENTIVA: Guardamos siempre en minúsculas y sin espacios
             if (registroDto.getEmail() != null) {
                 registroDto.setEmail(registroDto.getEmail().trim().toLowerCase());
             }
-
             Usuario newUser = authService.registerNewUser(registroDto);
             return new ResponseEntity<>(newUser, HttpStatus.CREATED);
         } catch (RuntimeException e) {
@@ -51,18 +60,42 @@ public class UsuarioController {
         }
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+
+        // 1. Buscar usuario por email
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 2. Generar token temporal
+        String tempPassword = UUID.randomUUID().toString().substring(0, 8);
+
+        // 3. Actualizar usuario con la nueva contraseña (¡ENCRIPTADA!)
+        // ✅ AHORA SÍ FUNCIONA PORQUE passwordEncoder YA EXISTE
+        usuario.setPasswordHash(passwordEncoder.encode(tempPassword));
+        usuarioRepository.save(usuario);
+
+        // 4. Enviar email
+        emailService.sendEmail(
+                email,
+                "Recuperación de Contraseña - Tu Club de Fútbol",
+                "Hola " + usuario.getNombre() + ",\n\n" +
+                        "Tu nueva contraseña temporal es: " + tempPassword + "\n\n" +
+                        "Por favor, entra en la app y cámbiala lo antes posible."
+        );
+
+        return ResponseEntity.ok(Map.of("message", "Email enviado correctamente"));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@RequestBody LoginDto loginDto) {
         try {
-            // 🧹 LIMPIEZA CRÍTICA: El usuario puede escribir " Sergio@Gmail.com "
-            // Nosotros lo convertimos a "sergio@gmail.com" antes de buscar.
             String emailLimpio = "";
-
             if (loginDto.getEmail() != null) {
                 emailLimpio = loginDto.getEmail().trim().toLowerCase();
             }
 
-            // 1. Validar credenciales usando el email limpio
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             emailLimpio,
@@ -70,21 +103,16 @@ public class UsuarioController {
                     )
             );
 
-            // 2. Si la autenticación pasa, buscamos al usuario
             Usuario user = usuarioRepository.findByEmail(emailLimpio)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-            // 3. Generar Token
             String token = jwtService.generateToken(user);
 
-            // 4. Obtener roles de forma segura (para enviarlos en el login si quieres, o dejarlo como estaba)
-            // Tu AuthResponseDto parece que solo pide token, así que lo dejamos así.
             return ResponseEntity.ok(AuthResponseDto.builder()
                     .token(token)
                     .build());
 
         } catch (AuthenticationException e) {
-            // Este es el error 403 que veías. Ahora saltará mucho menos.
             System.out.println("❌ Error de autenticación para: " + loginDto.getEmail());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
