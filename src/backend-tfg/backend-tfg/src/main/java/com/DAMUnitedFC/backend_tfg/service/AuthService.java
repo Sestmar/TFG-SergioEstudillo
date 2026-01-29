@@ -21,12 +21,12 @@ public class AuthService {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
-    private EntrenadorRepository entrenadorRepository; // <--- INYECCIÓN NUEVA
+    private EntrenadorRepository entrenadorRepository; //
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Transactional // <--- AÑADIDO: Si falla crear el entrenador, que no se cree el usuario
+    @Transactional // Si falla crear el entrenador, que no se cree el usuario
     public Usuario registerNewUser(RegistroUsuario registroDto) {
         if (usuarioRepository.findByEmail(registroDto.getEmail()).isPresent()) {
             throw new RuntimeException("Error: El email ya está registrado.");
@@ -35,7 +35,7 @@ public class AuthService {
         Usuario newUser = new Usuario();
         newUser.setNombre(registroDto.getNombre());
         newUser.setApellidos(registroDto.getApellidos());
-        newUser.setEmail(registroDto.getEmail());
+        newUser.setEmail(registroDto.getEmail().trim().toLowerCase());
         newUser.setPasswordHash(passwordEncoder.encode(registroDto.getPassword()));
         newUser.setTelefono(registroDto.getTelefono());
         newUser.setFechaRegistro(new Date());
@@ -50,7 +50,7 @@ public class AuthService {
 
         Usuario savedUser = usuarioRepository.save(newUser);
 
-        // 🔥 SI ES ENTRENADOR, CREAMOS LA ENTIDAD ENTRENADOR AUTOMÁTICAMENTE
+        // SI ES ENTRENADOR, CREAMOS LA ENTIDAD ENTRENADOR AUTOMÁTICAMENTE
         if ("ENTRENADOR".equals(rolAsignado) || "ROLE_COACH".equals(rolAsignado)) {
             createEmptyCoachProfile(savedUser);
         }
