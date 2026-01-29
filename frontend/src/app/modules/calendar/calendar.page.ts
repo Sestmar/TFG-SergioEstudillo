@@ -5,7 +5,10 @@ import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { environment } from 'src/environments/environment'; // ✅ Importado
+import { environment } from 'src/environments/environment';
+// 👇 Nuevos Imports
+import { AlertController, ToastController } from '@ionic/angular';
+import { AdminService } from 'src/app/core/services/admin/admin.service';
 
 @Component({
   selector: 'app-calendar',
@@ -25,6 +28,9 @@ export class CalendarPage implements OnInit {
   allEvents: any[] = [];
   
   currentTeamId: number | null = null;
+  
+  // 🔥 Control de permisos
+  canDelete: boolean = false; 
 
   constructor(
     private location: Location,
@@ -33,11 +39,23 @@ export class CalendarPage implements OnInit {
     private coachSvc: CoachService,
     private http: HttpClient,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    // 👇 Inyecciones nuevas
+    private alertCtrl: AlertController,
+    private toastCtrl: ToastController,
+    private adminSvc: AdminService
   ) { }
 
   ngOnInit() {
     this.generateCalendar();
+
+    // Comprobar permisos al iniciar
+    this.authSvc.currentUser$.subscribe(user => {
+        if (user) {
+            const rol = (user.rol || '').toUpperCase();
+            this.canDelete = rol.includes('ADMIN') || rol.includes('ENTRENADOR');
+        }
+    });
 
     this.route.queryParams.subscribe(params => {
         if (params['teamId']) {
@@ -64,7 +82,6 @@ export class CalendarPage implements OnInit {
                 }
             });
         } else if (rol.includes('JUGADOR')) {
-            // ✅ Corregido para usar environment
             this.http.get(`${environment.apiUrl}/jugadores/usuario/${userId}/equipo`).subscribe({
                 next: (equipo: any) => {
                     if (equipo) {
@@ -83,6 +100,7 @@ export class CalendarPage implements OnInit {
     if (!this.currentTeamId) return;
     this.matchSvc.getMatchesByTeam(this.currentTeamId).subscribe(matches => {
         this.allEvents = matches;
+        // Refrescamos la selección del día actual si ya había uno seleccionado
         this.selectDay(this.selectedDate.getDate()); 
     });
   }
@@ -115,6 +133,43 @@ export class CalendarPage implements OnInit {
           }
       });
   }
+
+  // 🔥 NUEVO: Función para borrar evento
+  async deleteEvent(event: any, e: Event) {
+    e.stopPropagation(); // Importante: evita que se abra el detalle del evento
+
+    const alert = await this.alertCtrl.create({
+      header: '¿Borrar Evento?',
+      message: `Vas a eliminar: <strong>${event.rival || 'Entrenamiento'}</strong>.<br>Esta acción no se puede deshacer.`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Eliminar',
+          role: 'destructive',
+          handler: () => {
+            const id = event.idPartido || event.id;
+            this.adminSvc.deleteEvento(id).subscribe({
+              next: () => {
+                this.presentToast('Evento eliminado', 'success');
+                // Actualizar lista local
+                this.allEvents = this.allEvents.filter(ev => (ev.idPartido || ev.id) !== id);
+                this.filterEventsForSelectedDate(); // Refrescar vista
+              },
+              error: (err) => this.presentToast('Error al eliminar', 'danger')
+            });
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async presentToast(msg: string, color: string) {
+    const t = await this.toastCtrl.create({ message: msg, duration: 2000, color });
+    t.present();
+  }
+
+  // --- Lógica del Calendario (Sin cambios) ---
 
   generateCalendar() {
     const year = this.viewDate.getFullYear();

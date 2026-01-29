@@ -74,4 +74,8 @@ export class AdminService {
   getAsistencia(trainingId: number) {
     return this.http.get(`${this.apiUrl}/entrenamiento/${trainingId}/asistencia`);
   }
+
+  deleteEvento(id: number) {
+    return this.http.delete(`${this.apiUrl}/evento/${id}`);
+  }
 }

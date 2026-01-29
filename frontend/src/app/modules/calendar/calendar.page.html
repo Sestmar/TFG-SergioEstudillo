@@ -50,12 +50,23 @@
       <div class="event-card" 
            *ngFor="let event of selectedDayEvents"
            [class.match-card]="event.tipo === 'PARTIDO'"
-           (click)="onEventClick(event)"> <div class="info-col">
+           (click)="onEventClick(event)">
+        
+        <div class="info-col">
           <div class="top-row">
             <span class="type-tag" [class.match]="event.tipo === 'PARTIDO'">
                {{ event.tipo === 'PARTIDO' ? 'MATCHDAY' : 'TRAINING' }}
             </span>
             <span class="time-tag">{{ event.fechaHora | date:'HH:mm' }}</span>
+            
+            <ion-button *ngIf="canDelete" 
+                        fill="clear" 
+                        color="danger" 
+                        size="small" 
+                        class="delete-btn"
+                        (click)="deleteEvent(event, $event)">
+                <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+            </ion-button>
           </div>
 
           <div class="event-main-title">
