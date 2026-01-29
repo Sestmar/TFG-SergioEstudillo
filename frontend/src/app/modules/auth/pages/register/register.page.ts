@@ -11,7 +11,8 @@ import { ToastController } from '@ionic/angular';
   styleUrls: ['./register.page.scss']
 })
 export class RegisterPage implements OnInit {
-  
+
+  showPassword = false;
   registerForm!: FormGroup;
   isLoading = false;
   selectedFile: File | null = null;
