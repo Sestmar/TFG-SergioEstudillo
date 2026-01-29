@@ -1,5 +1,6 @@
 package com.DAMUnitedFC.backend_tfg.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -35,23 +36,19 @@ public class FileController {
     }
 
     @PostMapping("/img")
-    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
         Map<String, String> response = new HashMap<>();
-
         try {
-            // 1. Generar nombre único para evitar colisiones (ej: uuid_foto.jpg)
             String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-
-            // 2. Guardar el archivo en la carpeta
             Path targetLocation = this.fileStorageLocation.resolve(fileName);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
-            // 3. Generar la URL de acceso (ajusta el puerto si es necesario)
-            String fileDownloadUri = "http://localhost:8080/api/uploads/files/" + fileName;
+            // ✅ DINÁMICO: Esto detectará si estás en Render o en Local automáticamente
+            String baseUrl = request.getRequestURL().toString().replace(request.getRequestURI(), "");
+            String fileDownloadUri = baseUrl + "/api/uploads/files/" + fileName;
 
             response.put("url", fileDownloadUri);
             return ResponseEntity.ok(response);
-
         } catch (IOException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", "Fallo al subir: " + ex.getMessage()));
         }
