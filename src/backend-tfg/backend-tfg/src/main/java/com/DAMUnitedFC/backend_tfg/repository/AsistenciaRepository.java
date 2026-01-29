@@ -10,4 +10,5 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, Long> {
     List<Asistencia> findByIdEntrenamiento(Long idEntrenamiento);
     Optional<Asistencia> findByIdEntrenamientoAndJugador(Long idEntrenamiento, Jugador jugador);
     List<Asistencia> findByJugador(Jugador jugador);
+    void deleteByidEntrenamiento(Long id);
 }

@@ -42,7 +42,7 @@ public class PartidoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // 🔥 4. NUEVO: EDITAR PARTIDO (PUT)
+    // EDITAR PARTIDO (PUT)
     // Permite actualizar fecha, rival, ESCUDO, lugar, etc.
     @PutMapping("/{id}")
     public ResponseEntity<Partido> updatePartido(@PathVariable Long id, @RequestBody Map<String, Object> updates) {

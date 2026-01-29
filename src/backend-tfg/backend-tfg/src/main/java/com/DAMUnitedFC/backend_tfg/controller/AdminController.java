@@ -304,7 +304,33 @@ public class AdminController {
         }
     }
 
-    // 🔥 CERRAR ACTA (ACTUALIZADO CON ASISTENCIAS)
+    // 🔥 BORRAR EVENTO (PARTIDO O ENTRENAMIENTO)
+    @DeleteMapping("/evento/{id}")
+    @Transactional // Importante para borrar en cascada
+    public ResponseEntity<?> deleteEvento(@PathVariable Long id) {
+        try {
+            // 1. Buscar el evento
+            Partido evento = partidoRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+
+            // 2. Borrar dependencias (Hijos)
+            // Borrar alineaciones/estadísticas asociadas
+            alineacionRepo.deleteByPartido(evento);
+
+            // Borrar asistencias (si es entrenamiento)
+            asistenciaRepo.deleteByidEntrenamiento(id);
+
+            // 3. Borrar el evento (Padre)
+            partidoRepo.delete(evento);
+
+            return ResponseEntity.ok(Collections.singletonMap("message", "Evento eliminado correctamente"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("error", "No se pudo eliminar: " + e.getMessage()));
+        }
+    }
+
+    // CERRAR ACTA (ACTUALIZADO CON ASISTENCIAS)
     @PostMapping("/cerrar-acta")
     @Transactional
     public ResponseEntity<?> cerrarActaAdmin(@RequestBody Map<String, Object> payload) {
