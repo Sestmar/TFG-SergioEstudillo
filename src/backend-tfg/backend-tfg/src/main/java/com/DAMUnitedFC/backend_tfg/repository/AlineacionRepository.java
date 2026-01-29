@@ -13,20 +13,20 @@ import java.util.Optional;
 @Repository
 public interface AlineacionRepository extends JpaRepository<Alineacion, Long> {
 
-    // ✅ 1. PARA ARREGLAR ERROR ROJO EN AlineacionController (Lista de alineación)
-    // Spring Data es listo: entiende "Partido" + "IdPartido"
     List<Alineacion> findByPartidoIdPartido(Long idPartido);
 
-    // ✅ 2. PARA ARREGLAR ERROR ROJO EN AlineacionController (Buscar ficha específica)
     @Query("SELECT a FROM Alineacion a WHERE a.partido.idPartido = :idPartido AND a.jugador.idJugador = :idJugador")
     Optional<Alineacion> findFichaExacta(@Param("idPartido") Long idPartido, @Param("idJugador") Integer idJugador);
 
-    // ✅ 3. PARA EL ADMIN (Alternativa más limpia usando objetos, la usaremos en AdminController)
     Optional<Alineacion> findByPartidoAndJugador(Partido partido, Jugador jugador);
 
-    // Métodos auxiliares
     List<Alineacion> findByJugador(Jugador jugador);
     void deleteByJugador(Jugador jugador);
+
+    // 👇 ESTE ES EL QUE FALTA Y CAUSA EL ERROR
+    void deleteByPartido(Partido partido);
+
+    // Este otro ya lo tenías, puedes dejarlo si lo usas en otro sitio
     void deleteByPartidoIdPartido(Long idPartido);
 
     // --- ESTADÍSTICAS ---
