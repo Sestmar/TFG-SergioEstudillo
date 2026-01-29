@@ -14,7 +14,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.password.PasswordEncoder; // ✅ IMPORT NECESARIO
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.DAMUnitedFC.backend_tfg.service.EmailService;
 
@@ -33,18 +33,18 @@ public class UsuarioController {
     private final AuthService authService;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final PasswordEncoder passwordEncoder; // ✅ VARIABLE AÑADIDA
+    private final PasswordEncoder passwordEncoder;
 
     public UsuarioController(UsuarioRepository usuarioRepository,
                              AuthService authService,
                              JwtService jwtService,
                              AuthenticationManager authenticationManager,
-                             PasswordEncoder passwordEncoder) { // ✅ INYECCIÓN EN CONSTRUCTOR
+                             PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.authService = authService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
-        this.passwordEncoder = passwordEncoder; // ✅ ASIGNACIÓN
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/register")
@@ -68,11 +68,11 @@ public class UsuarioController {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 2. Generar token temporal
+        // 2. Generar contraseña temporal aleatoria (8 caracteres)
         String tempPassword = UUID.randomUUID().toString().substring(0, 8);
 
         // 3. Actualizar usuario con la nueva contraseña (¡ENCRIPTADA!)
-        // ✅ AHORA SÍ FUNCIONA PORQUE passwordEncoder YA EXISTE
+        // Como dijiste, tu entidad usa 'passwordHash', así que usamos ese setter.
         usuario.setPasswordHash(passwordEncoder.encode(tempPassword));
         usuarioRepository.save(usuario);
 
@@ -81,8 +81,9 @@ public class UsuarioController {
                 email,
                 "Recuperación de Contraseña - Tu Club de Fútbol",
                 "Hola " + usuario.getNombre() + ",\n\n" +
+                        "Hemos recibido una solicitud para restablecer tu contraseña.\n" +
                         "Tu nueva contraseña temporal es: " + tempPassword + "\n\n" +
-                        "Por favor, entra en la app y cámbiala lo antes posible."
+                        "Por favor, inicia sesión y cámbiala lo antes posible desde tu perfil."
         );
 
         return ResponseEntity.ok(Map.of("message", "Email enviado correctamente"));
