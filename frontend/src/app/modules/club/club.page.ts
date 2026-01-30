@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { LoadingController } from '@ionic/angular';
 
-// ✅ Alias profesionales que Docker reconocerá gracias al tsconfig.app.json
-import { PublicService } from '@core/services/public/public.service';
-import { PublicTeam, PublicPlayer } from '@shared/models/models';
+// ✅ Ruta relativa física directa para evitar fallos de alias en Docker
+import { PublicService } from '../../core/services/public/public.service';
+import { PublicTeam, PublicPlayer } from '../../shared/models/models';
 
 @Component({
   selector: 'app-club',

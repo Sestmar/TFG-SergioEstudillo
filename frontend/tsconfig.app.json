@@ -3,18 +3,20 @@
   "compilerOptions": {
     "outDir": "./out-tsc/app",
     "baseUrl": "./",
+    "types": [],
     "paths": {
+      "src/*": ["src/*"],
       "@core/*": ["src/app/core/*"],
       "@shared/*": ["src/app/shared/*"],
       "@environments/*": ["src/environments/*"]
-    },
-    "types": []
+    }
   },
   "files": [
     "src/main.ts",
     "src/polyfills.ts"
   ],
   "include": [
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "src/**/*.ts" // 👈 Asegúrate de que esta línea esté presente
   ]
 }

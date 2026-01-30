@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN npx ng build --configuration production
+RUN npm run build
 
 # Etapa 2: Servidor Web (Nginx)
 FROM nginx:alpine
