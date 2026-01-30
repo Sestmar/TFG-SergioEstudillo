@@ -42,6 +42,8 @@ public class SecurityConfig {
                         // 2. Permitir Auth (Login/Registro) explícitamente
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        .requestMatchers("/api/public/**").permitAll() // ruta publica ver equipos y plantillas
+
                         // 3. Permitir recursos estáticos y Swagger
                         .requestMatchers("/api/uploads/**", "/uploads/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
