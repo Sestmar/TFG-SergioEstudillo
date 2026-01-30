@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
-import { User, UserRole } from '@shared/models';
+import { Team } from 'src/app/shared/models/models';
 import { UserService } from '../user/user.service';
 
 /**

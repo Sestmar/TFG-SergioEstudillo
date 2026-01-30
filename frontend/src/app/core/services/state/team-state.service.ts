@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { Team } from '@shared/models';
+import { Team } from 'src/app/shared/models/models';
 import { TeamService } from '../team/team.service';
 
 /**

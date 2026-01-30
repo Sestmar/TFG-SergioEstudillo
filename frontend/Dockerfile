@@ -8,9 +8,9 @@ RUN npm run build
 
 # Etapa 2: Servidor Web (Nginx)
 FROM nginx:alpine
-# Copiamos el resultado de la compilación a la carpeta de Nginx
-COPY --from=build-step /app/www /usr/share/nginx/html
-# Copiamos una configuración para que las rutas de Angular funcionen
+# ✅ CORRECCIÓN: Copiamos desde la ruta real definida en angular.json
+COPY --from=build-step /app/dist/club-futbol-ionic /usr/share/nginx/html
+
 RUN echo 'server { \
     listen 80; \
     location / { \
@@ -19,5 +19,6 @@ RUN echo 'server { \
         try_files $uri $uri/ /index.html; \
     } \
 }' > /etc/nginx/conf.d/default.conf
+
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

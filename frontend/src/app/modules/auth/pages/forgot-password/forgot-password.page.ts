@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AuthService } from '../../../../core/services/auth/auth.service';
-import { NotificationService } from '../../../../core/services/notification/notification.service';
+import { AuthService } from 'src/app/core/services/auth/auth.service';
+import { NotificationService } from 'src/app/core/services/notification/notification.service';
 import { finalize } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
