@@ -15,15 +15,13 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "es2019",
+    "target": "es2022",
     "module": "es2020",
-    "lib": [
-      "es2019", 
-      "dom"
-    ],
+    "lib": ["es2022", "dom"],
     "useDefineForClassFields": false,
     "paths": {
       "src/*": ["src/*"],
+      "@app/*": ["src/app/*"],
       "@core/*": ["src/app/core/*"],
       "@shared/*": ["src/app/shared/*"],
       "@environments/*": ["src/environments/*"]

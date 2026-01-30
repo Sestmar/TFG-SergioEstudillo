@@ -64,7 +64,7 @@ testem.log
 Thumbs.db
 
 # Environment files
-/src/environments/environment.prod.ts
+#/src/environments/environment.prod.ts
 /src/environments/environment.staging.ts
 
 # Logs
