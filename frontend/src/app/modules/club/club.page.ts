@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-// ✅ Ruta relativa exacta: sube 3 niveles (club -> modules -> app) y entra en core
-import { PublicService } from '../../../app/core/services/public/public.service';
-// ✅ Ruta relativa exacta: sube 3 niveles y entra en shared
-import { PublicTeam, PublicPlayer } from '../../../app/shared/models/models';
+// ✅ Usamos el alias profesional que no depende de los puntos ../
+import { PublicService } from '@core/services/public/public.service';
+import { PublicTeam, PublicPlayer } from '@shared/models/models';
 import { LoadingController } from '@ionic/angular';
 
 @Component({
