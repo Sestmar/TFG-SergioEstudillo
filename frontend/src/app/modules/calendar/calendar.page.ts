@@ -1,14 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { Location } from '@angular/common';
-import { MatchService } from 'src/app/core/services/match/match.service';
-import { AuthService } from 'src/app/core/services/auth/auth.service';
-import { CoachService } from 'src/app/core/services/coach/coach.service';
+import { MatchService } from '../../core/services/match/match.service';
+import { AuthService } from '../../core/services/auth/auth.service';
+import { CoachService } from '../../core/services/coach/coach.service';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
-// 👇 Nuevos Imports
 import { AlertController, ToastController } from '@ionic/angular';
-import { AdminService } from 'src/app/core/services/admin/admin.service';
+import { AdminService } from '../../core/services/admin/admin.service';
 
 @Component({
   selector: 'app-calendar',

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { PublicService } from 'src/app/core/services/public/public.service';
-import { PublicTeam, PublicPlayer } from 'src/app/shared/models/models';
+import { PublicService } from '../../core/services/public/public.service';
+import { PublicTeam, PublicPlayer } from '../../shared/models/models';
 import { LoadingController } from '@ionic/angular';
 
 @Component({
