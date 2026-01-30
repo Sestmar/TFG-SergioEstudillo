@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { LoadingController } from '@ionic/angular';
 
-// ✅ Subimos 3 niveles: club -> modules -> app -> y bajamos a core
-import { PublicService } from '../../../app/core/services/public/public.service';
-import { PublicTeam, PublicPlayer } from '../../../app/shared/models/models';
+// ✅ Esta ruta es la que Docker mapea directamente al copiar todo el código
+import { PublicService } from 'src/app/core/services/public/public.service';
+import { PublicTeam, PublicPlayer } from 'src/app/shared/models/models';
 
 @Component({
   selector: 'app-club',
