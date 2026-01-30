@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-// Usando la ruta absoluta (que ahora funcionará gracias al tsconfig)
-import { PublicService } from 'src/app/core/services/public/public.service';
-import { PublicTeam, PublicPlayer } from 'src/app/shared/models/models';
+// ✅ Ruta relativa exacta: sube 3 niveles (club -> modules -> app) y entra en core
+import { PublicService } from '../../../app/core/services/public/public.service';
+// ✅ Ruta relativa exacta: sube 3 niveles y entra en shared
+import { PublicTeam, PublicPlayer } from '../../../app/shared/models/models';
 import { LoadingController } from '@ionic/angular';
 
 @Component({
