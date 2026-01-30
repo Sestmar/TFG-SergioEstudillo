@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { LoadingController } from '@ionic/angular';
 
-// ✅ Esta ruta es infalible para Docker y funciona en tu local
-import { PublicService } from 'src/app/core/services/public/public.service';
-import { PublicTeam, PublicPlayer } from 'src/app/shared/models/models';
+// ✅ Subimos 3 niveles: club -> modules -> app -> y bajamos a core
+import { PublicService } from '../../../app/core/services/public/public.service';
+import { PublicTeam, PublicPlayer } from '../../../app/shared/models/models';
 
 @Component({
   selector: 'app-club',
