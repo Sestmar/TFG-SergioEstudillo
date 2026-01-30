@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-// ✅ Usamos el alias profesional que no depende de los puntos ../
+import { LoadingController } from '@ionic/angular';
+
+// ✅ Alias profesionales que Docker reconocerá gracias al tsconfig.app.json
 import { PublicService } from '@core/services/public/public.service';
 import { PublicTeam, PublicPlayer } from '@shared/models/models';
-import { LoadingController } from '@ionic/angular';
 
 @Component({
   selector: 'app-club',
@@ -39,7 +40,10 @@ export class ClubPage implements OnInit {
   async openTeam(team: PublicTeam) {
     this.selectedTeam = team;
     
-    const loading = await this.loadingCtrl.create({ message: 'Cargando plantilla...', spinner: 'crescent' });
+    const loading = await this.loadingCtrl.create({ 
+      message: 'Cargando plantilla...', 
+      spinner: 'crescent' 
+    });
     await loading.present();
 
     this.publicSvc.getTeamRoster(team.idEquipo).subscribe({
@@ -48,7 +52,7 @@ export class ClubPage implements OnInit {
             .map((p: any) => ({
                 ...p,
                 goles: p.goles || 0,
-                asistencias: p.asistencias || 0, // Mapeamos asistencias
+                asistencias: p.asistencias || 0,
                 fotoUrl: p.fotoUrl || null
             }))
             .sort((a, b) => (a.dorsal || 99) - (b.dorsal || 99));
