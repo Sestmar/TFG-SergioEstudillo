@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { LoadingController } from '@ionic/angular';
 
-// ✅ Usamos rutas relativas directas (../../) que Docker no puede ignorar
-import { PublicService } from '../../core/services/public/public.service';
-import { PublicTeam, PublicPlayer } from '../../shared/models/models';
+// ✅ Subimos 3 niveles para llegar a la carpeta 'app' y entrar en 'core'
+import { PublicService } from '../../../app/core/services/public/public.service';
+import { PublicTeam, PublicPlayer } from '../../../app/shared/models/models';
 
 @Component({
   selector: 'app-club',
