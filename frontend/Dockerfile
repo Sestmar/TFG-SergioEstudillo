@@ -6,19 +6,19 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copiamos todo el código (incluyendo tu tsconfig.json que ya funciona)
+# Copiamos todo el código
 COPY . .
 
-# Ejecutamos el build de producción
-RUN npx ng build --configuration production
+# Ejecutamos el build de producción usando el script de tu package.json
+RUN npm run build
 
 # Etapa 2: Servidor Web (Nginx) para servir los archivos estáticos
 FROM nginx:alpine
 
-# ✅ CORRECCIÓN CRUCIAL: Copiamos desde 'dist/club-futbol-ionic' (según tu angular.json)
+# Copiamos desde la ruta real definida en tu angular.json
 COPY --from=build-step /app/dist/club-futbol-ionic /usr/share/nginx/html
 
-# Configuración de Nginx para manejar rutas de Angular (evita el 404 al refrescar)
+# Configuración de Nginx para manejar rutas de Angular
 RUN echo 'server { \
     listen 80; \
     location / { \
