@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { Observable, Subject, of } from 'rxjs';
 import { takeUntil, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http'; 
-import { AlertController } from '@ionic/angular'; // 🔥 Inyectado
+import { AlertController } from '@ionic/angular';
 import { environment } from 'src/environments/environment';
 import { User, Player, Team, PlayerStats } from 'src/app/shared/models/models';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
