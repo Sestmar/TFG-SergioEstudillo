@@ -1,24 +1,22 @@
-# Etapa 1: Compilación (Usamos Node 20 LTS para máxima estabilidad)
+# Etapa 1: Compilación
 FROM node:20.11.0-alpine as build-step
 WORKDIR /app
 
-# Copiamos archivos de dependencias
 COPY package*.json ./
 RUN npm install
 
-# Copiamos todo el código
 COPY . .
 
-# Ejecutamos el build de producción usando el script de tu package.json
+# Ejecutamos el build de producción
 RUN npm run build
 
-# Etapa 2: Servidor Web (Nginx) para servir los archivos estáticos
+# Etapa 2: Servidor Web
 FROM nginx:alpine
 
-# Copiamos desde la ruta real definida en tu angular.json
-COPY --from=build-step /app/dist/club-futbol-ionic /usr/share/nginx/html
+# ✅ CORRECCIÓN CRÍTICA: Copiamos desde 'www' (donde Ionic guarda el build)
+COPY --from=build-step /app/www /usr/share/nginx/html
 
-# Configuración de Nginx para manejar rutas de Angular
+# Configuración de Nginx para SPA (Single Page Application)
 RUN echo 'server { \
     listen 80; \
     location / { \
