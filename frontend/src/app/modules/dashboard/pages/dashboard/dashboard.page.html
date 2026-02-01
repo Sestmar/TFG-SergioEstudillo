@@ -1,11 +1,9 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <!-- El título se carga cuando el usuario (user) existe -->
     <ion-title *ngIf="currentUser$ | async as user">
       Bienvenido, {{ user.nombre }}
     </ion-title>
     <ion-buttons slot="end">
-      <!-- El botón de Logout llama a la función onLogout() del TS -->
       <ion-button (click)="onLogout()">
         <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
       </ion-button>
@@ -14,16 +12,13 @@
 </ion-header>
 
 <ion-content class="ion-padding" [fullscreen]="true">
-  <!-- Solo mostramos el contenido si el usuario está cargado -->
   <div *ngIf="currentUser$ | async as user">
     <h1 class="ion-padding-start">Panel de Control</h1>
     
     <ion-grid>
       <ion-row>
         
-        <!-- Tarjeta 1: Mi Perfil -->
         <ion-col size="12" size-md="4">
-          <!-- (cardClick) llama a la función goToProfile() del TS -->
           <app-dashboard-card
             title="Mi Perfil"
             icon="person-circle-outline"
@@ -33,21 +28,17 @@
           </app-dashboard-card>
         </ion-col>
 
-        <!-- Tarjeta 2: Equipos -->
         <ion-col size="12" size-md="4">
-           <!-- (cardClick) llama a la función goToTeams() del TS -->
           <app-dashboard-card
-            title="Equipos"
+            title="Mi Equipo"
             icon="shield-outline"
-            description="Ver todos los equipos del club."
+            description="Gestiona o visualiza tu equipo."
             color="primary"
-            (cardClick)="goToTeams()">
-          </Vapp-dashboard-card>
+            (cardClick)="goToMyTeam()">
+          </app-dashboard-card>
         </ion-col>
 
-        <!-- Tarjeta 3: Convocatorias -->
         <ion-col size="12" size-md="4">
-           <!-- (cardClick) llama a la función goToConvocations() del TS -->
           <app-dashboard-card
             title="Mis Convocatorias"
             icon="calendar-outline"
@@ -61,7 +52,6 @@
     </ion-grid>
   </div>
 
-  <!-- Estado de Carga (mientras currentUser$ es null) -->
   <div *ngIf="!(currentUser$ | async)" class="ion-text-center ion-padding-top">
     <ion-spinner name="crescent" color="primary"></ion-spinner>
     <p>Cargando datos del usuario...</p>

@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { LoadingController } from '@ionic/angular';
 
-// ✅ Esta ruta es la que Docker mapea directamente al copiar todo el código
-import { PublicService } from 'src/app/core/services/public/public.service';
-import { PublicTeam, PublicPlayer } from 'src/app/shared/models/models';
+// ✅ CORRECCIÓN: Usamos TeamService con ruta relativa física
+import { TeamService } from '../../core/services/team/team.service';
+// Usamos 'any' para evitar conflictos de modelos antiguos
+import { Team } from '../../shared/models/models'; 
 
 @Component({
   selector: 'app-club',
@@ -12,13 +13,13 @@ import { PublicTeam, PublicPlayer } from 'src/app/shared/models/models';
 })
 export class ClubPage implements OnInit {
 
-  teams: PublicTeam[] = [];
-  selectedTeam: PublicTeam | null = null;
+  teams: any[] = [];
+  selectedTeam: any | null = null;
   roster: any[] = [];
   loading = true;
 
   constructor(
-    private publicSvc: PublicService,
+    private teamSvc: TeamService, // ✅ Inyectamos TeamService
     private loadingCtrl: LoadingController
   ) { }
 
@@ -28,16 +29,18 @@ export class ClubPage implements OnInit {
 
   loadTeams() {
     this.loading = true;
-    this.publicSvc.getPublicTeams().subscribe({
-        next: (data) => {
-            this.teams = data;
+    // ✅ Usamos getTeams del servicio corregido
+    this.teamSvc.getTeams().subscribe({
+        next: (data: any) => {
+            // Manejamos si devuelve array directo o objeto con propiedad teams
+            this.teams = Array.isArray(data) ? data : (data.teams || []);
             this.loading = false;
         },
         error: () => this.loading = false
     });
   }
 
-  async openTeam(team: PublicTeam) {
+  async openTeam(team: any) {
     this.selectedTeam = team;
     
     const loading = await this.loadingCtrl.create({ 
@@ -46,16 +49,25 @@ export class ClubPage implements OnInit {
     });
     await loading.present();
 
-    this.publicSvc.getTeamRoster(team.idEquipo).subscribe({
-      next: (players) => {
+    const teamId = team.id || team.idEquipo;
+
+    // ✅ Usamos getTeamById para sacar los jugadores
+    this.teamSvc.getTeamById(teamId).subscribe({
+      next: (fullTeam: any) => {
+        // Mapeamos los jugadores que vienen en el detalle del equipo
+        const players = fullTeam.jugadores || [];
+        
         this.roster = players
             .map((p: any) => ({
                 ...p,
+                nombre: p.nombre,
+                apellidos: p.apellidos,
+                dorsal: p.dorsal || 99,
                 goles: p.goles || 0,
                 asistencias: p.asistencias || 0,
-                fotoUrl: p.fotoUrl || null
+                fotoUrl: p.fotoUrl || `https://ui-avatars.com/api/?name=${p.nombre}&background=random`
             }))
-            .sort((a, b) => (a.dorsal || 99) - (b.dorsal || 99));
+            .sort((a: any, b: any) => (a.dorsal) - (b.dorsal));
         
         loading.dismiss();
       },
