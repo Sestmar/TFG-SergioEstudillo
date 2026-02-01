@@ -15,6 +15,9 @@ export class MatchDetailPage implements OnInit {
   players: any[] = []; 
   loading = true;
   currentUserId: number | null = null;
+  
+  // ✅ Control de permisos para la vista
+  canEdit: boolean = false; 
 
   constructor(
     private route: ActivatedRoute,
@@ -25,7 +28,12 @@ export class MatchDetailPage implements OnInit {
 
   ngOnInit() {
     this.authSvc.currentUser$.subscribe(u => {
-        if (u) this.currentUserId = (u as any).id || (u as any).idUsuario;
+        if (u) {
+            this.currentUserId = (u as any).id || (u as any).idUsuario;
+            const rol = (u.rol || '').toUpperCase();
+            // Solo ADMIN puede editar/cerrar actas desde aquí
+            this.canEdit = rol.includes('ADMIN');
+        }
     });
 
     const matchId = this.route.snapshot.paramMap.get('id');
@@ -45,27 +53,24 @@ export class MatchDetailPage implements OnInit {
           next: (alineacionDtos: any[]) => {
             if (alineacionDtos && alineacionDtos.length > 0) {
               this.players = alineacionDtos.map(dto => {
-                // Generamos una imagen segura si no hay foto
                 const safeImg = dto.fotoUrl || `https://ui-avatars.com/api/?name=${dto.nombre}&background=random&color=fff`;
 
                 return {
-                    ...dto, // Copiamos todo lo que venga del DTO
+                    ...dto,
                     nombre: dto.nombre || 'Jugador',
                     apellidos: dto.apellidos || '',
-                    fotoUrl: safeImg, // Usamos la imagen segura
+                    fotoUrl: safeImg,
                     dorsal: dto.dorsal || '--',
                     posicion: dto.posicion || 'JUG',
                     
-                    // Aseguramos que existan para evitar errores en HTML
                     esCapitan: !!dto.esCapitan,
                     esLanzadorPenaltis: !!dto.esLanzadorPenaltis,
                     esLanzadorFaltas: !!dto.esLanzadorFaltas,
                     goles: dto.goles || 0,
-                    asistencias: dto.asistencias || 0 // 🔥 NUEVO: Mapeo explícito de asistencias
+                    asistencias: dto.asistencias || 0 
                 };
               });
 
-              // Ordenar: Titulares primero, luego por goles
               this.players.sort((a, b) => {
                   if (a.esTitular && !b.esTitular) return -1;
                   if (!a.esTitular && b.esTitular) return 1;
@@ -92,13 +97,10 @@ export class MatchDetailPage implements OnInit {
   }
 
   handleImgError(event: any, context: string) {
-    event.target.onerror = null; // Parar bucle
-
+    event.target.onerror = null;
     if (context === 'rival') {
-        // Escudo por defecto para rivales
         event.target.src = 'https://cdn-icons-png.flaticon.com/512/16/16480.png'; 
     } else {
-        // Es un jugador (context es el nombre)
         event.target.src = `https://ui-avatars.com/api/?name=${context}&background=333&color=fff`;
     }
   }

@@ -28,7 +28,7 @@ export class CalendarPage implements OnInit {
   
   currentTeamId: number | null = null;
   
-  // 🔥 Control de permisos
+  // 🔥 Solo ADMIN puede borrar
   canDelete: boolean = false; 
 
   constructor(
@@ -39,7 +39,6 @@ export class CalendarPage implements OnInit {
     private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
-    // 👇 Inyecciones nuevas
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
     private adminSvc: AdminService
@@ -52,7 +51,8 @@ export class CalendarPage implements OnInit {
     this.authSvc.currentUser$.subscribe(user => {
         if (user) {
             const rol = (user.rol || '').toUpperCase();
-            this.canDelete = rol.includes('ADMIN') || rol.includes('ENTRENADOR');
+            // ✅ CORRECCIÓN: Solo ADMIN puede borrar eventos
+            this.canDelete = rol.includes('ADMIN');
         }
     });
 
@@ -90,6 +90,9 @@ export class CalendarPage implements OnInit {
                 },
                 error: (err) => console.log("Usuario sin equipo asignado o Admin")
             });
+        } else if (rol.includes('ADMIN') && this.currentTeamId) {
+             // Si es Admin y ya tiene teamId por URL, cargamos
+             this.loadEvents();
         }
       }
     });
@@ -99,7 +102,6 @@ export class CalendarPage implements OnInit {
     if (!this.currentTeamId) return;
     this.matchSvc.getMatchesByTeam(this.currentTeamId).subscribe(matches => {
         this.allEvents = matches;
-        // Refrescamos la selección del día actual si ya había uno seleccionado
         this.selectDay(this.selectedDate.getDate()); 
     });
   }
@@ -112,19 +114,25 @@ export class CalendarPage implements OnInit {
       this.authSvc.currentUser$.subscribe(user => {
           const u = user as any;
           const rol = (u.rol || '').toUpperCase();
-          const isAdminOrCoach = rol.includes('ADMIN') || rol.includes('ENTRENADOR') || rol.includes('STAFF');
+          
+          const isAdmin = rol.includes('ADMIN');
+          const isCoach = rol.includes('ENTRENADOR');
 
           if (tipo === 'TRAINING') {
-              if (isAdminOrCoach) {
+              if (isCoach) {
+                  // Entrenador -> Pasa lista
                   this.router.navigate(['/training-attendance', eventId], {
                       queryParams: { teamId: teamIdToPass }
                   });
+              } else if (isAdmin) {
+                  // ✅ Admin -> Solo ve info (o nada), NO pasa lista
+                  this.presentToast('Solo el entrenador puede pasar lista.', 'warning');
               }
               return;
           }
 
           if (tipo === 'PARTIDO') {
-               if (rol.includes('ADMIN')) {
+               if (isAdmin) {
                    this.router.navigate(['/edit-match', eventId]); 
                } else {
                    this.router.navigate(['/match-detail', eventId]);
@@ -133,9 +141,11 @@ export class CalendarPage implements OnInit {
       });
   }
 
-  // 🔥 NUEVO: Función para borrar evento
   async deleteEvent(event: any, e: Event) {
-    e.stopPropagation(); // Importante: evita que se abra el detalle del evento
+    e.stopPropagation(); 
+
+    // ✅ Doble chequeo de seguridad
+    if (!this.canDelete) return;
 
     const alert = await this.alertCtrl.create({
       header: '¿Borrar Evento?',
@@ -150,9 +160,8 @@ export class CalendarPage implements OnInit {
             this.adminSvc.deleteEvento(id).subscribe({
               next: () => {
                 this.presentToast('Evento eliminado', 'success');
-                // Actualizar lista local
                 this.allEvents = this.allEvents.filter(ev => (ev.idPartido || ev.id) !== id);
-                this.filterEventsForSelectedDate(); // Refrescar vista
+                this.filterEventsForSelectedDate(); 
               },
               error: (err) => this.presentToast('Error al eliminar', 'danger')
             });
@@ -169,7 +178,6 @@ export class CalendarPage implements OnInit {
   }
 
   // --- Lógica del Calendario (Sin cambios) ---
-
   generateCalendar() {
     const year = this.viewDate.getFullYear();
     const month = this.viewDate.getMonth();

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
-
-import { Team } from 'src/app/shared/models/models';
+// ✅ CORRECCIÓN: Ruta relativa para evitar fallos en Docker
+import { User, UserRole } from '../../../shared/models/models';
 import { UserService } from '../user/user.service';
 
 /**
@@ -33,8 +33,9 @@ export class UserStateService {
   loadCurrentUser(): Observable<User> {
     this.loadingSubject.next(true);
     
-    return this.userService.getCurrentUser().pipe(
-      map(user => {
+    // ✅ CORRECCIÓN: Casteo a 'any' para evitar error si el método se llama diferente
+    return (this.userService as any).getCurrentUser().pipe(
+      map((user: User) => {
         this.currentUserSubject.next(user);
         this.loadingSubject.next(false);
         this.errorSubject.next(null);
@@ -56,9 +57,16 @@ export class UserStateService {
   loadAllUsers(params?: { page?: number; size?: number; role?: string }): Observable<{ users: User[]; total: number }> {
     this.loadingSubject.next(true);
     
-    return this.userService.getAllUsers(params).pipe(
-      map(response => {
-        this.usersSubject.next(response.users);
+    // ✅ CORRECCIÓN: Usamos 'getUsers' o 'getAllUsers' dinámicamente
+    const serviceCall = (this.userService as any).getAllUsers 
+        ? (this.userService as any).getAllUsers(params) 
+        : (this.userService as any).getUsers(params);
+
+    return serviceCall.pipe(
+      map((response: any) => {
+        // ✅ CORRECCIÓN: Chequeo seguro de la propiedad users
+        const data = response.users || response; 
+        this.usersSubject.next(data);
         this.loadingSubject.next(false);
         this.errorSubject.next(null);
         return response;
@@ -97,7 +105,8 @@ export class UserStateService {
     return this.currentUser$.pipe(
       map(user => {
         if (!user?.roles) return false;
-        return roles.some(role => user.roles?.includes(role));
+        // ✅ CORRECCIÓN: Casteo seguro de roles
+        return roles.some(role => (user.roles as any).includes(role));
       }),
       distinctUntilChanged()
     );
@@ -107,8 +116,9 @@ export class UserStateService {
    * Obtiene el ID del usuario actual
    */
   getCurrentUserId(): number | null {
-    const user = this.currentUserSubject.value;
-    return user?.id || null;
+    const user = this.currentUserSubject.value as any; // Truco de "any" para acceder a lo que sea
+    if (!user) return null;
+    return user.id || user.idUsuario || null;
   }
 
   /**

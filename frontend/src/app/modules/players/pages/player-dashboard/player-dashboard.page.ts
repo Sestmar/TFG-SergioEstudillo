@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { Observable, Subject, of } from 'rxjs';
 import { takeUntil, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http'; 
-import { AlertController } from '@ionic/angular';
+import { AlertController, ToastController } from '@ionic/angular'; // Añadido ToastController
 import { environment } from 'src/environments/environment';
 import { User, Player, Team, PlayerStats } from 'src/app/shared/models/models';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
@@ -41,6 +41,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   upcomingConvocations: any[] = []; 
   playerStats: PlayerStats | null = null;
   
+  // Las acciones se renderizan en el HTML, pero el ID es clave para el switch
   quickActions = [
     { id: 'calendar', title: 'Calendario', icon: 'calendar', color: 'primary' },
     { id: 'team', title: 'Mi Equipo', icon: 'shield-checkmark', color: 'secondary' },
@@ -59,7 +60,8 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private router: Router,
     private http: HttpClient,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private toastCtrl: ToastController // Inyectamos Toast
   ) {
     this.currentUser$ = this.authService.currentUser$; 
   }
@@ -73,7 +75,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // 🔥 MÉTODO LOGOUT AÑADIDO
+  // 🔥 MÉTODO LOGOUT
   async logout() {
       const alert = await this.alertCtrl.create({
           header: 'Desconectar',
@@ -112,7 +114,6 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   }
 
   private loadPlayerProfile(userId: number) {
-    // ✅ Usamos la URL de Render definida en environment.ts
     const url = `${environment.apiUrl}/jugadores/usuario/${userId}/equipo`;
 
     this.http.get(url).pipe(
@@ -189,12 +190,16 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
       });
   }
 
-  navigateTo(actionOrRoute: any) {
+  // 🔥 MÉTODO NAVIGATE MEJORADO PARA JUGADORES
+  async navigateTo(actionOrRoute: any) {
     if (typeof actionOrRoute === 'string') {
         if (actionOrRoute === '/profile') {
              this.goToProfile();
         } else if (actionOrRoute === '/convocations') {
              this.router.navigate(['/calendar']);
+        } else if (actionOrRoute === '/coach/my-team') {
+             // Si el HTML llama a la ruta antigua, interceptamos aquí
+             this.goToMyTeamDetail();
         } else {
              this.router.navigate([actionOrRoute]);
         }
@@ -209,7 +214,8 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
             this.router.navigate(['/calendar']);
             break;
         case 'team':
-            this.router.navigate(['/coach/my-team']); 
+            // ✅ CORRECCIÓN: Vamos al detalle del equipo, no al panel de coach
+            this.goToMyTeamDetail();
             break;
         case 'profile':
             this.goToProfile();
@@ -217,6 +223,21 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
         case 'stats':
             this.scrollToStats();
             break;
+    }
+  }
+
+  // ✅ Nueva función para ir al detalle del equipo del jugador
+  private async goToMyTeamDetail() {
+    if (this.currentTeam) {
+        const teamId = this.currentTeam.id || (this.currentTeam as any).idEquipo;
+        this.router.navigate(['/team-detail', teamId]);
+    } else {
+        const toast = await this.toastCtrl.create({
+            message: 'No tienes equipo asignado todavía.',
+            duration: 2000,
+            color: 'warning'
+        });
+        toast.present();
     }
   }
 

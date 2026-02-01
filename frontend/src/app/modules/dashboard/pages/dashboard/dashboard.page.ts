@@ -1,20 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
-import { AuthService } from 'src/app/core/services/auth/auth.service';
+import { take } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http'; // ✅ Necesario para pedir el ID del equipo
 
-// Tu auth.service.ts exporta esta interfaz
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  nombre: string;
-  apellidos: string;
-  activo: boolean;
-  fechaRegistro: Date;
-  fechaActualizacion: Date;
-  roles: string[];
-}
+// ✅ Rutas relativas físicas corregidas (5 niveles para environment)
+import { AuthService } from '../../../../core/services/auth/auth.service';
+import { User } from '../../../../shared/models/models';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-dashboard',
@@ -27,15 +20,14 @@ export class DashboardPage implements OnInit {
 
   constructor(
     private auth: AuthService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient // ✅ Inyectamos HttpClient
   ) {
     this.currentUser$ = this.auth.currentUser$;
   }
 
   ngOnInit() {
-    // IMPORTANTE: Failsafe Redirect
-    // Tu login-futbolero ya redirige, pero si un admin
-    // entra a /dashboard manualmente, lo volvemos a redirigir.
+    // IMPORTANTE: Failsafe Redirect (Redirección de seguridad según rol)
     this.currentUser$.subscribe(user => {
       if (user) {
         if (user.roles.includes('ADMIN')) {
@@ -45,32 +37,65 @@ export class DashboardPage implements OnInit {
         } else if (user.roles.includes('JUGADOR')) {
           this.router.navigate(['/player/dashboard'], { replaceUrl: true });
         }
-        // Si no es ninguno, se queda aquí, en el dashboard general.
       }
     });
   }
 
   // --- Métodos de Navegación ---
-  // (Tu HTML complejo los llama 'navigateTo', el mío 'goToProfile', 
-  // pero el HTML que te doy en el Paso 2 usará estos)
 
   goToProfile() {
-    // Asumo que tienes una ruta '/user/profile' o similar
     this.router.navigate(['/user/profile']); 
   }
 
+  // 🚀 NUEVO MÉTODO INTELIGENTE PARA EL BOTÓN "MI EQUIPO"
+  goToMyTeam() {
+    this.currentUser$.pipe(take(1)).subscribe(user => {
+      if (!user) return;
+
+      const u = user as any;
+      const userId = u.id || u.idUsuario || u.sub;
+
+      // CASO 1: JUGADOR -> Vamos al detalle visual del equipo (Team Detail)
+      if (user.roles.includes('JUGADOR')) {
+        this.http.get(`${environment.apiUrl}/jugadores/usuario/${userId}`).subscribe({
+          next: (res: any) => {
+            // El backend devuelve el objeto jugador con 'equipo' o 'equipoPrincipal'
+            const team = res.equipo || res.equipoPrincipal;
+            if (team) {
+              const teamId = team.id || team.idEquipo;
+              // ✅ Redirige a la página bonita de detalle
+              this.router.navigate(['/team-detail', teamId]); 
+            } else {
+              // Si no tiene equipo, lo mandamos a la lista para que busque uno
+              this.router.navigate(['/teams']);
+            }
+          },
+          error: () => this.router.navigate(['/teams']) // Fallback si falla la API
+        });
+      }
+      
+      // CASO 2: ENTRENADOR -> Vamos a la gestión de su equipo
+      else if (user.roles.includes('ENTRENADOR')) {
+        this.router.navigate(['/coach/my-team']); 
+      }
+      
+      // CASO 3: ADMIN/OTROS -> Lista general
+      else {
+        this.router.navigate(['/teams']);
+      }
+    });
+  }
+
+  // Mantenemos este para "Ver todos los equipos" si tienes otro botón
   goToTeams() {
-    // Asumo que tienes una ruta '/teams'
     this.router.navigate(['/teams']); 
   }
   
   goToConvocations() {
-    // Asumo que tienes una ruta '/convocations'
     this.router.navigate(['/convocations']); 
   }
 
   onLogout() {
     this.auth.logout();
-    // Tu auth.service.ts ya redirige a /landing o /login
   }
 }

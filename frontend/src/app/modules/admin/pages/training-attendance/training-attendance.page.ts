@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common'; // ✅ Importar Location
 import { AdminService } from 'src/app/core/services/admin/admin.service';
 import { ToastController, LoadingController } from '@ionic/angular';
 
@@ -20,7 +21,8 @@ export class TrainingAttendancePage implements OnInit {
     private router: Router,
     private adminSvc: AdminService,
     private toastCtrl: ToastController,
-    private loadingCtrl: LoadingController
+    private loadingCtrl: LoadingController,
+    private location: Location // ✅ Inyectar Location
   ) { }
 
   ngOnInit() {
@@ -37,6 +39,11 @@ export class TrainingAttendancePage implements OnInit {
     }
   }
 
+  // ✅ NUEVO: Método para volver atrás sin bucles
+  goBack() {
+    this.location.back();
+  }
+
   async loadPlayers() {
       const loading = await this.loadingCtrl.create({ spinner: 'crescent' });
       await loading.present();
@@ -49,11 +56,9 @@ export class TrainingAttendancePage implements OnInit {
               ...p,
               idJugador: p.idJugador || p.id, 
               fotoUrl: p.fotoUrl || `https://ui-avatars.com/api/?name=${p.nombre}&background=random`,
-              // 🔥 CAMBIO: Estado inicial null (ninguno seleccionado)
               estado: null 
           }));
 
-          // Verificamos si ya hay datos guardados en la BD
           this.adminSvc.getAsistencia(this.trainingId).subscribe({
              next: (saved: any) => {
                 if(saved && Array.isArray(saved) && saved.length > 0) {
@@ -75,9 +80,7 @@ export class TrainingAttendancePage implements OnInit {
       });
   }
 
-  // Método para cambiar estado (toggle)
   setEstado(player: any, nuevoEstado: string) {
-      // Si pulsa el mismo, lo desmarca (vuelve a null)
       if (player.estado === nuevoEstado) {
           player.estado = null;
       } else {
@@ -86,19 +89,11 @@ export class TrainingAttendancePage implements OnInit {
   }
 
   guardar() {
-      // Validar que al menos uno tenga estado (opcional)
-      /* const markedCount = this.players.filter(p => p.estado).length;
-      if (markedCount === 0) {
-         this.presentToast('Marca al menos un jugador', 'warning');
-         return;
-      }
-      */
-
       this.saving = true;
       const payload = {
           idEntrenamiento: this.trainingId,
           asistencias: this.players
-            .filter(p => p.estado !== null) // Solo enviamos los que tienen estado marcado
+            .filter(p => p.estado !== null) 
             .map(p => ({
               idJugador: p.idJugador,
               estado: p.estado
@@ -109,7 +104,7 @@ export class TrainingAttendancePage implements OnInit {
           next: () => {
               this.saving = false;
               this.presentToast('Asistencia guardada correctamente ✅', 'success');
-              // this.router.navigate(['/calendar']); // Opcional volver
+              // Opcional: this.goBack(); si quieres que vuelva al guardar
           },
           error: (err) => {
               this.saving = false;

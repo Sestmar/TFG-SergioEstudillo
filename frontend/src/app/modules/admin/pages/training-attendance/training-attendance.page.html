@@ -1,7 +1,9 @@
 <ion-header class="ion-no-border">
   <ion-toolbar class="transparent-toolbar">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/calendar" color="light"></ion-back-button>
+      <ion-button (click)="goBack()" color="light">
+        <ion-icon name="arrow-back"></ion-icon>
+      </ion-button>
     </ion-buttons>
     <ion-title>Pasar Lista</ion-title>
     <ion-buttons slot="end">

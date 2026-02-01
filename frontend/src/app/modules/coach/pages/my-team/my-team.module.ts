@@ -2,24 +2,17 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { Routes, RouterModule } from '@angular/router'; // 1. Importamos esto
 
+// ✅ Importamos el RoutingModule en vez de definir rutas aquí
+import { MyTeamPageRoutingModule } from './my-team-routing.module';
 import { MyTeamPage } from './my-team.page';
-
-// 2. Definimos la ruta aquí mismo para no depender de otro archivo
-const routes: Routes = [
-  {
-    path: '',
-    component: MyTeamPage
-  }
-];
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    RouterModule.forChild(routes) // 3. Cargamos las rutas
+    MyTeamPageRoutingModule // ✅ Usamos el archivo de rutas separado
   ],
   declarations: [MyTeamPage]
 })
