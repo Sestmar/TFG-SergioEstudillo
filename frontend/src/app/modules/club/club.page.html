@@ -24,30 +24,28 @@
         <div class="overlay"></div>
         <div class="card-content">
           <div class="badge-wrapper">
-            <img src="assets/img/mi-club-logo.png" alt="Club Logo" onError="this.src='https://ui-avatars.com/api/?name=Club&background=random'">
+             <img src="assets/img/mi-club-logo.png" alt="Club Logo" onError="this.src='https://ui-avatars.com/api/?name=Club&background=random'">
           </div>
           <div class="text-info">
             <h2>{{ team.nombre }}</h2>
-            <p class="category-tag"><ion-icon name="bookmark"></ion-icon> {{ team.categoria || 'Base' }}</p>
+            <p class="category-tag">
+                <ion-icon name="bookmark"></ion-icon> 
+                {{ team.categoria?.nombre || team.categoria || 'Base' }}
+            </p>
           </div>
           <div class="arrow-action"><ion-icon name="chevron-forward"></ion-icon></div>
         </div>
       </div>
-      
-      <div *ngIf="teams.length === 0" class="empty-state-neon">
-        <ion-icon name="shield-half-outline"></ion-icon>
-        <h3>No hay equipos disponibles</h3>
-      </div>
     </div>
 
 
-    <div *ngIf="selectedTeam && roster" class="roster-view-pro">
+    <div *ngIf="selectedTeam" class="roster-view-pro">
       
-      <div class="team-banner-pro">
+      <div class="team-banner-pro" style="margin-top: 60px;">
         <div class="team-identity">
             <span class="label">EQUIPO</span>
             <h1>{{ selectedTeam.nombre }}</h1>
-            <p>Plantilla oficial temporada {{ selectedTeam.temporada }}</p>
+            <p>Plantilla oficial temporada {{ selectedTeam.temporada || 'Actual' }}</p>
         </div>
 
         <div class="team-meta-boxes">
@@ -59,11 +57,31 @@
                 </div>
             </div>
             
-            <div class="meta-box">
-                <ion-icon name="clipboard-outline"></ion-icon> 
+            <div class="meta-box" *ngIf="coachName">
+                <ion-icon name="person-outline"></ion-icon> 
                 <div class="meta-text">
-                    <span class="sub">STAFF TÉCNICO</span>
-                    <span class="main">{{ selectedTeam.entrenadorNombre || 'Sin Asignar' }}</span>
+                    <span class="sub">ENTRENADOR</span>
+                    <span class="main">{{ coachName }}</span>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <div class="section-divider" *ngIf="staff.length > 0">
+        <div class="line"></div>
+        <span>CUERPO TÉCNICO</span>
+        <div class="line"></div>
+      </div>
+
+      <div class="roster-grid" *ngIf="staff.length > 0">
+        <div class="player-card-pro staff-card" *ngFor="let s of staff">
+            <div class="card-top">
+                <div class="avatar-container">
+                    <img [src]="s.fotoUrl">
+                </div>
+                <div class="info-container">
+                    <h3>{{ s.nombre }} {{ s.apellidos }}</h3>
+                    <div class="role-badge staff">Entrenador</div>
                 </div>
             </div>
         </div>
@@ -77,39 +95,30 @@
 
       <div class="roster-grid">
         <div class="player-card-pro" *ngFor="let p of roster">
-            
             <div class="card-top">
                 <div class="avatar-container">
-                    <img [src]="p.fotoUrl || 'https://ui-avatars.com/api/?name=' + p.nombreCompleto + '&background=random&color=fff&size=128'" 
-                         (error)="p.fotoUrl = 'https://ui-avatars.com/api/?name=' + p.nombreCompleto + '&background=random&color=fff&size=128'">
-                    
+                    <img [src]="p.fotoUrl" (error)="p.fotoUrl = 'https://ui-avatars.com/api/?name=' + (p.nombre || 'J') + '&background=random&color=fff'">
                     <div class="dorsal-bubble">{{ p.dorsal || '-' }}</div>
                 </div>
-                
                 <div class="info-container">
-                    <h3>{{ p.nombreCompleto }}</h3>
+                    <h3>{{ p.nombre }} {{ p.apellidos }}</h3>
                     <div class="role-badge">{{ p.posicion || 'JUGADOR' }}</div>
                 </div>
             </div>
-
             <div class="divider"></div>
-
             <div class="card-stats">
                 <div class="stat">
                     <span class="label">GOLES</span>
                     <span class="val">{{ p.goles || 0 }}</span>
                 </div>
-                
                 <div class="stat">
                     <span class="label">ASISTENCIAS</span>
                     <span class="val">{{ p.asistencias || 0 }}</span>
                 </div>
-                
                 <div class="status-dot">
                     <div class="dot"></div>
                 </div>
             </div>
-
         </div>
       </div>
 
@@ -119,7 +128,5 @@
       </div>
 
     </div>
-
   </div>
-
 </ion-content>
