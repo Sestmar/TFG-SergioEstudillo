@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/jugadores/**").permitAll()
 
                         .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/entrenadores/**").permitAll()
 
                         // 3. Permitir recursos estáticos y errores
                         .requestMatchers("/api/uploads/**", "/uploads/**").permitAll()
