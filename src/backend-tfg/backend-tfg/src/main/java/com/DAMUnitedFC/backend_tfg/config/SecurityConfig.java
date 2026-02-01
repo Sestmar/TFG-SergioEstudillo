@@ -36,18 +36,24 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Permitir OPTIONS (Preflight) para TODO el mundo. CRUCIAL.
+                        // 1. Permitir OPTIONS (Preflight)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // 2. Permitir Auth (Login/Registro) explícitamente
+                        // 2. Permitir Auth
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        .requestMatchers("/api/public/**").permitAll() // ruta publica ver equipos y plantillas
+                        // Para ver la lista de equipos inicial
+                        .requestMatchers(HttpMethod.GET, "/api/equipos/**").permitAll()
 
-                        // 3. Permitir recursos estáticos y Swagger
+                        // Para ver los jugadores y filtrar
+                        .requestMatchers(HttpMethod.GET, "/api/jugadores/**").permitAll()
+
+                        .requestMatchers("/api/public/**").permitAll()
+
+                        // 3. Permitir recursos estáticos y errores
                         .requestMatchers("/api/uploads/**", "/uploads/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/error").permitAll() // <--- AÑADIDO: Para ver errores 404 reales
+                        .requestMatchers("/error").permitAll()
 
                         // 4. Todo lo demás cerrado
                         .anyRequest().authenticated()
