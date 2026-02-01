@@ -28,19 +28,14 @@ export class OpenService {
     );
   }
 
-  // 3. JUGADORES
+  // 3. JUGADORES (MODIFICADO: Usar endpoint público con estadísticas calculadas)
   getTeamRoster(teamId: number): Observable<any[]> {
-    return this.http.get<any>(`${environment.apiUrl}/jugadores`).pipe(
+    // CAMBIO: Llamamos a /api/public/equipos/{id}/plantilla
+    // Este endpoint del PublicController SÍ calcula los goles y asistencias.
+    return this.http.get<any[]>(`${environment.apiUrl}/public/equipos/${teamId}/plantilla`).pipe(
       map(response => {
-        const allPlayers = Array.isArray(response) ? response : (response.data || []);
-        return allPlayers.filter((p: any) => {
-            // Buscamos ID plano o anidado
-            const pTeamId = p.idEquipo || p.equipoId ||
-                            p.equipoActual?.id || p.equipoActual?.idEquipo || 
-                            p.equipoPrincipal?.id || p.equipoPrincipal?.idEquipo || 
-                            p.equipo?.id;
-            return Number(pTeamId) === Number(teamId);
-        });
+        // La respuesta ya es la lista de jugadores filtrada y con stats
+        return response || [];
       })
     );
   }

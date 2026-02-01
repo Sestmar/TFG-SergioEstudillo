@@ -57,8 +57,8 @@ export class AdminService {
 
   // --- COMPETICIÓN ---
   
-  // Acepta FormData para la subida de archivos
-  createMatch(matchData: FormData): Observable<any> {
+  // ✅ CAMBIO: Ahora acepta 'any' (JSON) para enviar la URL, en lugar de FormData
+  createMatch(matchData: any): Observable<any> {
       return this.http.post(`${this.apiUrl}/crear-partido`, matchData);
   }
 

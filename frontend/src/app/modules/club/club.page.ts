@@ -92,18 +92,23 @@ export class ClubPage implements OnInit {
     });
 
     // 2. CARGAR JUGADORES
+    // En el método openTeam -> getTeamRoster
     this.openSvc.getTeamRoster(teamId).subscribe({
       next: (players) => {
-        const lista = Array.isArray(players) ? players : [];
-        this.roster = lista.map((p: any) => ({
-            ...p,
-            nombre: p.usuario?.nombre || p.nombre || 'Jugador',
-            apellidos: p.usuario?.apellidos || p.apellidos || '',
-            dorsal: p.dorsal || 99,
-            goles: p.goles || 0,
-            asistencias: p.asistencias || 0,
-            fotoUrl: p.fotoUrl || p.usuario?.fotoUrl || `https://ui-avatars.com/api/?name=${p.usuario?.nombre || 'U'}&background=random`
-        })).sort((a: any, b: any) => a.dorsal - b.dorsal);
+        const listaJugadores = Array.isArray(players) ? players : [];
+        this.roster = listaJugadores
+            .map((p: any) => ({
+                ...p,
+                // Tu PublicPlayerDto devuelve 'nombre' y 'apellidos' planos, o 'nombreCompleto'
+                nombre: p.nombre || 'Jugador',
+                apellidos: p.apellidos || '',
+                dorsal: p.dorsal || 99,
+                // ¡AQUÍ ESTÁ LA MAGIA! Ahora p.goles vendrá con el número real
+                goles: p.goles || 0,
+                asistencias: p.asistencias || 0,
+                fotoUrl: p.fotoUrl || `https://ui-avatars.com/api/?name=${p.nombre}&background=random`
+            }))
+            .sort((a: any, b: any) => (a.dorsal) - (b.dorsal)); // Ordenar por dorsal
         
         loading.dismiss();
       },

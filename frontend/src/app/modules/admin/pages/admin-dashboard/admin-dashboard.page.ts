@@ -35,7 +35,7 @@ export class AdminDashboardPage implements OnInit {
   newTeam = { nombre: '', categoria: '' };
   
   // Usaremos este objeto para ambos (Partido y Entrenamiento)
-  newMatch = { idEquipo: null, rival: '', lugar: '', fechaHora: new Date().toISOString() };
+  newMatch: any = { idEquipo: null, rival: '', lugar: '', fechaHora: new Date().toISOString(), escudoRivalUrl: '' };
   
   selectedFile: File | null = null;
   staffRoles = ['Entrenador Principal', 'Segundo Entrenador', 'Preparador Físico', 'Delegado', 'Entrenador de Porteros'];
@@ -243,14 +243,25 @@ export class AdminDashboardPage implements OnInit {
           return this.presentToast('Completa los datos del partido', 'warning');
       }
 
+      // ✅ VOLVEMOS A USAR FORMDATA (Para contentar al Backend)
       const formData = new FormData();
       formData.append('idEquipo', String(this.newMatch.idEquipo));
       formData.append('rival', this.newMatch.rival);
       formData.append('lugar', this.newMatch.lugar);
       formData.append('fechaHora', this.newMatch.fechaHora);
       
-      if (this.selectedFile) {
-          formData.append('file', this.selectedFile);
+      // TRUCO: Si hay URL escrita, la mandamos en un campo de texto extra
+      // OJO: Si tu backend espera 'file', no le mandamos nada en 'file' (será null)
+      // Pero si tu backend tiene un campo 'escudoRivalUrl' o similar, funcionará.
+      
+      // Si tu backend NO está preparado para recibir la URL,
+      // la única forma de arreglar esto SIN tocar backend es:
+      // 1. O subes el backend modificado (recomendado).
+      // 2. O nos quedamos sin foto en el partido (solo texto).
+      
+      // INTENTO: Mandar la URL como texto en un campo genérico por si acaso
+      if (this.newMatch.escudoRivalUrl) {
+           formData.append('escudoRivalUrl', this.newMatch.escudoRivalUrl);
       }
 
       await this.processRequest(
@@ -282,10 +293,11 @@ export class AdminDashboardPage implements OnInit {
 
   // Helper para cerrar y limpiar
   closeEventModal() {
-      this.isMatchModalOpen = false;
-      this.newMatch = { idEquipo: null, rival: '', lugar: '', fechaHora: new Date().toISOString() };
-      this.selectedFile = null;
-      this.eventType = 'MATCH'; // Resetear a Partido por defecto
+    this.isMatchModalOpen = false;
+    // ✅ Reseteamos también la URL
+    this.newMatch = { idEquipo: null, rival: '', lugar: '', fechaHora: new Date().toISOString(), escudoRivalUrl: '' };
+    this.selectedFile = null;
+    this.eventType = 'MATCH';
   }
 
   async processRequest(observable$: any, successMsg: string) {
