@@ -243,6 +243,9 @@ public class AdminController {
             @RequestParam("rival") String rival,
             @RequestParam("lugar") String lugar,
             @RequestParam("fechaHora") String fechaStr,
+            // ✅ NUEVO: Aceptamos la URL como texto (Opcional)
+            @RequestParam(value = "escudoRivalUrl", required = false) String escudoRivalUrl,
+            // El archivo sigue siendo opcional
             @RequestParam(value = "file", required = false) MultipartFile file
     ) {
         try {
@@ -252,12 +255,21 @@ public class AdminController {
             partido.setRival(rival);
             partido.setLugar(lugar);
 
-            if (file != null && !file.isEmpty()) {
+            // 1. PRIORIDAD: Si llega URL de texto, usamos esa (nunca se borra)
+            if (escudoRivalUrl != null && !escudoRivalUrl.isEmpty()) {
+                partido.setEscudoRivalUrl(escudoRivalUrl);
+            }
+            // 2. Si no hay URL texto, miramos si hay archivo (lógica antigua)
+            else if (file != null && !file.isEmpty()) {
                 String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+                // OJO: Asegúrate de que esta ruta es correcta en Render o usa un servicio externo
+                // En Render el disco es efímero, así que esto se borrará al reiniciar.
+                // Por eso la opción 1 (URL externa) es la recomendada.
                 Path path = Paths.get("target/uploads");
                 if (!Files.exists(path)) Files.createDirectories(path);
                 Files.copy(file.getInputStream(), path.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-                partido.setEscudoRivalUrl("http://localhost:8080/api/uploads/" + fileName);
+                // Construimos la URL local (que solo funcionará mientras el archivo exista)
+                partido.setEscudoRivalUrl("https://backend-tfg-sergio.onrender.com/api/uploads/" + fileName);
             }
 
             if (fechaStr != null) {
@@ -267,7 +279,10 @@ public class AdminController {
             partido.setEstado("PENDIENTE");
             partidoRepo.save(partido);
             return ResponseEntity.ok(Collections.singletonMap("message", "Evento creado"));
-        } catch (Exception e) { e.printStackTrace(); return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage())); }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/crear-entrenamiento")
