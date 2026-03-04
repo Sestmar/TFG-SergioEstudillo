@@ -1,4 +1,4 @@
-<![CDATA[# 📗 FRONTEND.md — Documentación Técnica del Frontend
+# 📗 FRONTEND.md — Documentación Técnica del Frontend
 
 <div align="center">
 
@@ -11,12 +11,12 @@
 ## 📋 Índice
 
 1. [Arquitectura Modular](#-arquitectura-modular)
-2. [Lazy Loading & Routing](#-lazy-loading--routing)
+2. [Lazy Loading y Routing](#-lazy-loading-y-routing)
 3. [Core Module (Singleton)](#-core-module)
 4. [Feature Modules](#-feature-modules)
 5. [Patrón Smart-Dumb Components](#-patrón-smart-dumb-components)
 6. [Servicios HTTP (Capa de Datos)](#-servicios-http)
-7. [Guards & Interceptors](#-guards--interceptors)
+7. [Guards e Interceptors](#-guards-e-interceptors)
 8. [Gestión de Estado con RxJS](#-gestión-de-estado-con-rxjs)
 9. [UI Adaptativa (Ionic Components)](#-ui-adaptativa)
 10. [Configuración de Entorno](#-configuración-de-entorno)
@@ -27,34 +27,34 @@
 
 ```mermaid
 graph TB
-    subgraph Root["📦 AppModule"]
-        AR["AppRoutingModule<br/>(Lazy Loading)"]
+    subgraph Root["AppModule"]
+        AR["AppRoutingModule Lazy Loading"]
         AC["AppComponent"]
     end
 
-    subgraph Core["🔧 Core (Singleton)"]
+    subgraph Core["Core Singleton"]
         direction TB
-        G["Guards<br/>Auth · NoAuth · Role"]
-        I["Interceptors<br/>Auth · Error"]
-        S["Services (18+)<br/>Auth · Storage · Admin<br/>Coach · Match · Open<br/>Player · Team · ..."]
+        G["Guards: Auth, NoAuth, Role"]
+        I["Interceptors: Auth, Error"]
+        S["Services 18+: Auth, Storage, Admin, Coach, Match, Open, Player, Team"]
     end
 
-    subgraph Features["📱 Feature Modules (Lazy Loaded)"]
+    subgraph Features["Feature Modules Lazy Loaded"]
         direction TB
-        M1["🏠 LandingModule"]
-        M2["🔐 AuthModule"]
-        M3["👔 AdminModule"]
-        M4["⚽ CoachModule"]
-        M5["🏃 PlayerModule"]
-        M6["👤 UserModule"]
-        M7["📅 CalendarModule"]
-        M8["🏟️ ClubModule"]
-        M9["📊 MatchDetailModule"]
-        M10["📋 DashboardModule"]
+        M1["LandingModule"]
+        M2["AuthModule"]
+        M3["AdminModule"]
+        M4["CoachModule"]
+        M5["PlayerModule"]
+        M6["UserModule"]
+        M7["CalendarModule"]
+        M8["ClubModule"]
+        M9["MatchDetailModule"]
+        M10["DashboardModule"]
     end
 
-    subgraph Shared["🔄 SharedModule"]
-        SM["Componentes reutilizables<br/>Pipes · Modelos · Interfaces"]
+    subgraph Shared["SharedModule"]
+        SM["Componentes reutilizables, Pipes, Modelos, Interfaces"]
     end
 
     AR --> M1 & M2 & M3 & M4 & M5 & M6 & M7 & M8 & M9 & M10
@@ -75,7 +75,7 @@ frontend/src/app/
 ├── app-routing.module.ts        # Lazy loading routes (15+ rutas)
 ├── app.component.ts/html/scss   # Root component
 │
-├── core/                        # Singleton services & infrastructure
+├── core/                        # Singleton services e infrastructure
 │   ├── guards/                  # AuthGuard, NoAuthGuard, RoleGuard (+1)
 │   ├── interceptors/            # AuthInterceptor, ErrorInterceptor (+1)
 │   └── services/                # 18 subdirectorios de servicios
@@ -83,7 +83,7 @@ frontend/src/app/
 │       ├── auth/                # AuthService
 │       ├── coach/               # CoachService
 │       ├── match/               # MatchService
-│       ├── open/                # OpenService (endpoints públicos)
+│       ├── open/                # OpenService (endpoints publicos)
 │       ├── player/              # PlayerService
 │       ├── storage/             # StorageService (localStorage)
 │       ├── team/                # TeamService
@@ -99,7 +99,7 @@ frontend/src/app/
 │       └── index.ts             # Barrel exports
 │
 ├── modules/                     # 10 Feature Modules
-│   ├── landing/                 # Página pública del club
+│   ├── landing/                 # Pagina publica del club
 │   ├── auth/                    # Login + Registro
 │   ├── admin/                   # Panel Director Deportivo
 │   │   └── pages/
@@ -108,15 +108,15 @@ frontend/src/app/
 │   ├── coach/                   # Dashboard Entrenador
 │   │   └── pages/
 │   │       ├── coach-dashboard/ # Dashboard principal
-│   │       ├── team-stats/      # Estadísticas de equipo
+│   │       ├── team-stats/      # Estadisticas de equipo
 │   │       ├── my-team/         # Gestionar plantilla
 │   │       ├── coach-profile/   # Perfil entrenador
-│   │       ├── tactics/         # Pizarra táctica
-│   │       ├── edit-match/      # Editar partido/alineación
+│   │       ├── tactics/         # Pizarra tactica
+│   │       ├── edit-match/      # Editar partido/alineacion
 │   │       └── convocations/    # Crear/detalle convocatoria
 │   ├── players/                 # Dashboard Jugador
-│   ├── user/                    # Perfil y configuración
-│   ├── dashboard/               # Dashboard genérico
+│   ├── user/                    # Perfil y configuracion
+│   ├── dashboard/               # Dashboard generico
 │   ├── club/                    # Vista club
 │   ├── calendar/                # Calendario de eventos
 │   └── match-detail/            # Detalle de partido
@@ -126,7 +126,7 @@ frontend/src/app/
 
 ---
 
-## 🔄 Lazy Loading & Routing
+## 🔄 Lazy Loading y Routing
 
 Todos los Feature Modules se cargan bajo demanda usando la sintaxis `loadChildren`:
 
@@ -135,25 +135,33 @@ Todos los Feature Modules se cargan bajo demanda usando la sintaxis `loadChildre
 const routes: Routes = [
   { path: '', redirectTo: 'landing', pathMatch: 'full' },
 
-  // PÚBLICO
-  { path: 'landing',
+  // PUBLICO
+  {
+    path: 'landing',
     loadChildren: () => import('./modules/landing/landing.module')
-      .then(m => m.LandingPageModule) },
+      .then(m => m.LandingPageModule)
+  },
 
   // AUTH
-  { path: 'auth',
+  {
+    path: 'auth',
     loadChildren: () => import('./modules/auth/auth.module')
-      .then(m => m.AuthModule) },
+      .then(m => m.AuthModule)
+  },
 
   // ADMIN
-  { path: 'admin',
+  {
+    path: 'admin',
     loadChildren: () => import('./modules/admin/admin.module')
-      .then(m => m.AdminModule) },
+      .then(m => m.AdminModule)
+  },
 
-  // COACH (múltiples sub-rutas)
-  { path: 'coach-dashboard',
+  // COACH (multiples sub-rutas)
+  {
+    path: 'coach-dashboard',
     loadChildren: () => import('./modules/coach/pages/coach-dashboard/coach-dashboard.module')
-      .then(m => m.CoachDashboardPageModule) },
+      .then(m => m.CoachDashboardPageModule)
+  },
   { path: 'coach/stats', /* ... */ },
   { path: 'coach/my-team', /* ... */ },
   { path: 'tactics/:matchId', /* ... */ },
@@ -211,17 +219,20 @@ El Core Module proporciona servicios **Singleton** inyectados en el `root` que p
 ## 📱 Feature Modules
 
 ### `AuthModule` — Autenticación
+
 - **LoginPage:** Formulario con validaciones reactivas. Llama a `AuthService.login()`.
 - **RegisterPage:** Registro con validación de campos. Llama a `AuthService.register()`.
 - Ambos redirigen según el rol del usuario tras autenticación exitosa.
 
 ### `AdminModule` — Panel Director Deportivo
+
 - Gestión CRUD de usuarios, equipos y eventos (partidos/entrenamientos).
 - Asignación de jugadores a equipos y entrenadores a equipos.
 - Cierre de actas con estadísticas.
 - Sub-páginas: `team-detail`, `training-attendance`.
 
 ### `CoachModule` — Dashboard Entrenador
+
 - **CoachDashboard:** Vista principal con próximos partidos y entrenamientos.
 - **TeamStats:** Estadísticas agregadas del equipo.
 - **MyTeam:** Gestión de plantilla.
@@ -231,9 +242,11 @@ El Core Module proporciona servicios **Singleton** inyectados en el `root` que p
 - **CoachProfile:** Perfil del entrenador.
 
 ### `PlayerModule` — Dashboard Jugador
+
 - Visualización de partidos, estadísticas personales y perfil.
 
 ### `LandingModule` — Página Pública
+
 - Vista del club sin autenticación.
 - Consume datos de `OpenService` → `PublicController`.
 
@@ -243,23 +256,23 @@ El Core Module proporciona servicios **Singleton** inyectados en el `root` que p
 
 ```mermaid
 graph LR
-    subgraph Smart["🧠 Smart Component (Page)"]
-        SC["CoachDashboardPage<br/>Inyecta: CoachService, MatchService<br/>Lógica: subscribe(), manejo eventos"]
+    subgraph Smart["Smart Component Page"]
+        SC["CoachDashboardPage: Inyecta CoachService y MatchService, Logica subscribe y manejo eventos"]
     end
 
-    subgraph Dumb["🎨 Dumb Components"]
-        DC1["MatchCardComponent<br/>@Input() match"]
-        DC2["PlayerListComponent<br/>@Input() players"]
-        DC3["StatsWidgetComponent<br/>@Input() stats"]
+    subgraph Dumb["Dumb Components"]
+        DC1["MatchCardComponent con Input match"]
+        DC2["PlayerListComponent con Input players"]
+        DC3["StatsWidgetComponent con Input stats"]
     end
 
-    subgraph Service["⚙️ Service Layer"]
-        SV["CoachService<br/>(Singleton, providedIn: 'root')"]
+    subgraph Service["Service Layer"]
+        SV["CoachService Singleton providedIn root"]
     end
 
     SC --> DC1 & DC2 & DC3
     SC --> SV
-    SV -- "HttpClient<br/>Observable" --> API["Backend REST API"]
+    SV -- "HttpClient Observable" --> API["Backend REST API"]
 
     style Smart fill:#16213e,stroke:#3880ff,color:#e0e0e0
     style Dumb fill:#1a1a2e,stroke:#3880ff,color:#e0e0e0
@@ -267,12 +280,14 @@ graph LR
 ```
 
 **Smart Components (Pages):**
+
 - Inyectan servicios.
 - Suscriben a Observables.
 - Manejan la lógica de vista.
 - Pasan datos hacia abajo vía `@Input()`.
 
 **Dumb Components (UI):**
+
 - Reciben datos por `@Input()`.
 - Emiten eventos por `@Output()`.
 - Sin lógica de negocio.
@@ -311,19 +326,19 @@ export class AdminService {
 
 ---
 
-## 🛡️ Guards & Interceptors
+## 🛡️ Guards e Interceptors
 
 ### Guards
 
 ```mermaid
 graph TD
-    U["Usuario navega a ruta"] --> R{"¿Ruta protegida?"}
-    R -- "No" --> P["✅ Permitir acceso"]
-    R -- "Sí" --> AG{"AuthGuard<br/>¿Token válido?"}
-    AG -- "No" --> L["🔒 Redirect → /auth/login"]
-    AG -- "Sí" --> RG{"RoleGuard<br/>¿Rol correcto?"}
-    RG -- "No" --> D["🚫 Redirect → Dashboard"]
-    RG -- "Sí" --> P
+    U["Usuario navega a ruta"] --> R{"Ruta protegida?"}
+    R -- "No" --> P["Permitir acceso"]
+    R -- "Si" --> AG{"AuthGuard: Token valido?"}
+    AG -- "No" --> L["Redirect a /auth/login"]
+    AG -- "Si" --> RG{"RoleGuard: Rol correcto?"}
+    RG -- "No" --> D["Redirect a Dashboard"]
+    RG -- "Si" --> P
 
     style R fill:#16213e,stroke:#e94560,color:#e0e0e0
     style AG fill:#0f3460,stroke:#e94560,color:#e0e0e0
@@ -344,7 +359,7 @@ graph TD
 | `ErrorInterceptor` | Captura respuestas `401 Unauthorized`: limpia storage y redirige a `/auth/login` |
 
 ```typescript
-// AuthInterceptor — Pseudocódigo
+// AuthInterceptor — Pseudocodigo
 intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
   const token = this.storageService.getToken();
   if (token) {
@@ -402,16 +417,16 @@ El frontend utiliza componentes de **Ionic 7** para lograr una interfaz nativa a
 
 | Componente Ionic | Uso en la App |
 |-----------------|---------------|
-| `<ion-header>` + `<ion-toolbar>` | Barras de navegación con título y botones |
-| `<ion-content>` | Contenedor principal con scroll nativo |
-| `<ion-card>` | Tarjetas de partido, jugador, equipo |
-| `<ion-list>` + `<ion-item>` | Listas interactivas (plantilla, convocatorias) |
-| `<ion-fab>` + `<ion-fab-button>` | Botones de acción flotante (crear partido, etc.) |
-| `<ion-segment>` | Tabs para filtrar vistas (próximos/historial) |
-| `<ion-modal>` + `<ion-alert>` | Confirmaciones y formularios emergentes |
-| `<ion-toast>` | Notificaciones feedback al usuario |
-| `<ion-grid>` + `<ion-row>` + `<ion-col>` | Layout responsivo |
-| `<ion-badge>` | Indicadores de estado (roles, tipo partido) |
+| `ion-header` + `ion-toolbar` | Barras de navegación con título y botones |
+| `ion-content` | Contenedor principal con scroll nativo |
+| `ion-card` | Tarjetas de partido, jugador, equipo |
+| `ion-list` + `ion-item` | Listas interactivas (plantilla, convocatorias) |
+| `ion-fab` + `ion-fab-button` | Botones de acción flotante (crear partido, etc.) |
+| `ion-segment` | Tabs para filtrar vistas (próximos/historial) |
+| `ion-modal` + `ion-alert` | Confirmaciones y formularios emergentes |
+| `ion-toast` | Notificaciones feedback al usuario |
+| `ion-grid` + `ion-row` + `ion-col` | Layout responsivo |
+| `ion-badge` | Indicadores de estado (roles, tipo partido) |
 
 ### Fallback Reactivo de Avatares
 
@@ -451,7 +466,7 @@ export const environment = {
 ```typescript
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080/api',  // ← SIN barra final
+  apiUrl: 'http://localhost:8080/api',  // SIN barra final
   appName: 'Football Club Management',
   version: '1.0.0-dev'
 };
@@ -477,4 +492,3 @@ export const environment = {
 [← Backend](./BACKEND.md) · [README](./README.md) · [Troubleshooting →](./TROUBLESHOOTING.md)
 
 </div>
-]]>

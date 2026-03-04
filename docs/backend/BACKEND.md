@@ -1,4 +1,4 @@
-<![CDATA[# 📘 BACKEND.md — Documentación Técnica del Backend
+# 📘 BACKEND.md — Documentación Técnica del Backend
 
 <div align="center">
 
@@ -26,34 +26,34 @@ El backend sigue una arquitectura **en capas estricta** con separación de respo
 
 ```mermaid
 graph TB
-    subgraph Presentación["🌐 Capa de Presentación"]
+    subgraph Presentacion["Capa de Presentacion"]
         C1["AdminController"]
         C2["PublicController"]
         C3["UsuarioController"]
         C4["PartidoController"]
-        C5["...15 Controllers más"]
+        C5["...15 Controllers mas"]
     end
 
-    subgraph Seguridad["🔐 Capa de Seguridad"]
+    subgraph Seguridad["Capa de Seguridad"]
         SF["JwtAuthenticationFilter"]
         JS["JwtService"]
         SC["SecurityConfig"]
     end
 
-    subgraph Negocio["⚙️ Capa de Negocio"]
+    subgraph Negocio["Capa de Negocio"]
         AS["AuthService"]
         DTO["DTOs (19)"]
     end
 
-    subgraph Persistencia["🗄️ Capa de Persistencia"]
+    subgraph Persistencia["Capa de Persistencia"]
         R1["EquipoRepository"]
         R2["JugadorRepository"]
         R3["AlineacionRepository"]
-        R4["...15 Repositories más"]
+        R4["...15 Repositories mas"]
     end
 
-    subgraph BD["🐘 Base de Datos"]
-        PG[("PostgreSQL<br/>NeonDB")]
+    subgraph BD["Base de Datos"]
+        PG[("PostgreSQL NeonDB")]
     end
 
     C1 & C2 & C3 & C4 & C5 --> DTO
@@ -63,7 +63,7 @@ graph TB
     R1 & R2 & R3 & R4 --> PG
     AS --> JS
 
-    style Presentación fill:#1a1a2e,stroke:#e94560,color:#e0e0e0
+    style Presentacion fill:#1a1a2e,stroke:#e94560,color:#e0e0e0
     style Seguridad fill:#16213e,stroke:#e94560,color:#e0e0e0
     style Negocio fill:#0f3460,stroke:#e94560,color:#e0e0e0
     style Persistencia fill:#533483,stroke:#e94560,color:#e0e0e0
@@ -130,12 +130,12 @@ public class Usuario implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @JsonIgnore                      // ← Evita serialización del hash
+    @JsonIgnore                      // Evita serializacion del hash
     private String passwordHash;
 
     private String rol;              // ADMIN | ENTRENADOR | JUGADOR
 
-    @Override @JsonIgnore            // ← Evita bucle infinito de serialización
+    @Override @JsonIgnore            // Evita bucle infinito de serializacion
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + this.rol));
     }
@@ -153,9 +153,13 @@ public class Usuario implements UserDetails {
 ### Modelo `Alineacion` — Centro de Datos de Rendimiento
 
 ```java
-@Entity @Table(name = "alineacion") @Data
+@Entity
+@Table(name = "alineacion")
+@Data
 public class Alineacion {
-    @Id @GeneratedValue private Long id;
+
+    @Id @GeneratedValue
+    private Long id;
 
     @ManyToOne private Partido partido;
     @ManyToOne private Jugador jugador;
@@ -315,6 +319,7 @@ int totalAsist = participaciones.stream()
 ### Cierre de Acta con Transaccionalidad
 
 El método `cerrarActaAdmin` en `AdminController` es **transaccional**:
+
 1. Actualiza el resultado del partido (goles favor/contra).
 2. Guarda todas las entradas de `Alineacion` con sus estadísticas.
 3. Cambia el estado del partido a `FINALIZADO`.
@@ -347,7 +352,7 @@ public ResponseEntity<?> crearPartido(
 # Base de Datos (NeonDB)
 spring.datasource.url=jdbc:postgresql://<host>.neon.tech/<database>?sslmode=require
 spring.datasource.username=<usuario>
-spring.datasource.password=<contraseña>
+spring.datasource.password=<contrasena>
 spring.datasource.driver-class-name=org.postgresql.Driver
 
 # JPA/Hibernate
@@ -357,7 +362,7 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 
 # JWT
 application.security.jwt.secret-key=<clave-secreta-256-bits>
-application.security.jwt.expiration=86400000  # 24 horas en ms
+application.security.jwt.expiration=86400000
 
 # Servidor
 server.port=8080
@@ -383,4 +388,3 @@ server.port=8080
 [← Volver al README](./README.md) · [Frontend →](./FRONTEND.md) · [Troubleshooting →](./TROUBLESHOOTING.md)
 
 </div>
-]]>
