@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # ⚽ DAM United FC — Gestión Integral de Clubes Deportivos
 
@@ -212,50 +212,50 @@ El sistema es completamente **Stateless**. No se mantienen sesiones en el servid
 
 ```mermaid
 sequenceDiagram
-    actor U as 👤 Usuario
-    participant F as 📱 Frontend<br/>(Angular/Ionic)
-    participant I as 🔄 AuthInterceptor
-    participant B as ⚙️ Backend<br/>(Spring Boot)
-    participant S as 🔑 JwtService
-    participant DB as 🐘 PostgreSQL
+    actor U as Usuario
+    participant F as Frontend Angular/Ionic
+    participant I as AuthInterceptor
+    participant B as Backend Spring Boot
+    participant S as JwtService
+    participant DB as PostgreSQL
 
-    Note over U,DB: 1️⃣ FLUJO DE LOGIN
+    Note over U,DB: 1. FLUJO DE LOGIN
 
     U->>F: Introduce email + password
-    F->>B: POST /api/auth/login<br/>{ email, password }
+    F->>B: POST /api/auth/login { email, password }
     B->>DB: Buscar usuario por email
     DB-->>B: Usuario encontrado
     B->>B: BCrypt.matches(password, passwordHash)
     B->>S: generateToken(usuario)
     S-->>B: JWT firmado (HMAC-SHA256, 24h)
-    B-->>F: 200 OK { "token": "eyJhbG..." }
-    F->>F: localStorage.setItem('auth_token', token)
+    B-->>F: 200 OK { token: eyJhbG... }
+    F->>F: localStorage.setItem(auth_token, token)
 
-    Note over U,DB: 2️⃣ ACCESO A ENDPOINT PROTEGIDO
+    Note over U,DB: 2. ACCESO A ENDPOINT PROTEGIDO
 
     U->>F: Navega a /coach-dashboard
     F->>F: AuthGuard verifica token en storage
     F->>I: GET /api/admin/equipos
-    I->>I: Inyecta header Authorization:<br/>Bearer eyJhbG...
+    I->>I: Inyecta header Authorization Bearer
     I->>B: Request con JWT
     B->>S: isTokenValid(token)
     S->>S: Verifica firma HMAC-SHA256
-    S->>S: Verifica expiración
-    S-->>B: ✅ Token válido
+    S->>S: Verifica expiracion
+    S-->>B: Token valido
     B->>DB: Query datos
     DB-->>B: Resultados
-    B-->>F: 200 OK { equipos: [...] }
+    B-->>F: 200 OK equipos
     F-->>U: Renderiza Dashboard
 
-    Note over U,DB: 3️⃣ TOKEN EXPIRADO / INVÁLIDO
+    Note over U,DB: 3. TOKEN EXPIRADO / INVALIDO
 
     F->>I: GET /api/jugadores
     I->>B: Request con JWT expirado
     B->>S: isTokenValid(token)
-    S-->>B: ❌ Token expirado
+    S-->>B: Token expirado
     B-->>F: 401 Unauthorized
     F->>F: ErrorInterceptor captura 401
-    F->>F: Limpia Storage + Redirect a /auth/login
+    F->>F: Limpia Storage y Redirect a /auth/login
 ```
 
 ### Componentes de Seguridad
@@ -298,6 +298,7 @@ sequenceDiagram
 ## ✨ Características Principales
 
 ### 🏟️ Gestión Deportiva
+
 - CRUD completo de **equipos, jugadores y entrenadores**.
 - Creación de **partidos y entrenamientos** con escudo rival (URL o archivo).
 - **Alineaciones tácticas** con titulares/suplentes, sustituciones, capitán y lanzadores.
@@ -305,16 +306,19 @@ sequenceDiagram
 - **Pasar lista** de asistencia a entrenamientos.
 
 ### 📊 Estadísticas & Datos
+
 - Estadísticas de jugador calculadas dinámicamente desde `Alineacion`.
 - Vista pública de plantilla y equipos sin autenticación (`/api/public/**`).
 - Detalle de partidos con acta completa.
 
 ### 👥 Multi-Rol
+
 - **Admin (Director Deportivo):** Panel completo de gestión.
 - **Entrenador:** Dashboard, pizarra táctica, convocatorias, estadísticas.
 - **Jugador:** Dashboard personal, partidos, perfil.
 
 ### 📱 Mobile First
+
 - Interfaz Ionic 7 adaptativa para **web y móvil**.
 - Componentes nativos (IonHeader, IonCard, IonList, IonFab).
 - Capacitor para despliegue en Android.
@@ -325,7 +329,7 @@ sequenceDiagram
 
 ```
 TFG-SergioEstudillo/
-├── src/backend-tfg/backend-tfg/     # ⚙️ Spring Boot Backend
+├── src/backend-tfg/backend-tfg/     # Spring Boot Backend
 │   ├── src/main/java/.../
 │   │   ├── config/                  # SecurityConfig, CorsConfig, WebConfig
 │   │   ├── controller/              # 19 REST Controllers
@@ -338,29 +342,29 @@ TFG-SergioEstudillo/
 │   │   └── application.properties
 │   └── pom.xml
 │
-├── frontend/                        # 📱 Angular 16 + Ionic 7
+├── frontend/                        # Angular 16 + Ionic 7
 │   ├── src/app/
 │   │   ├── core/                    # Guards, Interceptors, 18+ Services
 │   │   ├── modules/                 # 10 Feature Modules (Lazy Loaded)
 │   │   │   ├── admin/               # Panel Director Deportivo
 │   │   │   ├── auth/                # Login / Registro
-│   │   │   ├── coach/               # Dashboard + Tácticas + Convocatorias
+│   │   │   ├── coach/               # Dashboard + Tacticas + Convocatorias
 │   │   │   ├── players/             # Dashboard Jugador
-│   │   │   ├── landing/             # Página pública
+│   │   │   ├── landing/             # Pagina publica
 │   │   │   ├── club/                # Vista Club
 │   │   │   ├── calendar/            # Calendario de eventos
 │   │   │   ├── match-detail/        # Detalle de partido
-│   │   │   ├── dashboard/           # Dashboard genérico
+│   │   │   ├── dashboard/           # Dashboard generico
 │   │   │   └── user/                # Perfil de usuario
 │   │   └── shared/                  # Componentes y modelos compartidos
-│   ├── src/environments/            # Configuración por entorno
+│   ├── src/environments/            # Configuracion por entorno
 │   └── package.json
 │
-├── docs/                            # 📖 Documentación adicional
-├── README.md                        # ← Este archivo
-├── BACKEND.md                       # Documentación técnica Backend
-├── FRONTEND.md                      # Documentación técnica Frontend
-└── TROUBLESHOOTING.md               # Guía de resolución de problemas
+├── docs/                            # Documentacion adicional
+├── README.md                        # Este archivo
+├── BACKEND.md                       # Documentacion tecnica Backend
+├── FRONTEND.md                      # Documentacion tecnica Frontend
+└── TROUBLESHOOTING.md               # Guia de resolucion de problemas
 ```
 
 ---
@@ -417,7 +421,7 @@ npm install
 
 # Ejecutar servidor de desarrollo
 ionic serve
-# ó
+# o
 ng serve
 ```
 
@@ -445,6 +449,7 @@ ng serve
 ## 👤 Autor
 
 **Sergio Estudillo**
+
 Estudiante de 2º DAM — Desarrollo de Aplicaciones Multiplataforma
 
 [![GitHub](https://img.shields.io/badge/GitHub-sestmar-181717?style=flat-square&logo=github)](https://github.com/sestmar)
@@ -460,7 +465,7 @@ Este proyecto es un **Trabajo Final de Grado (TFG)** desarrollado con fines educ
 <div align="center">
 
 *Documentación actualizada: Marzo 2026*
+
 *Versión: 4.0 — Cloud & Mobile First*
 
 </div>
-]]>
