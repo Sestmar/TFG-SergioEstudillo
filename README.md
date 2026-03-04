@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚽ DAM United FC — Gestión Integral de Clubes Deportivos
+# DAM United FC — Gestión Integral de Clubes Deportivos
 
 ### Trabajo Final de Grado · Desarrollo de Aplicaciones Multiplataforma
 
