@@ -38,7 +38,11 @@ frontend/www/
 frontend/.angular/
 frontend/.ionic/
 
-# Backend  
+# Backend
 target/
 *.jar
 *.war
+
+# Perfiles locales con credenciales — NUNCA commitear
+src/main/resources/application-local.properties
+src/main/resources/application-local*.properties
