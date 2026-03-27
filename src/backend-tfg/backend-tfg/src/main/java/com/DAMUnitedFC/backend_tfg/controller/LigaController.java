@@ -1,10 +1,8 @@
 package com.DAMUnitedFC.backend_tfg.controller;
 
 import com.DAMUnitedFC.backend_tfg.dto.LigaDto;
-import com.DAMUnitedFC.backend_tfg.model.Categoria;
 import com.DAMUnitedFC.backend_tfg.model.Liga;
-import com.DAMUnitedFC.backend_tfg.repository.CategoriaRepository;
-import com.DAMUnitedFC.backend_tfg.repository.LigaRepository;
+import com.DAMUnitedFC.backend_tfg.service.LigaService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,45 +11,34 @@ import java.util.List;
 @RequestMapping("/api/ligas")
 public class LigaController {
 
-    private final LigaRepository ligaRepository;
-    private final CategoriaRepository categoriaRepository;
+    private final LigaService ligaService;
 
-    public LigaController(LigaRepository ligaRepository, CategoriaRepository categoriaRepository) {
-        this.ligaRepository = ligaRepository;
-        this.categoriaRepository = categoriaRepository;
+    public LigaController(LigaService ligaService) {
+        this.ligaService = ligaService;
     }
 
     @GetMapping
     public List<Liga> getLigas() {
-        return ligaRepository.findAll();
+        return ligaService.listar();
     }
 
     @PostMapping
     public Liga crearLiga(@RequestBody LigaDto ligaDto) {
-        Categoria categoria = categoriaRepository.findById(ligaDto.getIdCategoria())
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
-        Liga liga = new Liga();
-        liga.setNombre(ligaDto.getNombre());
-        liga.setTemporada(ligaDto.getTemporada());
-        liga.setNivel(ligaDto.getNivel());
-        liga.setObservaciones(ligaDto.getObservaciones());
-        liga.setCategoria(categoria);
-        return ligaRepository.save(liga);
+        return ligaService.crear(ligaDto);
     }
 
     @GetMapping("/{id}")
     public Liga getLiga(@PathVariable Integer id) {
-        return ligaRepository.findById(id).orElse(null);
+        return ligaService.obtener(id);
     }
 
     @PutMapping("/{id}")
     public Liga actualizarLiga(@PathVariable Integer id, @RequestBody Liga ligaActualizada) {
-        ligaActualizada.setIdliga(id);
-        return ligaRepository.save(ligaActualizada);
+        return ligaService.actualizar(id, ligaActualizada);
     }
 
     @DeleteMapping("/{id}")
     public void borrarLiga(@PathVariable Integer id) {
-        ligaRepository.deleteById(id);
+        ligaService.borrar(id);
     }
 }

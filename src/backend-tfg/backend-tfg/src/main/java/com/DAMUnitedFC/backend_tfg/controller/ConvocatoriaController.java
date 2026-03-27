@@ -2,56 +2,43 @@ package com.DAMUnitedFC.backend_tfg.controller;
 
 import com.DAMUnitedFC.backend_tfg.dto.ConvocatoriaDto;
 import com.DAMUnitedFC.backend_tfg.model.Convocatoria;
-import com.DAMUnitedFC.backend_tfg.repository.ConvocatoriaRepository;
-import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
+import com.DAMUnitedFC.backend_tfg.service.ConvocatoriaService;
 import org.springframework.web.bind.annotation.*;
-import java.sql.Timestamp;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/convocatorias")
 public class ConvocatoriaController {
 
-    private final ConvocatoriaRepository repo;
-    private final EquipoRepository equipoRepo;
+    private final ConvocatoriaService convocatoriaService;
 
-    public ConvocatoriaController(ConvocatoriaRepository repo, EquipoRepository equipoRepo) {
-        this.repo = repo;
-        this.equipoRepo = equipoRepo;
+    public ConvocatoriaController(ConvocatoriaService convocatoriaService) {
+        this.convocatoriaService = convocatoriaService;
     }
 
     @GetMapping
     public List<Convocatoria> listar() {
-        return repo.findAll();
+        return convocatoriaService.listar();
     }
 
     @GetMapping("/{id}")
     public Convocatoria obtener(@PathVariable Integer id) {
-        return repo.findById(id).orElseThrow(() -> new RuntimeException("Convocatoria no encontrada"));
+        return convocatoriaService.obtener(id);
     }
 
     @PostMapping
     public Convocatoria crear(@RequestBody ConvocatoriaDto dto) {
-        Convocatoria c = new Convocatoria();
-        c.setEquipo(equipoRepo.findById(dto.getIdEquipo()).orElseThrow());
-        c.setFechaEvento(Timestamp.valueOf(dto.getFechaEvento()));
-        c.setTipo(dto.getTipo());
-        c.setObservaciones(dto.getObservaciones());
-        return repo.save(c);
+        return convocatoriaService.crear(dto);
     }
 
     @PutMapping("/{id}")
     public Convocatoria actualizar(@PathVariable Integer id, @RequestBody ConvocatoriaDto dto) {
-        Convocatoria c = repo.findById(id).orElseThrow(() -> new RuntimeException("Convocatoria no encontrada"));
-        c.setEquipo(equipoRepo.findById(dto.getIdEquipo()).orElseThrow());
-        c.setFechaEvento(Timestamp.valueOf(dto.getFechaEvento()));
-        c.setTipo(dto.getTipo());
-        c.setObservaciones(dto.getObservaciones());
-        return repo.save(c);
+        return convocatoriaService.actualizar(id, dto);
     }
 
     @DeleteMapping("/{id}")
     public void borrar(@PathVariable Integer id) {
-        repo.deleteById(id);
+        convocatoriaService.borrar(id);
     }
 }

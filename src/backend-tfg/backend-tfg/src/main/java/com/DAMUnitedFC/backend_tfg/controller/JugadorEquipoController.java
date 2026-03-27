@@ -1,48 +1,34 @@
 package com.DAMUnitedFC.backend_tfg.controller;
 
 import com.DAMUnitedFC.backend_tfg.dto.JugadorEquipoDto;
-import com.DAMUnitedFC.backend_tfg.model.*;
-import com.DAMUnitedFC.backend_tfg.repository.*;
+import com.DAMUnitedFC.backend_tfg.model.JugadorEquipo;
+import com.DAMUnitedFC.backend_tfg.service.JugadorEquipoService;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/jugador-equipo")
 public class JugadorEquipoController {
 
-    private final JugadorEquipoRepository repo;
-    private final JugadorRepository jugadorRepo;
-    private final EquipoRepository equipoRepo;
+    private final JugadorEquipoService jugadorEquipoService;
 
-    public JugadorEquipoController(JugadorEquipoRepository repo, JugadorRepository jugadorRepo, EquipoRepository equipoRepo) {
-        this.repo = repo;
-        this.jugadorRepo = jugadorRepo;
-        this.equipoRepo = equipoRepo;
+    public JugadorEquipoController(JugadorEquipoService jugadorEquipoService) {
+        this.jugadorEquipoService = jugadorEquipoService;
     }
 
     @GetMapping
     public List<JugadorEquipo> listar() {
-        return repo.findAll();
+        return jugadorEquipoService.listar();
     }
 
     @PostMapping
     public JugadorEquipo crear(@RequestBody JugadorEquipoDto dto) {
-        JugadorEquipo je = new JugadorEquipo();
-        JugadorEquipoId id = new JugadorEquipoId();
-        id.setIdJugador(dto.getIdJugador());
-        id.setIdEquipo(dto.getIdEquipo());
-        je.setId(id);
-        je.setJugador(jugadorRepo.findById(dto.getIdJugador()).orElseThrow());
-        je.setEquipo(equipoRepo.findById(dto.getIdEquipo()).orElseThrow());
-        je.setObservacion(dto.getObservacion());
-        return repo.save(je);
+        return jugadorEquipoService.crear(dto);
     }
 
     @DeleteMapping("/{idJugador}/{idEquipo}")
     public void borrar(@PathVariable Integer idJugador, @PathVariable Integer idEquipo) {
-        JugadorEquipoId id = new JugadorEquipoId();
-        id.setIdJugador(idJugador);
-        id.setIdEquipo(idEquipo);
-        repo.deleteById(id);
+        jugadorEquipoService.borrar(idJugador, idEquipo);
     }
 }

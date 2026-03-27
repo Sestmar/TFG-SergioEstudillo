@@ -1,7 +1,7 @@
 package com.DAMUnitedFC.backend_tfg.controller;
 
 import com.DAMUnitedFC.backend_tfg.model.Categoria;
-import com.DAMUnitedFC.backend_tfg.repository.CategoriaRepository;
+import com.DAMUnitedFC.backend_tfg.service.CategoriaService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,35 +10,34 @@ import java.util.List;
 @RequestMapping("/api/categorias")
 public class CategoriaController {
 
-    private final CategoriaRepository categoriaRepository;
+    private final CategoriaService categoriaService;
 
-    public CategoriaController(CategoriaRepository categoriaRepository) {
-        this.categoriaRepository = categoriaRepository;
+    public CategoriaController(CategoriaService categoriaService) {
+        this.categoriaService = categoriaService;
     }
 
     @GetMapping
     public List<Categoria> getCategorias() {
-        return categoriaRepository.findAll();
+        return categoriaService.listar();
     }
 
     @PostMapping
     public Categoria crearCategoria(@RequestBody Categoria categoria) {
-        return categoriaRepository.save(categoria);
+        return categoriaService.crear(categoria);
     }
 
     @GetMapping("/{id}")
     public Categoria getCategoria(@PathVariable Integer id) {
-        return categoriaRepository.findById(id).orElse(null);
+        return categoriaService.obtener(id);
     }
 
     @PutMapping("/{id}")
     public Categoria actualizarCategoria(@PathVariable Integer id, @RequestBody Categoria categoriaActualizada) {
-        categoriaActualizada.setIdCategoria(id);
-        return categoriaRepository.save(categoriaActualizada);
+        return categoriaService.actualizar(id, categoriaActualizada);
     }
 
     @DeleteMapping("/{id}")
     public void borrarCategoria(@PathVariable Integer id) {
-        categoriaRepository.deleteById(id);
+        categoriaService.borrar(id);
     }
 }

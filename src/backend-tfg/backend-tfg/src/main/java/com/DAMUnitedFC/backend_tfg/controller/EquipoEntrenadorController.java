@@ -1,50 +1,34 @@
 package com.DAMUnitedFC.backend_tfg.controller;
 
 import com.DAMUnitedFC.backend_tfg.dto.EquipoEntrenadorDto;
-import com.DAMUnitedFC.backend_tfg.model.*;
-import com.DAMUnitedFC.backend_tfg.repository.*;
+import com.DAMUnitedFC.backend_tfg.model.EquipoEntrenador;
+import com.DAMUnitedFC.backend_tfg.service.EquipoEntrenadorService;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/equipo-entrenador")
 public class EquipoEntrenadorController {
 
-    private final EquipoEntrenadorRepository repo;
-    private final EquipoRepository equipoRepo;
-    private final EntrenadorRepository entrenadorRepo;
+    private final EquipoEntrenadorService equipoEntrenadorService;
 
-    public EquipoEntrenadorController(EquipoEntrenadorRepository repo,
-                                      EquipoRepository equipoRepo,
-                                      EntrenadorRepository entrenadorRepo) {
-        this.repo = repo;
-        this.equipoRepo = equipoRepo;
-        this.entrenadorRepo = entrenadorRepo;
+    public EquipoEntrenadorController(EquipoEntrenadorService equipoEntrenadorService) {
+        this.equipoEntrenadorService = equipoEntrenadorService;
     }
 
     @GetMapping
     public List<EquipoEntrenador> listar() {
-        return repo.findAll();
+        return equipoEntrenadorService.listar();
     }
 
     @PostMapping
     public EquipoEntrenador crear(@RequestBody EquipoEntrenadorDto dto) {
-        EquipoEntrenador ee = new EquipoEntrenador();
-        EquipoEntrenadorId id = new EquipoEntrenadorId();
-        id.setIdEquipo(dto.getIdEquipo());
-        id.setIdEntrenador(dto.getIdEntrenador());
-        ee.setId(id);
-        ee.setEquipo(equipoRepo.findById(dto.getIdEquipo()).orElseThrow());
-        ee.setEntrenador(entrenadorRepo.findById(dto.getIdEntrenador()).orElseThrow());
-        ee.setRol(dto.getRol());  // AÑADE ESTA LÍNEA
-        return repo.save(ee);
+        return equipoEntrenadorService.crear(dto);
     }
 
     @DeleteMapping("/{idEquipo}/{idEntrenador}")
     public void borrar(@PathVariable Integer idEquipo, @PathVariable Integer idEntrenador) {
-        EquipoEntrenadorId id = new EquipoEntrenadorId();
-        id.setIdEquipo(idEquipo);
-        id.setIdEntrenador(idEntrenador);
-        repo.deleteById(id);
+        equipoEntrenadorService.borrar(idEquipo, idEntrenador);
     }
 }
