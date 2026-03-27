@@ -20,18 +20,18 @@
 
 ---
 
-## 🏗️ Arquitectura en Capas
+## 🏗️ Arquitectura en Capas (Refactorizada)
 
-El backend sigue una arquitectura **en capas estricta** con separación de responsabilidades:
+El backend sigue una arquitectura de **Capa de Servicio (Service Layer)** para centralizar la lógica de negocio y desacoplar los controladores de la persistencia:
 
 ```mermaid
 graph TB
-    subgraph Presentacion["Capa de Presentacion"]
+    subgraph Presentacion["Capa de Presentación (REST)"]
         C1["AdminController"]
-        C2["PublicController"]
-        C3["UsuarioController"]
+        C2["UsuarioController"]
+        C3["UserController"]
         C4["PartidoController"]
-        C5["...15 Controllers mas"]
+        C5["...19 Controllers"]
     end
 
     subgraph Seguridad["Capa de Seguridad"]
@@ -40,28 +40,32 @@ graph TB
         SC["SecurityConfig"]
     end
 
-    subgraph Negocio["Capa de Negocio"]
-        AS["AuthService"]
+    subgraph Negocio["Capa de Servicio (Dominio)"]
+        S1["AdminService"]
+        S2["AuthService"]
+        S3["AlineacionService"]
+        S4["JugadorService"]
+        S5["...19 Services"]
         DTO["DTOs (19)"]
     end
 
-    subgraph Persistencia["Capa de Persistencia"]
+    subgraph Persistencia["Capa de Persistencia (JPA)"]
         R1["EquipoRepository"]
         R2["JugadorRepository"]
         R3["AlineacionRepository"]
-        R4["...15 Repositories mas"]
+        R4["...15 Repositories"]
     end
 
     subgraph BD["Base de Datos"]
         PG[("PostgreSQL NeonDB")]
     end
 
-    C1 & C2 & C3 & C4 & C5 --> DTO
+    C1 & C2 & C3 & C4 & C5 --> S1 & S2 & S3 & S4 & S5
+    S1 & S2 & S3 & S4 & S5 --> DTO
+    S1 & S2 & S3 & S4 & S5 --> R1 & R2 & R3 & R4
     SF --> JS
     SC --> SF
-    DTO --> R1 & R2 & R3 & R4
     R1 & R2 & R3 & R4 --> PG
-    AS --> JS
 
     style Presentacion fill:#1a1a2e,stroke:#e94560,color:#e0e0e0
     style Seguridad fill:#16213e,stroke:#e94560,color:#e0e0e0
@@ -74,16 +78,60 @@ graph TB
 
 ```
 com.DAMUnitedFC.backend_tfg/
-├── config/               # SecurityConfig, CorsConfig, WebConfig, ApplicationConfig, OpenApiConfig
-├── controller/           # 19 REST Controllers
-├── dto/                  # 19 Data Transfer Objects
-├── model/                # 18 Entidades JPA
-├── repository/           # JpaRepository interfaces
-├── security/             # JwtAuthenticationFilter
-└── service/              # JwtService, AuthService
+├── config/               # Configuración de Seguridad, CORS y OpenAPI
+├── controller/           # Controladores REST (Delegación a Capa de Servicio)
+├── dto/                  # Objetos de Transferencia de Datos
+├── model/                # Entidades JPA (Persistencia)
+├── repository/           # Interfaces de Acceso a Datos (Spring Data JPA)
+├── security/             # Componentes de Seguridad (JWT y Auth)
+└── service/              # 19 Servicios de Dominio (Lógica de Negocio)
 ```
 
+### Patrones Implementados
+
+- **Service Layer**: Toda la lógica de negocio y orquestación se encuentra en servicios.
+- **Inyección de Dependencias**: Migración progresiva a Inyección por Constructor para mejorar la estabilidad.
+- **Transaccionalidad**: Control de transacciones centrado en la capa de servicios mediante `@Transactional`.
+
 ---
+
+## ⚙️ Servicios de Dominio (Service Layer)
+
+Se han implementado **19 servicios** para orquestar la funcionalidad del club:
+
+| Servicio | Propósito Clave |
+|----------|-----------------|
+| `AdminService` | Gestión administrativa de usuarios, equipos y cierre de actas. |
+| `AuthService` | Manejo de registro, roles automáticos y autenticación. |
+| `AlineacionService` | Gestión de fichas de partido, titulares y estadísticas. |
+| `JugadorService` | Gestión de perfiles deportivos y estadísticas de jugadores. |
+| `EntrenadorService` | Gestión de técnicos y asignaciones a equipos. |
+| `EquipoService` | Gestión de la estructura de equipos y categorías. |
+| `PartidoService` | Calendario de eventos, partidos y entrenamientos. |
+| `UsuarioService` | Gestión de datos personales y perfiles de usuario. |
+| `PublicService` | Suministro de datos optimizados para vistas públicas. |
+| `EmailService` | Notificaciones y comunicaciones vía correo electrónico. |
+| `JwtService` | Generación y validación de tokens de seguridad JWT. |
+
+---
+
+## 🌐 Controladores REST
+
+### Mapa de Endpoints
+
+| Controller | Base Path | Métodos | Acceso |
+|-----------|-----------|---------|--------|
+| `UsuarioController` | `/api/auth/**` | POST login, POST register | Público |
+| `PublicController` | `/api/public/**` | GET equipos, GET plantilla | Público |
+| `AdminController` | `/api/admin/**` | CRUD Administrativo completo | JWT (ADMIN) |
+| `UserController` | `/api/usuarios/**` | Gestión de usuarios y perfiles | JWT |
+| `EquipoController` | `/api/equipos/**` | Consulta de equipos | Público (GET) |
+| `JugadorController` | `/api/jugadores/**` | Consulta de jugadores y filtros | Público (GET) |
+| `EntrenadorController` | `/api/entrenadores/**` | Consulta de técnicos | Público (GET) |
+| `PartidoController` | `/api/partidos/**` | Gestión de eventos deportivos | JWT |
+| `AlineacionController` | `/api/alineaciones/**` | Gestión de alineaciones de partidos | JWT |
+| `FileController` | `/api/uploads/**` | Acceso a archivos estáticos | Público |
+| `MediaController` | `/api/media/**` | Gestión de archivos multimedia | JWT |
 
 ## 🗄️ Entidades JPA
 
@@ -209,9 +257,10 @@ Se utilizan **19 DTOs** para controlar la información que entra y sale del API:
 
 | Controller | Base Path | Métodos | Acceso |
 |-----------|-----------|---------|--------|
-| `UsuarioController` | `/api/auth/**` | POST login, POST register | Público |
+| `AuthController` | `/api/auth/**` | POST login, POST register | Público |
 | `PublicController` | `/api/public/**` | GET equipos, GET plantilla | Público |
 | `AdminController` | `/api/admin/**` | CRUD completo (16+ endpoints) | JWT (ADMIN) |
+| `UserController` | `/api/usuarios/**` | Gestión de usuarios, perfil | JWT |
 | `EquipoController` | `/api/equipos/**` | GET equipos | Público (GET) |
 | `JugadorController` | `/api/jugadores/**` | GET, filtros | Público (GET) |
 | `EntrenadorController` | `/api/entrenadores/**` | GET | Público (GET) |
@@ -221,7 +270,6 @@ Se utilizan **19 DTOs** para controlar la información que entra y sale del API:
 | `IncidenciaController` | `/api/incidencias/**` | CRUD | JWT |
 | `FileController` | `/api/uploads/**` | GET archivos | Público |
 | `MediaController` | `/api/media/**` | Gestión media | JWT |
-| `UserController` | `/api/users/**` | Perfil usuario | JWT |
 
 ### Endpoints Principales del `AdminController`
 
