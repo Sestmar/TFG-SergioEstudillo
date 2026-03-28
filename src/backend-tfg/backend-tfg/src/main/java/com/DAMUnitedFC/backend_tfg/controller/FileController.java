@@ -21,7 +21,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/uploads")
-@CrossOrigin(origins = "*")
 public class FileController {
 
     // Carpeta donde se guardarán las fotos (en la raíz del proyecto)

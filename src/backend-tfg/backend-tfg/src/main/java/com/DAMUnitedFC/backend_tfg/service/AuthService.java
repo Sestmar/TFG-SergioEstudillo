@@ -6,7 +6,6 @@ import com.DAMUnitedFC.backend_tfg.model.Usuario;
 import com.DAMUnitedFC.backend_tfg.repository.EntrenadorRepository; // Importante
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import com.DAMUnitedFC.backend_tfg.security.CustomUserDetails;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,14 +16,17 @@ import java.util.Date;
 @Service
 public class AuthService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final EntrenadorRepository entrenadorRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private EntrenadorRepository entrenadorRepository; //
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public AuthService(UsuarioRepository usuarioRepository,
+                       EntrenadorRepository entrenadorRepository,
+                       PasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.entrenadorRepository = entrenadorRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Transactional // Si falla crear el entrenador, que no se cree el usuario
     public Usuario registerNewUser(RegistroUsuario registroDto) {

@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Responsabilidad: CRUD de perfiles de usuario (listar, obtener por ID, actualizar datos).
+ * La autenticación e identidad (register, login, forgot-password, me) están en UsuarioController.
+ */
 @RestController
 @RequestMapping("/api/usuarios")
 public class UserController {

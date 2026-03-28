@@ -4,46 +4,46 @@ import com.DAMUnitedFC.backend_tfg.dto.AuthResponseDto;
 import com.DAMUnitedFC.backend_tfg.dto.LoginDto;
 import com.DAMUnitedFC.backend_tfg.dto.RegistroUsuario;
 import com.DAMUnitedFC.backend_tfg.model.Usuario;
-import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import com.DAMUnitedFC.backend_tfg.service.AuthService;
 import com.DAMUnitedFC.backend_tfg.service.EmailService;
 import com.DAMUnitedFC.backend_tfg.service.JwtService;
+import com.DAMUnitedFC.backend_tfg.service.UsuarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Responsabilidad: autenticación y gestión de identidad (register, login, forgot-password, me).
+ * Las rutas CRUD de usuarios (/api/usuarios) están en UserController.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class UsuarioController {
 
-    private final UsuarioRepository usuarioRepository;
     private final AuthService authService;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final UsuarioService usuarioService;
 
-    public UsuarioController(UsuarioRepository usuarioRepository,
-                             AuthService authService,
+    public UsuarioController(AuthService authService,
                              JwtService jwtService,
                              AuthenticationManager authenticationManager,
-                             PasswordEncoder passwordEncoder,
-                             EmailService emailService) {
-        this.usuarioRepository = usuarioRepository;
+                             EmailService emailService,
+                             UsuarioService usuarioService) {
         this.authService = authService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
-        this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.usuarioService = usuarioService;
     }
 
     @PostMapping("/register")
@@ -63,12 +63,11 @@ public class UsuarioController {
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");
 
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        Usuario usuario = usuarioService.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         String tempPassword = UUID.randomUUID().toString().substring(0, 8);
-        usuario.setPasswordHash(passwordEncoder.encode(tempPassword));
-        usuarioRepository.save(usuario);
+        usuarioService.resetPassword(email, tempPassword);
 
         try {
             emailService.sendEmail(
@@ -94,7 +93,7 @@ public class UsuarioController {
                     new UsernamePasswordAuthenticationToken(emailLimpio, loginDto.getPassword())
             );
 
-            Usuario user = usuarioRepository.findByEmail(emailLimpio)
+            Usuario user = usuarioService.findByEmail(emailLimpio)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
             String token = jwtService.generateToken(user);
@@ -108,14 +107,14 @@ public class UsuarioController {
 
     @GetMapping("/users")
     public List<Usuario> getAllUsuarios() {
-        return usuarioRepository.findAll();
+        return usuarioService.listar();
     }
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyself(Authentication authentication) {
         try {
             String email = authentication.getName();
-            Usuario user = usuarioRepository.findByEmail(email)
+            Usuario user = usuarioService.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
             return ResponseEntity.ok(user);
         } catch (Exception e) {

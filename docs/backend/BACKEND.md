@@ -90,7 +90,7 @@ com.DAMUnitedFC.backend_tfg/
 ### Patrones Implementados
 
 - **Service Layer**: Toda la lógica de negocio y orquestación se encuentra en servicios.
-- **Inyección de Dependencias**: Migración progresiva a Inyección por Constructor para mejorar la estabilidad.
+- **Inyección de Dependencias**: Inyección por Constructor **total y absoluta** en los 19 servicios de dominio (uso de campos `final` y constructores explícitos), eliminando por completo el uso de `@Autowired` en campos para una mejor testeabilidad y robustez.
 - **Transaccionalidad**: Control de transacciones centrado en la capa de servicios mediante `@Transactional`.
 
 ---
@@ -108,7 +108,7 @@ Se han implementado **19 servicios** para orquestar la funcionalidad del club:
 | `EntrenadorService` | Gestión de técnicos y asignaciones a equipos. |
 | `EquipoService` | Gestión de la estructura de equipos y categorías. |
 | `PartidoService` | Calendario de eventos, partidos y entrenamientos. |
-| `UsuarioService` | Gestión de datos personales y perfiles de usuario. |
+| `UsuarioService` | Gestión de identidad y perfiles. Incluye lógica de recuperación de cuenta (`findByEmail`, `resetPassword`). |
 | `PublicService` | Suministro de datos optimizados para vistas públicas. |
 | `EmailService` | Notificaciones y comunicaciones vía correo electrónico. |
 | `JwtService` | Generación y validación de tokens de seguridad JWT. |
@@ -117,21 +117,38 @@ Se han implementado **19 servicios** para orquestar la funcionalidad del club:
 
 ## 🌐 Controladores REST
 
-### Mapa de Endpoints
+El API está organizado en controladores especializados que delegan la lógica de negocio a la capa de servicios. Se ha eliminado el acceso directo a repositorios desde los controladores.
 
-| Controller | Base Path | Métodos | Acceso |
-|-----------|-----------|---------|--------|
-| `UsuarioController` | `/api/auth/**` | POST login, POST register | Público |
-| `PublicController` | `/api/public/**` | GET equipos, GET plantilla | Público |
-| `AdminController` | `/api/admin/**` | CRUD Administrativo completo | JWT (ADMIN) |
-| `UserController` | `/api/usuarios/**` | Gestión de usuarios y perfiles | JWT |
-| `EquipoController` | `/api/equipos/**` | Consulta de equipos | Público (GET) |
-| `JugadorController` | `/api/jugadores/**` | Consulta de jugadores y filtros | Público (GET) |
-| `EntrenadorController` | `/api/entrenadores/**` | Consulta de técnicos | Público (GET) |
-| `PartidoController` | `/api/partidos/**` | Gestión de eventos deportivos | JWT |
-| `AlineacionController` | `/api/alineaciones/**` | Gestión de alineaciones de partidos | JWT |
-| `FileController` | `/api/uploads/**` | Acceso a archivos estáticos | Público |
-| `MediaController` | `/api/media/**` | Gestión de archivos multimedia | JWT |
+### Mapa de Endpoints Principal
+
+| Controller | Base Path | Responsabilidad Primaria | Acceso |
+|-----------|-----------|--------------------------|--------|
+| `UsuarioController` | `/api/auth/**` | Identidad, Auth y Recuperación | Público |
+| `UserController` | `/api/usuarios/**` | CRUD de perfiles y administración | JWT |
+| `PublicController` | `/api/public/**` | Datos optimizados para vistas públicas | Público |
+| `AdminController` | `/api/admin/**` | Operaciones de gestión avanzada | JWT (ADMIN) |
+| `EquipoController` | `/api/equipos/**` | Consulta de estructura de equipos | Público (GET) |
+| `JugadorController` | `/api/jugadores/**` | Consulta y filtrado de deportistas | Público (GET) |
+| `PartidoController` | `/api/partidos/**` | Gestión de calendario y eventos | JWT |
+| `AlineacionController` | `/api/alineaciones/**` | Gestión de actas y estadísticas | JWT |
+| `FileController` | `/api/uploads/**` | Servido de archivos estáticos (sin `@CrossOrigin` redundante) | Público |
+
+> **💡 Nota Semántica sobre Usuarios:**
+> - **`UsuarioController` (`/api/auth`)**: Se encarga del ciclo de vida de la **identidad** del usuario (login, registro, "quién soy yo", recuperar contraseña). Delega toda la lógica a `UsuarioService`.
+> - **`UserController` (`/api/usuarios`)**: Se encarga del **perfil y la gestión** (listar usuarios, ver detalles de un perfil, actualizar datos de contacto).
+
+### Endpoints Detallados del `AdminController`
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/admin/usuarios` | Todos los usuarios activos con sus perfiles |
+| POST | `/api/admin/usuarios` | Crear usuario con rol específico |
+| DELETE | `/api/admin/usuarios/{id}` | Eliminación en cascada de cuenta y perfiles |
+| POST | `/api/admin/asignar-equipo` | Vinculación de jugador a equipo |
+| POST | `/api/admin/cerrar-acta` | Proceso transaccional de finalización de partido |
+| POST | `/api/admin/asistencia` | Registro de presencia en entrenamientos/eventos |
+
+---
 
 ## 🗄️ Entidades JPA
 
@@ -248,49 +265,6 @@ Se utilizan **19 DTOs** para controlar la información que entra y sale del API:
 | `ConvocatoriaDto` / `ConvocatoriaJugadorDto` | Convocatorias |
 | `IncidenciaDto` | Incidencias |
 | `PartidoDto` (implícito en Map) | Datos de partido |
-
----
-
-## 🌐 Controladores REST
-
-### Mapa de Endpoints
-
-| Controller | Base Path | Métodos | Acceso |
-|-----------|-----------|---------|--------|
-| `AuthController` | `/api/auth/**` | POST login, POST register | Público |
-| `PublicController` | `/api/public/**` | GET equipos, GET plantilla | Público |
-| `AdminController` | `/api/admin/**` | CRUD completo (16+ endpoints) | JWT (ADMIN) |
-| `UserController` | `/api/usuarios/**` | Gestión de usuarios, perfil | JWT |
-| `EquipoController` | `/api/equipos/**` | GET equipos | Público (GET) |
-| `JugadorController` | `/api/jugadores/**` | GET, filtros | Público (GET) |
-| `EntrenadorController` | `/api/entrenadores/**` | GET | Público (GET) |
-| `PartidoController` | `/api/partidos/**` | CRUD | JWT |
-| `AlineacionController` | `/api/alineaciones/**` | CRUD | JWT |
-| `ConvocatoriaController` | `/api/convocatorias/**` | CRUD | JWT |
-| `IncidenciaController` | `/api/incidencias/**` | CRUD | JWT |
-| `FileController` | `/api/uploads/**` | GET archivos | Público |
-| `MediaController` | `/api/media/**` | Gestión media | JWT |
-
-### Endpoints Principales del `AdminController`
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/admin/candidatos` | Usuarios candidatos a ser jugadores |
-| GET | `/api/admin/candidatos-entrenadores` | Usuarios candidatos a ser entrenadores |
-| GET | `/api/admin/usuarios` | Todos los usuarios activos con sus perfiles |
-| DELETE | `/api/admin/usuarios/{id}` | Eliminar usuario (cascada) |
-| POST | `/api/admin/usuarios` | Crear usuario con rol |
-| GET | `/api/admin/equipos` | Lista completa de equipos |
-| POST | `/api/admin/equipos` | Crear equipo |
-| POST | `/api/admin/asignar-equipo` | Asignar jugador a equipo |
-| POST | `/api/admin/asignar-entrenador` | Asignar entrenador a equipo |
-| POST | `/api/admin/partidos` | Crear partido (multipart/form-data) |
-| POST | `/api/admin/entrenamientos` | Crear entrenamiento |
-| DELETE | `/api/admin/eventos/{id}` | Borrar evento |
-| POST | `/api/admin/cerrar-acta` | Cerrar acta con estadísticas |
-| GET | `/api/admin/equipos/{id}` | Detalle equipo con jugadores y partidos |
-| POST | `/api/admin/asistencia` | Guardar asistencia (pasar lista) |
-| GET | `/api/admin/asistencia/{id}` | Obtener asistencia de un evento |
 
 ---
 
