@@ -3,12 +3,11 @@ import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { HttpClient } from '@angular/common/http'; // ✅ Necesario para pedir el ID del equipo
 
-// ✅ Rutas relativas físicas corregidas (5 niveles para environment)
+// ✅ Rutas relativas físicas corregidas
 import { AuthService } from '../../../../core/services/auth/auth.service';
-import { User } from '../../../../shared/models/models';
-import { environment } from '../../../../../environments/environment';
+import { PlayerService } from '../../../../core/services/player/player.service';
+import { User, Jugador } from '../../../../shared/models/models';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,7 +22,7 @@ export class DashboardPage implements OnInit {
   constructor(
     private auth: AuthService,
     private router: Router,
-    private http: HttpClient // ✅ Inyectamos HttpClient
+    private playerSvc: PlayerService
   ) {
     this.currentUser$ = this.auth.currentUser$;
   }
@@ -54,17 +53,16 @@ export class DashboardPage implements OnInit {
     this.currentUser$.pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       if (!user) return;
 
-      const u = user as any;
-      const userId = u.id || u.idUsuario || u.sub;
+      const userId = user.idUsuario;
 
       // CASO 1: JUGADOR -> Vamos al detalle visual del equipo (Team Detail)
       if (user.roles.includes('JUGADOR')) {
-        this.http.get(`${environment.apiUrl}/jugadores/usuario/${userId}`).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-          next: (res: any) => {
+        this.playerSvc.getPlayerByUserId(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+          next: (res: Jugador) => {
             // El backend devuelve el objeto jugador con 'equipo' o 'equipoPrincipal'
-            const team = res.equipo || res.equipoPrincipal;
+            const team = res.equipoPrincipal;
             if (team) {
-              const teamId = team.id || team.idEquipo;
+              const teamId = typeof team === 'object' ? team.idEquipo : team;
               // ✅ Redirige a la página bonita de detalle
               this.router.navigate(['/team-detail', teamId]); 
             } else {

@@ -7,7 +7,6 @@ import { forkJoin, of } from 'rxjs';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
-import { HttpClient } from '@angular/common/http';
 import { ToastController, ActionSheetController, ModalController } from '@ionic/angular';
 import { Jugador, Partido, LineupSlotDto, EquipoResumen } from 'src/app/shared/models/models';
 import { ConvocationModalComponent } from 'src/app/shared/models/convocation-modal/convocation-modal.component';
@@ -56,7 +55,6 @@ export class TacticsPage implements OnInit {
     private playerSvc: PlayerService,
     private matchSvc: MatchService,
     private authSvc: AuthService,
-    private http: HttpClient,
     private toastCtrl: ToastController,
     private actionSheetCtrl: ActionSheetController,
     private modalCtrl: ModalController
@@ -445,6 +443,14 @@ export class TacticsPage implements OnInit {
       slot.isPenaltyTaker = false;
       slot.isFreeKickTaker = false;
     }
+  }
+
+  getSlotLabel(slotId: string): string {
+    if (slotId.startsWith('GK')) return 'POR';
+    if (slotId.startsWith('DEF')) return 'DEF';
+    if (slotId.startsWith('MID')) return 'MED';
+    if (slotId.startsWith('FWD')) return 'DEL';
+    return '';
   }
 
   getProfileImage(player: Jugador): string {

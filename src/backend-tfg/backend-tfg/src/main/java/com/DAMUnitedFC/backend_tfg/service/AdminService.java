@@ -297,6 +297,10 @@ public class AdminService {
             alineacion.setEsTitular(esTitular != null && esTitular);
             alineacion.setMinutoEntrada(minEntrada);
             alineacion.setMinutoSalida(minSalida);
+            Boolean amarilla = (Boolean) stat.get("amarilla");
+            Boolean roja = (Boolean) stat.get("roja");
+            alineacion.setTarjetaAmarilla(amarilla != null && amarilla);
+            alineacion.setTarjetaRoja(roja != null && roja);
             alineacionRepo.save(alineacion);
         }
     }

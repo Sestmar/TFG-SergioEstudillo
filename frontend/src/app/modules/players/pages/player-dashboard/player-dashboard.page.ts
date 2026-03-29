@@ -3,9 +3,7 @@ import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { HttpClient } from '@angular/common/http'; 
 import { AlertController, ToastController } from '@ionic/angular'; // Añadido ToastController
-import { environment } from 'src/environments/environment';
 import { User, Jugador, EquipoResumen, Partido, PlayerStats } from 'src/app/shared/models/models';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { UserService } from 'src/app/core/services/user/user.service';
@@ -60,7 +58,6 @@ export class PlayerDashboardPage implements OnInit {
     private matchService: MatchService, 
     private notificationService: NotificationService,
     private router: Router,
-    private http: HttpClient,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController // Inyectamos Toast
   ) {
@@ -109,9 +106,7 @@ export class PlayerDashboardPage implements OnInit {
   }
 
   private loadPlayerProfile(userId: number) {
-    const url = `${environment.apiUrl}/jugadores/usuario/${userId}/equipo`;
-
-    this.http.get<EquipoResumen>(url).pipe(
+    this.playerService.getPlayerTeamByUserId(userId).pipe(
       takeUntilDestroyed(this.destroyRef),
       catchError(() => of(null))
     ).subscribe((equipo) => {

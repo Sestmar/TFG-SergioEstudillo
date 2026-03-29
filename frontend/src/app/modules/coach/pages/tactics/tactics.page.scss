@@ -19,7 +19,7 @@ $font-body: 'Inter', sans-serif;
 
 // --- HEADER MANAGER STYLE ---
 .manager-header {
-    position: absolute; top: 0; left: 0; right: 0; height: 60px; // Reducido a 60px para ganar espacio
+    position: absolute; top: 0; left: 0; right: 0; height: 60px;
     background: rgba($bg-panel, 0.95);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -30,18 +30,17 @@ $font-body: 'Inter', sans-serif;
     .header-left {
         display: flex; align-items: center; gap: 8px;
         .back-btn { --color: #fff; margin: 0; --padding-start: 0; }
-        
+
         .formation-pill {
             background: #374151; padding: 4px 10px; border-radius: 8px;
             display: flex; align-items: center; gap: 6px; position: relative;
             border: 1px solid rgba(255,255,255,0.1);
 
-            .label { 
-                font-size: 10px; color: $text-dim; font-weight: 700; letter-spacing: 0.5px; 
-                // Ocultar etiqueta "ESQUEMA" en móviles muy pequeños para evitar solapes
+            .label {
+                font-size: 10px; color: $text-dim; font-weight: 700; letter-spacing: 0.5px;
                 @media (max-width: 360px) { display: none; }
             }
-            
+
             .formation-select {
                 --padding-top: 0; --padding-bottom: 0; --padding-start: 0;
                 font-family: $font-display; font-size: 16px; font-weight: 700; color: #fff;
@@ -51,26 +50,21 @@ $font-body: 'Inter', sans-serif;
         }
     }
 
-    // ESTILO PARA EL RIVAL
     .header-center {
         position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
         text-align: center;
-        
-        // 🔥 CRÍTICO: Ocultar el rival en móviles para que no se solape con los botones
-        @media (max-width: 600px) {
-            display: none;
-        }
+        @media (max-width: 600px) { display: none; }
 
         .match-context {
             display: flex; flex-direction: column; align-items: center;
             background: rgba(0,0,0,0.4); padding: 4px 16px; border-radius: 6px;
             border: 1px solid rgba(255,255,255,0.05);
 
-            .context-label { 
+            .context-label {
                 font-size: 9px; color: $text-dim; font-weight: 700; letter-spacing: 1px; margin-bottom: 2px;
             }
-            .rival-name { 
-                font-family: $font-display; font-size: 16px; font-weight: 700; color: #fff; 
+            .rival-name {
+                font-family: $font-display; font-size: 16px; font-weight: 700; color: #fff;
                 text-transform: uppercase; white-space: nowrap;
                 text-shadow: 0 0 10px rgba($accent-blue, 0.5);
             }
@@ -82,14 +76,12 @@ $font-body: 'Inter', sans-serif;
         .action-btn {
             --border-radius: 8px; height: 34px; font-weight: 600; font-family: $font-display; letter-spacing: 0.5px;
             --box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            --padding-start: 8px; --padding-end: 8px; // Botones más compactos
+            --padding-start: 8px; --padding-end: 8px;
 
             &.purple { --background: #{$accent-purple}; }
             &.green { --background: #{$accent-green}; }
 
-            // Texto solo visible en tablets/pc
             .btn-text { display: none; @media(min-width: 500px) { display: inline-block; margin-left: 6px; } }
-            
             ion-icon { font-size: 18px; }
         }
     }
@@ -97,56 +89,76 @@ $font-body: 'Inter', sans-serif;
 
 // --- PITCH (CAMPO) ---
 .main-stage {
-    position: absolute; 
-    top: 60px; // Ajustado al nuevo header
-    bottom: 110px; // Espacio para el footer
+    position: absolute;
+    top: 60px;
+    bottom: 110px;
     left: 0; right: 0;
-    background: #0f0f0f; // Fondo oscuro tras el campo
+    background: #0f0f0f;
     display: flex; justify-content: center; align-items: center;
-    overflow: hidden; 
-    padding: 2px; // Padding mínimo para aprovechar pantalla
+    overflow: hidden;
+    padding: 2px;
 }
 
 .pitch-board {
-    width: 100%; 
-    height: 100%; // Forzar altura máxima disponible
-    max-width: 800px; 
-    // Quitamos aspect-ratio fijo en móvil para que llene la pantalla verticalmente
-    // aspect-ratio: 1.6/1; 
-    
+    width: 100%;
+    height: 100%;
+    max-width: 800px;
+
     background-color: $pitch-base;
     position: relative; border-radius: 6px;
     border: 3px solid #222;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-    
-    // PATRÓN CÉSPED
+
+    // PATRÓN CÉSPED — franjas verticales + degradado central
     .pitch-texture {
         position: absolute; inset: 0;
-        background-image: 
-            repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.08) 40px, rgba(0,0,0,0.08) 80px),
-            radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 60%);
+        background-image:
+            repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 42px,
+                rgba(0,0,0,0.07) 42px,
+                rgba(0,0,0,0.07) 84px
+            ),
+            radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.04) 0%, transparent 65%);
+        border-radius: inherit;
     }
 
     // LÍNEAS PINTADAS
     .pitch-markings {
         position: absolute; inset: 0; pointer-events: none;
-        div { border: 2px solid rgba(255,255,255,0.4); position: absolute; }
-        
-        .box { width: 50%; height: 14%; left: 50%; transform: translateX(-50%); }
+        div { border: 1.5px solid rgba(255,255,255,0.55); position: absolute; }
+
+        // Áreas grandes
+        .box { width: 55%; height: 16%; left: 50%; transform: translateX(-50%); }
         .top-box { top: -2px; border-top: 0; }
         .bottom-box { bottom: -2px; border-bottom: 0; }
-        
-        .half-line { top: 50%; left: 0; right: 0; height: 0; border-top: 2px solid rgba(255,255,255,0.4); border-left:0; border-right:0; border-bottom:0; }
-        
-        .center-circle { 
-            width: 80px; height: 80px; // Tamaño fijo mejor que porcentaje
-            top: 50%; left: 50%; 
-            border-radius: 50%; transform: translate(-50%, -50%); 
-            
+
+        // Áreas pequeñas (6 metros)
+        .small-box { width: 25%; height: 7%; left: 50%; transform: translateX(-50%); }
+        .top-small-box { top: -2px; border-top: 0; }
+        .bottom-small-box { bottom: -2px; border-bottom: 0; }
+
+        // Porterías
+        .goal {
+            width: 18%; height: 3%; left: 50%; transform: translateX(-50%);
+            background: rgba(255,255,255,0.08);
+            border: 1.5px solid rgba(255,255,255,0.6);
+        }
+        .top-goal { top: -3%; border-radius: 0 0 3px 3px; border-top: 0; }
+        .bottom-goal { bottom: -3%; border-radius: 3px 3px 0 0; border-bottom: 0; }
+
+        .half-line { top: 50%; left: 0; right: 0; height: 0; border-top: 1.5px solid rgba(255,255,255,0.55); border-left:0; border-right:0; border-bottom:0; }
+
+        .center-circle {
+            width: 80px; height: 80px;
+            top: 50%; left: 50%;
+            border-radius: 50%; transform: translate(-50%, -50%);
+
             .center-dot { width: 6px; height: 6px; background: rgba(255,255,255,0.8); border-radius: 50%; position: absolute; top:50%; left:50%; transform: translate(-50%,-50%); border:none;}
         }
 
-        .corner { width: 15px; height: 15px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); }
+        .corner { width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.55); }
         .tl { top: -8px; left: -8px; } .tr { top: -8px; right: -8px; }
         .bl { bottom: -8px; left: -8px; } .br { bottom: -8px; right: -8px; }
     }
@@ -156,11 +168,11 @@ $font-body: 'Inter', sans-serif;
 .tactical-layer {
     position: absolute; inset: 0; z-index: 10;
     display: flex; flex-direction: column;
-    padding: 10px 0; // Padding interno reducido
+    padding: 10px 0;
 
     .line-row {
         flex: 1; display: flex; justify-content: space-evenly; align-items: center;
-        &.gk-line { flex: 0.7; } 
+        &.gk-line { flex: 0.7; }
     }
 }
 
@@ -168,40 +180,63 @@ $font-body: 'Inter', sans-serif;
     width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
 }
 
+// Bug 2 fix: área de drop más grande
 .pos-anchor {
-    width: 50px; height: 50px; position: relative; // Área de drop
+    width: 64px; height: 64px; position: relative;
     display: flex; justify-content: center; align-items: center;
 
-    .empty-pos-indicator {
-        width: 10px; height: 10px; background: rgba(255,255,255,0.15); border-radius: 50%;
-        border: 1px dashed rgba(255,255,255,0.4);
+    @media (min-width: 400px) { width: 72px; height: 72px; }
+}
+
+// --- POSICIÓN VACÍA MEJORADA ---
+.empty-pos-indicator {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 2px dashed rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.04);
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s, background 0.2s;
+
+    @media (min-width: 400px) { width: 52px; height: 52px; }
+
+    .pos-label {
+        font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.35);
+        font-family: $font-display; letter-spacing: 0.5px;
     }
 }
 
-// --- PLAYER TOKEN (Estilo FM - Adaptable) ---
+// Highlight cuando un drag pasa por encima
+.cdk-drop-list-dragging .empty-pos-indicator {
+    border-color: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.08);
+}
+
+// --- PLAYER TOKEN ---
 .player-token {
     display: flex; flex-direction: column; align-items: center; cursor: grab;
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     &:active { cursor: grabbing; transform: scale(1.15); }
 
     .token-visual {
-        position: relative; 
-        // 🔥 TAMAÑO RESPONSIVE: Más pequeño en móvil
-        width: 38px; height: 38px;
-        @media (min-width: 400px) { width: 46px; height: 46px; }
-        
+        position: relative;
+        width: 44px; height: 44px;
+        @media (min-width: 400px) { width: 54px; height: 54px; }
+
         .img-wrapper {
             width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
-            background: #222; border: 2px solid #fff;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.4);
+            background: #222;
+            border: 2px solid transparent !important;
+            box-shadow: 0 0 0 2px var(--pos-color, #9ca3af), 0 4px 8px rgba(0,0,0,0.5);
             img { width: 100%; height: 100%; object-fit: cover; }
-            &.gk-border { border-color: #fbbf24 !important; }
+            &.gk-border {
+                box-shadow: 0 0 0 2px #fbbf24, 0 4px 8px rgba(0,0,0,0.5);
+            }
         }
 
         .kit-number {
             position: absolute; top: -4px; right: -4px;
-            background: #fff; color: #111; font-weight: 800; font-size: 9px;
-            width: 15px; height: 15px; border-radius: 50%;
+            background: #fff; color: #111; font-weight: 800; font-size: 10px;
+            width: 17px; height: 17px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             border: 1px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             &.black { background: #111; color: #fff; border-color: #333; }
@@ -212,7 +247,7 @@ $font-body: 'Inter', sans-serif;
             width: 14px; height: 14px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-size: 8px; font-weight: 900; color: #fff; border: 1px solid #fff;
-            
+
             &.captain { background: #f59e0b; top: -4px; left: -4px; width: 16px; height: 16px; font-size: 10px; z-index: 2; }
             &.penalty { background: #ef4444; bottom: -2px; right: 8px; left: auto; }
             &.freekick { background: #3b82f6; bottom: -2px; right: -4px; left: auto; }
@@ -227,7 +262,7 @@ $font-body: 'Inter', sans-serif;
         white-space: nowrap; text-transform: uppercase;
         max-width: 70px; overflow: hidden; text-overflow: ellipsis;
         text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-        
+
         @media (min-width: 400px) { font-size: 11px; margin-top: 4px; }
     }
 }
@@ -235,9 +270,10 @@ $font-body: 'Inter', sans-serif;
 // --- BANQUILLO (FOOTER) ---
 .manager-footer {
     position: absolute; bottom: 0; left: 0; right: 0; height: 110px;
-    background: $bg-panel; border-top: 1px solid #374151;
+    background: linear-gradient(to bottom, #1a2030, #111827);
+    border-top: 1px solid rgba(255,255,255,0.08);
     display: flex; flex-direction: column; z-index: 50;
-    padding-bottom: env(safe-area-inset-bottom); // Respetar área segura iPhone
+    padding-bottom: env(safe-area-inset-bottom);
 
     .footer-header {
         padding: 6px 12px; background: rgba(0,0,0,0.2);
@@ -257,36 +293,57 @@ $font-body: 'Inter', sans-serif;
         .bench-token {
             display: flex; flex-direction: column; align-items: center; cursor: grab;
             &:active { cursor: grabbing; transform: scale(1.1); }
-            
+
             .token-img {
-                width: 36px; height: 36px; position: relative;
-                img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid #4b5563; }
+                width: 42px; height: 42px; position: relative;
+                img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid #6b7280; }
+                &:hover img { border-color: #9ca3af; }
                 .bench-number {
                     position: absolute; bottom: -2px; right: -2px;
                     background: #111; color: #fff; font-size: 8px; width: 12px; height: 12px;
                     border-radius: 50%; display: flex; align-items: center; justify-content: center;
                 }
             }
-            .bench-name { margin-top: 2px; font-size: 9px; color: $text-dim; font-weight: 600; text-align: center; max-width: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+            .bench-name { margin-top: 2px; font-size: 10px; color: $text-dim; font-weight: 600; text-align: center; max-width: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
         }
 
         .bench-empty { color: #4b5563; font-size: 12px; font-style: italic; width: 100%; text-align: center; }
     }
 }
 
-// Drag Ghost
-.token-ghost { opacity: 0; }
+// --- DRAG & DROP VISUAL ---
+// Bug 3 fix: placeholder visible en lugar de invisible
+.token-ghost {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 2px dashed rgba(255,255,255,0.4);
+
+    @media (min-width: 400px) { width: 54px; height: 54px; }
+}
+
 .cdk-drag-preview {
-    z-index: 9999 !important; 
-    .token-visual { transform: scale(1.2); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); }
+    z-index: 9999 !important;
+    border-radius: 50%;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 0 3px rgba(255,255,255,0.3) !important;
+
+    .token-visual {
+        transform: scale(1.25);
+        filter: drop-shadow(0 8px 16px rgba(0,0,0,0.6));
+    }
     .token-name { display: none; }
+}
+
+.cdk-drag-placeholder {
+    opacity: 0.3;
+    .token-visual { filter: grayscale(0.5); }
 }
 
 .loading-overlay {
     height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
     background: $bg-dark; color: $text-dim; font-family: $font-display;
-    .spinner-fm { 
-        width: 40px; height: 40px; border: 3px solid $accent-blue; 
+    .spinner-fm {
+        width: 40px; height: 40px; border: 3px solid $accent-blue;
         border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;
     }
 }

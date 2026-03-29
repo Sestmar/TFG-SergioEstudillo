@@ -30,6 +30,14 @@ export class PlayerService {
     return this.apiService.get<Jugador>(`/jugadores/${id}`);
   }
 
+  getPlayerByUserId(userId: number): Observable<Jugador> {
+    return this.apiService.get<Jugador>(`/jugadores/usuario/${userId}`);
+  }
+
+  getPlayerTeamByUserId(userId: number): Observable<any> {
+    return this.apiService.get<any>(`/jugadores/usuario/${userId}/equipo`);
+  }
+
   createPlayer(playerData: PlayerCreateDto): Observable<Jugador> {
     return this.apiService.post<Jugador>('/jugadores', playerData);
   }
