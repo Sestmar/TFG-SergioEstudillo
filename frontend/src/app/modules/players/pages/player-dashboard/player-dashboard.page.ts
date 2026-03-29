@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, Subject, of } from 'rxjs';
-import { takeUntil, catchError } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http'; 
 import { AlertController, ToastController } from '@ionic/angular'; // Añadido ToastController
 import { environment } from 'src/environments/environment';
@@ -25,7 +26,7 @@ interface DashboardStats {
   templateUrl: './player-dashboard.page.html',
   styleUrls: ['./player-dashboard.page.scss'],
 })
-export class PlayerDashboardPage implements OnInit, OnDestroy {
+export class PlayerDashboardPage implements OnInit {
   currentUser$: Observable<User | null>;
   currentPlayer: Player | null = null;
   currentTeam: Team | null = null;
@@ -49,7 +50,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     { id: 'stats', title: 'Estadísticas', icon: 'stats-chart', color: 'success' }
   ];
 
-  private destroy$ = new Subject<void>();
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     private authService: AuthService,
@@ -68,11 +69,6 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.loadPlayerData();
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   // 🔥 MÉTODO LOGOUT
@@ -96,7 +92,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
 
   private loadPlayerData() {
     this.loading = true;
-    this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe({
+    this.authService.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (user) => {
         const u = user as any;
         if (u && (u.id || u.idUsuario)) {
@@ -117,6 +113,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
     const url = `${environment.apiUrl}/jugadores/usuario/${userId}/equipo`;
 
     this.http.get(url).pipe(
+      takeUntilDestroyed(this.destroyRef),
       catchError(() => of(null))
     ).subscribe((equipo: any) => {
       if (equipo) {
@@ -136,7 +133,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   }
 
   private getFullPlayerData(userId: number) {
-      this.playerService.getAllPlayers().subscribe((res: any) => {
+      this.playerService.getAllPlayers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((res: any) => {
           const players = Array.isArray(res) ? res : (res.data || []);
           const found = players.find((p: any) => {
              const uId = p.usuario?.id || p.usuario?.idUsuario;
@@ -160,7 +157,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
   }
 
   private loadTeamMatches(teamId: number) {
-      this.matchService.getMatchesByTeam(teamId).pipe(takeUntil(this.destroy$)).subscribe({
+      this.matchService.getMatchesByTeam(teamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: (matches) => {
               const now = new Date();
               this.upcomingConvocations = matches
@@ -181,7 +178,7 @@ export class PlayerDashboardPage implements OnInit, OnDestroy {
 
   private loadPlayerStats(playerId: number) {
     this.playerService.getPlayerStats(playerId)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (stats: PlayerStats) => {
             this.playerStats = stats;

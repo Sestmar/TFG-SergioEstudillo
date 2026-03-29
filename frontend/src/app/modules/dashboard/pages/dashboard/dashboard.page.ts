@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { take } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http'; // ✅ Necesario para pedir el ID del equipo
 
 // ✅ Rutas relativas físicas corregidas (5 niveles para environment)
@@ -16,6 +17,7 @@ import { environment } from '../../../../../environments/environment';
 })
 export class DashboardPage implements OnInit {
 
+  private destroyRef = inject(DestroyRef);
   currentUser$: Observable<User | null>;
 
   constructor(
@@ -28,7 +30,7 @@ export class DashboardPage implements OnInit {
 
   ngOnInit() {
     // IMPORTANTE: Failsafe Redirect (Redirección de seguridad según rol)
-    this.currentUser$.subscribe(user => {
+    this.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       if (user) {
         if (user.roles.includes('ADMIN')) {
           this.router.navigate(['/admin/dashboard'], { replaceUrl: true });
@@ -49,7 +51,7 @@ export class DashboardPage implements OnInit {
 
   // 🚀 NUEVO MÉTODO INTELIGENTE PARA EL BOTÓN "MI EQUIPO"
   goToMyTeam() {
-    this.currentUser$.pipe(take(1)).subscribe(user => {
+    this.currentUser$.pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       if (!user) return;
 
       const u = user as any;
@@ -57,7 +59,7 @@ export class DashboardPage implements OnInit {
 
       // CASO 1: JUGADOR -> Vamos al detalle visual del equipo (Team Detail)
       if (user.roles.includes('JUGADOR')) {
-        this.http.get(`${environment.apiUrl}/jugadores/usuario/${userId}`).subscribe({
+        this.http.get(`${environment.apiUrl}/jugadores/usuario/${userId}`).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: (res: any) => {
             // El backend devuelve el objeto jugador con 'equipo' o 'equipoPrincipal'
             const team = res.equipo || res.equipoPrincipal;

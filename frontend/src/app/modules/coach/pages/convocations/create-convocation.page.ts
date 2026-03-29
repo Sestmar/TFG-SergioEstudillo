@@ -1,4 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ModalController, ToastController, LoadingController } from '@ionic/angular';
 import { MatchService } from 'src/app/core/services/match/match.service';
 // ✅ IMPORTAR SERVICIO DE SUBIDA
@@ -10,6 +11,8 @@ import { UploadService } from 'src/app/core/services/common/upload.service';
   styleUrls: ['./create-convocation.page.scss'],
 })
 export class CreateConvocationPage implements OnInit {
+
+  private destroyRef = inject(DestroyRef);
 
   @Input() teamId: number | null = null;
 
@@ -54,7 +57,7 @@ export class CreateConvocationPage implements OnInit {
     const file: File = event.target.files[0];
     if (file) {
       this.uploadingImage = true;
-      this.uploadSvc.uploadImage(file).subscribe({
+      this.uploadSvc.uploadImage(file).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res: any) => {
           this.formData.escudoRivalUrl = res.url;
           this.uploadingImage = false;
@@ -114,7 +117,7 @@ export class CreateConvocationPage implements OnInit {
 
       console.log('Enviando payload:', payload);
 
-      this.matchSvc.createMatch(payload).subscribe({
+      this.matchSvc.createMatch(payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: async (res) => {
           await loading.dismiss();
           this.presentToast('Convocatoria creada con éxito', 'success');

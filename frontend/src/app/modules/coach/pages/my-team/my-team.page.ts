@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { AlertController, ToastController, LoadingController } from '@ionic/angular';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { TeamService } from 'src/app/core/services/team/team.service';
@@ -14,7 +15,9 @@ import { environment } from 'src/environments/environment'; // ✅ Importado par
   styleUrls: ['./my-team.page.scss'],
 })
 export class MyTeamPage implements OnInit {
-  
+
+  private destroyRef = inject(DestroyRef);
+
   // 🔥 LISTAS SEPARADAS
   injuredPlayers: Player[] = []; 
   
@@ -67,7 +70,8 @@ export class MyTeamPage implements OnInit {
     this.loading = true;
     this.authSvc.currentUser$
       .pipe(
-        filter(user => !!user), 
+        takeUntilDestroyed(this.destroyRef),
+        filter(user => !!user),
         switchMap(user => {
           const u = user as any;
           const userId = u.id || u.idUsuario || u.sub;
@@ -96,7 +100,7 @@ export class MyTeamPage implements OnInit {
   loadPlayers() {
     if (!this.coachTeamId) return;
 
-    this.playerService.getAllPlayers().subscribe({
+    this.playerService.getAllPlayers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res: any) => {
         const all = Array.isArray(res) ? res : (res.data || []);
         
@@ -199,10 +203,10 @@ export class MyTeamPage implements OnInit {
     const payload = this.prepareDto(this.selectedPlayer, cambios);
     const playerId = (this.selectedPlayer as any).id || (this.selectedPlayer as any).idJugador;
 
-    this.playerService.updatePlayer(playerId, payload).subscribe({
+    this.playerService.updatePlayer(playerId, payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: async () => {
         await loading.dismiss();
-        this.closeModals(); 
+        this.closeModals();
         this.showToast('Ficha actualizada', 'success');
         this.loadPlayers(); 
       },
@@ -243,11 +247,11 @@ export class MyTeamPage implements OnInit {
     const payload = this.prepareDto(this.selectedPlayer, cambios);
     const playerId = (this.selectedPlayer as any).id || (this.selectedPlayer as any).idJugador;
 
-    this.playerService.updatePlayer(playerId, payload).subscribe({
+    this.playerService.updatePlayer(playerId, payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: async () => {
         await loading.dismiss();
-        this.closeModals(); 
-        this.loadPlayers(); 
+        this.closeModals();
+        this.loadPlayers();
         this.showToast('Baja registrada en enfermería', 'warning');
       },
       error: async () => { await loading.dismiss(); }
@@ -281,7 +285,7 @@ export class MyTeamPage implements OnInit {
           handler: () => {
             const payload = this.prepareDto(player, { estado: 'ACTIVO', observaciones: 'Alta médica' });
             const id = (player as any).id || (player as any).idJugador;
-            this.playerService.updatePlayer(id, payload).subscribe(() => {
+            this.playerService.updatePlayer(id, payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 this.closeModals(); 
                 this.loadPlayers();
                 this.showToast('Jugador recuperado y disponible', 'success');

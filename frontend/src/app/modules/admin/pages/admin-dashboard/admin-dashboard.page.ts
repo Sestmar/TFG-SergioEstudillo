@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AdminService } from 'src/app/core/services/admin/admin.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { ToastController, LoadingController, AlertController } from '@ionic/angular';
@@ -10,6 +11,8 @@ import { Router } from '@angular/router';
   styleUrls: ['./admin-dashboard.page.scss'],
 })
 export class AdminDashboardPage implements OnInit {
+
+  private destroyRef = inject(DestroyRef);
 
   // Listas de datos
   candidates: any[] = []; 
@@ -75,7 +78,7 @@ export class AdminDashboardPage implements OnInit {
     this.loading = true;
     
     // 1. Cargar Equipos
-    this.adminSvc.getTeams().subscribe({
+    this.adminSvc.getTeams().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => { this.teams = res; },
       error: () => this.loading = false
     });
@@ -86,7 +89,7 @@ export class AdminDashboardPage implements OnInit {
 
   // LÓGICA: Usamos la lista completa para evitar problemas del backend
   loadUsersAndCalculateCandidates() {
-      this.adminSvc.getAllActiveUsers().subscribe({
+      this.adminSvc.getAllActiveUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: (res: any[]) => {
               console.log("👥 Usuarios Totales recibidos:", res.length);
               this.activeUsers = res;
@@ -205,7 +208,7 @@ export class AdminDashboardPage implements OnInit {
       await this.processRequest(this.adminSvc.createTeam(this.newTeam), 'Equipo creado');
       this.isTeamModalOpen = false;
       this.newTeam = { nombre: '', categoria: '' };
-      this.adminSvc.getTeams().subscribe(res => this.teams = res);
+      this.adminSvc.getTeams().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(res => this.teams = res);
   }
 
   openTeamDetail(team: any) {
@@ -304,7 +307,7 @@ export class AdminDashboardPage implements OnInit {
     const loading = await this.loadingCtrl.create({ message: 'Procesando...', spinner: 'crescent' });
     await loading.present();
     return new Promise<void>((resolve) => {
-        observable$.subscribe({
+        observable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: async () => {
             await loading.dismiss();
             this.presentToast(successMsg, 'success');

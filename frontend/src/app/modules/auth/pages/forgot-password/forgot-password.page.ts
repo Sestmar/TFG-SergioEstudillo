@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { NotificationService } from 'src/app/core/services/notification/notification.service';
@@ -41,6 +42,9 @@ import { Router } from '@angular/router';
   `]
 })
 export class ForgotPasswordPage implements OnInit {
+
+  private destroyRef = inject(DestroyRef);
+
   forgotForm!: FormGroup;
   isLoading = false;
 
@@ -66,6 +70,7 @@ export class ForgotPasswordPage implements OnInit {
     await this.notification.showLoading('Enviando...'); // Usando tu servicio
 
     this.auth.requestPasswordReset(this.email!.value).pipe(
+      takeUntilDestroyed(this.destroyRef),
       finalize(async () => {
         this.isLoading = false;
         await this.notification.hideLoading(); // Usando tu servicio

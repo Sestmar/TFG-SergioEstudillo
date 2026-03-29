@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LoadingController } from '@ionic/angular';
 import { OpenService } from '../../core/services/open/open.service';
 
@@ -9,6 +10,7 @@ import { OpenService } from '../../core/services/open/open.service';
 })
 export class ClubPage implements OnInit {
 
+  private destroyRef = inject(DestroyRef);
   teams: any[] = [];
   selectedTeam: any | null = null;
   roster: any[] = [];
@@ -29,7 +31,7 @@ export class ClubPage implements OnInit {
 
   loadTeams() {
     this.loading = true;
-    this.openSvc.getPublicTeams().subscribe({
+    this.openSvc.getPublicTeams().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (data) => {
             this.teams = data;
             this.loading = false;
@@ -53,7 +55,7 @@ export class ClubPage implements OnInit {
     const teamId = teamSummary.id || teamSummary.idEquipo;
 
     // 1. OBTENER DETALLE Y EXTRAER ENTRENADOR
-    this.openSvc.getTeamDetail(teamId).subscribe({
+    this.openSvc.getTeamDetail(teamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (fullTeam) => {
             console.log('✅ FICHA:', fullTeam);
             this.selectedTeam = fullTeam; 
@@ -93,7 +95,7 @@ export class ClubPage implements OnInit {
 
     // 2. CARGAR JUGADORES
     // En el método openTeam -> getTeamRoster
-    this.openSvc.getTeamRoster(teamId).subscribe({
+    this.openSvc.getTeamRoster(teamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (players) => {
         const listaJugadores = Array.isArray(players) ? players : [];
         this.roster = listaJugadores

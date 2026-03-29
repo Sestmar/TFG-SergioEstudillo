@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router'; 
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { PlayerService } from 'src/app/core/services/player/player.service';
@@ -24,6 +25,7 @@ interface PitchSlot {
 })
 export class TacticsPage implements OnInit {
 
+  private destroyRef = inject(DestroyRef);
   loading = true;
   saving = false;
   matchId: number = 0; 
@@ -221,7 +223,7 @@ export class TacticsPage implements OnInit {
   }
 
   loadMatchData() {
-    this.matchSvc.getMatchById(this.matchId).subscribe({
+    this.matchSvc.getMatchById(this.matchId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (match) => {
         this.matchInfo = match;
         const teamObj = match.equipo;
@@ -238,7 +240,7 @@ export class TacticsPage implements OnInit {
   }
 
   loadPlayersAndTactics(teamId: number) {
-    this.playerSvc.getAllPlayers().subscribe({
+    this.playerSvc.getAllPlayers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res: any) => {
         const all = Array.isArray(res) ? res : (res.data || []);
         
@@ -264,7 +266,7 @@ export class TacticsPage implements OnInit {
   }
 
   fetchSavedLineup() {
-    this.matchSvc.getLineup(this.matchId).subscribe({
+    this.matchSvc.getLineup(this.matchId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (savedSlots: any) => {
         
         if (Array.isArray(savedSlots) && savedSlots.length > 0) {
@@ -363,7 +365,7 @@ export class TacticsPage implements OnInit {
 
     const fullPayload = [...pitchPayload, ...benchPayload];
 
-    this.matchSvc.saveLineup(this.matchId, fullPayload).subscribe({
+    this.matchSvc.saveLineup(this.matchId, fullPayload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: async () => {
           this.saving = false;
           const msg = isConvocation ? 'Squad List Updated ✅' : 'Tácticas guardadas. 💾';

@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, DestroyRef, inject } from '@angular/core';
 import { IonRefresher, IonInfiniteScroll } from '@ionic/angular';
-import { Subject, takeUntil } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http'; 
 
 // Imports de Servicios
@@ -18,12 +18,12 @@ import { environment } from 'src/environments/environment'; // ✅ Importado par
   templateUrl: './user-dashboard.page.html',
   styleUrls: ['./user-dashboard.page.scss']
 })
-export class UserDashboardPage implements OnInit, OnDestroy {
+export class UserDashboardPage implements OnInit {
   @ViewChild(IonRefresher) refresher!: IonRefresher;
   @ViewChild(IonInfiniteScroll) infiniteScroll!: IonInfiniteScroll;
 
-  private destroy$ = new Subject<void>();
-  
+  private destroyRef = inject(DestroyRef);
+
   currentUser: User | null = null;
   myTeamId: number | null = null; 
   teamName: string = '';
@@ -51,14 +51,9 @@ export class UserDashboardPage implements OnInit, OnDestroy {
     this.loadUserData();
   }
 
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   // 1. Cargar usuario y buscar su equipo
   private loadUserData() {
-    this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
+    this.authService.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       this.currentUser = user;
       if (user) {
         this.findPlayerTeam(user);
@@ -78,7 +73,7 @@ export class UserDashboardPage implements OnInit, OnDestroy {
     }
 
     // B. 🔥 CORRECCIÓN: Usando environment.apiUrl para Render/Móvil
-    this.http.get(`${environment.apiUrl}/jugadores/usuario/${userId}/equipo`).subscribe({
+    this.http.get(`${environment.apiUrl}/jugadores/usuario/${userId}/equipo`).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (equipo: any) => {
             console.log("✅ Equipo de jugador detectado:", equipo);
             this.myTeamId = equipo.idEquipo || equipo.id;
@@ -107,7 +102,7 @@ export class UserDashboardPage implements OnInit, OnDestroy {
 
   // 3. Cargar partidos usando el servicio MatchService (filtra por ID de equipo)
   private loadNextMatches(teamId: number) {
-    this.matchService.getMatchesByTeam(teamId).pipe(takeUntil(this.destroy$)).subscribe({
+    this.matchService.getMatchesByTeam(teamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (matches: any[]) => {
         
         // Filtramos y ordenamos por fecha
@@ -128,7 +123,7 @@ export class UserDashboardPage implements OnInit, OnDestroy {
   }
 
   private loadRecentNews() {
-    this.newsService.getNews({ page: this.newsPage, limit: 10 }).pipe(takeUntil(this.destroy$)).subscribe({
+    this.newsService.getNews({ page: this.newsPage, limit: 10 }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response: any) => {
         const news = Array.isArray(response) ? response : (response.news || response.data || []);
         if (this.newsPage === 1) {

@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
 import { ToastController, LoadingController } from '@ionic/angular';
 import { Location } from '@angular/common';
@@ -15,6 +16,7 @@ import { AuthService } from 'src/app/core/services/auth/auth.service';
 })
 export class CoachProfilePage implements OnInit {
 
+  private destroyRef = inject(DestroyRef);
   coachId: number | null = null;
   coachData: any = {
     especialidad: '',
@@ -44,7 +46,7 @@ export class CoachProfilePage implements OnInit {
 
   loadProfile() {
     if(!this.coachId) return;
-    this.coachSvc.getProfile(this.coachId).subscribe(data => {
+    this.coachSvc.getProfile(this.coachId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
       this.coachData = data;
     });
   }
@@ -61,7 +63,7 @@ export class CoachProfilePage implements OnInit {
     const loading = await this.loadingCtrl.create({ message: 'Subiendo foto...' });
     await loading.present();
 
-    this.uploadSvc.uploadImage(file).subscribe({
+    this.uploadSvc.uploadImage(file).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res: any) => {
         const nuevaUrl = res.url;
         // 1. Actualizar visualmente al instante
@@ -83,7 +85,7 @@ export class CoachProfilePage implements OnInit {
     
     // Llamamos al AuthService para actualizar solo el usuario
     // (Asumiendo que tienes un updateUser genérico, si no, usa el endpoint que tengas)
-    this.authSvc.updateUser(userId, { fotoUrl: url }).subscribe({
+    this.authSvc.updateUser(userId, { fotoUrl: url }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: async () => {
         await loading.dismiss();
         this.presentToast('Foto de perfil actualizada 📸', 'success');
@@ -109,7 +111,7 @@ export class CoachProfilePage implements OnInit {
       fechaAlta: this.coachData.fechaAlta // Mantenemos la fecha original
     };
 
-    this.coachSvc.updateProfile(this.coachId!, dto).subscribe({
+    this.coachSvc.updateProfile(this.coachId!, dto).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: async () => {
         await loading.dismiss();
         this.presentToast('Perfil actualizado correctamente', 'success');

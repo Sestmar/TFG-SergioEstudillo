@@ -409,86 +409,139 @@ export class TeamStateService {
 
 ---
 
-## 🎨 UI Adaptativa
+## 📦 Modelos de Datos (Interfaces TS)
 
-### Ionic Components Utilizados
-
-El frontend utiliza componentes de **Ionic 7** para lograr una interfaz nativa adaptativa:
-
-| Componente Ionic | Uso en la App |
-|-----------------|---------------|
-| `ion-header` + `ion-toolbar` | Barras de navegación con título y botones |
-| `ion-content` | Contenedor principal con scroll nativo |
-| `ion-card` | Tarjetas de partido, jugador, equipo |
-| `ion-list` + `ion-item` | Listas interactivas (plantilla, convocatorias) |
-| `ion-fab` + `ion-fab-button` | Botones de acción flotante (crear partido, etc.) |
-| `ion-segment` | Tabs para filtrar vistas (próximos/historial) |
-| `ion-modal` + `ion-alert` | Confirmaciones y formularios emergentes |
-| `ion-toast` | Notificaciones feedback al usuario |
-| `ion-grid` + `ion-row` + `ion-col` | Layout responsivo |
-| `ion-badge` | Indicadores de estado (roles, tipo partido) |
-
-### Fallback Reactivo de Avatares
-
-Para usuarios sin foto (o con foto perdida por el sistema efímero de Render), se usa un fallback reactivo:
-
-```html
-<img [src]="player.fotoUrl"
-     (error)="onImageError($event, player)"
-     alt="Avatar" />
-```
+Contratos de tipado estricto para garantizar la integridad de los datos en toda la aplicación:
 
 ```typescript
-onImageError(event: Event, player: any) {
-  const initials = player.nombre.charAt(0) + player.apellidos.charAt(0);
-  (event.target as HTMLImageElement).src =
-    `https://ui-avatars.com/api/?name=${initials}&background=random&size=128`;
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  nombre: string;
+  apellidos: string;
+  roles: UserRole[];
+  fotoPerfil?: string;
+  activo: boolean;
+}
+
+export interface Team {
+  id: number;
+  nombre: string;
+  categoria: Category;
+  liga: Liga;
+  jugadores: Player[];
+  escudo?: string;
+  colorPrincipal: string;
+}
+
+export interface Convocation {
+  id: number;
+  equipo: Team;
+  tipo: ConvocationType;
+  titulo: string;
+  fechaHoraInicio: Date;
+  lugar: string;
+  estado: ConvocationStatus;
 }
 ```
 
 ---
 
-## ⚙️ Configuración de Entorno
+## 🔄 Paginación y Gestión de Listas
 
-### `environment.ts` (Producción actual)
-
-```typescript
-export const environment = {
-  production: false,
-  apiUrl: 'https://backend-tfg-sergio.onrender.com/api',
-  appName: 'Football Club Management',
-  version: '1.0.0'
-};
-```
-
-### `environment.local.ts` (Desarrollo local)
+El sistema maneja grandes volúmenes de datos mediante un esquema de paginación estándar:
 
 ```typescript
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8080/api',  // SIN barra final
-  appName: 'Football Club Management',
-  version: '1.0.0-dev'
-};
+interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
 ```
 
-> **Regla de la barra (Slash Rule):** `apiUrl` **nunca** termina en `/`. Los servicios **siempre** usan barra inicial: `` `${this.apiUrl}/admin/equipos` ``.
+- **Uso en Servicios**: Los métodos aceptan `PaginationParams { page, size, sort }`.
+- **UI**: Uso de `ion-infinite-scroll` para carga progresiva de usuarios y equipos.
 
-### `package.json` — Dependencias Principales
+---
 
-| Dependencia | Propósito |
-|------------|-----------|
-| `@angular/core` (16+) | Framework principal |
-| `@ionic/angular` (7) | Componentes UI nativos |
-| `rxjs` (7.8+) | Programación reactiva |
-| `@capacitor/core` | Bridge nativo Android/iOS |
-| `@angular/forms` | Formularios reactivos |
-| `@angular/router` | Routing con Lazy Loading |
+## 📱 Optimización Mobile y Offline
+
+Para garantizar la usabilidad en condiciones de red inestables (estadios, viajes):
+
+1. **Estrategia de Caché**: `StorageService` implementa TTL (Time-To-Live) para datos maestros (categorías, ligas) evitando peticiones redundantes.
+2. **Detección Offline**: `NetworkService` monitoriza el estado de la conexión vía `navigator.onLine` y muestra un aviso persistente si se pierde la red.
+3. **Optimización de Imágenes**: Fallback reactivo ante errores de carga y uso de avatares generados dinámicamente (`ui-avatars.com`).
+
+---
+
+## 🎨 Sistema de Diseño y UI
+
+### Variables de Tema (CSS Custom Properties)
+Se utiliza una paleta profesional basada en el azul marino y verde esmeralda para transmitir seriedad y energía deportiva:
+
+```scss
+:root {
+  --ion-color-primary: #1e3a8a;    // Azul marino (Confianza)
+  --ion-color-secondary: #059669;   // Verde esmeralda (Césped/Vitalidad)
+  --ion-color-tertiary: #7c3aed;    // Púrpura (Creatividad)
+  
+  --ion-spacing-md: 16px;
+  --ion-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+```
+
+### Componentes Ionic Utilizados
+... (tabla ya existente) ...
+
+---
+
+## 🔒 Seguridad y Autenticación
+
+### Flujo de Identidad (JWT)
+1. **Login Inicial**: `AuthService.login()` envía credenciales y recibe el par `token` / `refreshToken`.
+2. **Persistencia**: Los tokens se guardan en `localStorage` vía `StorageService` (como strings puros).
+3. **Interceptor JWT**: `AuthInterceptor` clona cada petición para inyectar el header `Authorization: Bearer <token>`.
+4. **Refresco Automático**: El sistema detecta la expiración y lanza un refresh antes de que el token muera.
+5. **Manejo de 401**: Si un token falla, el `ErrorInterceptor` limpia la sesión y redirige al login.
+
+---
+
+## 📈 Rendimiento y Métricas Objetivo
+
+Para garantizar una experiencia fluida en dispositivos móviles, nos regimos por estos KPIs:
+- **Carga inicial**: < 3 segundos.
+- **Lighthouse Performance**: > 90.
+- **Bundle inicial**: < 500KB (gracias al Lazy Loading masivo).
+- **Time to Interactive (TTI)**: < 5 segundos.
+
+---
+
+## 🔮 Roadmap Frontend
+
+### Fase 1 - MVP (Completado)
+- ✅ Dashboards por rol (Admin, Coach, Player, User).
+- ✅ Gestión de alineaciones y convocatorias.
+- ✅ Sistema de login temático.
+
+### Fase 2 - Mejoras (En progreso)
+- 🔄 **Chat en tiempo real** (vía WebSockets).
+- 🔄 **Notificaciones Push** (Firebase Cloud Messaging).
+- 🔄 Análisis avanzado de datos con gráficos dinámicos.
+
+### Fase 3 - Escalabilidad (Planeado)
+- 📋 Arquitectura de Microfrontends (si el club crece masivamente).
+- 📋 Funcionalidad Offline avanzada (Service Workers).
 
 ---
 
 <div align="center">
 
-[← Backend](./BACKEND.md) · [README](./README.md) · [Troubleshooting →](./TROUBLESHOOTING.md)
+[← Backend](../backend/BACKEND.md) · [README](../../README.md) · [Troubleshooting](../troubleshooting/TROUBLESHOOTING.md)
 
 </div>
+

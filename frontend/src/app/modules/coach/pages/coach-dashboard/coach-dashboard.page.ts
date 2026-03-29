@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { filter, switchMap } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ModalController, ToastController, AlertController } from '@ionic/angular'; // 🔥 AlertController añadido
 
 import { AuthService } from 'src/app/core/services/auth/auth.service';
@@ -25,6 +26,7 @@ type ViewType = 'dashboard' | 'matches';
   styleUrls: ['./coach-dashboard.page.scss'],
 })
 export class CoachDashboardPage implements OnInit {
+  private destroyRef = inject(DestroyRef);
   currentUser$: Observable<User | null>;
   loading: boolean = true;
   
@@ -91,6 +93,7 @@ export class CoachDashboardPage implements OnInit {
     
     this.authService.currentUser$
       .pipe(
+        takeUntilDestroyed(this.destroyRef),
         filter(user => !!user),
         switchMap(user => {
             const u = user as any;
@@ -127,7 +130,7 @@ export class CoachDashboardPage implements OnInit {
   }
 
   private loadMatches(teamId: number) {
-    this.matchService.getMatchesByTeam(teamId).subscribe({
+    this.matchService.getMatchesByTeam(teamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (matches) => {
         this.upcomingEvents = matches.sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime());
         
@@ -141,7 +144,7 @@ export class CoachDashboardPage implements OnInit {
   }
 
   private loadTeamStats(teamId: number) {
-    this.playerService.getAllPlayers().subscribe((res: any) => {
+    this.playerService.getAllPlayers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((res: any) => {
         const all = Array.isArray(res) ? res : (res.data || []);
         
         const myPlayers = all.filter((p: any) => {

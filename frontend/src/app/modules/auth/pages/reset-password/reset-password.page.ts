@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
@@ -50,6 +51,9 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
   `]
 })
 export class ResetPasswordPage implements OnInit {
+
+  private destroyRef = inject(DestroyRef);
+
   resetForm!: FormGroup;
   isLoading = false;
   token: string | null = null;
@@ -89,6 +93,7 @@ export class ResetPasswordPage implements OnInit {
     await this.notification.showLoading('Guardando...'); // Usando tu servicio
 
     this.auth.resetPassword(this.token, this.password!.value).pipe(
+      takeUntilDestroyed(this.destroyRef),
       finalize(async () => {
         this.isLoading = false;
         await this.notification.hideLoading(); // Usando tu servicio

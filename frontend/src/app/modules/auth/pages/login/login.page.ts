@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
@@ -11,6 +12,9 @@ import { LoadingController } from '@ionic/angular';
   styleUrls: ['./login.page.scss'],
 })
 export class LoginPage implements OnInit {
+
+  private destroyRef = inject(DestroyRef);
+
   loginForm: FormGroup;
   isLoading = false;
   showPassword = false;
@@ -52,7 +56,7 @@ export class LoginPage implements OnInit {
       password: this.loginForm.value.password
     };
 
-    this.authService.login(credentials).subscribe({
+    this.authService.login(credentials).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: async (user) => {
         this.isLoading = false;
         await loading.dismiss();

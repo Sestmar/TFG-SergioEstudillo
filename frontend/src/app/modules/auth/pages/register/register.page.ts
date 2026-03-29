@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
@@ -11,6 +12,8 @@ import { ToastController } from '@ionic/angular';
   styleUrls: ['./register.page.scss']
 })
 export class RegisterPage implements OnInit {
+
+  private destroyRef = inject(DestroyRef);
 
   showPassword = false;
   registerForm!: FormGroup;
@@ -73,7 +76,7 @@ export class RegisterPage implements OnInit {
 
     // 1. Si hay foto, la subimos primero
     if (this.selectedFile) {
-      this.mediaService.uploadImage(this.selectedFile).subscribe({
+      this.mediaService.uploadImage(this.selectedFile).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (response) => {
           console.log('Imagen subida con éxito:', response.url);
           userData.fotoUrl = response.url; // Añadimos la URL al usuario
@@ -92,7 +95,7 @@ export class RegisterPage implements OnInit {
   }
 
   private doRegister(userData: any) {
-    this.authService.register(userData).subscribe({
+    this.authService.register(userData).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: async () => {
         this.isLoading = false;
         await this.showToast('¡Fichaje completado! Inicia sesión.', 'success');

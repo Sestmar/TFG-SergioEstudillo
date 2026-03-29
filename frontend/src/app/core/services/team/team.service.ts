@@ -49,6 +49,10 @@ export class TeamService {
     });
   }
 
+  getTeamByUserId(userId: number | string): Observable<any> {
+    return this.apiService.get<any>(`/jugadores/usuario/${userId}/equipo`);
+  }
+
   // --- MÉTODOS DE ESTADÍSTICAS ---
 
   // Mock para clasificación (se implementará más adelante)

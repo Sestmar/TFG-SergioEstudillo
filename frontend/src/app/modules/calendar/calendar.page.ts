@@ -1,13 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { Location } from '@angular/common';
 import { MatchService } from '../../core/services/match/match.service';
 import { AuthService } from '../../core/services/auth/auth.service';
 import { CoachService } from '../../core/services/coach/coach.service';
-import { HttpClient } from '@angular/common/http';
+import { TeamService } from '../../core/services/team/team.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { environment } from 'src/environments/environment';
 import { AlertController, ToastController } from '@ionic/angular';
 import { AdminService } from '../../core/services/admin/admin.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-calendar',
@@ -15,7 +15,9 @@ import { AdminService } from '../../core/services/admin/admin.service';
   styleUrls: ['./calendar.page.scss'],
 })
 export class CalendarPage implements OnInit {
-  
+
+  private destroyRef = inject(DestroyRef);
+
   viewDate: Date = new Date();
   currentMonthName: string = '';
   currentYear: number = 0;
@@ -36,7 +38,7 @@ export class CalendarPage implements OnInit {
     private matchSvc: MatchService,
     private authSvc: AuthService,
     private coachSvc: CoachService,
-    private http: HttpClient,
+    private teamSvc: TeamService,
     private route: ActivatedRoute,
     private router: Router,
     private alertCtrl: AlertController,
@@ -48,7 +50,7 @@ export class CalendarPage implements OnInit {
     this.generateCalendar();
 
     // Comprobar permisos al iniciar
-    this.authSvc.currentUser$.subscribe(user => {
+    this.authSvc.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
         if (user) {
             const rol = (user.rol || '').toUpperCase();
             // ✅ CORRECCIÓN: Solo ADMIN puede borrar eventos
@@ -56,7 +58,7 @@ export class CalendarPage implements OnInit {
         }
     });
 
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
         if (params['teamId']) {
             this.currentTeamId = Number(params['teamId']);
             this.loadEvents();
@@ -67,21 +69,21 @@ export class CalendarPage implements OnInit {
   }
 
   detectTeamAndLoadEvents() {
-    this.authSvc.currentUser$.subscribe(user => {
+    this.authSvc.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       if (user) {
         const u = user as any;
         const userId = u.id || u.idUsuario;
-        const rol = (u.rol || '').toUpperCase(); 
+        const rol = (u.rol || '').toUpperCase();
 
         if (rol.includes('ENTRENADOR') || rol.includes('COACH')) {
-            this.coachSvc.getDashboardData(userId).subscribe((res: any) => {
+            this.coachSvc.getDashboardData(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((res: any) => {
                 if (res.equipo) {
                     this.currentTeamId = res.equipo.idEquipo || res.equipo.id;
                     this.loadEvents();
                 }
             });
         } else if (rol.includes('JUGADOR')) {
-            this.http.get(`${environment.apiUrl}/jugadores/usuario/${userId}/equipo`).subscribe({
+            this.teamSvc.getTeamByUserId(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
                 next: (equipo: any) => {
                     if (equipo) {
                         this.currentTeamId = equipo.idEquipo || equipo.id;
@@ -100,7 +102,7 @@ export class CalendarPage implements OnInit {
 
   loadEvents() {
     if (!this.currentTeamId) return;
-    this.matchSvc.getMatchesByTeam(this.currentTeamId).subscribe(matches => {
+    this.matchSvc.getMatchesByTeam(this.currentTeamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(matches => {
         this.allEvents = matches;
         this.selectDay(this.selectedDate.getDate()); 
     });
@@ -111,7 +113,7 @@ export class CalendarPage implements OnInit {
       const tipo = event.tipo; 
       const teamIdToPass = event.idEquipo || (event.equipo ? event.equipo.idEquipo : this.currentTeamId);
 
-      this.authSvc.currentUser$.subscribe(user => {
+      this.authSvc.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
           const u = user as any;
           const rol = (u.rol || '').toUpperCase();
           
@@ -157,7 +159,7 @@ export class CalendarPage implements OnInit {
           role: 'destructive',
           handler: () => {
             const id = event.idPartido || event.id;
-            this.adminSvc.deleteEvento(id).subscribe({
+            this.adminSvc.deleteEvento(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
               next: () => {
                 this.presentToast('Evento eliminado', 'success');
                 this.allEvents = this.allEvents.filter(ev => (ev.idPartido || ev.id) !== id);

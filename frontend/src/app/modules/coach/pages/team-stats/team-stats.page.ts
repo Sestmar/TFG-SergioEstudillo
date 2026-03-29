@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavController } from '@ionic/angular';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
@@ -12,6 +13,7 @@ import { filter, switchMap } from 'rxjs/operators';
 })
 export class TeamStatsPage implements OnInit {
 
+  private destroyRef = inject(DestroyRef);
   loading = true;
   teamName = '';
   
@@ -47,6 +49,7 @@ export class TeamStatsPage implements OnInit {
     
     this.authSvc.currentUser$
       .pipe(
+        takeUntilDestroyed(this.destroyRef),
         filter(u => !!u),
         switchMap((u: any) => {
             // Obtenemos el ID del usuario (Entrenador)
@@ -62,7 +65,7 @@ export class TeamStatsPage implements OnInit {
             const coachId = res.entrenadorId; // Asegúrate de que el endpoint dashboard devuelve esto
 
             // 1. Cargar Partidos (para resumen de temporada)
-            this.matchSvc.getMatchesByTeam(teamId).subscribe(matches => {
+            this.matchSvc.getMatchesByTeam(teamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(matches => {
                 this.calculateSeasonStats(matches || []);
             });
 
@@ -83,7 +86,7 @@ export class TeamStatsPage implements OnInit {
   }
 
   loadFullStats(coachId: number) {
-      this.coachSvc.getTeamStats(coachId).subscribe({
+      this.coachSvc.getTeamStats(coachId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: (res: any) => {
               const players = res.jugadores || [];
 

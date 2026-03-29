@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common'; // ✅ Importar Location
 import { AdminService } from 'src/app/core/services/admin/admin.service';
@@ -10,7 +11,9 @@ import { ToastController, LoadingController } from '@ionic/angular';
   styleUrls: ['./training-attendance.page.scss'],
 })
 export class TrainingAttendancePage implements OnInit {
-  
+
+  private destroyRef = inject(DestroyRef);
+
   trainingId: number = 0;
   teamId: number = 0;
   players: any[] = [];
@@ -48,7 +51,7 @@ export class TrainingAttendancePage implements OnInit {
       const loading = await this.loadingCtrl.create({ spinner: 'crescent' });
       await loading.present();
 
-      this.adminSvc.getTeamDetails(this.teamId).subscribe({
+      this.adminSvc.getTeamDetails(this.teamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res: any) => {
           const rawPlayers = res.jugadores || [];
 
@@ -59,7 +62,7 @@ export class TrainingAttendancePage implements OnInit {
               estado: null 
           }));
 
-          this.adminSvc.getAsistencia(this.trainingId).subscribe({
+          this.adminSvc.getAsistencia(this.trainingId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
              next: (saved: any) => {
                 if(saved && Array.isArray(saved) && saved.length > 0) {
                     saved.forEach((s: any) => {
@@ -100,7 +103,7 @@ export class TrainingAttendancePage implements OnInit {
           }))
       };
 
-      this.adminSvc.guardarAsistencia(payload).subscribe({
+      this.adminSvc.guardarAsistencia(payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: () => {
               this.saving = false;
               this.presentToast('Asistencia guardada correctamente ✅', 'success');

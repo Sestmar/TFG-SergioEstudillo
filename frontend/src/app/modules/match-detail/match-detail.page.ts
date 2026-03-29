@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { MatchService } from 'src/app/core/services/match/match.service';
@@ -11,6 +12,7 @@ import { AuthService } from 'src/app/core/services/auth/auth.service';
 })
 export class MatchDetailPage implements OnInit {
   
+  private destroyRef = inject(DestroyRef);
   match: any = null;
   players: any[] = []; 
   loading = true;
@@ -27,7 +29,7 @@ export class MatchDetailPage implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.authSvc.currentUser$.subscribe(u => {
+    this.authSvc.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(u => {
         if (u) {
             this.currentUserId = (u as any).id || (u as any).idUsuario;
             const rol = (u.rol || '').toUpperCase();
@@ -45,11 +47,11 @@ export class MatchDetailPage implements OnInit {
   loadMatchInfo(id: number) {
     this.loading = true;
     
-    this.matchSvc.getMatchById(id).subscribe({
+    this.matchSvc.getMatchById(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (data) => {
         this.match = data; 
         
-        this.matchSvc.getLineup(id).subscribe({
+        this.matchSvc.getLineup(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: (alineacionDtos: any[]) => {
             if (alineacionDtos && alineacionDtos.length > 0) {
               this.players = alineacionDtos.map(dto => {

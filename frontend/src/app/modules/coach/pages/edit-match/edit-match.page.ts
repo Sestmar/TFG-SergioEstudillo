@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
@@ -11,6 +12,7 @@ import { LoadingController, ToastController, AlertController } from '@ionic/angu
   styleUrls: ['./edit-match.page.scss'],
 })
 export class EditMatchPage implements OnInit {
+  private destroyRef = inject(DestroyRef);
   matchId: number = 0;
   match: any = null;
   
@@ -45,7 +47,7 @@ export class EditMatchPage implements OnInit {
       this.loadData();
     }
 
-    this.authSvc.currentUser$.subscribe(user => {
+    this.authSvc.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
         const u = user as any;
         if (u && u.rol) {
             const r = String(u.rol).toUpperCase();
@@ -59,7 +61,7 @@ export class EditMatchPage implements OnInit {
     const loading = await this.loadingCtrl.create({ message: 'Cargando acta...', spinner: 'crescent' });
     await loading.present();
 
-    this.matchSvc.getMatchById(this.matchId).subscribe({
+    this.matchSvc.getMatchById(this.matchId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (m) => {
         this.match = m;
         this.matchStats.golesFavor = m.golesFavor || 0;
@@ -201,7 +203,7 @@ export class EditMatchPage implements OnInit {
     this.saving = true;
     const payload = this.construirPayload();
 
-    this.matchSvc.closeMatchReport(payload).subscribe({
+    this.matchSvc.closeMatchReport(payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: () => {
             this.saving = false;
             this.presentToast('Acta cerrada y estadísticas actualizadas 🏆', 'success');

@@ -123,30 +123,44 @@ El API está organizado en controladores especializados que delegan la lógica d
 
 | Controller | Base Path | Responsabilidad Primaria | Acceso |
 |-----------|-----------|--------------------------|--------|
-| `UsuarioController` | `/api/auth/**` | Identidad, Auth y Recuperación | Público |
-| `UserController` | `/api/usuarios/**` | CRUD de perfiles y administración | JWT |
-| `PublicController` | `/api/public/**` | Datos optimizados para vistas públicas | Público |
-| `AdminController` | `/api/admin/**` | Operaciones de gestión avanzada | JWT (ADMIN) |
-| `EquipoController` | `/api/equipos/**` | Consulta de estructura de equipos | Público (GET) |
-| `JugadorController` | `/api/jugadores/**` | Consulta y filtrado de deportistas | Público (GET) |
-| `PartidoController` | `/api/partidos/**` | Gestión de calendario y eventos | JWT |
-| `AlineacionController` | `/api/alineaciones/**` | Gestión de actas y estadísticas | JWT |
-| `FileController` | `/api/uploads/**` | Servido de archivos estáticos (sin `@CrossOrigin` redundante) | Público |
+| `UsuarioController` | `/api/auth/**` | Login, Registro, Recuperación (Forgot/Reset) | Público |
+| `UserController` | `/api/usuarios/**` | Gestión de perfiles, roles y estados (Activar/Desactivar) | JWT |
+| `EquipoController` | `/api/equipos/**` | Estructura, asignación de técnicos y jugadores | Público (GET) |
+| `JugadorController` | `/api/jugadores/**` | Perfiles deportivos, lesiones y estadísticas | Público (GET) |
+| `PartidoController` | `/api/partidos/**` | Calendario, eventos y gestión de resultados | JWT |
+| `AlineacionController` | `/api/alineaciones/**` | Gestión de actas, titulares y estadísticas de campo | JWT |
+| `ConvocatoriaController` | `/api/convocatoria/**` | Gestión de citas oficiales y asistencia | JWT |
+| `SolicitudController` | `/api/solicitudinscripcion/**` | Proceso de alta de nuevos aspirantes | JWT / Público |
+| `IncidenciaController` | `/api/incidencia/**` | Registro de lesiones, sanciones y seguimiento | JWT |
+| `FileController` | `/api/uploads/**` | Servido de archivos estáticos (multimedia) | Público |
 
 > **💡 Nota Semántica sobre Usuarios:**
-> - **`UsuarioController` (`/api/auth`)**: Se encarga del ciclo de vida de la **identidad** del usuario (login, registro, "quién soy yo", recuperar contraseña). Delega toda la lógica a `UsuarioService`.
-> - **`UserController` (`/api/usuarios`)**: Se encarga del **perfil y la gestión** (listar usuarios, ver detalles de un perfil, actualizar datos de contacto).
+> - **`UsuarioController` (`/api/auth`)**: Se encarga del ciclo de vida de la **identidad** del usuario (login, registro, "quién soy yo", recuperar contraseña).
+> - **`UserController` (`/api/usuarios`)**: Se encarga del **perfil y la gestión** (listar usuarios, ver detalles, actualizar datos, cambiar roles).
+
+### Endpoints Clave por Dominio
+
+#### 🔐 Identidad y Auth (`/api/auth`)
+- `POST /login`: Retorna JWT + RefreshToken + Datos de usuario.
+- `POST /register`: Registro inicial de usuario (rol predeterminado).
+- `POST /forgot-password`: Envío de token de recuperación vía email.
+- `POST /reset-password`: Cambio de contraseña usando token válido.
+
+#### 📋 Convocatorias (`/api/convocatoria`)
+- `GET /equipo/{id}`: Lista todas las convocatorias de un equipo.
+- `POST /attendance`: Actualización masiva de estado de asistencia (Presente/Ausente/Justificado).
+- `GET /upcoming`: Próximos eventos (7 días vista).
+
+#### 🚑 Incidencias y Salud (`/api/incidencia`)
+- `POST /`: Registro de nueva incidencia (Lesión, Sanción, Observación).
+- `PUT /{id}/follow-up`: Añadir seguimiento médico o técnico a una incidencia abierta.
+- `PUT /{id}/close`: Cierre definitivo con resolución.
+
+---
 
 ### Endpoints Detallados del `AdminController`
+... (ya existente) ...
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/admin/usuarios` | Todos los usuarios activos con sus perfiles |
-| POST | `/api/admin/usuarios` | Crear usuario con rol específico |
-| DELETE | `/api/admin/usuarios/{id}` | Eliminación en cascada de cuenta y perfiles |
-| POST | `/api/admin/asignar-equipo` | Vinculación de jugador a equipo |
-| POST | `/api/admin/cerrar-acta` | Proceso transaccional de finalización de partido |
-| POST | `/api/admin/asistencia` | Registro de presencia en entrenamientos/eventos |
 
 ---
 

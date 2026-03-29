@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { Location } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ToastController, LoadingController } from '@ionic/angular';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
@@ -12,7 +13,9 @@ import { Player } from 'src/app/shared/models/models';
   styleUrls: ['./profile.page.scss'],
 })
 export class ProfilePage implements OnInit {
-  
+
+  private destroyRef = inject(DestroyRef);
+
   currentUser: any = null;
   playerData: Player | null = null;
   loading: boolean = true;
@@ -38,14 +41,14 @@ export class ProfilePage implements OnInit {
 
   loadProfile() {
     this.loading = true;
-    this.authSvc.currentUser$.subscribe(user => {
+    this.authSvc.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       if (user) {
         this.currentUser = user;
         const u = user as any;
         const userId = u.id || u.idUsuario;
         
         // Cargar datos del jugador asociados al usuario
-        this.playerSvc.getAllPlayers().subscribe({
+        this.playerSvc.getAllPlayers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: (res: any) => {
             const list = Array.isArray(res) ? res : (res.data || []);
             const myPlayer = list.find((p: any) => {
@@ -85,7 +88,7 @@ export class ProfilePage implements OnInit {
     const loading = await this.loadingCtrl.create({ message: 'Subiendo foto...' });
     await loading.present();
 
-    this.uploadSvc.uploadImage(file).subscribe({
+    this.uploadSvc.uploadImage(file).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res: any) => {
         const nuevaUrl = res.url;
         // 1. Actualizar visualmente al instante
@@ -110,7 +113,7 @@ export class ProfilePage implements OnInit {
     const userId = this.currentUser.id || this.currentUser.idUsuario;
     
     // Usamos el método updateUser que añadiste al AuthService
-    this.authSvc.updateUser(userId, { fotoUrl: url }).subscribe({
+    this.authSvc.updateUser(userId, { fotoUrl: url }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: async () => {
         await loading.dismiss();
         this.showToast('Foto de perfil actualizada 📸', 'success');
@@ -177,7 +180,7 @@ export class ProfilePage implements OnInit {
     const raw = this.playerData as any;
     const playerId = raw.id || raw.idJugador;
 
-    this.playerSvc.updatePlayer(playerId, updatePayload).subscribe({
+    this.playerSvc.updatePlayer(playerId, updatePayload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: async () => {
         await loader.dismiss();
         this.showToast('Perfil actualizado correctamente', 'success');
