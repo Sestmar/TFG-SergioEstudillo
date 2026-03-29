@@ -31,7 +31,7 @@ export class AuthService {
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
-  private tokenRefreshTimer: any;
+  private tokenRefreshTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private apiService: ApiService,

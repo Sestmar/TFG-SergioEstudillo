@@ -2,6 +2,7 @@ import { Component, Input, OnInit, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ModalController, ToastController, LoadingController } from '@ionic/angular';
 import { MatchService } from 'src/app/core/services/match/match.service';
+import { TipoEvento, EstadoPartido } from 'src/app/shared/models/models';
 // ✅ IMPORTAR SERVICIO DE SUBIDA
 import { UploadService } from 'src/app/core/services/common/upload.service';
 
@@ -104,13 +105,13 @@ export class CreateConvocationPage implements OnInit {
       const payload = {
         idEquipo: this.teamId,
         rival: this.formData.tipo === 'PARTIDO' ? this.formData.rival : null,
-        escudoRivalUrl: this.formData.tipo === 'PARTIDO' ? this.formData.escudoRivalUrl : null, // ✅ ENVIAMOS URL
+        escudoRivalUrl: this.formData.tipo === 'PARTIDO' ? this.formData.escudoRivalUrl : null,
         lugar: this.formData.lugar,
         fechaHora: fechaHoraCombinada,
-        tipo: this.formData.tipo,
+        tipo: this.formData.tipo as TipoEvento,
         golesFavor: 0,
         golesContra: 0,
-        estado: 'PENDIENTE',
+        estado: 'PENDIENTE' as EstadoPartido,
         competicion: this.formData.competicion,
         observaciones: this.formData.observaciones
       };

@@ -1,36 +1,28 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiService } from '../api/api.service'; // 👈 IMPORTANTE: Usamos tu servicio central
+import { ApiService } from '../api/api.service';
+import { CoachDashboardResponse, TeamStatsResponse, CoachProfileDto, CoachProfileUpdateDto } from 'src/app/shared/models/models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CoachService {
 
-  // Ya no hace falta la variable apiUrl hardcodeada
-  // El ApiService ya sabe que es https://backend-tfg.../api
+  constructor(private apiService: ApiService) { }
 
-  constructor(private apiService: ApiService) { } // 👈 Inyectamos ApiService
-
-  // 1. Obtener datos del dashboard (Equipo + Rol)
-  getDashboardData(userId: number): Observable<any> {
-    // Antes: http://localhost:8080/api/entrenadores/usuario/...
-    // Ahora: /entrenadores/usuario/... (ApiService pone el resto)
-    return this.apiService.get<any>(`/entrenadores/usuario/${userId}/equipo`);
+  getDashboardData(userId: number): Observable<CoachDashboardResponse> {
+    return this.apiService.get<CoachDashboardResponse>(`/entrenadores/usuario/${userId}/equipo`);
   }
 
-  // 2. Obtener datos del perfil completo
-  getProfile(coachId: number): Observable<any> {
-    return this.apiService.get<any>(`/entrenadores/${coachId}`);
+  getProfile(coachId: number): Observable<CoachProfileDto> {
+    return this.apiService.get<CoachProfileDto>(`/entrenadores/${coachId}`);
   }
 
-  // 3. Actualizar perfil
-  updateProfile(coachId: number, data: any): Observable<any> {
-    return this.apiService.put<any>(`/entrenadores/${coachId}`, data);
+  updateProfile(coachId: number, data: CoachProfileUpdateDto): Observable<CoachProfileDto> {
+    return this.apiService.put<CoachProfileDto>(`/entrenadores/${coachId}`, data);
   }
 
-  // 4. Llamada al endpoint de estadisticas
-  getTeamStats(coachId: number) {
-    return this.apiService.get<any>(`/entrenadores/${coachId}/estadisticas-equipo`);
+  getTeamStats(coachId: number): Observable<TeamStatsResponse> {
+    return this.apiService.get<TeamStatsResponse>(`/entrenadores/${coachId}/estadisticas-equipo`);
   }
 }

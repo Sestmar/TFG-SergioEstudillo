@@ -5,6 +5,7 @@ import { AdminService } from 'src/app/core/services/admin/admin.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { Location } from '@angular/common';
+import { AdminEquipoDto, Jugador, UsuarioResumen, Partido } from 'src/app/shared/models/models';
 
 @Component({
   selector: 'app-team-detail',
@@ -16,11 +17,11 @@ export class TeamDetailPage implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   teamId: number | null = null;
-  teamData: any = null;
-  
-  players: any[] = [];
-  staff: any[] = [];
-  matches: any[] = []; 
+  teamData: AdminEquipoDto | null = null;
+
+  players: Jugador[] = [];
+  staff: UsuarioResumen[] = [];
+  matches: Partido[] = [];
   
   loading = true;
   selectedSegment = 'squad'; 
@@ -38,9 +39,8 @@ export class TeamDetailPage implements OnInit {
   ngOnInit() {
     // 1. Detectar Rol
     this.authSvc.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
-        const u = user as any;
-        if (u && u.rol) {
-            this.isAdmin = String(u.rol).toUpperCase().includes('ADMIN');
+        if (user?.rol) {
+            this.isAdmin = String(user.rol).toUpperCase().includes('ADMIN');
         }
     });
 
@@ -84,9 +84,9 @@ export class TeamDetailPage implements OnInit {
   }
 
   // 🔥 ACCIÓN 1: EDITAR / GESTIONAR (Lápiz)
-  handleEdit(event: any) {
+  handleEdit(event: Partido) {
       const id = event.idPartido || event.id;
-      
+
       if (event.tipo === 'TRAINING') {
           // Si es entrenamiento -> Pasar Lista
           this.router.navigate(['/training-attendance', id], { queryParams: { teamId: this.teamId } });
@@ -97,7 +97,7 @@ export class TeamDetailPage implements OnInit {
   }
 
   // 🔥 ACCIÓN 2: VER DETALLES (Ojo)
-  handleView(event: any) {
+  handleView(event: Partido) {
       const id = event.idPartido || event.id;
 
       if (event.tipo === 'TRAINING') {

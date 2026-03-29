@@ -6,7 +6,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from
 interface Equipo {
   id: number;
   nombre: string;
-  categoria: any;
+  categoria?: string;
   entrenador?: string;
 }
 

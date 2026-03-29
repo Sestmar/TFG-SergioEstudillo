@@ -5,6 +5,7 @@ import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
 import { filter, switchMap } from 'rxjs/operators';
+import { Partido, PlayerSeasonStat } from 'src/app/shared/models/models';
 
 @Component({
   selector: 'app-team-stats',
@@ -22,10 +23,10 @@ export class TeamStatsPage implements OnInit {
   };
 
   // Listas para la Vista
-  topScorerMVP: any = null; 
-  restScorers: any[] = []; 
-  topMinutes: any[] = [];
-  topAttendance: any[] = []; // Nueva lista para asistencia
+  topScorerMVP: PlayerSeasonStat | null = null;
+  restScorers: PlayerSeasonStat[] = [];
+  topMinutes: PlayerSeasonStat[] = [];
+  topAttendance: PlayerSeasonStat[] = [];
   
   maxMinutes: number = 1;
 
@@ -51,14 +52,13 @@ export class TeamStatsPage implements OnInit {
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         filter(u => !!u),
-        switchMap((u: any) => {
-            // Obtenemos el ID del usuario (Entrenador)
-            const id = u.id || u.idUsuario || u.sub;
+        switchMap(u => {
+            const id = u!.idUsuario;
             return this.coachSvc.getDashboardData(id);
         })
       )
       .subscribe({
-        next: (res: any) => {
+        next: (res) => {
           if (res.equipo) {
             this.teamName = res.equipo.nombre;
             const teamId = res.equipo.idEquipo || res.equipo.id;
@@ -87,27 +87,24 @@ export class TeamStatsPage implements OnInit {
 
   loadFullStats(coachId: number) {
       this.coachSvc.getTeamStats(coachId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-          next: (res: any) => {
-              const players = res.jugadores || [];
+          next: (res) => {
+              const players: PlayerSeasonStat[] = res.jugadores || [];
 
-              // A) Goleadores (Igual)
               const scorers = [...players]
-                  .sort((a:any, b:any) => b.goles - a.goles)
-                  .filter((p:any) => p.goles > 0);
-              
+                  .sort((a, b) => (b.goles || 0) - (a.goles || 0))
+                  .filter(p => (p.goles || 0) > 0);
+
               if (scorers.length > 0) {
-                  this.topScorerMVP = scorers[0]; 
+                  this.topScorerMVP = scorers[0];
                   this.restScorers = scorers.slice(1, 6);
               }
 
-              // B) Minutos (Ordenamos por TOTAL, pero mostraremos promedio)
               this.topMinutes = [...players]
-                  .sort((a:any, b:any) => b.minutos - a.minutos)
-                  .slice(0, 10); // Top 10
+                  .sort((a, b) => (b.minutos || 0) - (a.minutos || 0))
+                  .slice(0, 10);
 
-              // C) Asistencia
               this.topAttendance = [...players]
-                  .sort((a:any, b:any) => b.asistenciaPct - a.asistenciaPct);
+                  .sort((a, b) => (b.asistenciaPct || 0) - (a.asistenciaPct || 0));
 
               this.loading = false;
           },
@@ -118,7 +115,7 @@ export class TeamStatsPage implements OnInit {
       });
   }
 
-  calculateSeasonStats(matches: any[]) {
+  calculateSeasonStats(matches: Partido[]) {
       const finished = matches.filter(m => m.estado === 'FINALIZADO' && m.tipo === 'PARTIDO');
       this.seasonStats.played = finished.length;
       
@@ -139,8 +136,7 @@ export class TeamStatsPage implements OnInit {
       return ((mins / this.maxMinutes) * 100) + '%';
   }
 
-  getAvatarUrl(p: any): string {
-      // El objeto 'p' ahora viene directo del endpoint nuevo
+  getAvatarUrl(p: PlayerSeasonStat): string {
       if (p.fotoUrl) return p.fotoUrl;
       const name = p.nombre || 'Player';
       return `https://ui-avatars.com/api/?name=${name}&background=random&color=fff&size=128`;

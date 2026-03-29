@@ -6,7 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http'; 
 import { AlertController, ToastController } from '@ionic/angular'; // Añadido ToastController
 import { environment } from 'src/environments/environment';
-import { User, Player, Team, PlayerStats } from 'src/app/shared/models/models';
+import { User, Jugador, EquipoResumen, Partido, PlayerStats } from 'src/app/shared/models/models';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { UserService } from 'src/app/core/services/user/user.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
@@ -28,8 +28,8 @@ interface DashboardStats {
 })
 export class PlayerDashboardPage implements OnInit {
   currentUser$: Observable<User | null>;
-  currentPlayer: Player | null = null;
-  currentTeam: Team | null = null;
+  currentPlayer: Jugador | null = null;
+  currentTeam: EquipoResumen | null = null;
   loading: boolean = true;
   
   stats: DashboardStats = {
@@ -39,7 +39,7 @@ export class PlayerDashboardPage implements OnInit {
     attendanceRate: 0
   };
 
-  upcomingConvocations: any[] = []; 
+  upcomingConvocations: Partido[] = [];
   playerStats: PlayerStats | null = null;
   
   // Las acciones se renderizan en el HTML, pero el ID es clave para el switch
@@ -94,10 +94,9 @@ export class PlayerDashboardPage implements OnInit {
     this.loading = true;
     this.authService.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (user) => {
-        const u = user as any;
-        if (u && (u.id || u.idUsuario)) {
-          const userId = u.id || u.idUsuario; 
-          this.loadPlayerProfile(userId); 
+        const userId = user?.idUsuario;
+        if (userId) {
+          this.loadPlayerProfile(userId);
         } else {
           console.log("Esperando datos de usuario...");
         }
@@ -112,18 +111,18 @@ export class PlayerDashboardPage implements OnInit {
   private loadPlayerProfile(userId: number) {
     const url = `${environment.apiUrl}/jugadores/usuario/${userId}/equipo`;
 
-    this.http.get(url).pipe(
+    this.http.get<EquipoResumen>(url).pipe(
       takeUntilDestroyed(this.destroyRef),
       catchError(() => of(null))
-    ).subscribe((equipo: any) => {
+    ).subscribe((equipo) => {
       if (equipo) {
           this.currentTeam = equipo;
-          this.currentPlayer = { 
-            usuario: { id: userId } as any 
-          } as Player; 
-          
+          this.currentPlayer = {
+            usuario: { idUsuario: userId, nombre: '', apellidos: '' }
+          } as Jugador;
+
           this.getFullPlayerData(userId);
-          
+
           const teamId = equipo.id || equipo.idEquipo;
           this.loadTeamMatches(teamId);
       } else {
@@ -133,22 +132,21 @@ export class PlayerDashboardPage implements OnInit {
   }
 
   private getFullPlayerData(userId: number) {
-      this.playerService.getAllPlayers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((res: any) => {
-          const players = Array.isArray(res) ? res : (res.data || []);
-          const found = players.find((p: any) => {
+      this.playerService.getAllPlayers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((players: Jugador[]) => {
+          const found = players.find((p: Jugador) => {
              const uId = p.usuario?.id || p.usuario?.idUsuario;
              return uId === userId;
           });
-          
+
           if (found) {
               this.currentPlayer = found;
-              const realPlayerId = (found as any).id || (found as any).idJugador;
-              
+              const realPlayerId = found.idJugador || found.id;
+
               if (realPlayerId) {
-                  if (!this.currentPlayer!.id) {
-                      this.currentPlayer!.id = realPlayerId;
+                  if (!this.currentPlayer!.idJugador) {
+                      this.currentPlayer!.idJugador = realPlayerId;
                   }
-                  this.loadPlayerStats(realPlayerId); 
+                  this.loadPlayerStats(realPlayerId);
               }
           } else {
               this.loading = false;
@@ -161,8 +159,8 @@ export class PlayerDashboardPage implements OnInit {
           next: (matches) => {
               const now = new Date();
               this.upcomingConvocations = matches
-                  .filter((m: any) => new Date(m.fechaHora) >= now) 
-                  .sort((a: any, b: any) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime())
+                  .filter(m => new Date(m.fechaHora) >= now)
+                  .sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime())
                   .slice(0, 5); 
 
               this.stats.upcomingConvocations = this.upcomingConvocations.length;
@@ -226,7 +224,7 @@ export class PlayerDashboardPage implements OnInit {
   // ✅ Nueva función para ir al detalle del equipo del jugador
   private async goToMyTeamDetail() {
     if (this.currentTeam) {
-        const teamId = this.currentTeam.id || (this.currentTeam as any).idEquipo;
+        const teamId = this.currentTeam.id || this.currentTeam.idEquipo;
         this.router.navigate(['/team-detail', teamId]);
     } else {
         const toast = await this.toastCtrl.create({
@@ -255,7 +253,7 @@ export class PlayerDashboardPage implements OnInit {
     }, 100);
   }
 
-  showMatchDetails(match: any) {
+  showMatchDetails(match: Partido) {
     if (match.tipo === 'ENTRENAMIENTO') {
        this.showTrainingAlert(match);
        return;
@@ -264,7 +262,7 @@ export class PlayerDashboardPage implements OnInit {
     this.router.navigate(['/match-detail', matchId]);
   }
 
-  async showTrainingAlert(match: any) {
+  async showTrainingAlert(match: Partido) {
       const alert = await this.alertCtrl.create({
         header: 'Entrenamiento',
         subHeader: match.lugar,
@@ -276,21 +274,19 @@ export class PlayerDashboardPage implements OnInit {
   }
 
   getPlayerPosition(): string {
-    const player: any = this.currentPlayer;
-    return player?.posicion || 'Sin Posición';
+    return this.currentPlayer?.posicion || 'Sin Posición';
   }
 
   isPlayerAvailable(): boolean {
-    const player: any = this.currentPlayer;
-    return player?.estado === 'ACTIVO';
+    return this.currentPlayer?.estado === 'ACTIVO';
   }
-  
+
   getConvocationTypeColor(type: string): string {
-      const map: any = { 'PARTIDO': 'success', 'ENTRENAMIENTO': 'primary' };
+      const map: Record<string, string> = { 'PARTIDO': 'success', 'ENTRENAMIENTO': 'primary' };
       return map[type] || 'medium';
   }
 
-  getPlayerAttendanceStatus(conv: any): string { return 'PENDIENTE'; }
+  getPlayerAttendanceStatus(conv: Partido): string { return 'PENDIENTE'; }
   getAttendanceStatusColor(status: string): string { return 'primary'; }
   getAttendanceStatusText(status: string): string { return 'Convocado'; }
 }

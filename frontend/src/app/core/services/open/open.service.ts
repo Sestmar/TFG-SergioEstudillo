@@ -3,6 +3,16 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { PublicTeam, PublicPlayer, AdminEquipoDto } from 'src/app/shared/models/models';
+
+interface CoachRaw {
+  idEquipo?: number;
+  equipoId?: number;
+  equipoActual?: { id?: number; idEquipo?: number };
+  equipoPrincipal?: { id?: number; idEquipo?: number };
+  equipo?: { id?: number };
+  [key: string]: unknown;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -11,48 +21,37 @@ export class OpenService {
 
   constructor(private http: HttpClient) { }
 
-  // 1. LISTA DE EQUIPOS
-  getPublicTeams(): Observable<any[]> {
-    return this.http.get<any>(`${environment.apiUrl}/equipos`).pipe(
+  getPublicTeams(): Observable<PublicTeam[]> {
+    return this.http.get<PublicTeam[] | { data?: PublicTeam[]; teams?: PublicTeam[] }>(`${environment.apiUrl}/equipos`).pipe(
       map(response => {
         if (Array.isArray(response)) return response;
-        return response.data || response.teams || [];
+        return (response as { data?: PublicTeam[]; teams?: PublicTeam[] }).data || (response as { data?: PublicTeam[]; teams?: PublicTeam[] }).teams || [];
       })
     );
   }
 
-  // 2. DETALLE DE EQUIPO
-  getTeamDetail(teamId: number): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/equipos/${teamId}`).pipe(
-      map(response => response.data || response)
+  getTeamDetail(teamId: number): Observable<AdminEquipoDto> {
+    return this.http.get<AdminEquipoDto | { data?: AdminEquipoDto }>(`${environment.apiUrl}/equipos/${teamId}`).pipe(
+      map(response => (response as { data?: AdminEquipoDto }).data || (response as AdminEquipoDto))
     );
   }
 
-  // 3. JUGADORES (MODIFICADO: Usar endpoint público con estadísticas calculadas)
-  getTeamRoster(teamId: number): Observable<any[]> {
-    // CAMBIO: Llamamos a /api/public/equipos/{id}/plantilla
-    // Este endpoint del PublicController SÍ calcula los goles y asistencias.
-    return this.http.get<any[]>(`${environment.apiUrl}/public/equipos/${teamId}/plantilla`).pipe(
-      map(response => {
-        // La respuesta ya es la lista de jugadores filtrada y con stats
-        return response || [];
-      })
+  getTeamRoster(teamId: number): Observable<PublicPlayer[]> {
+    return this.http.get<PublicPlayer[]>(`${environment.apiUrl}/public/equipos/${teamId}/plantilla`).pipe(
+      map(response => response || [])
     );
   }
 
-  // 4. STAFF TÉCNICO (CORRECCIÓN CRÍTICA AQUÍ)
-  getTeamStaff(teamId: number): Observable<any[]> {
-    return this.http.get<any>(`${environment.apiUrl}/entrenadores`).pipe(
+  getTeamStaff(teamId: number): Observable<CoachRaw[]> {
+    return this.http.get<CoachRaw[] | { data?: CoachRaw[] }>(`${environment.apiUrl}/entrenadores`).pipe(
       map(response => {
-        const allCoaches = Array.isArray(response) ? response : (response.data || []);
-        
-        return allCoaches.filter((c: any) => {
-             // ✅ AÑADIDO c.idEquipo PORQUE TU BACKEND LO ENVÍA ASÍ (VER CONSOLA)
-             const cTeamId = c.idEquipo || c.equipoId || 
-                             c.equipoActual?.id || c.equipoActual?.idEquipo ||
-                             c.equipoPrincipal?.id || c.equipoPrincipal?.idEquipo || 
-                             c.equipo?.id;
-             return Number(cTeamId) === Number(teamId);
+        const allCoaches: CoachRaw[] = Array.isArray(response) ? response : ((response as { data?: CoachRaw[] }).data || []);
+        return allCoaches.filter((c: CoachRaw) => {
+          const cTeamId = c.idEquipo || c.equipoId ||
+            c.equipoActual?.id || c.equipoActual?.idEquipo ||
+            c.equipoPrincipal?.id || c.equipoPrincipal?.idEquipo ||
+            c.equipo?.id;
+          return Number(cTeamId) === Number(teamId);
         });
       })
     );

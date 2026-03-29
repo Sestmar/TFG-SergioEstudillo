@@ -2,80 +2,81 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import {
+  AdminUserDto, AdminEquipoDto, TeamDetailResponse,
+  Partido, AsistenciaPayload, AttendanceSavedDto
+} from 'src/app/shared/models/models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AdminService {
 
-  // Usa la variable global + el endpoint específico
   private apiUrl = `${environment.apiUrl}/admin`;
 
   constructor(private http: HttpClient) { }
 
   // --- USUARIOS ---
-  getCandidates(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/candidatos`);
+  getCandidates(): Observable<AdminUserDto[]> {
+    return this.http.get<AdminUserDto[]>(`${this.apiUrl}/candidatos`);
   }
 
-  getCoachCandidates(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/candidatos-entrenadores`);
+  getCoachCandidates(): Observable<AdminUserDto[]> {
+    return this.http.get<AdminUserDto[]>(`${this.apiUrl}/candidatos-entrenadores`);
   }
 
-  getAllActiveUsers(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/usuarios-activos`);
+  getAllActiveUsers(): Observable<AdminUserDto[]> {
+    return this.http.get<AdminUserDto[]>(`${this.apiUrl}/usuarios-activos`);
   }
 
-  createUser(userData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/crear-usuario`, userData);
+  createUser(userData: Partial<AdminUserDto> & { password?: string }): Observable<AdminUserDto> {
+    return this.http.post<AdminUserDto>(`${this.apiUrl}/crear-usuario`, userData);
   }
 
-  deleteUser(id: number): Observable<any> {
-      return this.http.delete(`${this.apiUrl}/usuario/${id}`);
+  deleteUser(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/usuario/${id}`);
   }
 
-  assignTeam(idUsuario: number, idEquipo: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/asignar-equipo`, { idUsuario, idEquipo });
+  assignTeam(idUsuario: number, idEquipo: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/asignar-equipo`, { idUsuario, idEquipo });
   }
 
-  assignCoach(idUsuario: number, idEquipo: number, rol: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/asignar-mister`, { idUsuario, idEquipo, rol });
+  assignCoach(idUsuario: number, idEquipo: number, rol: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/asignar-mister`, { idUsuario, idEquipo, rol });
   }
 
   // --- EQUIPOS ---
-  getTeams(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/equipos`);
+  getTeams(): Observable<AdminEquipoDto[]> {
+    return this.http.get<AdminEquipoDto[]>(`${this.apiUrl}/equipos`);
   }
 
-  getTeamDetails(idEquipo: number): Observable<any> {
-      return this.http.get<any>(`${this.apiUrl}/equipo/${idEquipo}/detalle`);
+  getTeamDetails(idEquipo: number): Observable<TeamDetailResponse> {
+    return this.http.get<TeamDetailResponse>(`${this.apiUrl}/equipo/${idEquipo}/detalle`);
   }
 
-  createTeam(teamData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/crear-equipo`, teamData);
+  createTeam(teamData: Partial<AdminEquipoDto>): Observable<AdminEquipoDto> {
+    return this.http.post<AdminEquipoDto>(`${this.apiUrl}/crear-equipo`, teamData);
   }
 
   // --- COMPETICIÓN ---
-  
-  // ✅ CAMBIO: Ahora acepta 'any' (JSON) para enviar la URL, en lugar de FormData
-  createMatch(matchData: any): Observable<any> {
-      return this.http.post(`${this.apiUrl}/crear-partido`, matchData);
+  // FormData o JSON según el caso — se mantiene flexible
+  createMatch(matchData: Partial<Partido> | FormData): Observable<Partido> {
+    return this.http.post<Partido>(`${this.apiUrl}/crear-partido`, matchData);
   }
 
-  createTraining(data: any) {
-    return this.http.post(`${this.apiUrl}/crear-entrenamiento`, data);
+  createTraining(data: Partial<Partido>): Observable<Partido> {
+    return this.http.post<Partido>(`${this.apiUrl}/crear-entrenamiento`, data);
   }
 
-  // Guardar estadisticas de asistencia en entrenamientos
-  guardarAsistencia(payload: any) {
-    return this.http.post(`${this.apiUrl}/guardar-asistencia`, payload);
+  guardarAsistencia(payload: AsistenciaPayload): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/guardar-asistencia`, payload);
   }
 
-  getAsistencia(trainingId: number) {
-    return this.http.get(`${this.apiUrl}/entrenamiento/${trainingId}/asistencia`);
+  getAsistencia(trainingId: number): Observable<AttendanceSavedDto[]> {
+    return this.http.get<AttendanceSavedDto[]>(`${this.apiUrl}/entrenamiento/${trainingId}/asistencia`);
   }
 
-  deleteEvento(id: number) {
-    return this.http.delete(`${this.apiUrl}/evento/${id}`);
+  deleteEvento(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/evento/${id}`);
   }
 }

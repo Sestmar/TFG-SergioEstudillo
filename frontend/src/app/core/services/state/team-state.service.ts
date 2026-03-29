@@ -37,17 +37,12 @@ export class TeamStateService {
     this.loadingSubject.next(true);
     
     // ✅ CORRECCIÓN: Usamos 'getTeams' en lugar de 'getAllTeams'
-    return this.teamService.getTeams(params).pipe(
-      map((response: any) => {
-        // Manejamos respuesta directa (array) o paginada ({teams: []})
-        const teamsList = Array.isArray(response) ? response : (response.teams || []);
-        const total = response.total || teamsList.length;
-        
-        this.teamsSubject.next(teamsList);
+    return this.teamService.getTeams(params as Record<string, string>).pipe(
+      map((teams: Team[]) => {
+        this.teamsSubject.next(teams);
         this.loadingSubject.next(false);
         this.errorSubject.next(null);
-        
-        return { teams: teamsList, total };
+        return { teams, total: teams.length };
       })
     );
   }
@@ -121,8 +116,7 @@ export class TeamStateService {
   getFeaturedTeams(): Observable<Team[]> {
     // ✅ CORRECCIÓN: Usamos filtro en getTeams si no existe endpoint específico
     return this.teamService.getTeams({ featured: true }).pipe(
-      map((response: any) => {
-        const teams = Array.isArray(response) ? response : (response.teams || []);
+      map((teams: Team[]) => {
         this.teamsSubject.next(teams);
         return teams;
       })
@@ -135,7 +129,7 @@ export class TeamStateService {
   searchTeams(term: string): Observable<Team[]> {
     // ✅ CORRECCIÓN: Usamos filtro de búsqueda en getTeams
     return this.teamService.getTeams({ search: term }).pipe(
-      map((response: any) => Array.isArray(response) ? response : (response.teams || []))
+      map((teams: Team[]) => teams)
     );
   }
 

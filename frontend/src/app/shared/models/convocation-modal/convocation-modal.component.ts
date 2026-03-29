@@ -2,21 +2,25 @@ import { Component, Input, OnInit } from '@angular/core';
 import { ModalController, IonicModule } from '@ionic/angular'; // Importamos IonicModule
 import { CommonModule } from '@angular/common'; // Importamos CommonModule para *ngFor
 import { FormsModule } from '@angular/forms';   // Importamos FormsModule para [(ngModel)]
-import { Player } from 'src/app/shared/models/models';
+import { Jugador } from 'src/app/shared/models/models';
+
+interface SelectablePlayer extends Jugador {
+  selected: boolean;
+}
 
 @Component({
   selector: 'app-convocation-modal',
   templateUrl: './convocation-modal.component.html',
   styleUrls: ['./convocation-modal.component.scss'],
-  standalone: true, // 🔥 ESTO ES LA CLAVE
-  imports: [CommonModule, IonicModule, FormsModule] // 🔥 AQUÍ IMPORTAMOS LAS HERRAMIENTAS
+  standalone: true,
+  imports: [CommonModule, IonicModule, FormsModule]
 })
 export class ConvocationModalComponent implements OnInit {
 
-  @Input() allPlayers: Player[] = [];     
-  @Input() currentSquad: Player[] = [];   
+  @Input() allPlayers: Jugador[] = [];
+  @Input() currentSquad: Jugador[] = [];
 
-  players: any[] = [];
+  players: SelectablePlayer[] = [];
 
   constructor(private modalCtrl: ModalController) { }
 
@@ -39,7 +43,7 @@ export class ConvocationModalComponent implements OnInit {
     });
   }
 
-  toggleSelection(p: any) {
+  toggleSelection(p: SelectablePlayer) {
     p.selected = !p.selected;
   }
 
@@ -59,7 +63,7 @@ export class ConvocationModalComponent implements OnInit {
     this.modalCtrl.dismiss();
   }
 
-  private getPlayerId(player: any): string {
-    return String(player.id || player.idJugador || (player.usuario && player.usuario.id));
+  private getPlayerId(player: Jugador): string {
+    return String(player.idJugador || player.id || player.usuario?.id || player.usuario?.idUsuario);
   }
 }

@@ -210,19 +210,15 @@ export interface News {
 }
 
 export interface PlayerStats {
-  partidosJugados: number;
-  goles: number;
-  asistencias: number;
-  tarjetasAmarillas: number;
-  tarjetasRojas: number;
-  minutosJugados: number;
-}
-
-export interface PlayerStats {
-  partidosTotales: number;
-  golesTotales: number;
-  asistenciasTotales: number;
-  minutosJugados: number;
+  partidosJugados?: number;
+  partidosTotales?: number;
+  goles?: number;
+  golesTotales?: number;
+  asistencias?: number;
+  asistenciasTotales?: number;
+  tarjetasAmarillas?: number;
+  tarjetasRojas?: number;
+  minutosJugados?: number;
 }
 
 // ✅ ZONA PÚBLICA
@@ -247,3 +243,167 @@ export interface PublicPlayer {
 }
 
 export type UserRole = 'ADMIN' | 'ENTRENADOR' | 'JUGADOR' | 'PADRE';
+
+// =================================================================
+// ===        BACKEND RESPONSE DTOs (shapes reales del API)       ===
+// =================================================================
+
+export type EstadoJugador = 'ACTIVO' | 'LESIONADO' | 'BAJA';
+export type EstadoPartido = 'PENDIENTE' | 'FINALIZADO' | 'CANCELADO';
+export type TipoEvento = 'PARTIDO' | 'TRAINING' | 'ENTRENAMIENTO';
+
+export interface UsuarioResumen {
+  id?: number;
+  idUsuario?: number;
+  nombre: string;
+  apellidos: string;
+  email?: string;
+  fotoUrl?: string;
+  rol?: string;
+}
+
+export interface EquipoResumen {
+  id?: number;
+  idEquipo?: number;
+  nombre: string;
+  fotoUrl?: string;
+  categoria?: string;
+}
+
+export interface Jugador {
+  id?: number;
+  idJugador?: number;
+  usuario: UsuarioResumen;
+  posicion?: string;
+  dorsal?: number;
+  estado?: EstadoJugador;
+  equipoPrincipal?: EquipoResumen | number;
+  observaciones?: string;
+  fechaNacimiento?: string;
+  fechaAlta?: string;
+}
+
+export interface Partido {
+  idPartido?: number;
+  id?: number;
+  rival?: string | null;
+  lugar: string;
+  fechaHora: string;
+  tipo: TipoEvento;
+  estado: EstadoPartido;
+  golesFavor: number;
+  golesContra: number;
+  idEquipo?: number;
+  equipo?: EquipoResumen;
+  escudoRivalUrl?: string | null;
+  competicion?: string;
+  observaciones?: string;
+}
+
+export interface LineupSlotDto {
+  idJugador?: number;
+  jugador?: { id?: number; idJugador?: number };
+  slotId?: string;
+  esTitular?: boolean;
+  esCapitan?: boolean;
+  esLanzadorPenaltis?: boolean;
+  esLanzadorFaltas?: boolean;
+  goles?: number;
+  asistencias?: number;
+  minutos?: number;
+  minutosJugados?: number;
+  minutoEntrada?: number | null;
+  minutoSalida?: number | null;
+  tarjetaAmarilla?: number;
+  tarjetaRoja?: number;
+  nombre?: string;
+  apellidos?: string;
+  fotoUrl?: string;
+  dorsal?: number;
+  posicion?: string;
+}
+
+export interface CloseMatchPayload {
+  idPartido: number;
+  golesFavor: number;
+  golesContra: number;
+  estadisticas: LineupSlotDto[];
+}
+
+export interface AdminUserDto {
+  id: number;
+  nombre: string;
+  apellidos: string;
+  email: string;
+  rol: string;
+  equipoNombre?: string;
+}
+
+export interface AdminEquipoDto {
+  idEquipo?: number;
+  id?: number;
+  nombre: string;
+  categoria?: string;
+  activo?: boolean;
+  entrenador?: { usuario?: UsuarioResumen };
+  entrenadorPrincipal?: { usuario?: UsuarioResumen };
+  entrenadorNombre?: string;
+  fotoUrl?: string;
+}
+
+export interface TeamDetailResponse {
+  equipo: AdminEquipoDto;
+  jugadores: Jugador[];
+  staff: UsuarioResumen[];
+}
+
+export interface CoachDashboardResponse {
+  equipo?: EquipoResumen;
+  rol?: string;
+  entrenadorId?: number;
+}
+
+export interface PlayerSeasonStat {
+  idJugador?: number;
+  nombre?: string;
+  apellidos?: string;
+  fotoUrl?: string;
+  dorsal?: number;
+  posicion?: string;
+  goles?: number;
+  asistencias?: number;
+  minutos?: number;
+  asistenciaPct?: number;
+  golesTemporada?: number;
+}
+
+export interface TeamStatsResponse {
+  jugadores: PlayerSeasonStat[];
+}
+
+export interface AsistenciaPayload {
+  idEntrenamiento: number;
+  asistencias: { idJugador: number; estado: string }[];
+}
+
+export interface AttendanceSavedDto {
+  idJugador: number;
+  estado: string;
+}
+
+export interface CoachProfileDto {
+  idEntrenador?: number;
+  especialidad?: string;
+  licencia?: string;
+  telefonoContacto?: string;
+  fechaAlta?: string;
+  usuario: UsuarioResumen;
+}
+
+export interface CoachProfileUpdateDto {
+  idUsuario?: number;
+  especialidad?: string;
+  licencia?: string;
+  telefonoContacto?: string;
+  fechaAlta?: string;
+}

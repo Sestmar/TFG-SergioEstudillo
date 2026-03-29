@@ -12,7 +12,7 @@ export class IncidentService {
 
   // --- ¡ARREGLO! ---
   // La función debe devolver el tipo correcto que la API entrega
-  getAllIncidents(params?: any): Observable<{ incidents: Incident[]; total: number }> {
+  getAllIncidents(params?: Record<string, string | number | boolean>): Observable<{ incidents: Incident[]; total: number }> {
     return this.apiService.get<{ incidents: Incident[]; total: number }>('incidencia', params);
   }
 
@@ -20,7 +20,7 @@ export class IncidentService {
     return this.apiService.get<Incident>(`incidencia/${id}`);
   }
 
-  createIncident(incidentData: any): Observable<Incident> {
+  createIncident(incidentData: Record<string, unknown>): Observable<Incident> {
     return this.apiService.post<Incident>('incidencia', incidentData);
   }
 
@@ -28,7 +28,7 @@ export class IncidentService {
     return this.apiService.put<Incident>(`incidencia/${id}`, incidentData);
   }
 
-  addFollowUp(incidentId: number, followUpData: any): Observable<Incident> {
+  addFollowUp(incidentId: number, followUpData: Record<string, unknown>): Observable<Incident> {
     return this.apiService.put<Incident>(`incidencia/${incidentId}/follow-up`, followUpData);
   }
 

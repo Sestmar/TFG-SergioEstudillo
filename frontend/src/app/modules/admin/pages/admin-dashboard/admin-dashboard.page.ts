@@ -1,9 +1,28 @@
 import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Observable } from 'rxjs';
 import { AdminService } from 'src/app/core/services/admin/admin.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { ToastController, LoadingController, AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
+import { AdminUserDto, AdminEquipoDto } from 'src/app/shared/models/models';
+
+interface CandidatoJugador extends AdminUserDto {
+  selectedTeamId: number | null;
+}
+
+interface CandidatoCoach extends AdminUserDto {
+  selectedTeamId: number | null;
+  selectedRole: string;
+}
+
+interface NuevoPartidoForm {
+  idEquipo: number | null;
+  rival: string;
+  lugar: string;
+  fechaHora: string;
+  escudoRivalUrl: string;
+}
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -15,11 +34,11 @@ export class AdminDashboardPage implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   // Listas de datos
-  candidates: any[] = []; 
-  coachCandidates: any[] = [];
-  activeUsers: any[] = [];
-  teams: any[] = [];
-  
+  candidates: CandidatoJugador[] = [];
+  coachCandidates: CandidatoCoach[] = [];
+  activeUsers: AdminUserDto[] = [];
+  teams: AdminEquipoDto[] = [];
+
   // Control de vista
   currentView = 'users';
   userSegment = 'pending';
@@ -36,9 +55,8 @@ export class AdminDashboardPage implements OnInit {
   // Formularios
   newUser = { nombre: '', apellidos: '', email: '', rol: 'JUGADOR', password: '123456' };
   newTeam = { nombre: '', categoria: '' };
-  
-  // Usaremos este objeto para ambos (Partido y Entrenamiento)
-  newMatch: any = { idEquipo: null, rival: '', lugar: '', fechaHora: new Date().toISOString(), escudoRivalUrl: '' };
+
+  newMatch: NuevoPartidoForm = { idEquipo: null, rival: '', lugar: '', fechaHora: new Date().toISOString(), escudoRivalUrl: '' };
   
   selectedFile: File | null = null;
   staffRoles = ['Entrenador Principal', 'Segundo Entrenador', 'Preparador Físico', 'Delegado', 'Entrenador de Porteros'];
@@ -90,7 +108,7 @@ export class AdminDashboardPage implements OnInit {
   // LÓGICA: Usamos la lista completa para evitar problemas del backend
   loadUsersAndCalculateCandidates() {
       this.adminSvc.getAllActiveUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-          next: (res: any[]) => {
+          next: (res: AdminUserDto[]) => {
               console.log("👥 Usuarios Totales recibidos:", res.length);
               this.activeUsers = res;
 
@@ -138,7 +156,7 @@ export class AdminDashboardPage implements OnInit {
 
   // --- ACCIONES ---
 
-  async onAssignPlayer(user: any) {
+  async onAssignPlayer(user: CandidatoJugador) {
     if (!user.selectedTeamId) return this.presentToast('⚠️ Selecciona un equipo primero', 'warning');
     
     const uid = user.id; 
@@ -150,7 +168,7 @@ export class AdminDashboardPage implements OnInit {
     this.loadUsersAndCalculateCandidates();
   }
 
-  async onAssignCoach(coach: any) {
+  async onAssignCoach(coach: CandidatoCoach) {
       if (!coach.selectedTeamId) return this.presentToast('⚠️ Selecciona un equipo', 'warning');
       if (!coach.selectedRole) return this.presentToast('⚠️ Selecciona un rol', 'warning');
       
@@ -179,7 +197,7 @@ export class AdminDashboardPage implements OnInit {
       }, 500);
   }
 
-  async deleteUser(user: any) {
+  async deleteUser(user: AdminUserDto) {
       const alert = await this.alertCtrl.create({
           header: 'Confirmar Eliminación',
           message: `¿Seguro que quieres eliminar a ${user.nombre}?`,
@@ -211,13 +229,13 @@ export class AdminDashboardPage implements OnInit {
       this.adminSvc.getTeams().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(res => this.teams = res);
   }
 
-  openTeamDetail(team: any) {
+  openTeamDetail(team: AdminEquipoDto) {
       if (!team) return;
       const tid = team.idEquipo || team.id;
       if(tid) this.router.navigate(['/team-detail', tid]);
   }
 
-  goToTeamCalendar(team: any) {
+  goToTeamCalendar(team: AdminEquipoDto) {
       if (!team) return;
       const teamId = team.idEquipo || team.id;
       if(teamId) this.router.navigate(['/calendar'], { queryParams: { teamId: teamId } });
@@ -303,7 +321,7 @@ export class AdminDashboardPage implements OnInit {
     this.eventType = 'MATCH';
   }
 
-  async processRequest(observable$: any, successMsg: string) {
+  async processRequest(observable$: Observable<unknown>, successMsg: string) {
     const loading = await this.loadingCtrl.create({ message: 'Procesando...', spinner: 'crescent' });
     await loading.present();
     return new Promise<void>((resolve) => {

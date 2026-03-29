@@ -7,12 +7,12 @@ import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service'; 
 import { HttpClient } from '@angular/common/http';
 import { ToastController, ActionSheetController, ModalController } from '@ionic/angular';
-import { Player } from 'src/app/shared/models/models';
+import { Jugador, Partido, LineupSlotDto } from 'src/app/shared/models/models';
 import { ConvocationModalComponent } from 'src/app/shared/models/convocation-modal/convocation-modal.component';
 
 interface PitchSlot {
-  id: string;      
-  player: Player | null; 
+  id: string;
+  player: Jugador | null;
   isCaptain?: boolean;
   isPenaltyTaker?: boolean;
   isFreeKickTaker?: boolean;
@@ -29,11 +29,11 @@ export class TacticsPage implements OnInit {
   loading = true;
   saving = false;
   matchId: number = 0; 
-  matchInfo: any = null; 
+  matchInfo: Partido | null = null;
   currentTeamId: number | null = null;
 
-  bench: Player[] = [];          
-  allTeamPlayers: Player[] = []; 
+  bench: Jugador[] = [];
+  allTeamPlayers: Jugador[] = []; 
   
   formations = ['3-4-3', '3-5-2', '4-3-3', '4-4-2', '4-5-1', '5-3-2', '5-4-1'];
   selectedFormation = '4-3-3'; 
@@ -91,7 +91,7 @@ export class TacticsPage implements OnInit {
     }
   }
 
-  applyNewConvocation(selectedPlayers: Player[]) {
+  applyNewConvocation(selectedPlayers: Jugador[]) {
     const selectedIds = new Set(selectedPlayers.map(p => this.getPlayerId(p)));
 
     const allSlots = [...this.forwards, ...this.midfielders, ...this.defenders, ...this.goalkeeper];
@@ -204,8 +204,8 @@ export class TacticsPage implements OnInit {
     ];
   }
 
-  private getPlayerId(player: any): string {
-      return String(player.id || player.idJugador || (player.usuario && player.usuario.id));
+  private getPlayerId(player: Jugador): string {
+      return String(player.idJugador || player.id || player.usuario?.id || player.usuario?.idUsuario);
   }
 
   getBorderColor(posicion: string): string {
@@ -241,16 +241,15 @@ export class TacticsPage implements OnInit {
 
   loadPlayersAndTactics(teamId: number) {
     this.playerSvc.getAllPlayers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (res: any) => {
-        const all = Array.isArray(res) ? res : (res.data || []);
-        
-        const teamPlayers = all.filter((p: any) => {
-            const pTeamId = p.equipoPrincipal?.id || p.equipoPrincipal?.idEquipo || p.equipoPrincipal;
+      next: (all: Jugador[]) => {
+        const teamPlayers = all.filter((p: Jugador) => {
+            const ep = p.equipoPrincipal;
+            const pTeamId = typeof ep === 'object' ? (ep?.id || ep?.idEquipo) : ep;
             return String(pTeamId) === String(teamId);
         });
 
-        const uniquePlayersMap = new Map();
-        teamPlayers.forEach((p: any) => {
+        const uniquePlayersMap = new Map<string, Jugador>();
+        teamPlayers.forEach((p: Jugador) => {
             const uniqueId = this.getPlayerId(p);
             if (uniqueId && !uniquePlayersMap.has(uniqueId)) {
                 uniquePlayersMap.set(uniqueId, p);
@@ -267,11 +266,11 @@ export class TacticsPage implements OnInit {
 
   fetchSavedLineup() {
     this.matchSvc.getLineup(this.matchId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (savedSlots: any) => {
-        
+      next: (savedSlots: LineupSlotDto[]) => {
+
         if (Array.isArray(savedSlots) && savedSlots.length > 0) {
             let maxDef = 0, maxMid = 0, maxFwd = 0;
-            savedSlots.forEach((slot: any) => {
+            savedSlots.forEach((slot: LineupSlotDto) => {
                 const id = slot.slotId || '';
                 if (id.startsWith('DEF-')) { const num = parseInt(id.split('-')[1]); if (num > maxDef) maxDef = num; }
                 if (id.startsWith('MID-')) { const num = parseInt(id.split('-')[1]); if (num > maxMid) maxMid = num; }
@@ -294,7 +293,7 @@ export class TacticsPage implements OnInit {
         if (Array.isArray(savedSlots) && savedSlots.length > 0) {
           const savedIds = new Set();
 
-          savedSlots.forEach((saved: any) => {
+          savedSlots.forEach((saved: LineupSlotDto) => {
               const playerId = saved.idJugador || saved.jugador?.idJugador;
               if (playerId) savedIds.add(String(playerId));
 
@@ -347,7 +346,7 @@ export class TacticsPage implements OnInit {
 
     const pitchPayload = playersOnPitch.map(slot => ({
         idPartido: this.matchId,
-        idJugador: (slot.player as any).idJugador || slot.player?.id,
+        idJugador: slot.player?.idJugador || slot.player?.id,
         slotId: slot.id,
         esCapitan: slot.isCaptain || false,
         esLanzadorPenaltis: slot.isPenaltyTaker || false,
@@ -356,8 +355,8 @@ export class TacticsPage implements OnInit {
 
     const benchPayload = this.bench.map(p => ({
         idPartido: this.matchId,
-        idJugador: (p as any).idJugador || p.id,
-        slotId: `BENCH_${(p as any).idJugador || p.id}`, 
+        idJugador: p.idJugador || p.id,
+        slotId: `BENCH_${p.idJugador || p.id}`,
         esCapitan: false,
         esLanzadorPenaltis: false,
         esLanzadorFaltas: false
@@ -380,11 +379,11 @@ export class TacticsPage implements OnInit {
       });
   }
 
-  drop(event: CdkDragDrop<any>) {
+  drop(event: CdkDragDrop<Jugador[]>) {
     if (event.previousContainer === event.container) return;
     const isBenchSource = event.previousContainer.id === 'benchList';
     const isBenchTarget = event.container.id === 'benchList';
-    const draggedPlayer: Player = event.item.data;
+    const draggedPlayer: Jugador = event.item.data;
 
     if (!draggedPlayer) return;
 
@@ -443,14 +442,11 @@ export class TacticsPage implements OnInit {
   }
 
   // 🔥 NUEVO MÉTODO PARA GESTIONAR IMÁGENES Y EVITAR PARPADEO
-  getProfileImage(player: any): string {
-    // 1. Si tiene foto de usuario válida, la usamos
-    if (player && player.usuario && player.usuario.fotoUrl) {
+  getProfileImage(player: Jugador): string {
+    if (player?.usuario?.fotoUrl) {
         return player.usuario.fotoUrl;
     }
-    // 2. Si no, devolvemos una imagen LOCAL (esto evita el parpadeo de red)
-    // Asegúrate de tener esta imagen o usa el escudo del equipo si prefieres
-    return 'assets/img/default-player.png'; 
+    return 'assets/img/default-player.png';
   }
 
   // Helper para mostrar el nombre del rival en el HTML

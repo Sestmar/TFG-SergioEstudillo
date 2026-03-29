@@ -10,7 +10,7 @@ import { MatchService } from 'src/app/core/services/match/match.service';
 import { NewsService } from 'src/app/core/services/news/new.service';
 
 // Imports de Modelos
-import { User, News } from 'src/app/shared/models/models';
+import { User, News, Partido, EquipoResumen } from 'src/app/shared/models/models';
 import { environment } from 'src/environments/environment'; // ✅ Importado para Render
 
 @Component({
@@ -28,7 +28,7 @@ export class UserDashboardPage implements OnInit {
   myTeamId: number | null = null; 
   teamName: string = '';
   
-  nextMatches: any[] = []; 
+  nextMatches: Partido[] = [];
   recentNews: News[] = [];
   
   isLoading = true;
@@ -62,21 +62,21 @@ export class UserDashboardPage implements OnInit {
   }
 
   // 2. Lógica para encontrar el equipo del JUGADOR
-  private findPlayerTeam(user: any) {
-    const userId = user.id || user.idUsuario;
+  private findPlayerTeam(user: User) {
+    const userId = user.idUsuario;
 
     // A. Si el usuario ya tiene el ID guardado en local (Login optimizado)
-    if (user.equipoId || user.idEquipo) {
-        this.myTeamId = user.equipoId || user.idEquipo;
+    if (user.equipoFavoritoId) {
+        this.myTeamId = user.equipoFavoritoId;
         this.loadDashboardData();
         return;
     }
 
     // B. 🔥 CORRECCIÓN: Usando environment.apiUrl para Render/Móvil
     this.http.get(`${environment.apiUrl}/jugadores/usuario/${userId}/equipo`).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (equipo: any) => {
+        next: (equipo: EquipoResumen) => {
             console.log("✅ Equipo de jugador detectado:", equipo);
-            this.myTeamId = equipo.idEquipo || equipo.id;
+            this.myTeamId = equipo.idEquipo || equipo.id || null;
             this.teamName = equipo.nombre;
             
             // Una vez tenemos el ID correcto, cargamos los partidos
@@ -103,7 +103,7 @@ export class UserDashboardPage implements OnInit {
   // 3. Cargar partidos usando el servicio MatchService (filtra por ID de equipo)
   private loadNextMatches(teamId: number) {
     this.matchService.getMatchesByTeam(teamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (matches: any[]) => {
+      next: (matches: Partido[]) => {
         
         // Filtramos y ordenamos por fecha
         this.nextMatches = matches
@@ -123,7 +123,7 @@ export class UserDashboardPage implements OnInit {
   }
 
   private loadRecentNews() {
-    this.newsService.getNews({ page: this.newsPage, limit: 10 }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.newsService.getNews({ page: String(this.newsPage), limit: '10' }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response: any) => {
         const news = Array.isArray(response) ? response : (response.news || response.data || []);
         if (this.newsPage === 1) {
@@ -164,6 +164,6 @@ export class UserDashboardPage implements OnInit {
     return diffDays <= 1 ? 'Mañana' : `En ${diffDays} días`;
   }
 
-  trackByMatchId(index: number, match: any): number { return match.idPartido || index; }
+  trackByMatchId(index: number, match: Partido): number { return match.idPartido || index; }
   trackByNewsId(index: number, news: News): number { return news.id; }
 }

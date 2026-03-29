@@ -8,6 +8,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
 import { AdminService } from '../../core/services/admin/admin.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Partido, EquipoResumen } from '../../shared/models/models';
 
 @Component({
   selector: 'app-calendar',
@@ -25,8 +26,8 @@ export class CalendarPage implements OnInit {
   emptyDays: number[] = [];
   
   selectedDate: Date = new Date();
-  selectedDayEvents: any[] = [];
-  allEvents: any[] = [];
+  selectedDayEvents: Partido[] = [];
+  allEvents: Partido[] = [];
   
   currentTeamId: number | null = null;
   
@@ -71,22 +72,21 @@ export class CalendarPage implements OnInit {
   detectTeamAndLoadEvents() {
     this.authSvc.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       if (user) {
-        const u = user as any;
-        const userId = u.id || u.idUsuario;
-        const rol = (u.rol || '').toUpperCase();
+        const userId = user.idUsuario;
+        const rol = (user.rol || '').toUpperCase();
 
         if (rol.includes('ENTRENADOR') || rol.includes('COACH')) {
-            this.coachSvc.getDashboardData(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((res: any) => {
+            this.coachSvc.getDashboardData(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((res) => {
                 if (res.equipo) {
-                    this.currentTeamId = res.equipo.idEquipo || res.equipo.id;
+                    this.currentTeamId = res.equipo.idEquipo || res.equipo.id || null;
                     this.loadEvents();
                 }
             });
         } else if (rol.includes('JUGADOR')) {
             this.teamSvc.getTeamByUserId(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-                next: (equipo: any) => {
+                next: (equipo: EquipoResumen) => {
                     if (equipo) {
-                        this.currentTeamId = equipo.idEquipo || equipo.id;
+                        this.currentTeamId = equipo.idEquipo || equipo.id || null;
                         this.loadEvents();
                     }
                 },
@@ -108,14 +108,13 @@ export class CalendarPage implements OnInit {
     });
   }
 
-  onEventClick(event: any) {
+  onEventClick(event: Partido) {
       const eventId = event.idPartido || event.id;
-      const tipo = event.tipo; 
+      const tipo = event.tipo;
       const teamIdToPass = event.idEquipo || (event.equipo ? event.equipo.idEquipo : this.currentTeamId);
 
       this.authSvc.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
-          const u = user as any;
-          const rol = (u.rol || '').toUpperCase();
+          const rol = (user?.rol || '').toUpperCase();
           
           const isAdmin = rol.includes('ADMIN');
           const isCoach = rol.includes('ENTRENADOR');
@@ -143,7 +142,7 @@ export class CalendarPage implements OnInit {
       });
   }
 
-  async deleteEvent(event: any, e: Event) {
+  async deleteEvent(event: Partido, e: Event) {
     e.stopPropagation(); 
 
     // ✅ Doble chequeo de seguridad
@@ -237,7 +236,7 @@ export class CalendarPage implements OnInit {
   hasMatch(day: number): boolean { return this.getEventsForDay(day).some(e => e.tipo === 'PARTIDO'); }
   hasTraining(day: number): boolean { return this.getEventsForDay(day).some(e => e.tipo === 'TRAINING'); }
 
-  private getEventsForDay(day: number): any[] {
+  private getEventsForDay(day: number): Partido[] {
       return this.allEvents.filter(e => {
         const eDate = new Date(e.fechaHora);
         return eDate.getDate() === day && eDate.getMonth() === this.viewDate.getMonth() && eDate.getFullYear() === this.viewDate.getFullYear();

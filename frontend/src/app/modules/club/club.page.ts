@@ -2,6 +2,14 @@ import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LoadingController } from '@ionic/angular';
 import { OpenService } from '../../core/services/open/open.service';
+import { PublicTeam, PublicPlayer, AdminEquipoDto, UsuarioResumen } from '../../shared/models/models';
+
+interface StaffMember {
+  nombre: string;
+  apellidos: string;
+  rol: string;
+  fotoUrl: string;
+}
 
 @Component({
   selector: 'app-club',
@@ -11,10 +19,10 @@ import { OpenService } from '../../core/services/open/open.service';
 export class ClubPage implements OnInit {
 
   private destroyRef = inject(DestroyRef);
-  teams: any[] = [];
-  selectedTeam: any | null = null;
-  roster: any[] = [];
-  staff: any[] = [];
+  teams: PublicTeam[] = [];
+  selectedTeam: AdminEquipoDto | null = null;
+  roster: PublicPlayer[] = [];
+  staff: StaffMember[] = [];
   loading = true;
 
   // ✅ VARIABLE SIMPLE PARA EL HTML
@@ -43,7 +51,7 @@ export class ClubPage implements OnInit {
     });
   }
 
-  async openTeam(teamSummary: any) {
+  async openTeam(teamSummary: PublicTeam) {
     this.selectedTeam = teamSummary; 
     this.staff = []; 
     this.roster = [];
@@ -52,7 +60,7 @@ export class ClubPage implements OnInit {
     const loading = await this.loadingCtrl.create({ message: 'Cargando ficha...', spinner: 'crescent' });
     await loading.present();
 
-    const teamId = teamSummary.id || teamSummary.idEquipo;
+    const teamId = teamSummary.idEquipo;
 
     // 1. OBTENER DETALLE Y EXTRAER ENTRENADOR
     this.openSvc.getTeamDetail(teamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -96,21 +104,18 @@ export class ClubPage implements OnInit {
     // 2. CARGAR JUGADORES
     // En el método openTeam -> getTeamRoster
     this.openSvc.getTeamRoster(teamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (players) => {
-        const listaJugadores = Array.isArray(players) ? players : [];
-        this.roster = listaJugadores
-            .map((p: any) => ({
+      next: (players: PublicPlayer[]) => {
+        this.roster = players
+            .map(p => ({
                 ...p,
-                // Tu PublicPlayerDto devuelve 'nombre' y 'apellidos' planos, o 'nombreCompleto'
                 nombre: p.nombre || 'Jugador',
                 apellidos: p.apellidos || '',
                 dorsal: p.dorsal || 99,
-                // ¡AQUÍ ESTÁ LA MAGIA! Ahora p.goles vendrá con el número real
                 goles: p.goles || 0,
                 asistencias: p.asistencias || 0,
                 fotoUrl: p.fotoUrl || `https://ui-avatars.com/api/?name=${p.nombre}&background=random`
             }))
-            .sort((a: any, b: any) => (a.dorsal) - (b.dorsal)); // Ordenar por dorsal
+            .sort((a, b) => (a.dorsal || 99) - (b.dorsal || 99));
         
         loading.dismiss();
       },

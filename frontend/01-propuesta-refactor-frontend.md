@@ -200,9 +200,9 @@ forkJoin({
 
 Antes de considerar el refactor terminado y pasar a nuevas funcionalidades:
 
-- [ ] **Fase 1**: 0 suscripciones sin `takeUntilDestroyed` o `AsyncPipe` en toda la app
-- [ ] **Fase 2**: 0 usos de `any` en `core/services/`. Reducción significativa en modules.
-- [ ] **Fase 3**: 0 imports de `HttpClient` en componentes de `modules/`
+- [x] **Fase 1**: 0 suscripciones sin `takeUntilDestroyed` o `AsyncPipe` en toda la app (⚠️ pendiente: `tactics.page.ts`)
+- [x] **Fase 2**: 0 usos de `any` en `core/services/`. (DTOs reales del backend integrados en `models.ts`).
+- [ ] **Fase 3**: 0 imports de `HttpClient` en componentes de `modules/` (En progreso).
 - [ ] El servidor de desarrollo arranca sin errores de compilación TypeScript
 - [ ] La app navega correctamente por todas las rutas principales
 

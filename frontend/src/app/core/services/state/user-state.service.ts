@@ -106,7 +106,7 @@ export class UserStateService {
       map(user => {
         if (!user?.roles) return false;
         // ✅ CORRECCIÓN: Casteo seguro de roles
-        return roles.some(role => (user.roles as any).includes(role));
+        return roles.some(role => user.roles?.includes(role as string) ?? false);
       }),
       distinctUntilChanged()
     );
@@ -116,9 +116,9 @@ export class UserStateService {
    * Obtiene el ID del usuario actual
    */
   getCurrentUserId(): number | null {
-    const user = this.currentUserSubject.value as any; // Truco de "any" para acceder a lo que sea
+    const user = this.currentUserSubject.value;
     if (!user) return null;
-    return user.id || user.idUsuario || null;
+    return user.idUsuario || null;
   }
 
   /**

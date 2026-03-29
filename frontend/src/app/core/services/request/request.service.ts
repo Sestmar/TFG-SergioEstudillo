@@ -11,7 +11,7 @@ export class RequestService {
   constructor(private apiService: ApiService) {}
 
   // --- ¡ARREGLO! ---
-  getAllRequests(params?: any): Observable<{ requests: InscriptionRequest[]; total: number }> {
+  getAllRequests(params?: Record<string, string | number | boolean>): Observable<{ requests: InscriptionRequest[]; total: number }> {
     return this.apiService.get<{ requests: InscriptionRequest[]; total: number }>('solicitudinscripcion', params);
   }
 
@@ -19,7 +19,7 @@ export class RequestService {
     return this.apiService.get<InscriptionRequest>(`solicitudinscripcion/${id}`);
   }
 
-  createRequest(requestData: any): Observable<InscriptionRequest> {
+  createRequest(requestData: Record<string, unknown>): Observable<InscriptionRequest> {
     return this.apiService.post<InscriptionRequest>('solicitudinscripcion', requestData);
   }
 
@@ -35,7 +35,7 @@ export class RequestService {
     return this.apiService.put<InscriptionRequest>(`solicitudinscripcion/${requestId}/cancel`, { motivo });
   }
 
-  updateRequest(requestId: number, requestData: any): Observable<InscriptionRequest> {
+  updateRequest(requestId: number, requestData: Record<string, unknown>): Observable<InscriptionRequest> {
     return this.apiService.put<InscriptionRequest>(`solicitudinscripcion/${requestId}`, requestData);
   }
 

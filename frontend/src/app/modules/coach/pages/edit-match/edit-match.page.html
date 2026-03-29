@@ -97,6 +97,15 @@
                     <label>GOLES</label>
                     <input type="number" [(ngModel)]="player.goles" class="dark-input highlight">
                 </div>
+
+                <div class="cards-col">
+                    <button class="card-btn yellow" [class.active]="player.tarjetaAmarilla" (click)="toggleAmarilla(player)">
+                        <ion-icon name="square"></ion-icon>
+                    </button>
+                    <button class="card-btn red" [class.active]="player.tarjetaRoja" (click)="toggleRoja(player)">
+                        <ion-icon name="square"></ion-icon>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -136,6 +145,15 @@
                 <div class="input-col">
                     <label>GOLES</label>
                     <input type="number" [(ngModel)]="player.goles" class="dark-input highlight">
+                </div>
+
+                <div class="cards-col">
+                    <button class="card-btn yellow" [class.active]="player.tarjetaAmarilla" (click)="toggleAmarilla(player)">
+                        <ion-icon name="square"></ion-icon>
+                    </button>
+                    <button class="card-btn red" [class.active]="player.tarjetaRoja" (click)="toggleRoja(player)">
+                        <ion-icon name="square"></ion-icon>
+                    </button>
                 </div>
             </div>
         </div>

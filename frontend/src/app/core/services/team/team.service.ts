@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { ApiService } from '../api/api.service';
-import { Team } from 'src/app/shared/models/models';
+import { Team, EquipoResumen } from 'src/app/shared/models/models';
 
 @Injectable({
   providedIn: 'root'
@@ -12,15 +12,13 @@ export class TeamService {
 
   // --- MÉTODOS DE LECTURA ---
 
-  // Obtener lista de equipos (con filtros opcionales)
-  getTeams(filters: any = {}): Observable<any> { 
+  getTeams(filters: Record<string, string | number | boolean> = {}): Observable<Team[]> {
     let params = '';
     if (Object.keys(filters).length > 0) {
-      const query = new URLSearchParams(filters).toString();
+      const query = new URLSearchParams(filters as Record<string, string>).toString();
       params = `?${query}`;
     }
-    // ✅ FIX: Slash Rule (barra inicial)
-    return this.apiService.get<any>(`/equipos${params}`);
+    return this.apiService.get<Team[]>(`/equipos${params}`);
   }
 
   // ✅ NUEVO: Obtener un equipo por su ID (Crucial para ver el nombre "Primer Equipo" en vez de "23")
@@ -49,8 +47,8 @@ export class TeamService {
     });
   }
 
-  getTeamByUserId(userId: number | string): Observable<any> {
-    return this.apiService.get<any>(`/jugadores/usuario/${userId}/equipo`);
+  getTeamByUserId(userId: number | string): Observable<EquipoResumen> {
+    return this.apiService.get<EquipoResumen>(`/jugadores/usuario/${userId}/equipo`);
   }
 
   // --- MÉTODOS DE ESTADÍSTICAS ---

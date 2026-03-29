@@ -12,7 +12,7 @@ export class NewsService {
 
   constructor(private apiService: ApiService) {}
 
-  getNews(params: any = {}): Observable<any> {
+  getNews(params: Record<string, string> = {}): Observable<{ news: News[]; total: number }> {
     // Devolvemos un mock vacío por ahora para que no falle
     return of({ news: [], total: 0 });
   }

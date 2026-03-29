@@ -5,6 +5,24 @@ import { MatchService } from 'src/app/core/services/match/match.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { LoadingController, ToastController, AlertController } from '@ionic/angular';
+import { Partido, Jugador, LineupSlotDto } from 'src/app/shared/models/models';
+
+interface PlayerMatchStat {
+  idJugador: number;
+  nombre: string;
+  apellidos: string;
+  dorsal?: number;
+  fotoUrl: string;
+  posicion?: string;
+  esTitular: boolean;
+  minutos: number;
+  goles: number;
+  asistencias: number;
+  minutoEntrada: number | null;
+  minutoSalida: number | null;
+  tarjetaAmarilla: boolean;
+  tarjetaRoja: boolean;
+}
 
 @Component({
   selector: 'app-edit-match',
@@ -14,11 +32,11 @@ import { LoadingController, ToastController, AlertController } from '@ionic/angu
 export class EditMatchPage implements OnInit {
   private destroyRef = inject(DestroyRef);
   matchId: number = 0;
-  match: any = null;
-  
-  starters: any[] = [];
-  bench: any[] = [];
-  fullSquadStats: any[] = [];
+  match: Partido | null = null;
+
+  starters: PlayerMatchStat[] = [];
+  bench: PlayerMatchStat[] = [];
+  fullSquadStats: PlayerMatchStat[] = [];
 
   matchStats = {
     golesFavor: 0,
@@ -48,10 +66,9 @@ export class EditMatchPage implements OnInit {
     }
 
     this.authSvc.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
-        const u = user as any;
-        if (u && u.rol) {
-            const r = String(u.rol).toUpperCase();
-            this.isAdmin = r.includes('ADMIN'); 
+        if (user?.rol) {
+            const r = String(user.rol).toUpperCase();
+            this.isAdmin = r.includes('ADMIN');
             this.isCoach = r.includes('ENTRENADOR') || r.includes('STAFF');
         }
     });
@@ -83,32 +100,33 @@ export class EditMatchPage implements OnInit {
     const p1 = this.matchSvc.getLineup(this.matchId).toPromise();
     const p2 = this.playerService.getAllPlayers().toPromise(); 
 
-    Promise.all([p1, p2]).then(([lineupData, allPlayersData]: [any, any]) => {
-      
-      const alineacionGuardada = lineupData || []; 
-      const allPlayers = Array.isArray(allPlayersData) ? allPlayersData : (allPlayersData.data || []);
+    Promise.all([p1, p2]).then(([lineupData, allPlayersData]: [LineupSlotDto[] | undefined, Jugador[] | undefined]) => {
 
-      const myTeamPlayers = allPlayers.filter((p: any) => {
-         const pTeamId = p.equipoPrincipal?.id || p.equipoPrincipal?.idEquipo || p.equipoPrincipal;
+      const alineacionGuardada: LineupSlotDto[] = lineupData || [];
+      const allPlayers: Jugador[] = allPlayersData || [];
+
+      const myTeamPlayers = allPlayers.filter((p: Jugador) => {
+         const ep = p.equipoPrincipal;
+         const pTeamId = typeof ep === 'object' ? (ep?.id || ep?.idEquipo) : ep;
          return pTeamId == teamId;
       });
 
-      this.fullSquadStats = myTeamPlayers.map((player: any) => {
+      this.fullSquadStats = myTeamPlayers.map((player: Jugador) => {
         const pId = player.idJugador || player.id;
-        
-        const savedData = alineacionGuardada.find((a: any) => {
+
+        const savedData = alineacionGuardada.find((a: LineupSlotDto) => {
             const savedId = a.jugador?.id || a.jugador?.idJugador || a.idJugador;
             return String(savedId) === String(pId);
         });
 
-        const originalFoto = player.usuario?.fotoUrl || player.fotoUrl;
-        const nombreCompleto = (player.usuario?.nombre || player.nombre) + ' ' + (player.usuario?.apellidos || player.apellidos);
+        const originalFoto = player.usuario?.fotoUrl;
+        const nombreCompleto = (player.usuario?.nombre || '') + ' ' + (player.usuario?.apellidos || '');
         const safeImg = originalFoto || `https://ui-avatars.com/api/?name=${nombreCompleto}&background=random&color=fff&size=128`;
         
         let stats = {
             idJugador: pId,
-            nombre: player.usuario?.nombre || player.nombre,
-            apellidos: player.usuario?.apellidos || player.apellidos,
+            nombre: player.usuario?.nombre || '',
+            apellidos: player.usuario?.apellidos || '',
             dorsal: player.dorsal,
             fotoUrl: safeImg,
             posicion: player.posicion,
@@ -116,18 +134,22 @@ export class EditMatchPage implements OnInit {
             esTitular: false,
             minutos: 0,
             goles: 0,
-            asistencias: 0, // 🔥 NUEVO CAMPO
+            asistencias: 0,
             minutoEntrada: null,
-            minutoSalida: null
+            minutoSalida: null,
+            tarjetaAmarilla: false,
+            tarjetaRoja: false
         };
 
         if (savedData) {
             stats.esTitular = !!savedData.esTitular;
             stats.goles = savedData.goles || 0;
-            stats.asistencias = savedData.asistencias || 0; // 🔥 CARGAR
+            stats.asistencias = savedData.asistencias || 0; 
             stats.minutos = savedData.minutosJugados || 0;
             stats.minutoEntrada = savedData.minutoEntrada;
             stats.minutoSalida = savedData.minutoSalida;
+            stats.tarjetaAmarilla = !!savedData.tarjetaAmarilla;
+            stats.tarjetaRoja = !!savedData.tarjetaRoja;
             
             if(stats.esTitular && stats.minutos === 0) stats.minutos = 90;
         }
@@ -172,16 +194,24 @@ export class EditMatchPage implements OnInit {
             return {
                 idJugador: p.idJugador,
                 goles: this.safeInt(p.goles),
-                asistencias: this.safeInt(p.asistencias), // 🔥 ENVIAR
+                asistencias: this.safeInt(p.asistencias), 
                 minutos: minJugados,
                 esTitular: esTitular,
                 minutoEntrada: minEntrada > 0 ? minEntrada : null,
                 minutoSalida: minSalida > 0 ? minSalida : null,
-                tarjetaAmarilla: 0,
-                tarjetaRoja: 0
+                amarilla: !!p.tarjetaAmarilla, // 🔥 NOMBRE CORREGIDO
+                roja: !!p.tarjetaRoja          // 🔥 NOMBRE CORREGIDO
             };
           })
       };
+  }
+
+  toggleAmarilla(p: PlayerMatchStat) {
+    p.tarjetaAmarilla = !p.tarjetaAmarilla;
+  }
+
+  toggleRoja(p: PlayerMatchStat) {
+    p.tarjetaRoja = !p.tarjetaRoja;
   }
 
   async confirmarCierreActa() {

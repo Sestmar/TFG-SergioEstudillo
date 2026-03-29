@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
 import { ToastController, LoadingController } from '@ionic/angular';
 import { Location } from '@angular/common';
+import { CoachProfileDto } from 'src/app/shared/models/models';
 
 // 🔥 NUEVOS IMPORTS
 import { UploadService } from 'src/app/core/services/common/upload.service';
@@ -18,11 +19,11 @@ export class CoachProfilePage implements OnInit {
 
   private destroyRef = inject(DestroyRef);
   coachId: number | null = null;
-  coachData: any = {
+  coachData: CoachProfileDto = {
     especialidad: '',
     licencia: '',
     telefonoContacto: '',
-    usuario: {} 
+    usuario: { nombre: '', apellidos: '' }
   };
 
   constructor(
@@ -52,8 +53,8 @@ export class CoachProfilePage implements OnInit {
   }
 
   // 🔥 NUEVA LÓGICA DE SUBIDA DE FOTO
-  onFileSelected(event: any) {
-    const file: File = event.target.files[0];
+  onFileSelected(event: Event) {
+    const file: File = (event.target as HTMLInputElement).files?.[0]!;
     if (file) {
       this.uploadPhoto(file);
     }
@@ -64,7 +65,7 @@ export class CoachProfilePage implements OnInit {
     await loading.present();
 
     this.uploadSvc.uploadImage(file).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (res: any) => {
+      next: (res: { url: string }) => {
         const nuevaUrl = res.url;
         // 1. Actualizar visualmente al instante
         this.coachData.usuario.fotoUrl = nuevaUrl;

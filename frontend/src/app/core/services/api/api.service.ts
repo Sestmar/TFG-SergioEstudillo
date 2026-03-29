@@ -26,9 +26,12 @@ export class ApiService {
   /**
    * GET request
    */
-  get<T>(endpoint: string, params: any = {}): Observable<T> {
+  get<T>(endpoint: string, params: Record<string, string | number | boolean | undefined> = {}): Observable<T> {
+    const filtered: Record<string, string | number | boolean> = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined) as [string, string | number | boolean][]
+    );
     const options = {
-      params: new HttpParams({ fromObject: params })
+      params: new HttpParams({ fromObject: filtered })
     };
     // Concatenamos la URL base (Render) con el endpoint (ej: /auth/login)
     return this.http.get<T>(`${this.apiUrl}${endpoint}`, options).pipe(
@@ -39,7 +42,7 @@ export class ApiService {
   /**
    * POST request
    */
-  post<T>(endpoint: string, data: any): Observable<T> {
+  post<T>(endpoint: string, data: unknown): Observable<T> {
     return this.http.post<T>(`${this.apiUrl}${endpoint}`, data).pipe(
       catchError(this.handleError)
     );
@@ -48,7 +51,7 @@ export class ApiService {
   /**
    * PUT request
    */
-  put<T>(endpoint: string, data: any): Observable<T> {
+  put<T>(endpoint: string, data: unknown): Observable<T> {
     return this.http.put<T>(`${this.apiUrl}${endpoint}`, data).pipe(
       catchError(this.handleError)
     );

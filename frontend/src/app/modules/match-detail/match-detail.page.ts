@@ -4,6 +4,17 @@ import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
+import { Partido, LineupSlotDto } from 'src/app/shared/models/models';
+
+interface MatchPlayerDisplay extends Omit<LineupSlotDto, 'tarjetaAmarilla' | 'tarjetaRoja' | 'dorsal'> {
+  fotoUrl: string;
+  dorsal: number | string;
+  esCapitan: boolean;
+  esLanzadorPenaltis: boolean;
+  esLanzadorFaltas: boolean;
+  tarjetaAmarilla: boolean;
+  tarjetaRoja: boolean;
+}
 
 @Component({
   selector: 'app-match-detail',
@@ -13,8 +24,8 @@ import { AuthService } from 'src/app/core/services/auth/auth.service';
 export class MatchDetailPage implements OnInit {
   
   private destroyRef = inject(DestroyRef);
-  match: any = null;
-  players: any[] = []; 
+  match: Partido | null = null;
+  players: MatchPlayerDisplay[] = [];
   loading = true;
   currentUserId: number | null = null;
   
@@ -31,7 +42,7 @@ export class MatchDetailPage implements OnInit {
   ngOnInit() {
     this.authSvc.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(u => {
         if (u) {
-            this.currentUserId = (u as any).id || (u as any).idUsuario;
+            this.currentUserId = u.idUsuario || null;
             const rol = (u.rol || '').toUpperCase();
             // Solo ADMIN puede editar/cerrar actas desde aquí
             this.canEdit = rol.includes('ADMIN');
@@ -52,7 +63,7 @@ export class MatchDetailPage implements OnInit {
         this.match = data; 
         
         this.matchSvc.getLineup(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-          next: (alineacionDtos: any[]) => {
+          next: (alineacionDtos: LineupSlotDto[]) => {
             if (alineacionDtos && alineacionDtos.length > 0) {
               this.players = alineacionDtos.map(dto => {
                 const safeImg = dto.fotoUrl || `https://ui-avatars.com/api/?name=${dto.nombre}&background=random&color=fff`;
@@ -69,7 +80,9 @@ export class MatchDetailPage implements OnInit {
                     esLanzadorPenaltis: !!dto.esLanzadorPenaltis,
                     esLanzadorFaltas: !!dto.esLanzadorFaltas,
                     goles: dto.goles || 0,
-                    asistencias: dto.asistencias || 0 
+                    asistencias: dto.asistencias || 0,
+                    tarjetaAmarilla: !!dto.tarjetaAmarilla,
+                    tarjetaRoja: !!dto.tarjetaRoja
                 };
               });
 

@@ -6,6 +6,8 @@
     --secondary: #10b981;   // Verde Neon
     --text-white: #ffffff;
     --text-gray: #9ca3af;
+    --yellow-card: #ffd700;
+    --red-card: #ff4d4d;
 }
 
 ion-content { --background: var(--bg-app); }
@@ -41,7 +43,6 @@ ion-content { --background: var(--bg-app); }
     .team-block {
         display: flex; flex-direction: column; align-items: center; width: 35%;
         
-        // 🔥 LOGO GRANDE Y LIBRE (110px) - Igual que en Match Detail
         .logo-free {
             width: 110px; height: 110px; 
             display: flex; align-items: center; justify-content: center;
@@ -140,7 +141,7 @@ ion-content { --background: var(--bg-app); }
     }
 
     .player-info {
-        display: flex; align-items: center; gap: 12px; width: 45%;
+        display: flex; align-items: center; gap: 12px; width: 40%;
         .avatar-circle {
             width: 42px; height: 42px; background: #222; border-radius: 50%; position: relative;
             img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
@@ -151,7 +152,7 @@ ion-content { --background: var(--bg-app); }
             }
         }
         .names {
-            h4 { color: white; font-size: 0.9rem; margin: 0; font-weight: 600; }
+            h4 { color: white; font-size: 0.85rem; margin: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
             .role-tag { 
                 font-size: 0.6rem; color: var(--secondary); font-weight: 700; 
                 &.sub { color: #9ca3af; }
@@ -160,19 +161,46 @@ ion-content { --background: var(--bg-app); }
     }
 
     .stats-inputs {
-        display: flex; gap: 6px; flex: 1; justify-content: flex-end;
+        display: flex; gap: 8px; flex: 1; justify-content: flex-end; align-items: center;
         
         .input-col {
-            display: flex; flex-direction: column; align-items: center; width: 50px;
+            display: flex; flex-direction: column; align-items: center; width: 45px;
             label { font-size: 0.5rem; color: #666; font-weight: 800; margin-bottom: 4px; }
             
             .dark-input {
-                width: 100%; height: 35px; background: #050505; border: 1px solid #333;
+                width: 100%; height: 32px; background: #050505; border: 1px solid #333;
                 border-radius: 6px; color: white; font-weight: 700; text-align: center;
-                font-size: 0.9rem; outline: none;
+                font-size: 0.85rem; outline: none;
                 
                 &:focus { border-color: var(--primary); }
                 &.highlight { color: var(--secondary); border-color: rgba(16, 185, 129, 0.3); }
+            }
+        }
+
+        // 🔥 ESTILOS PARA LAS TARJETAS
+        .cards-col {
+            display: flex; gap: 6px; padding-left: 8px; border-left: 1px solid #222; margin-left: 4px;
+            
+            .card-btn {
+                background: #1a1a1a; border: 1px solid #333; border-radius: 4px;
+                padding: 6px 8px; cursor: pointer; transition: all 0.2s;
+                display: flex; align-items: center; justify-content: center;
+                
+                ion-icon { font-size: 1rem; color: #222; }
+
+                &.yellow.active {
+                    background: var(--yellow-card); border-color: #fff;
+                    box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+                    ion-icon { color: white; }
+                }
+
+                &.red.active {
+                    background: var(--red-card); border-color: #fff;
+                    box-shadow: 0 0 12px rgba(255, 77, 77, 0.4);
+                    ion-icon { color: white; }
+                }
+
+                &:active { transform: scale(0.9); }
             }
         }
     }

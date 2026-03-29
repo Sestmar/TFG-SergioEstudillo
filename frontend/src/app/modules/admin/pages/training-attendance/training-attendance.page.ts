@@ -4,6 +4,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common'; // ✅ Importar Location
 import { AdminService } from 'src/app/core/services/admin/admin.service';
 import { ToastController, LoadingController } from '@ionic/angular';
+import { Jugador, AttendanceSavedDto } from 'src/app/shared/models/models';
+
+interface PlayerAttendance extends Omit<Jugador, 'estado'> {
+  estado: string | null;
+}
 
 @Component({
   selector: 'app-training-attendance',
@@ -16,7 +21,7 @@ export class TrainingAttendancePage implements OnInit {
 
   trainingId: number = 0;
   teamId: number = 0;
-  players: any[] = [];
+  players: PlayerAttendance[] = [];
   saving = false;
 
   constructor(
@@ -52,20 +57,19 @@ export class TrainingAttendancePage implements OnInit {
       await loading.present();
 
       this.adminSvc.getTeamDetails(this.teamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (res: any) => {
-          const rawPlayers = res.jugadores || [];
+        next: (res) => {
+          const rawPlayers: Jugador[] = res.jugadores || [];
 
-          this.players = rawPlayers.map((p: any) => ({
+          this.players = rawPlayers.map((p: Jugador) => ({
               ...p,
-              idJugador: p.idJugador || p.id, 
-              fotoUrl: p.fotoUrl || `https://ui-avatars.com/api/?name=${p.nombre}&background=random`,
-              estado: null 
+              idJugador: p.idJugador || p.id,
+              estado: null
           }));
 
           this.adminSvc.getAsistencia(this.trainingId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-             next: (saved: any) => {
-                if(saved && Array.isArray(saved) && saved.length > 0) {
-                    saved.forEach((s: any) => {
+             next: (saved: AttendanceSavedDto[]) => {
+                if (saved && Array.isArray(saved) && saved.length > 0) {
+                    saved.forEach((s: AttendanceSavedDto) => {
                         const found = this.players.find(p => p.idJugador === s.idJugador);
                         if(found) found.estado = s.estado;
                     });
@@ -83,7 +87,7 @@ export class TrainingAttendancePage implements OnInit {
       });
   }
 
-  setEstado(player: any, nuevoEstado: string) {
+  setEstado(player: PlayerAttendance, nuevoEstado: string) {
       if (player.estado === nuevoEstado) {
           player.estado = null;
       } else {

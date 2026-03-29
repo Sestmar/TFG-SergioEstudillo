@@ -9,7 +9,7 @@ import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { CoachService } from 'src/app/core/services/coach/coach.service'; 
-import { User } from 'src/app/shared/models/models';
+import { User, Partido, Jugador, PlayerSeasonStat } from 'src/app/shared/models/models';
 
 interface CoachStats {
   matches: number;
@@ -37,12 +37,12 @@ export class CoachDashboardPage implements OnInit {
   escudoUrl: string = ''; 
   managedTeamId: number | null = null;
   currentRole: string = ''; 
-  topScorer: any = null;
-  coachId: number | null = null; 
-  
+  topScorer: PlayerSeasonStat | null = null;
+  coachId: number | null = null;
+
   stats: CoachStats = { matches: 0, trainings: 0, squadSize: 0, injured: 0 };
-  
-  upcomingEvents: any[] = []; 
+
+  upcomingEvents: Partido[] = [];
   futureMatchesCount: number = 0;
 
   constructor(
@@ -96,21 +96,20 @@ export class CoachDashboardPage implements OnInit {
         takeUntilDestroyed(this.destroyRef),
         filter(user => !!user),
         switchMap(user => {
-            const u = user as any;
-            const userId = u.id || u.idUsuario || u.sub;
+            const userId = user!.idUsuario;
             return this.coachService.getDashboardData(userId);
         })
       )
       .subscribe({
-        next: (response: any) => {
+        next: (response) => {
           const equipo = response.equipo;
           this.currentRole = response.rol; 
           this.coachId = response.entrenadorId;
 
           if (equipo) {
             this.teamName = equipo.nombre;
-            this.categoryName = equipo.categoria ? equipo.categoria.nombre : 'General';
-            this.escudoUrl = equipo.escudoUrl;
+            this.categoryName = equipo.categoria || 'General';
+            this.escudoUrl = equipo.fotoUrl || '';
             this.managedTeamId = equipo.idEquipo || equipo.id;
             
             if (this.managedTeamId) {
@@ -144,26 +143,15 @@ export class CoachDashboardPage implements OnInit {
   }
 
   private loadTeamStats(teamId: number) {
-    this.playerService.getAllPlayers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((res: any) => {
-        const all = Array.isArray(res) ? res : (res.data || []);
-        
-        const myPlayers = all.filter((p: any) => {
-           const tId = p.equipoPrincipal?.id || p.equipoPrincipal?.idEquipo || p.equipoPrincipal;
+    this.playerService.getAllPlayers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((all: Jugador[]) => {
+        const myPlayers = all.filter((p: Jugador) => {
+           const ep = p.equipoPrincipal;
+           const tId = typeof ep === 'object' ? (ep?.id || ep?.idEquipo) : ep;
            return tId == teamId;
         });
 
         this.stats.squadSize = myPlayers.length;
-
-        this.stats.injured = myPlayers.filter((p: any) => 
-            p.estado === 'LESIONADO' || p.estado === 'BAJA'
-        ).length;
-
-        if (myPlayers.length > 0) {
-            const sortedScorers = [...myPlayers].sort((a, b) => (b.golesTemporada || 0) - (a.golesTemporada || 0));
-            if (sortedScorers[0] && (sortedScorers[0].golesTemporada || 0) > 0) {
-                this.topScorer = sortedScorers[0];
-            }
-        }
+        this.stats.injured = myPlayers.filter(p => p.estado === 'LESIONADO' || p.estado === 'BAJA').length;
     });
   }
 

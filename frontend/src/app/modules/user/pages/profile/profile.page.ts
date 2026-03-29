@@ -5,7 +5,7 @@ import { ToastController, LoadingController } from '@ionic/angular';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { UploadService } from 'src/app/core/services/common/upload.service'; // ✅ Importar servicio de subida
-import { Player } from 'src/app/shared/models/models';
+import { User, Jugador } from 'src/app/shared/models/models';
 
 @Component({
   selector: 'app-profile',
@@ -16,8 +16,8 @@ export class ProfilePage implements OnInit {
 
   private destroyRef = inject(DestroyRef);
 
-  currentUser: any = null;
-  playerData: Player | null = null;
+  currentUser: User | null = null;
+  playerData: Jugador | null = null;
   loading: boolean = true;
   
   editForm = {
@@ -44,26 +44,18 @@ export class ProfilePage implements OnInit {
     this.authSvc.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       if (user) {
         this.currentUser = user;
-        const u = user as any;
-        const userId = u.id || u.idUsuario;
-        
-        // Cargar datos del jugador asociados al usuario
+        const userId = user.idUsuario;
+
         this.playerSvc.getAllPlayers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-          next: (res: any) => {
-            const list = Array.isArray(res) ? res : (res.data || []);
-            const myPlayer = list.find((p: any) => {
-                const pUser = p.usuario || {};
-                return (pUser.id || pUser.idUsuario || p.idUsuario) === userId;
+          next: (list: Jugador[]) => {
+            const myPlayer = list.find((p: Jugador) => {
+                return (p.usuario?.id || p.usuario?.idUsuario) === userId;
             });
-            
+
             if (myPlayer) {
               this.playerData = myPlayer;
-              const raw = myPlayer as any;
-              this.editForm.telefono = raw.telefonoContacto || '';
-              this.editForm.direccion = raw.direccion || '';
-              // Prioridad: Foto del usuario > Foto en datos del jugador > cadena vacía
-              const userFoto = (myPlayer.usuario as any)?.fotoPerfil || (myPlayer.usuario as any)?.fotoUrl || this.currentUser.fotoUrl;
-              this.editForm.fotoUrl = userFoto || raw.fotoUrl || '';
+              const userFoto = myPlayer.usuario?.fotoUrl || this.currentUser?.fotoUrl;
+              this.editForm.fotoUrl = userFoto || '';
             }
             this.loading = false;
           },
@@ -89,13 +81,11 @@ export class ProfilePage implements OnInit {
     await loading.present();
 
     this.uploadSvc.uploadImage(file).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (res: any) => {
+      next: (res: { url: string }) => {
         const nuevaUrl = res.url;
-        // 1. Actualizar visualmente al instante
         this.editForm.fotoUrl = nuevaUrl;
         if (this.currentUser) {
-            this.currentUser.fotoUrl = nuevaUrl; // Actualizar objeto local usuario
-            this.currentUser.fotoPerfil = nuevaUrl; // Por si acaso usas este campo
+            this.currentUser.fotoUrl = nuevaUrl;
         }
         
         // 2. Guardar la URL en la base de datos (Entidad Usuario)
@@ -110,7 +100,7 @@ export class ProfilePage implements OnInit {
   }
 
   updateUserPhoto(url: string, loading: HTMLIonLoadingElement) {
-    const userId = this.currentUser.id || this.currentUser.idUsuario;
+    const userId = this.currentUser?.idUsuario;
     
     // Usamos el método updateUser que añadiste al AuthService
     this.authSvc.updateUser(userId, { fotoUrl: url }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -129,45 +119,31 @@ export class ProfilePage implements OnInit {
   // Helper para mostrar nombre del equipo
   getTeamNameDisplay(): string {
     if (!this.playerData) return 'Cargando...';
-    
-    const p = this.playerData as any;
-    const team = p.equipoPrincipal || p.equipo || p.equipoActual;
 
-    if (team && typeof team === 'object') {
-        return team.nombre + (team.categoria ? ` (${team.categoria.nombre})` : '');
+    const ep = this.playerData.equipoPrincipal;
+    if (ep && typeof ep === 'object') {
+        return ep.nombre + (ep.categoria ? ` (${ep.categoria})` : '');
     }
-    
-    if (team === 23) return 'Primer Equipo (Senior)'; // Ejemplo hardcoded que tenías
 
     return 'Sin Equipo Asignado';
   }
 
-  private prepareDto(player: Player, form: any): any {
-    const rawPlayer = player as any;
-    const rawUser = (player.usuario || {}) as any;
+  private prepareDto(player: Jugador, form: { telefono: string; direccion: string; fotoUrl: string }): Record<string, unknown> {
+    const ep = player.equipoPrincipal;
+    const teamToSend = typeof ep === 'object' ? (ep?.id || ep?.idEquipo) : ep;
 
-    let teamToSend = rawPlayer.equipoPrincipal;
-    if (teamToSend && typeof teamToSend === 'object') {
-        teamToSend = teamToSend.id || teamToSend.idEquipo;
-    }
-
-    // Nota: fotoUrl aquí se refiere a la foto en la tabla 'jugador', 
-    // pero idealmente deberíamos usar la de la tabla 'usuario' que actualizamos arriba.
-    // Aun así, lo enviamos por consistencia.
     return {
-      idUsuario: rawUser.id || rawUser.idUsuario, 
-      posicion: rawPlayer.posicionPrimaria || rawPlayer.posicion, 
-      equipoPrincipal: teamToSend, 
+      idUsuario: player.usuario?.id || player.usuario?.idUsuario,
+      posicion: player.posicion,
+      equipoPrincipal: teamToSend,
       dorsal: player.dorsal,
-      estado: rawPlayer.estado, 
-      observaciones: rawPlayer.observaciones,
+      estado: player.estado,
+      observaciones: player.observaciones,
       telefonoContacto: form.telefono,
       direccion: form.direccion,
-      fotoUrl: form.fotoUrl, // Enviamos la URL también al registro de jugador si tu backend lo soporta
-      
-      fechaNacimiento: rawPlayer.fechaNacimiento ? new Date(rawPlayer.fechaNacimiento).toISOString().split('T')[0] : null,
-      fechaAlta: rawPlayer.fechaAlta ? new Date(rawPlayer.fechaAlta).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-      fechaBaja: rawPlayer.fechaBaja ? new Date(rawPlayer.fechaBaja).toISOString().split('T')[0] : null,
+      fotoUrl: form.fotoUrl,
+      fechaNacimiento: player.fechaNacimiento ? new Date(player.fechaNacimiento).toISOString().split('T')[0] : null,
+      fechaAlta: player.fechaAlta ? new Date(player.fechaAlta).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     };
   }
 
@@ -177,8 +153,7 @@ export class ProfilePage implements OnInit {
     await loader.present();
 
     const updatePayload = this.prepareDto(this.playerData, this.editForm);
-    const raw = this.playerData as any;
-    const playerId = raw.id || raw.idJugador;
+    const playerId = this.playerData.idJugador || this.playerData.id;
 
     this.playerSvc.updatePlayer(playerId, updatePayload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: async () => {
