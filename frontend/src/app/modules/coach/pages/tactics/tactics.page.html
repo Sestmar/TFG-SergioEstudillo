@@ -1,16 +1,14 @@
 <ion-content [scrollY]="false" class="tactics-content">
-  
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
 
   <div class="manager-header">
     <div class="header-left">
       <ion-button fill="clear" class="back-btn" routerLink="/coach-dashboard">
         <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
       </ion-button>
-      
+
       <div class="formation-pill">
         <span class="label">ESQUEMA</span>
-        <ion-select [value]="selectedFormation" (ionChange)="onFormationChange($event)" interface="popover" class="formation-select">
+        <ion-select [value]="selectedFormation" (ionChange)="onFormationChange($event)" interface="popover" class="formation-select" cssClass="formation-popover">
           <ion-select-option *ngFor="let f of formations" [value]="f">{{ f }}</ion-select-option>
         </ion-select>
         <ion-icon name="caret-down-outline" class="select-arrow"></ion-icon>
@@ -44,7 +42,7 @@
   </div>
 
   <div class="main-stage" *ngIf="!loading">
-    
+
     <div class="pitch-board">
       <div class="pitch-texture"></div>
       <div class="pitch-markings">
@@ -61,92 +59,100 @@
       </div>
 
       <div class="tactical-layer">
-        
+
+        <!-- DELANTEROS -->
         <div class="line-row forward-line">
           <div class="slot-container" *ngFor="let slot of forwards">
             <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player ? [slot.player] : []" [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="pos-anchor">
               <div class="player-token" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player" (click)="openPlayerOptions(slot)">
-                <div class="token-visual">
-                  <div class="img-wrapper" [style.border-color]="getBorderColor(slot.player.posicion)">
-                     <img [src]="getProfileImage(slot.player)" alt="player">
+                <div class="player-circle" [style.--card-accent]="getBorderColor(slot.player.posicion)">
+                  <img [src]="getProfileImage(slot.player)" alt="player">
+                  <div class="badge-cluster">
+                    <div class="mini-badge captain" *ngIf="slot.isCaptain">C</div>
+                    <div class="mini-badge penalty" *ngIf="slot.isPenaltyTaker">P</div>
+                    <div class="mini-badge freekick" *ngIf="slot.isFreeKickTaker">F</div>
                   </div>
-                  <div class="kit-number">{{ slot.player.dorsal }}</div>
-                  <div class="mini-badge captain" *ngIf="slot.isCaptain">C</div>
-                  <div class="mini-badge penalty" *ngIf="slot.isPenaltyTaker">P</div>
-                  <div class="mini-badge freekick" *ngIf="slot.isFreeKickTaker">F</div>
                 </div>
-                <div class="token-name">{{ getShortName(slot.player.usuario.nombre) }}</div>
+                <span class="player-name">{{ getShortName(slot.player.usuario.nombre) }}</span>
                 <div *cdkDragPlaceholder class="token-ghost"></div>
               </div>
               <div class="empty-pos-indicator" *ngIf="!slot.player">
-                <span class="pos-label">{{ getSlotLabel(slot.id) }}</span>
+                <div class="empty-slot">
+                  <span class="empty-pos-label">{{ getSlotLabel(slot.id) }}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- MEDIOCAMPISTAS -->
         <div class="line-row mid-line">
             <div class="slot-container" *ngFor="let slot of midfielders">
               <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player ? [slot.player] : []" [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="pos-anchor">
                 <div class="player-token" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player" (click)="openPlayerOptions(slot)">
-                  <div class="token-visual">
-                    <div class="img-wrapper" [style.border-color]="getBorderColor(slot.player.posicion)">
-                       <img [src]="getProfileImage(slot.player)" alt="player">
+                  <div class="player-circle" [style.--card-accent]="getBorderColor(slot.player.posicion)">
+                    <img [src]="getProfileImage(slot.player)" alt="player">
+                    <div class="badge-cluster">
+                      <div class="mini-badge captain" *ngIf="slot.isCaptain">C</div>
+                      <div class="mini-badge penalty" *ngIf="slot.isPenaltyTaker">P</div>
+                      <div class="mini-badge freekick" *ngIf="slot.isFreeKickTaker">F</div>
                     </div>
-                    <div class="kit-number">{{ slot.player.dorsal }}</div>
-                    <div class="mini-badge captain" *ngIf="slot.isCaptain">C</div>
-                    <div class="mini-badge penalty" *ngIf="slot.isPenaltyTaker">P</div>
-                    <div class="mini-badge freekick" *ngIf="slot.isFreeKickTaker">F</div>
                   </div>
-                  <div class="token-name">{{ getShortName(slot.player.usuario.nombre) }}</div>
+                  <span class="player-name">{{ getShortName(slot.player.usuario.nombre) }}</span>
                   <div *cdkDragPlaceholder class="token-ghost"></div>
                 </div>
                 <div class="empty-pos-indicator" *ngIf="!slot.player">
-                  <span class="pos-label">{{ getSlotLabel(slot.id) }}</span>
+                  <div class="empty-slot">
+                    <span class="empty-pos-label">{{ getSlotLabel(slot.id) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
         </div>
 
+        <!-- DEFENSAS -->
         <div class="line-row def-line">
             <div class="slot-container" *ngFor="let slot of defenders">
               <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player ? [slot.player] : []" [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="pos-anchor">
                 <div class="player-token" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player" (click)="openPlayerOptions(slot)">
-                  <div class="token-visual">
-                    <div class="img-wrapper" [style.border-color]="getBorderColor(slot.player.posicion)">
-                       <img [src]="getProfileImage(slot.player)" alt="player">
+                  <div class="player-circle" [style.--card-accent]="getBorderColor(slot.player.posicion)">
+                    <img [src]="getProfileImage(slot.player)" alt="player">
+                    <div class="badge-cluster">
+                      <div class="mini-badge captain" *ngIf="slot.isCaptain">C</div>
+                      <div class="mini-badge penalty" *ngIf="slot.isPenaltyTaker">P</div>
+                      <div class="mini-badge freekick" *ngIf="slot.isFreeKickTaker">F</div>
                     </div>
-                    <div class="kit-number">{{ slot.player.dorsal }}</div>
-                    <div class="mini-badge captain" *ngIf="slot.isCaptain">C</div>
-                    <div class="mini-badge penalty" *ngIf="slot.isPenaltyTaker">P</div>
-                    <div class="mini-badge freekick" *ngIf="slot.isFreeKickTaker">F</div>
                   </div>
-                  <div class="token-name">{{ getShortName(slot.player.usuario.nombre) }}</div>
+                  <span class="player-name">{{ getShortName(slot.player.usuario.nombre) }}</span>
                   <div *cdkDragPlaceholder class="token-ghost"></div>
                 </div>
                 <div class="empty-pos-indicator" *ngIf="!slot.player">
-                  <span class="pos-label">{{ getSlotLabel(slot.id) }}</span>
+                  <div class="empty-slot">
+                    <span class="empty-pos-label">{{ getSlotLabel(slot.id) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
         </div>
 
+        <!-- PORTERO -->
         <div class="line-row gk-line">
             <div class="slot-container" *ngFor="let slot of goalkeeper">
               <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player ? [slot.player] : []" [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="pos-anchor">
                 <div class="player-token" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player" (click)="openPlayerOptions(slot)">
-                  <div class="token-visual">
-                    <div class="img-wrapper gk-border">
-                       <img [src]="getProfileImage(slot.player)" alt="player">
+                  <div class="player-circle" [style.--card-accent]="getBorderColor(slot.player.posicion)">
+                    <img [src]="getProfileImage(slot.player)" alt="player">
+                    <div class="badge-cluster">
+                      <div class="mini-badge captain" *ngIf="slot.isCaptain">C</div>
                     </div>
-                    <div class="kit-number black">{{ slot.player.dorsal }}</div>
-                    <div class="mini-badge captain" *ngIf="slot.isCaptain">C</div>
                   </div>
-                  <div class="token-name">{{ getShortName(slot.player.usuario.nombre) }}</div>
+                  <span class="player-name">{{ getShortName(slot.player.usuario.nombre) }}</span>
                   <div *cdkDragPlaceholder class="token-ghost"></div>
                 </div>
                 <div class="empty-pos-indicator" *ngIf="!slot.player">
-                  <span class="pos-label">{{ getSlotLabel(slot.id) }}</span>
+                  <div class="empty-slot">
+                    <span class="empty-pos-label">{{ getSlotLabel(slot.id) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -165,12 +171,11 @@
     <div cdkDropList id="benchList" [cdkDropListData]="bench" [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="bench-strip">
       <div class="bench-slot" *ngFor="let p of bench">
         <div class="bench-token" cdkDrag [cdkDragData]="p">
-          <div class="token-img">
-            <img [src]="getProfileImage(p)">
-            <div class="bench-number">{{ p.dorsal }}</div>
+          <div class="bench-circle" [style.--card-accent]="getBorderColor(p.posicion)">
+            <img [src]="getProfileImage(p)" alt="player">
           </div>
           <span class="bench-name">{{ getShortName(p.usuario.nombre) }}</span>
-          <div *cdkDragPlaceholder class="token-ghost"></div>
+          <div *cdkDragPlaceholder class="token-ghost bench-ghost"></div>
         </div>
       </div>
       <div *ngIf="bench.length === 0" class="bench-empty"><span>Banquillo Vacío</span></div>

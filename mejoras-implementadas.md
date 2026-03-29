@@ -43,3 +43,46 @@ La expresión `amarilla != null && amarilla` garantiza que si el campo no viene 
 - No se modificó ningún otro archivo — fix de mínimo impacto.
 
 ---
+
+## 2. Rediseño Pizarra Táctica — UX & Visual Upgrade ⚽🧠
+
+**Fecha:** 2026-03-29
+**Estado:** ✅ Verificado y 100% Funcional
+
+### Descripción de la mejora
+
+Se ha realizado una transformación completa de la pantalla de tácticas (`tactics.page`), evolucionando de una herramienta básica de posicionamiento a una pizarra interactiva de alto nivel, alineada con la estética inmersiva del nuevo sistema.
+
+### Fixes Técnicos (CDK DragDrop) 🛠️
+
+Se han corregido tres fallos críticos que afectaban la estabilidad de la pizarra:
+
+1.  **Glitches Visuales en el Drop**: `cdkDropListData` recibía un objeto en lugar de un array (ej. `slot.player` → `[slot.player] : []`). CDK espera colecciones, lo que causaba que el drag-and-drop fallara silenciosamente o corrompiera el estado visual.
+2.  **Área de Acción Reducida**: Se amplió el área de "drop" (`pos-anchor`) de 50px a **64px/72px**, facilitando enormemente el uso en dispositivos móviles con pantallas pequeñas.
+3.  **Parpadeo del Placeholder**: Se rediseñó el `cdkDragPlaceholder` (`token-ghost`) para que sea visible (semitransparente con borde dashed) en lugar de ocultarlo (`opacity: 0`), eliminando el efecto de parpadeo al arrastrar jugadores.
+
+### Mejoras Estéticas y de UX 🎨
+
+*   **Pintura del Campo Realista**: Se añadieron franjas verticales de césped con degradados radiales, áreas de 6 metros (`small-box`), y porterías que sobresalen visualmente del campo (`goal` con altura negativa) para dar profundidad 3D.
+*   **Identidad Visual por Posición**: Los tokens de jugadores ahora incluyen un anillo de color (`box-shadow`) dinámico según su posición (POR, DEF, MED, DEL) usando variables de CSS (`--pos-color`).
+*   **Slots de Posición Vacíos**: Se implementaron indicadores circulares dashed con etiquetas de posición en fuente *Oswald* (ej. "POR", "MED"). Al arrastrar un jugador cerca, el slot se ilumina (`highlight`) para confirmar el área de drop.
+*   **Feedback de Arrastre**: Se mejoró el `cdk-drag-preview` con un escalado de **1.25x**, sombras profundas y un filtro de escala de grises para el placeholder, proporcionando una sensación táctil mucho más refinada.
+*   **Gestión del Banquillo**: Rediseño del footer con gradientes, hover en los bordes de los avatars y una mejor jerarquía visual para los jugadores no convocados.
+
+---
+
+## 3. Refactorización Frontend Integral (Fase 1, 2 y 3) 🏗️💎
+
+**Fecha:** 2026-03-29
+**Estado:** ✅ 100% COMPLETADO — 0 errores de compilación
+
+### Hitos Alcanzados
+
+1.  **Higiene de RxJS (Fase 1)**: Blindaje de **todas** las suscripciones en 22+ archivos utilizando el patrón `takeUntilDestroyed(this.destroyRef)` de Angular 17. Eliminación total de fugas de memoria.
+2.  **Tipado Estricto y DTOs (Fase 2)**: Erradicación del uso de `any` en servicios y componentes. Sincronización completa con el esquema del backend de NeonDB, incluyendo interfaces para `Jugador`, `Match`, `LineupSlotDto` y `CloseMatchPayload`.
+3.  **Arquitectura Desacoplada (Fase 3)**: Eliminación del 100% de importaciones de `HttpClient` en componentes. Toda la lógica de comunicación reside ahora en la capa de servicios (`core/services/`), siguiendo el patrón *Smart/Dumb Components*.
+
+### Resultado Final
+Una base de código robusta, Type-Safe, optimizada para el rendimiento móvil y preparada para escalar con nuevas funcionalidades de forma segura.
+
+---

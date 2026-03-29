@@ -328,6 +328,40 @@ ion-alert {
 }
 
 /* =========================================
+   POPOVER DE FORMACIONES — formation-popover
+   ========================================= */
+
+.formation-popover {
+    --background: #1a1f2e;
+    --box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    --border-radius: 10px;
+
+    ion-list {
+        background: #1a1f2e !important;
+        padding: 4px 0;
+    }
+
+    ion-item {
+        --background: transparent;
+        --color: #f3f4f6;
+        --border-color: rgba(255,255,255,0.06);
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+
+        &.item-radio-checked,
+        &[aria-checked="true"] {
+            --background: rgba(108, 99, 255, 0.15);
+            --color: #6c63ff;
+        }
+    }
+
+    ion-radio {
+        --color-checked: #6c63ff;
+    }
+}
+
+/* =========================================
    ESTILOS GLOBALES PARA EL MENÚ TÁCTICO (ACTION SHEET)
    ========================================= */
 

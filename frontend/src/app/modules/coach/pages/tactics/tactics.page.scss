@@ -1,52 +1,76 @@
-// --- VARIABLES & THEME ---
-$bg-dark: #111827; // Fondo principal
-$bg-panel: #1f2937; // Paneles (header/footer)
-$accent-blue: #3b82f6;
-$accent-green: #10b981;
-$accent-purple: #8b5cf6;
-$text-light: #f3f4f6;
-$text-dim: #9ca3af;
-$pitch-base: #1b5e20;
+// ============================================================
+// VARIABLES & THEME — Professional Sports Tool
+// ============================================================
+$bg-dark:        #0a0e1a;
+$bg-panel:       #0f1420;
+$accent-blue:    #3b82f6;
+$accent-green:   #10b981;
+$accent-purple:  #6c63ff;
+$text-light:     #f3f4f6;
+$text-dim:       #9ca3af;
+$pitch-dark:     #1a5c21;
+$pitch-light:    #1e6b26;
 
-// Fuentes
-$font-display: 'Oswald', sans-serif;
-$font-body: 'Inter', sans-serif;
+// Token border colors by position
+$color-forward:  #e74c3c;
+$color-mid:      #3498db;
+$color-def:      #f1c40f;
+$color-gk:       #2ecc71;
 
+// Fonts — sistema únicamente
+$font-display:   'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+$font-mono:      'Courier New', monospace;
+
+// Token sizes
+$token-size:      64px;
+$token-size-md:   68px;
+$token-size-lg:   72px;
+$bench-size:      48px;
+
+// ============================================================
+// HOST
+// ============================================================
 :host {
-    font-family: $font-body;
+    font-family: $font-display;
     --background: #{$bg-dark};
 }
 
-// --- HEADER MANAGER STYLE ---
+// ============================================================
+// HEADER — Glassmorphism
+// ============================================================
 .manager-header {
     position: absolute; top: 0; left: 0; right: 0; height: 60px;
-    background: rgba($bg-panel, 0.95);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba($bg-panel, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 12px; z-index: 50;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
 
     .header-left {
         display: flex; align-items: center; gap: 8px;
         .back-btn { --color: #fff; margin: 0; --padding-start: 0; }
 
         .formation-pill {
-            background: #374151; padding: 4px 10px; border-radius: 8px;
+            background: rgba(255, 255, 255, 0.07);
+            padding: 4px 10px; border-radius: 8px;
             display: flex; align-items: center; gap: 6px; position: relative;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
 
             .label {
-                font-size: 10px; color: $text-dim; font-weight: 700; letter-spacing: 0.5px;
+                font-size: 10px; color: $text-dim; font-weight: 700;
+                letter-spacing: 1px; text-transform: uppercase;
                 @media (max-width: 360px) { display: none; }
             }
 
             .formation-select {
                 --padding-top: 0; --padding-bottom: 0; --padding-start: 0;
-                font-family: $font-display; font-size: 16px; font-weight: 700; color: #fff;
-                min-width: 50px;
+                font-size: 17px; font-weight: 700; color: #fff;
+                min-width: 52px; letter-spacing: 0.5px;
             }
-            .select-arrow { font-size: 12px; color: $text-dim; margin-left: -5px; pointer-events: none;}
+            .select-arrow { font-size: 12px; color: $text-dim; margin-left: -5px; pointer-events: none; }
         }
     }
 
@@ -57,16 +81,18 @@ $font-body: 'Inter', sans-serif;
 
         .match-context {
             display: flex; flex-direction: column; align-items: center;
-            background: rgba(0,0,0,0.4); padding: 4px 16px; border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(0, 0, 0, 0.5); padding: 4px 16px; border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
 
             .context-label {
-                font-size: 9px; color: $text-dim; font-weight: 700; letter-spacing: 1px; margin-bottom: 2px;
+                font-size: 9px; color: $text-dim; font-weight: 700;
+                letter-spacing: 1.5px; margin-bottom: 2px; text-transform: uppercase;
             }
             .rival-name {
-                font-family: $font-display; font-size: 16px; font-weight: 700; color: #fff;
+                font-size: 17px; font-weight: 700; color: #fff;
                 text-transform: uppercase; white-space: nowrap;
-                text-shadow: 0 0 10px rgba($accent-blue, 0.5);
+                text-shadow: 0 0 12px rgba($accent-blue, 0.6);
+                letter-spacing: 1px;
             }
         }
     }
@@ -74,278 +100,527 @@ $font-body: 'Inter', sans-serif;
     .header-actions {
         display: flex; gap: 8px;
         .action-btn {
-            --border-radius: 8px; height: 34px; font-weight: 600; font-family: $font-display; letter-spacing: 0.5px;
-            --box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            --padding-start: 8px; --padding-end: 8px;
+            --border-radius: 8px; height: 34px; font-weight: 700;
+            letter-spacing: 0.5px; text-transform: uppercase;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --padding-start: 10px; --padding-end: 10px;
 
             &.purple { --background: #{$accent-purple}; }
-            &.green { --background: #{$accent-green}; }
+            &.green  { --background: #{$accent-green}; }
 
-            .btn-text { display: none; @media(min-width: 500px) { display: inline-block; margin-left: 6px; } }
+            .btn-text {
+                display: none;
+                @media (min-width: 500px) { display: inline-block; margin-left: 6px; }
+            }
             ion-icon { font-size: 18px; }
         }
     }
 }
 
-// --- PITCH (CAMPO) ---
+// ============================================================
+// MAIN STAGE — Contenedor del campo
+// ============================================================
 .main-stage {
     position: absolute;
     top: 60px;
-    bottom: 110px;
+    bottom: 118px;
     left: 0; right: 0;
-    background: #0f0f0f;
-    display: flex; justify-content: center; align-items: center;
+    background: #050810;
+    display: flex; justify-content: center; align-items: stretch;
     overflow: hidden;
-    padding: 2px;
 }
 
+// ============================================================
+// PITCH BOARD — Campo ocupa 100% del ancho
+// ============================================================
 .pitch-board {
     width: 100%;
+    max-width: 100%;
     height: 100%;
-    max-width: 800px;
+    position: relative;
+    overflow: hidden;
+    background-color: $pitch-dark;
 
-    background-color: $pitch-base;
-    position: relative; border-radius: 6px;
-    border: 3px solid #222;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-
-    // PATRÓN CÉSPED — franjas verticales + degradado central
+    // FRANJAS DE CÉSPED — horizontales alternadas
     .pitch-texture {
         position: absolute; inset: 0;
         background-image:
             repeating-linear-gradient(
-                90deg,
-                transparent,
-                transparent 42px,
-                rgba(0,0,0,0.07) 42px,
-                rgba(0,0,0,0.07) 84px
+                to bottom,
+                rgba(0, 0, 0, 0.0)   0px,
+                rgba(0, 0, 0, 0.0)   40px,
+                rgba(0, 0, 0, 0.08)  40px,
+                rgba(0, 0, 0, 0.08)  80px
             ),
-            radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.04) 0%, transparent 65%);
-        border-radius: inherit;
+            radial-gradient(
+                ellipse 80% 60% at 50% 50%,
+                rgba(255, 255, 255, 0.025) 0%,
+                transparent 70%
+            );
     }
 
-    // LÍNEAS PINTADAS
+    // LÍNEAS DE CAL
     .pitch-markings {
         position: absolute; inset: 0; pointer-events: none;
-        div { border: 1.5px solid rgba(255,255,255,0.55); position: absolute; }
+        div { border: 1.5px solid rgba(255, 255, 255, 0.70); position: absolute; }
 
-        // Áreas grandes
-        .box { width: 55%; height: 16%; left: 50%; transform: translateX(-50%); }
-        .top-box { top: -2px; border-top: 0; }
-        .bottom-box { bottom: -2px; border-bottom: 0; }
+        .box { width: 55%; height: 17%; left: 50%; transform: translateX(-50%); }
+        .top-box    { top: -1px;    border-top: 0; }
+        .bottom-box { bottom: -1px; border-bottom: 0; }
 
-        // Áreas pequeñas (6 metros)
-        .small-box { width: 25%; height: 7%; left: 50%; transform: translateX(-50%); }
-        .top-small-box { top: -2px; border-top: 0; }
-        .bottom-small-box { bottom: -2px; border-bottom: 0; }
+        .small-box { width: 24%; height: 7.5%; left: 50%; transform: translateX(-50%); }
+        .top-small-box    { top: -1px;    border-top: 0; }
+        .bottom-small-box { bottom: -1px; border-bottom: 0; }
 
-        // Porterías
         .goal {
-            width: 18%; height: 3%; left: 50%; transform: translateX(-50%);
-            background: rgba(255,255,255,0.08);
-            border: 1.5px solid rgba(255,255,255,0.6);
+            width: 14%; height: 2.8%; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1.5px solid rgba(255, 255, 255, 0.75);
         }
-        .top-goal { top: -3%; border-radius: 0 0 3px 3px; border-top: 0; }
-        .bottom-goal { bottom: -3%; border-radius: 3px 3px 0 0; border-bottom: 0; }
+        .top-goal    { top: -2.9%;    border-radius: 0 0 3px 3px; border-top: 0; }
+        .bottom-goal { bottom: -2.9%; border-radius: 3px 3px 0 0; border-bottom: 0; }
 
-        .half-line { top: 50%; left: 0; right: 0; height: 0; border-top: 1.5px solid rgba(255,255,255,0.55); border-left:0; border-right:0; border-bottom:0; }
+        .half-line {
+            top: 50%; left: 0; right: 0; height: 0;
+            border-top: 1.5px solid rgba(255, 255, 255, 0.70);
+            border-left: 0; border-right: 0; border-bottom: 0;
+        }
 
         .center-circle {
-            width: 80px; height: 80px;
+            width: 88px; height: 88px;
             top: 50%; left: 50%;
-            border-radius: 50%; transform: translate(-50%, -50%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            border: 1.5px solid rgba(255, 255, 255, 0.70);
 
-            .center-dot { width: 6px; height: 6px; background: rgba(255,255,255,0.8); border-radius: 50%; position: absolute; top:50%; left:50%; transform: translate(-50%,-50%); border:none;}
+            .center-dot {
+                width: 7px; height: 7px;
+                background: rgba(255, 255, 255, 0.85);
+                border-radius: 50%;
+                position: absolute; top: 50%; left: 50%;
+                transform: translate(-50%, -50%);
+                border: none;
+                box-shadow: 0 0 4px rgba(255,255,255,0.5);
+            }
         }
 
-        .corner { width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.55); }
-        .tl { top: -8px; left: -8px; } .tr { top: -8px; right: -8px; }
-        .bl { bottom: -8px; left: -8px; } .br { bottom: -8px; right: -8px; }
+        .corner { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.70); }
+        .tl { top: -7px; left: -7px; }
+        .tr { top: -7px; right: -7px; }
+        .bl { bottom: -7px; left: -7px; }
+        .br { bottom: -7px; right: -7px; }
     }
 }
 
-// --- TACTICAL GRID ---
+// ============================================================
+// TACTICAL GRID
+// ============================================================
 .tactical-layer {
     position: absolute; inset: 0; z-index: 10;
     display: flex; flex-direction: column;
-    padding: 10px 0;
+    padding: 6px 0;
 
     .line-row {
-        flex: 1; display: flex; justify-content: space-evenly; align-items: center;
+        flex: 1;
+        display: flex; justify-content: space-evenly; align-items: center;
         &.gk-line { flex: 0.7; }
     }
 }
 
 .slot-container {
-    width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
+    width: 100%; height: 100%;
+    display: flex; justify-content: center; align-items: center;
 }
 
-// Bug 2 fix: área de drop más grande
+// Área de drop — dimensionada para los tokens circulares
 .pos-anchor {
-    width: 64px; height: 64px; position: relative;
+    width: 80px; height: 90px;
+    position: relative;
     display: flex; justify-content: center; align-items: center;
 
-    @media (min-width: 400px) { width: 72px; height: 72px; }
+    @media (min-width: 480px) { width: 86px; height: 96px; }
+    @media (min-width: 600px) { width: 92px; height: 102px; }
 }
 
-// --- POSICIÓN VACÍA MEJORADA ---
+// ============================================================
+// SLOT VACÍO — Círculo dashed profesional
+// ============================================================
 .empty-pos-indicator {
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    border: 2px dashed rgba(255,255,255,0.3);
-    background: rgba(255,255,255,0.04);
+    width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center;
-    transition: border-color 0.2s, background 0.2s;
-
-    @media (min-width: 400px) { width: 52px; height: 52px; }
-
-    .pos-label {
-        font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.35);
-        font-family: $font-display; letter-spacing: 0.5px;
-    }
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.2s ease;
 }
 
-// Highlight cuando un drag pasa por encima
-.cdk-drop-list-dragging .empty-pos-indicator {
-    border-color: rgba(255,255,255,0.6);
-    background: rgba(255,255,255,0.08);
-}
-
-// --- PLAYER TOKEN ---
-.player-token {
-    display: flex; flex-direction: column; align-items: center; cursor: grab;
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    &:active { cursor: grabbing; transform: scale(1.15); }
-
-    .token-visual {
-        position: relative;
-        width: 44px; height: 44px;
-        @media (min-width: 400px) { width: 54px; height: 54px; }
-
-        .img-wrapper {
-            width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
-            background: #222;
-            border: 2px solid transparent !important;
-            box-shadow: 0 0 0 2px var(--pos-color, #9ca3af), 0 4px 8px rgba(0,0,0,0.5);
-            img { width: 100%; height: 100%; object-fit: cover; }
-            &.gk-border {
-                box-shadow: 0 0 0 2px #fbbf24, 0 4px 8px rgba(0,0,0,0.5);
-            }
-        }
-
-        .kit-number {
-            position: absolute; top: -4px; right: -4px;
-            background: #fff; color: #111; font-weight: 800; font-size: 10px;
-            width: 17px; height: 17px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            border: 1px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            &.black { background: #111; color: #fff; border-color: #333; }
-        }
-
-        .mini-badge {
-            position: absolute; bottom: -2px; left: -2px;
-            width: 14px; height: 14px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 8px; font-weight: 900; color: #fff; border: 1px solid #fff;
-
-            &.captain { background: #f59e0b; top: -4px; left: -4px; width: 16px; height: 16px; font-size: 10px; z-index: 2; }
-            &.penalty { background: #ef4444; bottom: -2px; right: 8px; left: auto; }
-            &.freekick { background: #3b82f6; bottom: -2px; right: -4px; left: auto; }
-        }
-    }
-
-    .token-name {
-        margin-top: 2px;
-        background: rgba(17, 24, 39, 0.85); color: #fff;
-        font-family: $font-display; font-size: 9px; font-weight: 600; letter-spacing: 0.3px;
-        padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);
-        white-space: nowrap; text-transform: uppercase;
-        max-width: 70px; overflow: hidden; text-overflow: ellipsis;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-
-        @media (min-width: 400px) { font-size: 11px; margin-top: 4px; }
-    }
-}
-
-// --- BANQUILLO (FOOTER) ---
-.manager-footer {
-    position: absolute; bottom: 0; left: 0; right: 0; height: 110px;
-    background: linear-gradient(to bottom, #1a2030, #111827);
-    border-top: 1px solid rgba(255,255,255,0.08);
-    display: flex; flex-direction: column; z-index: 50;
-    padding-bottom: env(safe-area-inset-bottom);
-
-    .footer-header {
-        padding: 6px 12px; background: rgba(0,0,0,0.2);
-        display: flex; justify-content: space-between; align-items: center;
-        .footer-title { font-size: 10px; color: $text-dim; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-        .footer-count { font-size: 10px; color: $accent-blue; font-weight: 600; }
-    }
-
-    .bench-strip {
-        flex: 1; display: flex; align-items: center; gap: 12px;
-        overflow-x: auto; padding: 0 12px;
-        &::-webkit-scrollbar { height: 4px; }
-        &::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 2px; }
-
-        .bench-slot { min-width: 45px; display: flex; justify-content: center; }
-
-        .bench-token {
-            display: flex; flex-direction: column; align-items: center; cursor: grab;
-            &:active { cursor: grabbing; transform: scale(1.1); }
-
-            .token-img {
-                width: 42px; height: 42px; position: relative;
-                img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid #6b7280; }
-                &:hover img { border-color: #9ca3af; }
-                .bench-number {
-                    position: absolute; bottom: -2px; right: -2px;
-                    background: #111; color: #fff; font-size: 8px; width: 12px; height: 12px;
-                    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-                }
-            }
-            .bench-name { margin-top: 2px; font-size: 10px; color: $text-dim; font-weight: 600; text-align: center; max-width: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
-        }
-
-        .bench-empty { color: #4b5563; font-size: 12px; font-style: italic; width: 100%; text-align: center; }
-    }
-}
-
-// --- DRAG & DROP VISUAL ---
-// Bug 3 fix: placeholder visible en lugar de invisible
-.token-ghost {
-    width: 44px; height: 44px;
+.empty-slot {
+    width: $token-size; height: $token-size;
     border-radius: 50%;
-    background: rgba(255,255,255,0.12);
-    border: 2px dashed rgba(255,255,255,0.4);
+    background: rgba(255, 255, 255, 0.04);
+    border: 2px dashed rgba(255, 255, 255, 0.25);
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    backdrop-filter: blur(2px);
 
-    @media (min-width: 400px) { width: 54px; height: 54px; }
+    @media (min-width: 480px) { width: $token-size-md; height: $token-size-md; }
+    @media (min-width: 600px) { width: $token-size-lg; height: $token-size-lg; }
+
+    .empty-pos-label {
+        font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
+        color: rgba(255, 255, 255, 0.35); text-transform: uppercase;
+        line-height: 1;
+        @media (min-width: 480px) { font-size: 11px; }
+    }
 }
 
-.cdk-drag-preview {
+// Highlight cuando llega un drag
+.cdk-drop-list-dragging .empty-slot {
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.15), inset 0 0 12px rgba(255, 255, 255, 0.04);
+
+    .empty-pos-label { color: rgba(255, 255, 255, 0.7); }
+}
+
+// ============================================================
+// PLAYER TOKEN — Wrapper del drag
+// ============================================================
+.player-token {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 5px;
+    cursor: grab;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    &:active { cursor: grabbing; transform: scale(1.08); }
+
+    &:hover .player-circle {
+        transform: scale(1.12);
+        box-shadow:
+            0 0 0 3px var(--card-accent, rgba(255,255,255,0.5)),
+            0 0 18px 5px var(--card-accent, rgba(255,255,255,0.3)),
+            0 6px 20px rgba(0, 0, 0, 0.5);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+}
+
+// ============================================================
+// PLAYER CIRCLE — Token circular profesional
+// ============================================================
+.player-circle {
+    --card-accent: rgba(255, 255, 255, 0.6);
+
+    width: $token-size; height: $token-size;
+    border-radius: 50%;
+    border: 3px solid var(--card-accent);
+    position: relative;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    flex-shrink: 0;
+
+    @media (min-width: 480px) { width: $token-size-md; height: $token-size-md; }
+    @media (min-width: 600px) { width: $token-size-lg; height: $token-size-lg; }
+
+    img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        object-position: top center;
+        display: block;
+    }
+
+    .badge-cluster {
+        position: absolute; bottom: 1px; left: 50%;
+        transform: translateX(-50%);
+        display: flex; gap: 2px; align-items: center;
+        z-index: 3;
+    }
+}
+
+// Nombre del jugador bajo el círculo
+.player-name {
+    font-size: 9px; font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    line-height: 1.2;
+    text-align: center;
+    max-width: 72px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.7);
+
+    @media (min-width: 480px) { font-size: 10px; max-width: 80px; }
+    @media (min-width: 600px) { font-size: 11px; max-width: 88px; }
+}
+
+// ============================================================
+// MINI BADGES — dentro del círculo (C/P/F)
+// ============================================================
+.mini-badge {
+    width: 13px; height: 13px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 7px; font-weight: 900; color: #fff;
+    border: 1px solid rgba(255,255,255,0.5);
+    line-height: 1;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+
+    &.captain  { background: #f59e0b; border-color: #fcd34d; }
+    &.penalty  { background: #ef4444; border-color: #fca5a5; }
+    &.freekick { background: #3b82f6; border-color: #93c5fd; }
+}
+
+// ============================================================
+// PLACEHOLDER DRAG — forma circular
+// ============================================================
+.token-ghost {
+    width: $token-size; height: $token-size;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+
+    @media (min-width: 480px) { width: $token-size-md; height: $token-size-md; }
+    @media (min-width: 600px) { width: $token-size-lg; height: $token-size-lg; }
+}
+
+// ============================================================
+// CDK DRAG STATES — ::ng-deep requerido porque CDK appenda al body
+// fuera del scope del componente (ViewEncapsulation.Emulated)
+// ============================================================
+:host ::ng-deep .cdk-drag-preview {
     z-index: 9999 !important;
     border-radius: 50%;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 0 3px rgba(255,255,255,0.3) !important;
+    overflow: hidden;
 
-    .token-visual {
-        transform: scale(1.25);
-        filter: drop-shadow(0 8px 16px rgba(0,0,0,0.6));
+    .player-token {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
     }
-    .token-name { display: none; }
+
+    .player-circle {
+        border-radius: 50%;
+        overflow: hidden;
+        transform: scale(1.18);
+        box-shadow:
+            0 0 0 3px var(--card-accent, rgba(255,255,255,0.6)),
+            0 0 24px 8px var(--card-accent, rgba(255,255,255,0.3)),
+            0 24px 48px rgba(0,0,0,0.7);
+
+        img {
+            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+        }
+    }
+
+    .player-name {
+        font-size: 9px;
+        font-weight: 700;
+        color: #fff;
+        text-transform: uppercase;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    }
+
+    .bench-circle {
+        border-radius: 50%;
+        overflow: hidden;
+        transform: scale(1.18);
+
+        img {
+            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
 }
 
-.cdk-drag-placeholder {
-    opacity: 0.3;
-    .token-visual { filter: grayscale(0.5); }
+:host ::ng-deep .cdk-drag-placeholder {
+    opacity: 0.2;
+    .player-circle { filter: grayscale(0.5); }
 }
 
+// ============================================================
+// FOOTER — Banquillo Glassmorphism
+// ============================================================
+.manager-footer {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 118px;
+    background: rgba($bg-panel, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex; flex-direction: column; z-index: 50;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+
+    .footer-header {
+        padding: 5px 12px;
+        background: rgba(0,0,0,0.25);
+        display: flex; justify-content: space-between; align-items: center;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+
+        .footer-title {
+            font-size: 10px; color: $text-dim;
+            font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+        }
+        .footer-count {
+            font-size: 13px; color: rgba(255,255,255,0.7); letter-spacing: 0.5px; font-weight: 600;
+        }
+    }
+
+    // ---- BENCH STRIP
+    .bench-strip {
+        flex: 1;
+        display: flex; align-items: center; gap: 14px;
+        overflow-x: auto; padding: 0 14px;
+
+        &::-webkit-scrollbar { height: 3px; }
+        &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+        &::-webkit-scrollbar-track { background: transparent; }
+
+        .bench-slot {
+            min-width: $bench-size;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .bench-empty {
+            color: #4b5563; font-size: 12px; font-style: italic;
+            width: 100%; text-align: center;
+        }
+    }
+}
+
+// ---- BENCH TOKEN — Wrapper drag
+.bench-token {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 4px;
+    cursor: grab;
+    transition: transform 0.15s ease;
+
+    &:active { cursor: grabbing; transform: scale(1.1); }
+
+    &:hover .bench-circle {
+        transform: scale(1.12);
+        box-shadow:
+            0 0 0 2px var(--card-accent, rgba(255,255,255,0.5)),
+            0 0 14px 4px var(--card-accent, rgba(255,255,255,0.25)),
+            0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+}
+
+// ============================================================
+// BENCH CIRCLE — Mini token circular
+// ============================================================
+.bench-circle {
+    --card-accent: rgba(255, 255, 255, 0.6);
+
+    width: $bench-size; height: $bench-size;
+    border-radius: 50%;
+    border: 2.5px solid var(--card-accent);
+    position: relative;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    flex-shrink: 0;
+
+    img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        object-position: top center;
+        display: block;
+    }
+}
+
+.bench-name {
+    font-size: 8px; font-weight: 700;
+    color: rgba(255,255,255,0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    text-align: center;
+    max-width: 56px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+    line-height: 1;
+}
+
+.bench-ghost {
+    width: $bench-size; height: $bench-size;
+    border-radius: 50%;
+}
+
+// ============================================================
+// LOADING OVERLAY
+// ============================================================
 .loading-overlay {
-    height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: $bg-dark; color: $text-dim; font-family: $font-display;
+    height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: $bg-dark; color: $text-dim;
+
     .spinner-fm {
-        width: 40px; height: 40px; border: 3px solid $accent-blue;
-        border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;
+        width: 40px; height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.15);
+        border-top-color: rgba(255, 255, 255, 0.7);
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+        margin-bottom: 15px;
+    }
+
+    p {
+        font-size: 13px;
+        letter-spacing: 1.5px; text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.45);
+        font-weight: 600;
     }
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+// ============================================================
+// POPOVER FORMACIONES — ::ng-deep porque el popover sale fuera del host
+// ============================================================
+:host ::ng-deep ion-popover {
+    --background: #1a1f2e;
+    --box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    --border-radius: 10px;
+
+    ion-list {
+        background: #1a1f2e !important;
+        padding: 4px 0;
+    }
+
+    ion-item {
+        --background: transparent;
+        --color: #f3f4f6;
+        --border-color: rgba(255,255,255,0.06);
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+
+        &.item-radio-checked,
+        &[aria-checked="true"] {
+            --background: rgba(108, 99, 255, 0.15);
+            --color: #6c63ff;
+        }
+
+        &:hover {
+            --background: rgba(255,255,255,0.05);
+        }
+    }
+
+    ion-radio {
+        --color-checked: #6c63ff;
+    }
+}
