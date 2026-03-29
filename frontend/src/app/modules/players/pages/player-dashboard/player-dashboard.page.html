@@ -5,8 +5,30 @@
     <p>Cargando perfil...</p>
   </div>
 
-  <div class="main-content" *ngIf="!loading && currentPlayer">
-    
+  <div class="dashboard-layout" *ngIf="!loading && currentPlayer">
+
+    <!-- SIDEBAR IZQUIERDO -->
+    <nav class="sidebar-left">
+      <div class="sidebar-icon active">
+        <ion-icon name="home-outline"></ion-icon>
+      </div>
+      <div class="sidebar-icon" (click)="navigateTo('/calendar')">
+        <ion-icon name="calendar-outline"></ion-icon>
+      </div>
+      <div class="sidebar-icon" (click)="navigateTo('/coach/my-team')">
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+      </div>
+      <div class="sidebar-icon" (click)="navigateTo('/profile')">
+        <ion-icon name="person-outline"></ion-icon>
+      </div>
+      <div class="sidebar-icon">
+        <ion-icon name="chatbubbles-outline"></ion-icon>
+      </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="main-content">
+
     <div class="header-pro">
       <ng-container *ngIf="currentUser$ | async as user">
           <div class="text-container">
@@ -174,6 +196,7 @@
     </div>
 
     <div class="spacer" style="height: 80px;"></div>
-  
-  </div>
+
+    </div> <!-- /main-content -->
+  </div> <!-- /dashboard-layout -->
 </ion-content>

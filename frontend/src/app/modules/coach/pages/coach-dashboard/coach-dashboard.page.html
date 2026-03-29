@@ -1,54 +1,78 @@
 <ion-content [fullscreen]="true" class="coach-bg">
-  
+
   <div *ngIf="loading" class="loading-state">
     <div class="loader-pulse"></div>
     <p>Cargando perfil técnico...</p>
   </div>
 
-  <div class="main-content" *ngIf="!loading">
-    
-    <div *ngIf="currentView === 'dashboard'" class="animate-fade-in-down">
-        
+  <div class="dashboard-layout" *ngIf="!loading">
+
+    <!-- SIDEBAR IZQUIERDO -->
+    <nav class="sidebar-left">
+      <div class="sidebar-icon active">
+        <ion-icon name="home-outline"></ion-icon>
+      </div>
+      <div class="sidebar-icon" (click)="goToProfile()">
+        <ion-icon name="person-outline"></ion-icon>
+      </div>
+      <div class="sidebar-icon" (click)="navigateToAction('/calendar')">
+        <ion-icon name="calendar-outline"></ion-icon>
+      </div>
+      <div class="sidebar-icon" (click)="goToStats()">
+        <ion-icon name="trophy-outline"></ion-icon>
+      </div>
+      <div class="sidebar-icon">
+        <ion-icon name="chatbubbles-outline"></ion-icon>
+      </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="main-content">
+
+      <div *ngIf="currentView === 'dashboard'" class="animate-fade-in-down">
+
         <div class="header-pro">
           <div class="text-container">
             <span class="greeting">{{ getGreeting() }},</span>
             <h1 *ngIf="currentUser$ | async as user">{{ user.nombre || 'Míster' }}</h1>
           </div>
-          
-          <div style="display: flex; gap: 10px; align-items: center;">
-              <ion-button fill="clear" color="danger" (click)="logout()">
-                  <ion-icon name="log-out-outline" slot="icon-only" style="font-size: 1.5rem;"></ion-icon>
-              </ion-button>
 
-              <div class="profile-pic-wrapper ripple-effect" (click)="goToProfile()">
-                <ng-container *ngIf="currentUser$ | async as user">
-                    <img *ngIf="user.fotoUrl" [src]="user.fotoUrl" class="profile-img">
-                    <div *ngIf="!user.fotoUrl" class="profile-initials">DT</div>
-                </ng-container>
-                <div class="badge-edit"><ion-icon name="settings-sharp"></ion-icon></div>
-              </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <ion-button fill="clear" color="danger" (click)="logout()">
+              <ion-icon name="log-out-outline" slot="icon-only" style="font-size: 1.5rem;"></ion-icon>
+            </ion-button>
+
+            <div class="profile-pic-wrapper ripple-effect" (click)="goToProfile()">
+              <ng-container *ngIf="currentUser$ | async as user">
+                <img *ngIf="user.fotoUrl" [src]="user.fotoUrl" class="profile-img">
+                <div *ngIf="!user.fotoUrl" class="profile-initials">DT</div>
+              </ng-container>
+              <div class="badge-edit"><ion-icon name="settings-sharp"></ion-icon></div>
+            </div>
           </div>
         </div>
 
         <div class="club-identity-card animate-scale-in" *ngIf="managedTeamId">
           <div class="card-bg-glow"></div>
-          
+
           <div class="card-content">
             <div class="shield-section">
               <div class="shield-glow-effect"></div>
               <img [src]="escudoUrl || 'assets/img/mi-club-logo.png'" class="main-shield">
             </div>
-            
+
             <div class="info-section">
               <div class="role-badge">
                 <ion-icon name="clipboard"></ion-icon> {{ currentRole || 'Staff Técnico' }}
               </div>
               <h2 class="team-name">{{ teamName }}</h2>
               <div class="league-info">
-                  <ion-icon name="trophy-outline"></ion-icon>
-                  <span>{{ categoryName || 'Liga Oficial' }}</span>
+                <ion-icon name="trophy-outline"></ion-icon>
+                <span>{{ $any(categoryName)?.nombre || categoryName || 'Liga Oficial' }}</span>
               </div>
             </div>
+
+            <div class="principal-badge">PRINCIPAL</div>
           </div>
 
           <div class="stats-bar">
@@ -71,7 +95,7 @@
         </div>
 
         <div class="status-grid animate-fade-in-up delay-1" *ngIf="managedTeamId">
-          
+
           <div class="status-card" [class.alert]="stats.injured > 0" (click)="navigateToAction('/coach/my-team')">
             <div class="card-icon">
               <ion-icon name="medkit"></ion-icon>
@@ -86,7 +110,7 @@
 
           <div class="status-card highlight" *ngIf="topScorer" (click)="goToStats()">
             <div class="player-circle">
-                <img [src]="topScorer.usuario?.fotoUrl || topScorer.fotoUrl" onError="this.src='assets/img/default-avatar.png'">
+              <img [src]="topScorer.usuario?.fotoUrl || topScorer.fotoUrl" onError="this.src='assets/img/default-avatar.png'">
             </div>
             <div class="card-info">
               <span class="label">Goleador</span>
@@ -114,52 +138,59 @@
         </div>
 
         <div class="actions-grid-pro animate-fade-in-up delay-1">
-          
+
           <div class="action-card big primary" (click)="navigateToAction('/calendar')">
             <div class="content-wrapper">
-                <div class="icon-circle">
-                  <ion-icon name="calendar-number"></ion-icon>
-                </div>
-                <div class="text">
-                  <span class="title">Agenda Completa</span>
-                  <span class="desc">Ver calendario de temporada</span>
-                </div>
+              <div class="icon-circle">
+                <ion-icon name="calendar-number"></ion-icon>
+              </div>
+              <div class="text">
+                <span class="title">Agenda Completa</span>
+                <span class="desc">Ver calendario de temporada</span>
+              </div>
             </div>
-            <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
+            <div class="card-footer-actions">
+              <span class="more-info-link">More info →</span>
+              <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
+            </div>
           </div>
 
           <div class="action-card small" (click)="navigateToAction('/coach/my-team')">
             <div class="icon-circle secondary">
-              <ion-icon name="shirt-outline"></ion-icon>
+              <ion-icon name="medkit-outline"></ion-icon>
             </div>
-            <span class="title">Mi Plantilla</span>
+            <span class="title">Enfermería</span>
+            <span class="desc">Todo OK</span>
+            <span class="more-info-link">More info →</span>
           </div>
 
-          <div class="action-card small" (click)="setView('matches')">
+          <div class="action-card small" (click)="navigateToAction('/coach/stats')">
             <div class="icon-circle tertiary">
-              <ion-icon name="football-outline"></ion-icon>
+              <ion-icon name="trending-up-outline"></ion-icon>
             </div>
-            <span class="title">Próximos</span>
-            <span class="wip-tag" *ngIf="futureMatchesCount > 0">{{ futureMatchesCount }}</span>
+            <span class="title">Rendimiento</span>
+            <span class="desc">Sin datos</span>
+            <span class="more-info-link">More info →</span>
           </div>
+
         </div>
 
-    </div>
+      </div>
 
-    <div *ngIf="currentView === 'matches'" class="matches-view animate-fade-in-right">
-        
+      <div *ngIf="currentView === 'matches'" class="matches-view animate-fade-in-right">
+
         <div class="sub-header">
-            <ion-button fill="clear" color="light" (click)="setView('dashboard')">
-                <ion-icon name="arrow-back" slot="start"></ion-icon> Volver
-            </ion-button>
-            <h2>Encuentros</h2>
+          <ion-button fill="clear" color="light" (click)="setView('dashboard')">
+            <ion-icon name="arrow-back" slot="start"></ion-icon> Volver
+          </ion-button>
+          <h2>Encuentros</h2>
         </div>
 
         <div class="events-list-pro">
-          <div class="event-card" 
+          <div class="event-card"
                *ngFor="let event of upcomingEvents"
                [class.match-card]="event.tipo === 'PARTIDO'">
-            
+
             <div class="date-col">
               <span class="day">{{ event.fechaHora | date:'dd' }}</span>
               <span class="month">{{ event.fechaHora | date:'MMM' }}</span>
@@ -168,15 +199,15 @@
             <div class="info-col">
               <div class="top-row">
                 <span class="type-tag" [class.match]="event.tipo === 'PARTIDO'">
-                    {{ event.tipo === 'PARTIDO' ? 'MATCHDAY' : 'TRAINING' }}
+                  {{ event.tipo === 'PARTIDO' ? 'MATCHDAY' : 'TRAINING' }}
                 </span>
                 <span class="time-tag">{{ event.fechaHora | date:'HH:mm' }}</span>
               </div>
-              
+
               <div class="event-main-title">
                 <ng-container *ngIf="event.tipo === 'PARTIDO'">
                   <div class="match-vs">
-                    <span class="vs">VS</span> 
+                    <span class="vs">VS</span>
                     <img *ngIf="event.escudoRivalUrl" [src]="event.escudoRivalUrl" class="mini-shield">
                     <span class="rival-name">{{ event.rival }}</span>
                   </div>
@@ -184,7 +215,7 @@
                     <ion-icon name="location-sharp"></ion-icon> {{ event.lugar }}
                   </div>
                 </ng-container>
-                
+
                 <ng-container *ngIf="event.tipo !== 'PARTIDO'">
                   <span class="training-title">{{ event.descripcion || 'Entrenamiento' }}</span>
                   <div class="location-row">
@@ -205,13 +236,14 @@
           </div>
 
           <div *ngIf="upcomingEvents.length === 0" class="empty-state">
-              <ion-icon name="calendar-clear-outline"></ion-icon>
-              <p>No hay eventos programados.</p>
+            <ion-icon name="calendar-clear-outline"></ion-icon>
+            <p>No hay eventos programados.</p>
           </div>
         </div>
-        
-        <div style="height: 60px;"></div>
-    </div>
 
+        <div style="height: 60px;"></div>
+      </div>
+
+    </div>
   </div>
 </ion-content>

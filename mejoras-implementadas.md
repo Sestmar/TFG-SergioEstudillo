@@ -1,88 +1,70 @@
 # Mejoras Implementadas - DAM United FC
 
-Registro de funcionalidades corregidas o añadidas tras el refactor base.
+Este documento registra la evolución técnica, arquitectónica y visual del proyecto tras las fases intensivas de refactorización y pulido.
 
 ---
 
-## 1. Fix: Registro de Tarjetas en Actas Oficiales 🟨🟥
+## 1. Identidad Visual Unificada y Night Stadium Theme 🌌🏟️
 
-**Fecha:** 2026-03-29
-**Estado:** ✅ Verificado en producción
+Se ha implementado un sistema visual coherente en toda la aplicación, elevando la estética de una app genérica a una herramienta deportiva profesional.
 
-### Descripción del problema
+### Paleta Global y Estilizado (Navy Dark)
+- **Variables CSS**: Definición de una paleta centralizada en `variables.scss`:
+  - `--bg-color: #070b14` (Navy profundo para fondos principales).
+  - `--bg-card: rgba(15, 22, 45, 0.8)` (Glassmorphism para tarjetas y sidebars).
+  - `--accent-color: #6c63ff` (Púrpura vibrante para estados activos y botones).
+- **Efecto Estadio Nocturno**: Integración de una imagen de fondo de estadio iluminado con un gradiente oscuro superpuesto, proporcionando una atmósfera inmersiva en Landing Page, Login y Dashboards.
+- **Fix Transparencia Ionic**: Uso del selector `::part(background)` en componentes `ion-content` para permitir que el fondo del estadio sea visible a través del contenedor de scroll nativo de Ionic.
 
-Al cerrar un acta de partido desde el panel de Administrador, el resto de datos (goles, asistencias, minutos, sustituciones) se guardaban correctamente, pero las tarjetas amarillas y rojas **no persistían** — se ignoraban silenciosamente.
-
-### Causa raíz
-
-El frontend envía el payload al endpoint `/api/admin/cerrar-acta`, que es procesado por `AdminService.cerrarActaAdmin()`. Este método extraía correctamente todos los campos del stat de cada jugador **excepto** `amarilla` y `roja`, que llegaban al backend pero nunca se mapeaban a la entidad `Alineacion`.
-
-Existía otro endpoint (`/api/partidos/cerrar-acta` → `PartidoService.cerrarActa()`) que sí procesaba las tarjetas correctamente, pero el frontend no lo usaba para el flujo de admin.
-
-### Fix aplicado
-
-**Archivo:** `src/backend-tfg/backend-tfg/src/main/java/com/DAMUnitedFC/backend_tfg/service/AdminService.java`
-
-Se añadieron 4 líneas en el método `cerrarActaAdmin()`, justo antes del `alineacionRepo.save()`, en el bloque de procesamiento de stats por jugador:
-
-```java
-// Líneas 300-303 — extracción y persistencia de tarjetas
-Boolean amarilla = (Boolean) stat.get("amarilla");
-Boolean roja     = (Boolean) stat.get("roja");
-alineacion.setTarjetaAmarilla(amarilla != null && amarilla);
-alineacion.setTarjetaRoja(roja != null && roja);
-alineacionRepo.save(alineacion);
-```
-
-La expresión `amarilla != null && amarilla` garantiza que si el campo no viene en el payload o viene `null`, el valor persiste como `false` sin lanzar excepción.
-
-### Contexto adicional
-
-- La entidad `Alineacion` está en `model/` (no en `entity/`) y usa `@Data` de Lombok — los setters `setTarjetaAmarilla` y `setTarjetaRoja` son generados automáticamente.
-- El frontend ya enviaba los valores correctamente como boolean (`!!p.tarjetaAmarilla` → `amarilla`, `!!p.tarjetaRoja` → `roja`).
-- No se modificó ningún otro archivo — fix de mínimo impacto.
+### Rediseño de Pantallas Críticas
+- **Landing Page**: Transformación completa con animaciones suaves, tipografía *Oswald* para títulos y botones con efectos de brillo y glow.
+- **Login & Registro**: Nueva disposición centrada sobre el fondo del estadio, con campos de entrada estilizados y validaciones visuales integradas.
+- **Coach & Player Dashboards**: Unificación de la estructura de sidebar y contenido, utilizando tarjetas translúcidas y una jerarquía de información clara para estadísticas y próximos eventos.
 
 ---
 
-## 2. Rediseño Pizarra Táctica — UX & Visual Upgrade ⚽🧠
+## 2. Refactorización Estructural del Frontend (100% Completada) ⚡
 
-**Fecha:** 2026-03-29
-**Estado:** ✅ Verificado y 100% Funcional
+El frontend ha alcanzado su estado final de arquitectura limpia tras completar las tres fases de refactorización.
 
-### Descripción de la mejora
+### Fase 1: Higiene RxJS y Gestión de Memoria
+- **Control de Fugas**: Implementación de `takeUntilDestroyed(this.destroyRef)` en todos los componentes.
+- **Linearización de Carga**: Refactorización de `tactics.page.ts` eliminando suscripciones anidadas mediante operadores como `switchMap` y `forkJoin`.
 
-Se ha realizado una transformación completa de la pantalla de tácticas (`tactics.page`), evolucionando de una herramienta básica de posicionamiento a una pizarra interactiva de alto nivel, alineada con la estética inmersiva del nuevo sistema.
+### Fase 2: Tipado Estricto (Zero Any)
+- **Eliminación de `any`**: Sustitución de todos los tipos dinámicos por interfaces rigurosas en `shared/models/models.ts`.
+- **DTOs de Sincronización**: Creación de interfaces que mapean exactamente la respuesta del backend (`JugadorDTO`, `EquipoDTO`, `CategoriaDTO`), eliminando errores de visualización de datos.
 
-### Fixes Técnicos (CDK DragDrop) 🛠️
-
-Se han corregido tres fallos críticos que afectaban la estabilidad de la pizarra:
-
-1.  **Glitches Visuales en el Drop**: `cdkDropListData` recibía un objeto en lugar de un array (ej. `slot.player` → `[slot.player] : []`). CDK espera colecciones, lo que causaba que el drag-and-drop fallara silenciosamente o corrompiera el estado visual.
-2.  **Área de Acción Reducida**: Se amplió el área de "drop" (`pos-anchor`) de 50px a **64px/72px**, facilitando enormemente el uso en dispositivos móviles con pantallas pequeñas.
-3.  **Parpadeo del Placeholder**: Se rediseñó el `cdkDragPlaceholder` (`token-ghost`) para que sea visible (semitransparente con borde dashed) en lugar de ocultarlo (`opacity: 0`), eliminando el efecto de parpadeo al arrastrar jugadores.
-
-### Mejoras Estéticas y de UX 🎨
-
-*   **Pintura del Campo Realista**: Se añadieron franjas verticales de césped con degradados radiales, áreas de 6 metros (`small-box`), y porterías que sobresalen visualmente del campo (`goal` con altura negativa) para dar profundidad 3D.
-*   **Identidad Visual por Posición**: Los tokens de jugadores ahora incluyen un anillo de color (`box-shadow`) dinámico según su posición (POR, DEF, MED, DEL) usando variables de CSS (`--pos-color`).
-*   **Slots de Posición Vacíos**: Se implementaron indicadores circulares dashed con etiquetas de posición en fuente *Oswald* (ej. "POR", "MED"). Al arrastrar un jugador cerca, el slot se ilumina (`highlight`) para confirmar el área de drop.
-*   **Feedback de Arrastre**: Se mejoró el `cdk-drag-preview` con un escalado de **1.25x**, sombras profundas y un filtro de escala de grises para el placeholder, proporcionando una sensación táctil mucho más refinada.
-*   **Gestión del Banquillo**: Rediseño del footer con gradientes, hover en los bordes de los avatars y una mejor jerarquía visual para los jugadores no convocados.
+### Fase 3: Desacoplamiento de HttpClient
+- **Arquitectura de Servicios**: Eliminación de `HttpClient` de todos los componentes. Toda la comunicación externa se realiza ahora a través de servicios especializados en `core/services/`.
+- **Verificación Final**: Corrección de regresiones en `dashboard.page.ts` asegurando que las propiedades de usuario se accedan correctamente tras la eliminación del tipado dinámico.
 
 ---
 
-## 3. Refactorización Frontend Integral (Fase 1, 2 y 3) 🏗️💎
+## 3. Pizarra Táctica Profesional 2.0 ⚽🧠
 
-**Fecha:** 2026-03-29
-**Estado:** ✅ 100% COMPLETADO — 0 errores de compilación
+La herramienta de tácticas ha sido rediseñada para ofrecer una experiencia fluida y visualmente impactante.
 
-### Hitos Alcanzados
+### Evolución de Tokens y Campo
+- **Tokens Profesionales**: Sustitución de las cartas tipo FIFA por círculos tácticos minimalistas con anillos de color dinámicos según posición (POR, DEF, MED, DEL).
+- **Detalle del Terreno**: Césped realista con franjas, áreas de portería con efecto 3D y slots de posición dashed que se iluminan al detectar un jugador cerca (`highlight`).
 
-1.  **Higiene de RxJS (Fase 1)**: Blindaje de **todas** las suscripciones en 22+ archivos utilizando el patrón `takeUntilDestroyed(this.destroyRef)` de Angular 17. Eliminación total de fugas de memoria.
-2.  **Tipado Estricto y DTOs (Fase 2)**: Erradicación del uso de `any` en servicios y componentes. Sincronización completa con el esquema del backend de NeonDB, incluyendo interfaces para `Jugador`, `Match`, `LineupSlotDto` y `CloseMatchPayload`.
-3.  **Arquitectura Desacoplada (Fase 3)**: Eliminación del 100% de importaciones de `HttpClient` en componentes. Toda la lógica de comunicación reside ahora en la capa de servicios (`core/services/`), siguiendo el patrón *Smart/Dumb Components*.
-
-### Resultado Final
-Una base de código robusta, Type-Safe, optimizada para el rendimiento móvil y preparada para escalar con nuevas funcionalidades de forma segura.
+### Correcciones en Drag & Drop (CDK)
+- **Fix Estructural**: Corrección del bug donde `cdkDropListData` recibía objetos; ahora maneja arrays dinámicos `[player]`, evitando glitches visuales.
+- **Mejoras de UX**: Ampliación del área de "drop" (`pos-anchor`) para facilitar el uso en dispositivos móviles y rediseño del `placeholder` para eliminar parpadeos al arrastrar.
+- **::ng-deep CSS**: Aplicación de estilos específicos para el `cdk-drag-preview`, permitiendo que el diseño del token se mantenga perfecto incluso cuando se renderiza fuera del árbol de componentes de Angular.
 
 ---
+
+## 4. Arquitectura Backend y Correcciones de Datos 🏗️🛠️
+
+### Refactorización a Capa de Servicio
+- **Domain Services**: Implementación de 19 servicios de dominio para centralizar la lógica de negocio.
+- **Dependency Injection**: Migración a inyección por constructor para mejorar la testabilidad y seguir los estándares modernos de Spring Boot.
+
+### Bugfixes Críticos
+- **Persistencia de Tarjetas**: Fix en `AdminService.cerrarActaAdmin` para garantizar que las tarjetas amarillas y rojas se guarden correctamente en la base de datos.
+- **Mapeo de Categoría**: Corrección del error `[object Object]` en el dashboard al acceder correctamente a la propiedad `nombre` del objeto `Categoria` devuelto por la API.
+
+---
+> **Estado del Proyecto:** Refactorización finalizada, identidad visual unificada y verificado en entorno de desarrollo.

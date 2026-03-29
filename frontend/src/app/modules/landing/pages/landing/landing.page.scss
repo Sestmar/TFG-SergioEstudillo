@@ -1,26 +1,80 @@
-// --- CONFIGURACIÓN DARK NEON ---
+// --- CONFIGURACIÓN DARK STADIUM ---
 :host {
-    --bg-deep: #050505;
-    --primary: #ffd700;     // Amarillo/Dorado (Botón principal)
-    --accent: #3b82f6;      // Azul (Botón club)
     --text-white: #ffffff;
     --text-gray: #9ca3af;
 }
 
+// 🔑 IONIC FIX: forzar transparencia del scroll container nativo
 .landing-content {
-    --background: transparent; // Para ver nuestra capa de fondo
+    --background: transparent;
+}
+.landing-content::part(background) {
+    background: transparent;
+}
+
+.landing-content {
     position: relative;
-    
-    // CAPA DE FONDO GLOBAL
+
+    // CAPA DE FONDO — estadio nocturno con césped y focos
     .background-layer {
         position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: radial-gradient(circle at 80% 10%, #2e1065 0%, #050505 60%);
-        z-index: -1;
+        z-index: 0;
+        overflow: hidden;
+        background-color: #04070f;
+
+        // — Césped del campo (perspectiva desde tribuna)
+        &::before {
+            content: '';
+            position: absolute;
+            bottom: -8%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160%;
+            height: 58%;
+            border-radius: 50% 50% 0 0 / 18% 18% 0 0;
+            background:
+                // Rayas del césped
+                repeating-linear-gradient(
+                    90deg,
+                    rgba(0, 0, 0, 0.08) 0px,
+                    rgba(0, 0, 0, 0.08) 55px,
+                    transparent 55px,
+                    transparent 110px
+                ),
+                // Brillo central del campo (foco central)
+                radial-gradient(ellipse 50% 35% at 50% 65%, rgba(255,255,255,0.04) 0%, transparent 60%),
+                // Color césped
+                linear-gradient(175deg, #1e6b2e 0%, #165222 55%, #0e3818 100%);
+        }
+
+        // — Focos del estadio + atmósfera + overlay oscuro
+        &::after {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                // Foco izquierdo
+                radial-gradient(circle at 8% 20%, rgba(255, 228, 120, 0.22) 0%, transparent 28%),
+                // Foco derecho
+                radial-gradient(circle at 92% 20%, rgba(255, 228, 120, 0.22) 0%, transparent 28%),
+                // Foco izquierdo secundario
+                radial-gradient(circle at 22% 5%, rgba(255, 228, 120, 0.10) 0%, transparent 18%),
+                // Foco derecho secundario
+                radial-gradient(circle at 78% 5%, rgba(255, 228, 120, 0.10) 0%, transparent 18%),
+                // Overlay: oscurece arriba (cielo nocturno) y abajo
+                linear-gradient(to bottom,
+                    rgba(4, 7, 15, 0.82) 0%,
+                    rgba(4, 7, 15, 0.20) 30%,
+                    rgba(4, 7, 15, 0.10) 52%,
+                    rgba(4, 7, 15, 0.80) 100%
+                );
+        }
     }
 
     .main-wrapper {
-        display: flex; flex-direction: column; 
-        min-height: 100vh; // Ocupa toda la pantalla
+        position: relative;
+        z-index: 1;
+        display: flex; flex-direction: column;
+        min-height: 100vh;
         justify-content: center; align-items: center;
         padding: 20px;
     }
@@ -28,96 +82,109 @@
     // --- 1. HERO SECTION ---
     .hero-section {
         text-align: center;
-        margin-bottom: 60px;
+        margin-bottom: 50px;
         max-width: 700px;
 
         .app-logo {
             margin-bottom: 20px;
-            ion-icon { 
-                font-size: 60px; color: var(--primary); 
-                filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.3));
-            }
         }
 
         h1 {
-            font-size: 3.5rem; font-weight: 800; color: var(--text-white);
-            margin-bottom: 15px; letter-spacing: -1px;
+            font-size: 3.2rem; font-weight: 800; color: var(--text-white);
+            margin-bottom: 12px; letter-spacing: -1px;
         }
 
         p {
-            font-size: 1.1rem; color: var(--text-gray); line-height: 1.6;
-            margin-bottom: 40px;
+            font-size: 1rem; color: var(--text-gray); line-height: 1.6;
+            margin-bottom: 36px;
         }
 
         .hero-actions {
-            display: flex; gap: 20px; justify-content: center;
-            
-            ion-button {
-                --border-radius: 50px; height: 50px; font-weight: 700;
-                font-size: 0.95rem; text-transform: none; letter-spacing: 0.5px;
-                min-width: 160px;
+            display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
 
+            ion-button {
+                --border-radius: 50px;
+                height: 50px;
+                font-weight: 700;
+                font-size: 0.95rem;
+                text-transform: none;
+                letter-spacing: 0.5px;
+                min-width: 155px;
+
+                // Glassmorphism oscuro
                 &.btn-primary {
-                    --background: var(--primary); --color: #000;
-                    --box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+                    --background: rgba(255, 255, 255, 0.08);
+                    --color: white;
+                    --border-width: 1px;
+                    --border-color: rgba(255, 255, 255, 0.2);
+                    --border-style: solid;
+                    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                    backdrop-filter: blur(12px);
                 }
 
                 &.btn-outline {
-                    --border-color: rgba(255,255,255,0.3); --color: white;
+                    --background: rgba(255, 255, 255, 0.08);
+                    --color: white;
                     --border-width: 1px;
-                    --background-hover: rgba(255,255,255,0.05);
+                    --border-color: rgba(255, 255, 255, 0.2);
+                    --border-style: solid;
+                    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                    backdrop-filter: blur(12px);
                 }
             }
         }
     }
 
-    // --- 2. TARJETA ZONA AFICIONADO (Glassmorphism) ---
+    // --- 2. TARJETA ZONA AFICIONADO (Glassmorphism profundo) ---
     .club-card-glass {
         width: 100%; max-width: 900px;
-        background: rgba(255, 255, 255, 0.03); // Transparencia muy baja
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(10, 14, 26, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 24px;
         padding: 40px;
         position: relative;
-        backdrop-filter: blur(10px); // Efecto borroso detrás
-        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 
         .badge-pill {
             position: absolute; top: 30px; left: 40px;
             background: rgba(59, 130, 246, 0.15); color: #60a5fa;
             font-size: 0.75rem; font-weight: 700; padding: 6px 14px;
             border-radius: 20px; display: flex; align-items: center; gap: 8px;
-            
+            border: 1px solid rgba(96, 165, 250, 0.2);
+
             .dot { width: 6px; height: 6px; background: #60a5fa; border-radius: 50%; }
         }
 
         .card-content {
             display: flex; justify-content: space-between; align-items: center;
-            margin-top: 30px; // Espacio para el badge
+            margin-top: 30px;
             flex-wrap: wrap; gap: 30px;
 
             .text-side {
-                flex: 1; min-width: 300px;
-                h3 { font-size: 2rem; font-weight: 800; color: var(--text-white); margin-bottom: 10px; }
-                p { font-size: 1rem; color: var(--text-gray); line-height: 1.5; }
+                flex: 1; min-width: 280px;
+                h3 {
+                    font-size: 1.8rem; font-weight: 800; color: var(--text-white);
+                    margin-bottom: 10px;
+                }
+                p { font-size: 0.95rem; color: var(--text-gray); line-height: 1.5; }
             }
 
             .action-side {
                 .btn-club {
-                  --background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%); // Azul sólido brillante
-                  --color: white; 
-                  --border-radius: 12px; 
-                  height: 55px;
-                  font-weight: 700; 
-                  font-size: 1rem; 
-                  padding: 0 20px; // Un poco más de padding lateral
-                  --box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); // Sombra azul
-                  border: none; // Quitamos bordes raros
-                  transition: transform 0.2s;
+                    --background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+                    --color: white;
+                    --border-radius: 14px;
+                    height: 52px;
+                    font-weight: 700;
+                    font-size: 0.95rem;
+                    padding: 0 20px;
+                    --box-shadow: 0 4px 20px rgba(37, 99, 235, 0.45);
+                    transition: transform 0.2s;
 
-                  &:active { transform: scale(0.98); }
-    
-                  ion-icon { margin-right: 8px; font-size: 1.2rem; }
+                    &:active { transform: scale(0.98); }
+                    ion-icon { margin-right: 8px; font-size: 1.1rem; }
                 }
             }
         }
@@ -126,15 +193,16 @@
     // --- 3. FOOTER ---
     .footer-text {
         margin-top: auto; padding-top: 40px;
-        color: rgba(255,255,255,0.2); font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.2); font-size: 0.8rem;
     }
 }
 
-// Media Query para móviles (Apilar contenido de tarjeta)
+// Media Query móviles
 @media (max-width: 768px) {
     .club-card-glass .card-content {
         flex-direction: column; align-items: flex-start;
         .action-side { width: 100%; ion-button { width: 100%; } }
     }
-    .hero-section h1 { font-size: 2.5rem; }
+    .hero-section h1 { font-size: 2.4rem; }
+    .hero-actions { flex-direction: column; align-items: center; }
 }

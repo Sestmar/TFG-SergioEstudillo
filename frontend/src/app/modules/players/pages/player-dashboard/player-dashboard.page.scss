@@ -1,15 +1,16 @@
-// --- PALETA DARK PRO (Unificada) ---
+// --- PALETA DARK NAVY (Unificada con coach-dashboard) ---
 :host {
-  --bg-color: #09090b;       // Negro Profundo
-  --card-bg: #18181b;        // Gris muy oscuro
-  --text-main: #ffffff;      // Blanco puro
-  --text-muted: #a1a1aa;     // Gris claro
-  
-  --neon-purple: #8b5cf6;    // Lila Neón
-  --neon-blue: #3b82f6;      // Azul Eléctrico
-  --gold: #fbbf24;           // Dorado
+  --bg-color: #070b14;
+  --bg-card: rgba(15, 22, 45, 0.8);
+  --bg-sidebar: rgba(10, 15, 35, 0.95);
+  --text-main: #e2e8f0;
+  --text-muted: #64748b;
+
+  --neon-purple: #7c3aed;
+  --neon-blue: #2563eb;
+  --gold: #f59e0b;
   --gold-gradient: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-  --club-gradient: linear-gradient(135deg, #4c1d95 0%, #2563eb 100%); // Lila a Azul
+  --club-gradient: linear-gradient(135deg, #1a1040 0%, #0d2060 60%, #1a3080 100%);
 }
 
 .dashboard-bg {
@@ -21,7 +22,50 @@
   p { color: var(--text-muted); margin-top: 15px; letter-spacing: 1px; font-size: 0.8rem; text-transform: uppercase; }
 }
 
-.main-container { padding: 20px; }
+// ============================================================
+// LAYOUT: sidebar + main
+// ============================================================
+.dashboard-layout {
+  display: flex;
+  min-height: 100%;
+}
+
+// SIDEBAR IZQUIERDO
+.sidebar-left {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 52px;
+  z-index: 100;
+  background: var(--bg-sidebar);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  gap: 8px;
+
+  .sidebar-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+
+    &:hover { background: rgba(124, 58, 237, 0.15); color: var(--neon-purple); }
+    &.active { background: rgba(124, 58, 237, 0.2); color: var(--neon-purple); }
+  }
+}
+
+// MAIN CONTENT — desplazado para el sidebar
+.main-content {
+  flex: 1;
+  padding: 20px 20px 20px 72px; // 52px sidebar + 20px gap
+  min-width: 0;
+}
 
 // 1. HEADER PRO
 .header-pro {
@@ -140,15 +184,12 @@
   display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 35px;
 
   .action-card {
-    background: var(--card-bg); 
-    padding: 16px; 
+    background: var(--bg-card);
+    padding: 16px;
     border-radius: 20px;
-    
-    // 🔥 Aseguramos que no haya bordes
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     outline: none;
-    
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     
     display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
     transition: transform 0.2s, box-shadow 0.2s; 
@@ -175,7 +216,7 @@
   display: flex; flex-direction: column; gap: 12px;
 
   .event-card {
-    background: var(--card-bg); padding: 16px; border-radius: 18px;
+    background: var(--bg-card); padding: 16px; border-radius: 18px;
     display: flex; align-items: center; gap: 15px;
     border: 1px solid rgba(255,255,255,0.05);
     border-left: 4px solid #52525b;
@@ -229,7 +270,7 @@
 
 // 5. ESTADÍSTICAS DETALLADAS
 .detailed-stats-card {
-  background: var(--card-bg); border-radius: 20px; padding: 20px;
+  background: var(--bg-card); border-radius: 20px; padding: 20px;
   border: 1px solid rgba(255,255,255,0.05);
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center;
   background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px);

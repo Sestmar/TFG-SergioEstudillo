@@ -1,27 +1,27 @@
-Nos equivocamos con el enfoque del FIFA; esta es una herramienta profesional de gestión deportiva y debe verse como tal.
+ Lo que está BIEN en ese documento:
 
-Te paso las capturas de la 'mierda' que tenemos (image_40239a.jpg, image_4023df.png, image_4026c1.png) y necesitamos un refactor UI/UX profundo en tactics.page.html y .scss para lograr una estética espectacular y profesional.
+  ✅ Borrar user-state.service.ts — confirmado, no lo usa nadie más que su propio
+  index.ts. Es un muerto. Borrarlo es correcto.
 
-Tu tarea es aplicar estrictamente estas correcciones visuales, manteniendo intacta la lógica asíncrona y de Drag & Drop que ya funciona:
+  ✅ player.service.ts tiene 2 any restantes — menor, pero real. Tiparlos es correcto.
 
-Diseño del Campo (Adiós a los bordes negros): El campo de juego debe integrarse perfectamente en el layout central, eliminando cualquier espacio negro a los lados. Si es necesario, redimensiona el SVG/Canvas o el ion-content para que el césped realista (image_40239a.jpg) domine la pantalla.
+  ✅ NotificationService centralizado — buena práctica. Tener ToastController disperso
+   por 15 componentes es exactamente el tipo de deuda técnica que duele escalar.
 
-Nuevos Iconos de Jugadores (Círculos Profesionales): Elimina las tarjetas. Los jugadores en el campo deben ser iconos perfectamente redondos.
+  ✅ Chat con WebSockets primero en backend — el orden es correcto técnicamente.
+  Spring WebSocket + STOMP es el stack estándar para esto.
 
-Haz que esta pantalla sea la más potente de la aplicación, es de las funcionalidades más interesantes
+  ✅ PDF con iText o JasperReports — técnicamente válido. Para un TFG, iText es más
+  simple. JasperReports es una cañón para lo que necesitás.
 
-Código de Colores por Posición (CSS Estricto): Aplica un borde sólido de color a cada círculo según el tipo de jugador:
+  ---
+  Lo que está MAL o es cuestionable:
 
-Delanteros: Borde ROJO (ej: #e74c3c).
+  ❌ "Limpiar emojis de debug" — sin verificar no voy a confirmar. Es menor.
 
-Mediocampo: Borde AZUL (ej: #3498db).
+  ⚠️ PDF como "NUEVA IDEA" — es scope creep. Si el TFG ya tiene fecha límite, meter
+  iText o JasperReports es abrir una caja de Pandora. Mejor un window.print() con CSS
+  de impresión bien hecho que tiene el 80% del valor con el 5% del esfuerzo.
 
-Defensa: Borde AMARILLO (ej: #f1c40f).
-
-Portero: Borde VERDE (ej: #2ecc71).
-
-Efecto de Resaltado (Hover/Active): Añade un efecto CSS .pipe() o :hover para que, al pasar el cursor (o pulsar) sobre un círculo de jugador, este se resalte con un resplandor (drop-shadow o box-shadow) de color y un ligero escalado suave.
-
-Restyling de Toasts y Paneles (Se acabó lo cutre): Los encabezados genéricos de Ionic (image_4023df.png, image_4026c1.png) y los Toasts de 'Convocatoria' y 'Formación' deben rediseñarse por completo. Usa una estética oscura y minimalista con bordes sutiles y tipografía crispada de 'DAM United FC'.
-
-Hazlo paso a paso y asegúrate de que el Drag & Drop sigue funcionando perfectamente al cambiar las clases CSS de los elementos. ¡DALE, a meterle 'CINE' profesional a ese TFG!
+  ⚠️ El orden de prioridades es correcto pero el documento no menciona que el rediseño
+   visual ya está hecho — lo que significa que el contexto está desactualizado.
