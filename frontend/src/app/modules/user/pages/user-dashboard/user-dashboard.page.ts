@@ -1,7 +1,6 @@
 import { Component, OnInit, ViewChild, DestroyRef, inject } from '@angular/core';
 import { IonRefresher, IonInfiniteScroll } from '@ionic/angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { HttpClient } from '@angular/common/http'; 
 
 // Imports de Servicios
 import { AuthService } from 'src/app/core/services/auth/auth.service';
@@ -10,8 +9,7 @@ import { MatchService } from 'src/app/core/services/match/match.service';
 import { NewsService } from 'src/app/core/services/news/new.service';
 
 // Imports de Modelos
-import { User, News, Partido, EquipoResumen } from 'src/app/shared/models/models';
-import { environment } from 'src/environments/environment'; // ✅ Importado para Render
+import { User, News, Partido } from 'src/app/shared/models/models';
 
 @Component({
   selector: 'app-user-dashboard',
@@ -43,8 +41,7 @@ export class UserDashboardPage implements OnInit {
     private authService: AuthService,
     private teamService: TeamService,
     private matchService: MatchService,
-    private newsService: NewsService,
-    private http: HttpClient 
+    private newsService: NewsService
   ) {}
 
   ngOnInit() {
@@ -72,13 +69,12 @@ export class UserDashboardPage implements OnInit {
         return;
     }
 
-    // B. 🔥 CORRECCIÓN: Usando environment.apiUrl para Render/Móvil
-    this.http.get(`${environment.apiUrl}/jugadores/usuario/${userId}/equipo`).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (equipo: EquipoResumen) => {
-            console.log("✅ Equipo de jugador detectado:", equipo);
+    // B. Buscar equipo del jugador via TeamService
+    this.teamService.getTeamByUserId(userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (equipo) => {
             this.myTeamId = equipo.idEquipo || equipo.id || null;
             this.teamName = equipo.nombre;
-            
+
             // Una vez tenemos el ID correcto, cargamos los partidos
             this.loadDashboardData();
         },

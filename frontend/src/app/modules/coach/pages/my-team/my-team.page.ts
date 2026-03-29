@@ -1,13 +1,11 @@
 import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { AlertController, ToastController, LoadingController } from '@ionic/angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { HttpClient } from '@angular/common/http';
 import { PlayerService } from 'src/app/core/services/player/player.service';
-import { TeamService } from 'src/app/core/services/team/team.service';
+import { CoachService } from 'src/app/core/services/coach/coach.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
-import { Jugador, CoachDashboardResponse } from 'src/app/shared/models/models';
+import { Jugador } from 'src/app/shared/models/models';
 import { filter, switchMap } from 'rxjs/operators';
-import { environment } from 'src/environments/environment'; // ✅ Importado para Render
 
 @Component({
   selector: 'app-my-team',
@@ -56,7 +54,7 @@ export class MyTeamPage implements OnInit {
   constructor(
     private playerService: PlayerService,
     private authSvc: AuthService,
-    private http: HttpClient,
+    private coachSvc: CoachService,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
     private loadingCtrl: LoadingController
@@ -72,16 +70,13 @@ export class MyTeamPage implements OnInit {
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         filter(user => !!user),
-        switchMap(user => {
-          const userId = user!.idUsuario;
-          return this.http.get<CoachDashboardResponse>(`${environment.apiUrl}/entrenadores/usuario/${userId}/equipo`);
-        })
+        switchMap(user => this.coachSvc.getDashboardData(user!.idUsuario))
       )
       .subscribe({
         next: (response) => {
-          const equipo = response.equipo; 
+          const equipo = response.equipo;
           if (equipo) {
-             this.coachTeamId = Number(equipo.idEquipo || equipo.id); 
+             this.coachTeamId = Number(equipo.idEquipo || equipo.id);
              this.coachTeamName = equipo.nombre;
              this.loadPlayers();
           } else {
