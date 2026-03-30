@@ -1,11 +1,18 @@
 <ion-content class="login-content">
-  
+
   <div class="background-layer"></div>
 
   <div class="auth-wrapper animate-fade-in">
-    
-    <div class="glass-card">
-      
+
+    <div class="leather-card">
+
+      <!-- Tornillos decorativos -->
+      <span class="rivet top-left"></span>
+      <span class="rivet top-right"></span>
+      <span class="rivet bottom-left"></span>
+      <span class="rivet bottom-right"></span>
+
+      <!-- HEADER -->
       <div class="auth-header">
         <div class="logo-wrapper">
           <img src="assets/img/mi-club-logo.png" alt="Logo Club">
@@ -14,28 +21,29 @@
         <p>Acceso al Estadio</p>
       </div>
 
+      <!-- FORMULARIO -->
       <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="auth-form">
-        
+
         <div class="input-group">
-            <label>CORREO ELECTRÓNICO</label>
-            <div class="input-container">
-                <input type="email" formControlName="email" placeholder="ejemplo@futchain.com" class="neon-input">
-                <ion-icon name="mail-outline"></ion-icon>
-            </div>
-            <div class="error-msg" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
-                Introduce un email válido.
-            </div>
+          <label>CORREO ELECTRÓNICO</label>
+          <div class="input-container">
+            <input type="email" formControlName="email" placeholder="ejemplo@futchain.com" class="leather-input">
+            <ion-icon name="mail-outline"></ion-icon>
+          </div>
+          <div class="error-msg" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            Introduce un email válido.
+          </div>
         </div>
 
         <div class="input-group">
-            <label>CONTRASEÑA</label>
-            <div class="input-container">
-                <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="******" class="neon-input">
-                <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" (click)="togglePasswordVisibility()" class="eye-icon"></ion-icon>
-            </div>
-            <div class="error-msg" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-                La contraseña es requerida.
-            </div>
+          <label>CONTRASEÑA</label>
+          <div class="input-container">
+            <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="••••••" class="leather-input">
+            <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" (click)="togglePasswordVisibility()" class="eye-icon"></ion-icon>
+          </div>
+          <div class="error-msg" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+            La contraseña es requerida.
+          </div>
         </div>
 
         <div class="form-options">
@@ -47,15 +55,16 @@
           <a class="forgot-link" routerLink="/auth/forgot-password">¿Olvidaste tu contraseña?</a>
         </div>
 
-        <button type="submit" class="neon-button" [disabled]="loginForm.invalid || isLoading">
-          <span *ngIf="!isLoading">INGRESAR</span>
+        <button type="submit" class="gold-button" [disabled]="loginForm.invalid || isLoading">
+          <span *ngIf="!isLoading">INICIAR SESIÓN</span>
           <ion-spinner name="dots" *ngIf="isLoading"></ion-spinner>
         </button>
 
       </form>
 
+      <!-- FOOTER -->
       <div class="auth-footer">
-        <p>¿Nuevo fichaje?</p>
+        <div class="divider"></div>
         <button class="register-btn" routerLink="/auth/register">
           Registrarse en el Club
         </button>
