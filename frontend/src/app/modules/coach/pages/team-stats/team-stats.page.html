@@ -1,154 +1,191 @@
 <ion-content [fullscreen]="true" class="stats-bg">
-  
-  <div class="header-simple">
+
+  <div class="analytics-header">
     <ion-button fill="clear" color="light" (click)="goBack()">
       <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
     </ion-button>
-    <h1>Análisis de Rendimiento</h1>
+    <div class="header-text">
+      <h1>Dashboard Analítico</h1>
+      <span class="header-sub">{{ teamName }}</span>
+    </div>
   </div>
 
   <div *ngIf="loading" class="loading-center">
     <ion-spinner name="crescent" color="primary"></ion-spinner>
   </div>
 
-  <div class="content animate-fade-in" *ngIf="!loading">
-    
-    <div class="pro-card summary-card animate-slide-up">
-        <div class="card-top">
-            <div>
-                <h2 class="team-title">{{ teamName }}</h2>
-                <span class="subtitle">Temporada Actual</span>
-            </div>
-            <div class="total-matches">
-                <span class="num">{{ seasonStats.played }}</span>
-                <span class="label">Partidos</span>
-            </div>
-        </div>
+  <div class="analytics-container animate-fade-in" *ngIf="!loading">
 
-        <div class="performance-track">
-            <div class="bar win" [style.flex]="seasonStats.wins || 0.01"></div>
-            <div class="bar draw" [style.flex]="seasonStats.draws || 0.01"></div>
-            <div class="bar loss" [style.flex]="seasonStats.losses || 0.01"></div>
-        </div>
-        <div class="performance-legend">
-            <span>{{ seasonStats.wins }} Victorias</span>
-            <span>{{ seasonStats.draws }} Empates</span>
-            <span>{{ seasonStats.losses }} Derrotas</span>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="goals-grid">
-            <div class="goal-stat">
-                <span class="value success">{{ seasonStats.goalsFor }}</span>
-                <span class="label">Goles a Favor</span>
-            </div>
-            <div class="goal-stat">
-                <span class="value danger">{{ seasonStats.goalsAgainst }}</span>
-                <span class="label">Goles en Contra</span>
-            </div>
-            <div class="goal-stat">
-                <span class="value neutral">{{ seasonStats.goalsFor - seasonStats.goalsAgainst > 0 ? '+' : ''}}{{ seasonStats.goalsFor - seasonStats.goalsAgainst }}</span>
-                <span class="label">Diferencia</span>
-            </div>
-        </div>
+    <!-- ROW 1: KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <span class="kpi-value">{{ seasonStats.played }}</span>
+        <span class="kpi-label">Partidos</span>
+      </div>
+      <div class="kpi-card success">
+        <span class="kpi-value">{{ seasonStats.goalsFor }}</span>
+        <span class="kpi-label">GF</span>
+      </div>
+      <div class="kpi-card danger">
+        <span class="kpi-value">{{ seasonStats.goalsAgainst }}</span>
+        <span class="kpi-label">GC</span>
+      </div>
+      <div class="kpi-card"
+           [class.positive]="seasonStats.goalsFor - seasonStats.goalsAgainst > 0"
+           [class.negative]="seasonStats.goalsFor - seasonStats.goalsAgainst < 0">
+        <span class="kpi-value">{{ seasonStats.goalsFor - seasonStats.goalsAgainst > 0 ? '+' : '' }}{{ seasonStats.goalsFor - seasonStats.goalsAgainst }}</span>
+        <span class="kpi-label">Dif.</span>
+      </div>
     </div>
 
-    <div class="section-heading">
-        <h3>Máximos Goleadores</h3>
+    <!-- ROW 2: Racha + Bar chart -->
+    <div class="streak-card panel-card">
+      <div class="streak-header">
+        <span class="panel-title">Racha de Temporada</span>
+        <span class="season-label">{{ seasonStats.played }} PJ</span>
+      </div>
+      <div class="wdl-indicators">
+        <div class="wdl-item wins">
+          <span class="wdl-num">{{ seasonStats.wins }}</span>
+          <span class="wdl-lbl">Victorias</span>
+        </div>
+        <div class="wdl-sep"></div>
+        <div class="wdl-item draws">
+          <span class="wdl-num">{{ seasonStats.draws }}</span>
+          <span class="wdl-lbl">Empates</span>
+        </div>
+        <div class="wdl-sep"></div>
+        <div class="wdl-item losses">
+          <span class="wdl-num">{{ seasonStats.losses }}</span>
+          <span class="wdl-lbl">Derrotas</span>
+        </div>
+      </div>
+      <div class="performance-bar">
+        <div class="bar-segment win"  [style.flex]="seasonStats.wins   || 0.01"></div>
+        <div class="bar-segment draw" [style.flex]="seasonStats.draws  || 0.01"></div>
+        <div class="bar-segment loss" [style.flex]="seasonStats.losses || 0.01"></div>
+      </div>
     </div>
 
-    <div class="mvp-card animate-slide-up delay-1" *ngIf="topScorerMVP">
-        <div class="mvp-badge">TOP SCORER</div>
-        <div class="mvp-content">
-            <img [src]="getAvatarUrl(topScorerMVP)" class="mvp-avatar">
-            <div class="mvp-info">
-                <h4 class="mvp-name">{{ topScorerMVP.nombre }} {{ topScorerMVP.apellidos }}</h4>
-                <span class="mvp-pos">{{ topScorerMVP.posicion }}</span>
-                <div class="mvp-stat">
-                    <span class="num">{{ topScorerMVP.goles }}</span>
-                    <span class="lbl">Goles</span>
-                </div>
+    <!-- ROW 3: Gráfico de goles por partido -->
+    <div class="panel-card chart-card">
+      <div class="panel-header">
+        <span class="panel-title">Goles por Partido</span>
+        <span class="panel-sub">Últimos {{ matches.length > 10 ? 10 : matches.length }} encuentros</span>
+      </div>
+      <apx-chart
+        [series]="goalsChartOptions.series"
+        [chart]="goalsChartOptions.chart"
+        [xaxis]="goalsChartOptions.xaxis"
+        [yaxis]="goalsChartOptions.yaxis"
+        [colors]="goalsChartOptions.colors"
+        [plotOptions]="goalsChartOptions.plotOptions"
+        [dataLabels]="goalsChartOptions.dataLabels"
+        [grid]="goalsChartOptions.grid"
+        [legend]="goalsChartOptions.legend"
+        [tooltip]="goalsChartOptions.tooltip">
+      </apx-chart>
+    </div>
+
+    <!-- ROW 4: Grid 2 columnas — Radar + Goleadores -->
+    <div class="analytics-grid">
+
+      <!-- Radar por líneas -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <span class="panel-title">Rendimiento por Línea</span>
+        </div>
+        <apx-chart
+          [series]="radarChartOptions.series"
+          [chart]="radarChartOptions.chart"
+          [xaxis]="radarChartOptions.xaxis"
+          [yaxis]="radarChartOptions.yaxis"
+          [colors]="radarChartOptions.colors"
+          [plotOptions]="radarChartOptions.plotOptions"
+          [fill]="radarChartOptions.fill"
+          [stroke]="radarChartOptions.stroke"
+          [markers]="radarChartOptions.markers"
+          [legend]="radarChartOptions.legend"
+          [tooltip]="radarChartOptions.tooltip">
+        </apx-chart>
+      </div>
+
+      <!-- Leaderboard Goleadores -->
+      <div class="panel-card scorers-panel">
+        <div class="panel-header">
+          <span class="panel-title">Máx. Goleadores</span>
+          <span class="panel-badge">TOP ⚽</span>
+        </div>
+
+        <div class="mvp-row" *ngIf="topScorerMVP">
+          <img [src]="getAvatarUrl(topScorerMVP)" class="mvp-avatar">
+          <div class="mvp-info">
+            <span class="mvp-name">{{ topScorerMVP.nombre }} {{ topScorerMVP.apellidos }}</span>
+            <span class="mvp-pos">{{ topScorerMVP.posicion }}</span>
+          </div>
+          <div class="mvp-goals">
+            <span class="goals-num">{{ topScorerMVP.goles }}</span>
+            <span class="goals-icon">⚽</span>
+          </div>
+        </div>
+
+        <div class="leaderboard-list" *ngIf="restScorers.length > 0">
+          <div class="lb-item" *ngFor="let p of restScorers; let i = index">
+            <span class="lb-rank">{{ i + 2 }}</span>
+            <img [src]="getAvatarUrl(p)" class="lb-avatar">
+            <div class="lb-info">
+              <span class="lb-name">{{ p.nombre }}</span>
+              <span class="lb-pos">{{ p.posicion | slice:0:3 }}</span>
             </div>
+            <span class="lb-goals">{{ p.goles }} ⚽</span>
+          </div>
         </div>
+
+        <div *ngIf="!topScorerMVP" class="empty-state"><p>Sin datos de goles.</p></div>
+      </div>
+
     </div>
 
-    <div class="pro-list animate-slide-up delay-2" *ngIf="restScorers.length > 0">
-        <div class="list-item" *ngFor="let p of restScorers; let i = index">
-            <span class="rank">{{ i + 2 }}</span>
-            <img [src]="getAvatarUrl(p)" class="mini-avatar">
-            <div class="info">
-                <span class="name">{{ p.nombre }}</span>
-                <span class="pos">{{ p.posicion | slice:0:3 }}</span>
-            </div>
-            <span class="stat-value">{{ p.goles }}</span>
-        </div>
+    <!-- ROW 5: Carga Física -->
+    <div class="panel-card chart-card">
+      <div class="panel-header">
+        <span class="panel-title">Carga Física</span>
+        <span class="panel-sub">Minutos jugados — Top 8</span>
+      </div>
+      <apx-chart
+        [series]="physicalChartOptions.series"
+        [chart]="physicalChartOptions.chart"
+        [xaxis]="physicalChartOptions.xaxis"
+        [yaxis]="physicalChartOptions.yaxis"
+        [colors]="physicalChartOptions.colors"
+        [plotOptions]="physicalChartOptions.plotOptions"
+        [dataLabels]="physicalChartOptions.dataLabels"
+        [grid]="physicalChartOptions.grid"
+        [tooltip]="physicalChartOptions.tooltip">
+      </apx-chart>
     </div>
 
-    <div *ngIf="!topScorerMVP" class="empty-state">
-        <p>No hay datos de goles registrados.</p>
-    </div>
-
-    <div class="section-heading" style="margin-top: 35px;">
-        <h3>Carga Física</h3>
-    </div>
-
-    <div class="stats-table-header">
-        <span class="col-player">JUGADOR</span>
-        <span class="col-data">PJ</span>
-        <span class="col-data">MIN</span>
-        <span class="col-data highlight">AVG</span>
-    </div>
-
-    <div class="pro-list animate-slide-up delay-3">
-        <div class="list-item-table" *ngFor="let p of topMinutes">
-            <div class="player-cell">
-                <img [src]="getAvatarUrl(p)" class="mini-avatar">
-                <span class="name">{{ p.nombre }}</span>
-            </div>
-            
-            <div class="data-cell text-muted">{{ p.partidosJugados }}</div>
-            <div class="data-cell text-white">{{ p.minutos }}'</div>
-            <div class="data-cell font-bold text-blue">{{ p.promedioMinutos }}'</div>
-        </div>
-        
-        <div *ngIf="topMinutes.length === 0" class="empty-state">
-            <p>Sin datos de minutos.</p>
-        </div>
-    </div>
-
-    <div class="section-heading" style="margin-top: 35px;">
-        <h3>Compromiso (Últimas Sesiones)</h3>
-    </div>
-
-    <div class="pro-list animate-slide-up delay-3">
-        <div class="list-item-attendance" *ngFor="let p of topAttendance">
-            
-            <div class="player-info">
-                <img [src]="getAvatarUrl(p)" class="mini-avatar">
-                <div class="text-col">
-                    <span class="name">{{ p.nombre }}</span>
-                    <span class="pct-label" [style.color]="getAttendanceColor(p.asistenciaPct)">
-                        {{ p.asistenciaPct }}% Global
-                    </span>
-                </div>
-            </div>
-
-            <div class="history-dots">
-                <ng-container *ngFor="let status of p.historialAsistencia">
-                    <div class="dot present" *ngIf="status === 'PRESENT'" title="Presente"></div>
-                    <div class="dot absent" *ngIf="status === 'ABSENT'" title="Ausente"></div>
-                    <div class="dot injured" *ngIf="status === 'INJURED'" title="Lesionado"></div>
-                    <div class="dot unknown" *ngIf="status === 'UNKNOWN'" title="Sin datos"></div>
-                </ng-container>
-            </div>
-        </div>
-        
-        <div *ngIf="topAttendance.length === 0" class="empty-state">
-            <p>Aún no hay registros de asistencia.</p>
-        </div>
+    <!-- ROW 6: Compromiso -->
+    <div class="panel-card chart-card">
+      <div class="panel-header">
+        <span class="panel-title">Compromiso</span>
+        <span class="panel-sub">% asistencia · 🟢≥85 🔵≥60 🟡≥40 🔴&lt;40</span>
+      </div>
+      <apx-chart
+        [series]="attendanceChartOptions.series"
+        [chart]="attendanceChartOptions.chart"
+        [xaxis]="attendanceChartOptions.xaxis"
+        [yaxis]="attendanceChartOptions.yaxis"
+        [colors]="attendanceChartOptions.colors"
+        [plotOptions]="attendanceChartOptions.plotOptions"
+        [dataLabels]="attendanceChartOptions.dataLabels"
+        [grid]="attendanceChartOptions.grid"
+        [legend]="attendanceChartOptions.legend"
+        [tooltip]="attendanceChartOptions.tooltip">
+      </apx-chart>
     </div>
 
     <div style="height: 60px;"></div>
   </div>
+
 </ion-content>

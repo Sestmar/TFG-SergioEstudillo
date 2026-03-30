@@ -195,6 +195,44 @@
       </div>
     </div>
 
+    <!-- Evolución del equipo -->
+    <div class="section-title" style="margin-top: 24px;">
+      <h3>Evolución del Equipo</h3>
+    </div>
+    <div class="chart-card">
+      <apx-chart
+        [series]="evolutionChartOptions.series"
+        [chart]="evolutionChartOptions.chart"
+        [xaxis]="evolutionChartOptions.xaxis"
+        [yaxis]="evolutionChartOptions.yaxis"
+        [colors]="evolutionChartOptions.colors"
+        [fill]="evolutionChartOptions.fill"
+        [stroke]="evolutionChartOptions.stroke"
+        [dataLabels]="evolutionChartOptions.dataLabels"
+        [grid]="evolutionChartOptions.grid"
+        [tooltip]="evolutionChartOptions.tooltip">
+      </apx-chart>
+    </div>
+
+    <!-- Radar personal -->
+    <div class="section-title" style="margin-top: 24px;">
+      <h3>Mis Stats de Temporada</h3>
+    </div>
+    <div class="chart-card" *ngIf="playerStats">
+      <apx-chart
+        [series]="statsRadarOptions.series"
+        [chart]="statsRadarOptions.chart"
+        [xaxis]="statsRadarOptions.xaxis"
+        [yaxis]="statsRadarOptions.yaxis"
+        [colors]="statsRadarOptions.colors"
+        [fill]="statsRadarOptions.fill"
+        [stroke]="statsRadarOptions.stroke"
+        [markers]="statsRadarOptions.markers"
+        [plotOptions]="statsRadarOptions.plotOptions"
+        [tooltip]="statsRadarOptions.tooltip">
+      </apx-chart>
+    </div>
+
     <div class="spacer" style="height: 80px;"></div>
 
     </div> <!-- /main-content -->

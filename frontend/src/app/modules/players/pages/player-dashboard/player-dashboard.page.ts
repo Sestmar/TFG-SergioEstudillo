@@ -1,4 +1,11 @@
 import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+
+type ChartOptions = {
+  series: any; chart: any; xaxis?: any; yaxis?: any;
+  dataLabels?: any; colors?: string[]; fill?: any;
+  legend?: any; grid?: any; stroke?: any; tooltip?: any;
+  markers?: any; plotOptions?: any;
+};
 import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -39,6 +46,54 @@ export class PlayerDashboardPage implements OnInit {
 
   upcomingConvocations: Partido[] = [];
   playerStats: PlayerStats | null = null;
+
+  // ── CHART: Evolución del equipo (Area) ─────────────────────
+  evolutionChartOptions: ChartOptions = {
+    series: [{ name: 'Goles a Favor', data: [] }],
+    chart: {
+      type: 'area', height: 140,
+      background: 'transparent', foreColor: '#94a3b8',
+      toolbar: { show: false }, fontFamily: 'inherit'
+    },
+    colors: ['#6c63ff'],
+    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.05 } },
+    stroke: { curve: 'smooth', width: 2 },
+    dataLabels: { enabled: false },
+    xaxis: {
+      categories: [],
+      labels: { style: { colors: '#475569', fontSize: '9px' } },
+      axisBorder: { show: false }, axisTicks: { show: false }
+    },
+    yaxis: { show: false },
+    grid: { borderColor: 'rgba(255,255,255,0.05)', padding: { left: 4, right: 4 } },
+    tooltip: { theme: 'dark' }
+  };
+
+  // ── CHART: Stats personales (Radar) ────────────────────────
+  statsRadarOptions: ChartOptions = {
+    series: [{ name: 'Temporada', data: [0, 0, 0, 0, 0] }],
+    chart: {
+      type: 'radar', height: 240,
+      background: 'transparent', foreColor: '#94a3b8',
+      toolbar: { show: false }, fontFamily: 'inherit'
+    },
+    colors: ['#6c63ff'],
+    xaxis: { categories: ['Partidos', 'Goles', 'Asistencias', 'Min/10', 'Eficiencia'] },
+    yaxis: { show: false },
+    plotOptions: {
+      radar: {
+        polygons: {
+          strokeColors: 'rgba(255,255,255,0.08)',
+          connectorColors: 'rgba(255,255,255,0.08)',
+          fill: { colors: ['rgba(108,99,255,0.05)', 'rgba(108,99,255,0.02)'] }
+        }
+      }
+    },
+    fill: { opacity: 0.25 },
+    stroke: { width: 2 },
+    markers: { size: 4 },
+    tooltip: { theme: 'dark' }
+  };
   
   // Las acciones se renderizan en el HTML, pero el ID es clave para el switch
   quickActions = [
@@ -159,7 +214,14 @@ export class PlayerDashboardPage implements OnInit {
                   .slice(0, 5); 
 
               this.stats.upcomingConvocations = this.upcomingConvocations.length;
-              this.stats.totalConvocations = matches.length; 
+              this.stats.totalConvocations = matches.length;
+
+              const pastFinished = matches
+                .filter(m => m.estado === 'FINALIZADO' && m.tipo === 'PARTIDO')
+                .sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime())
+                .slice(-8);
+              this.buildEvolutionChart(pastFinished);
+
               this.loading = false;
           },
           error: (err) => {
@@ -175,6 +237,7 @@ export class PlayerDashboardPage implements OnInit {
       .subscribe({
         next: (stats: PlayerStats) => {
             this.playerStats = stats;
+            this.buildPlayerRadar();
         },
         error: (err) => console.error('Error cargando stats', err)
       });
@@ -279,6 +342,37 @@ export class PlayerDashboardPage implements OnInit {
   getConvocationTypeColor(type: string): string {
       const map: Record<string, string> = { 'PARTIDO': 'success', 'ENTRENAMIENTO': 'primary' };
       return map[type] || 'medium';
+  }
+
+  buildEvolutionChart(matches: Partido[]) {
+    this.evolutionChartOptions = {
+      ...this.evolutionChartOptions,
+      series: [{ name: 'Goles a Favor', data: matches.map(m => m.golesFavor || 0) }],
+      xaxis: {
+        ...this.evolutionChartOptions.xaxis,
+        categories: matches.map((m, i) => {
+          const r = m.rival;
+          if (!r) return `PJ${i + 1}`;
+          return r.length > 7 ? r.substring(0, 6) + '.' : r;
+        })
+      }
+    };
+  }
+
+  buildPlayerRadar() {
+    if (!this.playerStats) return;
+    const partidos    = this.playerStats.partidosTotales  || 0;
+    const goles       = this.playerStats.golesTotales      || 0;
+    const asistencias = this.playerStats.asistenciasTotales || 0;
+    const minutos10   = Math.round((this.playerStats.minutosJugados || 0) / 10);
+    const eficiencia  = partidos > 0
+      ? Math.round(((goles + asistencias) / partidos) * 10)
+      : 0;
+
+    this.statsRadarOptions = {
+      ...this.statsRadarOptions,
+      series: [{ name: 'Temporada', data: [partidos, goles, asistencias, minutos10, eficiencia] }]
+    };
   }
 
   getPlayerAttendanceStatus(conv: Partido): string { return 'PENDIENTE'; }
