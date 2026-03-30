@@ -21,7 +21,7 @@
       <div class="sidebar-icon" (click)="navigateTo('/profile')">
         <ion-icon name="person-outline"></ion-icon>
       </div>
-      <div class="sidebar-icon">
+      <div class="sidebar-icon" (click)="navigateTo('/chat')">
         <ion-icon name="chatbubbles-outline"></ion-icon>
       </div>
     </nav>
@@ -128,6 +128,13 @@
           <ion-icon name="stats-chart"></ion-icon>
         </div>
         <span class="title">Estadísticas</span>
+      </div>
+
+      <div class="action-card" (click)="navigateTo('/chat')">
+        <div class="icon-circle" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+          <ion-icon name="chatbubbles"></ion-icon>
+        </div>
+        <span class="title">Chat</span>
       </div>
     </div>
 

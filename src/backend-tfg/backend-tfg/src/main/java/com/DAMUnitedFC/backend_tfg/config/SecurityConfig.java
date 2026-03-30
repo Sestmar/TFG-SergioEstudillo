@@ -56,6 +56,9 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/error").permitAll()
 
+                        // 5. WebSocket endpoint
+                        .requestMatchers("/ws/**").permitAll()
+
                         // 4. Todo lo demás cerrado
                         .anyRequest().authenticated()
                 )

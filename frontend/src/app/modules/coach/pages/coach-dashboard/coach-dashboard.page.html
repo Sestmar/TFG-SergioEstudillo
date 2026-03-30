@@ -21,7 +21,7 @@
       <div class="sidebar-icon" (click)="goToStats()">
         <ion-icon name="trophy-outline"></ion-icon>
       </div>
-      <div class="sidebar-icon">
+      <div class="sidebar-icon" (click)="navigateToAction('/chat')">
         <ion-icon name="chatbubbles-outline"></ion-icon>
       </div>
     </nav>
@@ -170,6 +170,15 @@
             </div>
             <span class="title">Próx. Partidos</span>
             <span class="desc">Ver encuentros</span>
+            <span class="more-info-link">More info →</span>
+          </div>
+
+          <div class="action-card small" (click)="navigateToAction('/chat')">
+            <div class="icon-circle" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+              <ion-icon name="chatbubbles-outline"></ion-icon>
+            </div>
+            <span class="title">Chat Equipo</span>
+            <span class="desc">Mensajes del equipo</span>
             <span class="more-info-link">More info →</span>
           </div>
 

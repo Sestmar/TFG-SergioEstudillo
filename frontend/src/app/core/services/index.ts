@@ -9,3 +9,4 @@ export * from './player/player.service';
 export * from './convocation/convocation.service';
 export * from './request/request.service';
 export * from './incident/incident.service';
+export * from './chat/chat.service';

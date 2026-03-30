@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { AuthGuard } from './core/guards/auth.guard';
 
 const routes: Routes = [
   { path: '', redirectTo: 'landing', pathMatch: 'full' },
@@ -115,6 +116,13 @@ const routes: Routes = [
     loadChildren: () => import('./modules/admin/pages/training-attendance/training-attendance.module').then( m => m.TrainingAttendancePageModule)
   },
   
+  // CHAT
+  {
+    path: 'chat',
+    loadChildren: () => import('./modules/chat/chat.module').then(m => m.ChatModule),
+    canActivate: [AuthGuard]
+  },
+
   // COMODÍN (Siempre al final)
   { path: '**', redirectTo: 'landing' }
 ];

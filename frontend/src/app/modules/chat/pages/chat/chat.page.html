@@ -1,0 +1,68 @@
+<ion-header>
+  <ion-toolbar class="chat-toolbar">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/player-dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <ng-container *ngIf="modoChat === 'equipo'">Chat del Equipo</ng-container>
+      <ng-container *ngIf="modoChat === 'privado' && destinatarioSeleccionado">
+        {{ destinatarioSeleccionado.nombre }} {{ destinatarioSeleccionado.apellidos }}
+      </ng-container>
+      <ng-container *ngIf="modoChat === 'privado' && !destinatarioSeleccionado">Chat Privado</ng-container>
+    </ion-title>
+    <ion-buttons slot="end">
+      <div class="connection-dot" [class.connected]="conectado$ | async"></div>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="chat-content">
+
+  <!-- SELECTOR DE MODO (solo ADMIN) -->
+  <div class="mode-selector" *ngIf="currentUser?.rol === 'ADMIN'">
+    <ion-segment [(ngModel)]="modoChat" mode="ios" (ionChange)="cambiarModo($any($event.detail.value))">
+      <ion-segment-button value="equipo">
+        <ion-icon name="people-outline"></ion-icon>
+        <ion-label>Equipo</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="privado">
+        <ion-icon name="person-outline"></ion-icon>
+        <ion-label>Privado</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </div>
+
+  <!-- SELECCIÓN DE DESTINATARIO (Admin en modo privado) -->
+  <div class="destinatario-list" *ngIf="currentUser?.rol === 'ADMIN' && modoChat === 'privado' && !destinatarioSeleccionado">
+    <div class="destinatario-title">Selecciona un usuario</div>
+    <div class="destinatario-item"
+         *ngFor="let u of usuariosDisponibles"
+         (click)="seleccionarDestinatario(u)">
+      <div class="dest-avatar">
+        <img *ngIf="u.fotoUrl" [src]="u.fotoUrl" alt="">
+        <div class="dest-avatar-placeholder" *ngIf="!u.fotoUrl">
+          {{ (u.nombre || 'U')[0] }}{{ (u.apellidos || '')[0] }}
+        </div>
+      </div>
+      <div class="dest-info">
+        <span class="dest-nombre">{{ u.nombre }} {{ u.apellidos }}</span>
+        <span class="dest-rol">{{ u.rol }}</span>
+      </div>
+      <ion-icon name="chevron-forward"></ion-icon>
+    </div>
+
+    <div class="empty-state" *ngIf="usuariosDisponibles.length === 0">
+      <ion-icon name="people-outline"></ion-icon>
+      <p>No hay usuarios disponibles</p>
+    </div>
+  </div>
+
+  <!-- CHAT ROOM -->
+  <app-chat-room
+    *ngIf="modoChat === 'equipo' || (modoChat === 'privado' && destinatarioSeleccionado)"
+    [mensajes]="mensajes$ | async"
+    [currentUserId]="currentUser?.idUsuario"
+    (onEnviar)="enviarMensaje($event)">
+  </app-chat-room>
+
+</ion-content>

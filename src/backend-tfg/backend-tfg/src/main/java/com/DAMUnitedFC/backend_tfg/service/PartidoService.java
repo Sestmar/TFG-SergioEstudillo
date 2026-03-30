@@ -1,13 +1,18 @@
 package com.DAMUnitedFC.backend_tfg.service;
 
 import com.DAMUnitedFC.backend_tfg.dto.ActaDto;
+import com.DAMUnitedFC.backend_tfg.model.Entrenador;
+import com.DAMUnitedFC.backend_tfg.model.Jugador;
 import com.DAMUnitedFC.backend_tfg.model.Partido;
 import com.DAMUnitedFC.backend_tfg.repository.AlineacionRepository;
 import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.PartidoRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,20 +20,72 @@ import java.util.Optional;
 @Service
 public class PartidoService {
 
+    private static final Logger log = LoggerFactory.getLogger(PartidoService.class);
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
     private final PartidoRepository partidoRepo;
     private final AlineacionRepository alineacionRepo;
     private final JugadorRepository jugadorRepo;
+    private final WhatsAppService whatsAppService;
 
     public PartidoService(PartidoRepository partidoRepo,
                           AlineacionRepository alineacionRepo,
-                          JugadorRepository jugadorRepo) {
+                          JugadorRepository jugadorRepo,
+                          WhatsAppService whatsAppService) {
         this.partidoRepo = partidoRepo;
         this.alineacionRepo = alineacionRepo;
         this.jugadorRepo = jugadorRepo;
+        this.whatsAppService = whatsAppService;
     }
 
+    @Transactional
     public Partido crear(Partido partido) {
-        return partidoRepo.save(partido);
+        Partido guardado = partidoRepo.save(partido);
+
+        // Notificar a los jugadores del equipo — el fallo NO debe interrumpir el guardado
+        try {
+            if (guardado.getEquipo() != null) {
+                Integer idEquipo = guardado.getEquipo().getIdEquipo();
+                List<Jugador> jugadores = jugadorRepo.findByEquipoPrincipal_IdEquipo(idEquipo);
+
+                String rival = guardado.getRival() != null ? guardado.getRival() : "por confirmar";
+                String lugar = guardado.getLugar() != null ? guardado.getLugar() : "por confirmar";
+                String fechaHora = guardado.getFechaHora() != null
+                        ? guardado.getFechaHora().format(FORMATTER)
+                        : "por confirmar";
+
+                for (Jugador jugador : jugadores) {
+                    // Prioridad: telefonoContacto del jugador, fallback al teléfono del usuario
+                    String telefono = jugador.getTelefonoContacto();
+                    if (telefono == null || telefono.isBlank()) {
+                        telefono = jugador.getUsuario() != null ? jugador.getUsuario().getTelefono() : null;
+                    }
+                    if (telefono != null && !telefono.isBlank()) {
+                        whatsAppService.enviarNotificacionPartido(telefono, rival, lugar, fechaHora);
+                    }
+                }
+
+                // Notificar también al entrenador del equipo
+                Entrenador entrenador = guardado.getEquipo().getEntrenador();
+                if (entrenador != null) {
+                    String telEntrenador = entrenador.getTelefonoContacto();
+                    if (telEntrenador == null || telEntrenador.isBlank()) {
+                        telEntrenador = entrenador.getUsuario() != null ? entrenador.getUsuario().getTelefono() : null;
+                    }
+                    if (telEntrenador != null && !telEntrenador.isBlank()) {
+                        whatsAppService.enviarNotificacionPartido(telEntrenador, rival, lugar, fechaHora);
+                    }
+                }
+
+                log.info("Notificaciones WhatsApp enviadas para partido {} (equipo {})",
+                        guardado.getIdPartido(), idEquipo);
+            }
+        } catch (Exception e) {
+            log.error("Error enviando notificaciones WhatsApp para partido {}: {}",
+                    guardado.getIdPartido(), e.getMessage());
+        }
+
+        return guardado;
     }
 
     public List<Partido> listarPorEquipo(Long idEquipo) {

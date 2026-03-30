@@ -44,7 +44,10 @@
     "apexcharts": "^3.46.0",
     "jwt-decode": "^4.0.0",
     "ng-apexcharts": "^1.10.0",
+    "@stomp/stompjs": "^7.0.0",
+    "@stomp/rx-stomp": "^2.0.0",
     "rxjs": "~7.8.0",
+    "sockjs-client": "^1.6.1",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.0"
   },
@@ -61,6 +64,7 @@
     "@capacitor/cli": "^5.0.0",
     "@ionic/angular-toolkit": "^10.0.0",
     "@types/node": "^20.0.0",
+    "@types/sockjs-client": "^1.5.4",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.0.0",

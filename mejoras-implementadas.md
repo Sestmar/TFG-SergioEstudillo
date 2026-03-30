@@ -92,4 +92,37 @@ Se ha profesionalizado el backend Spring Boot siguiendo principios de **SOLID** 
   - **Decisión Estética**: Sigue la tendencia actual de interfaces deportivas premium (tipo FIFA/Stitch), alejándose del aspecto "móvil genérico" de los círculos de contacto.
 
 ---
+## 6. Chat en Tiempo Real: Comunicación Instantánea con WebSockets (STOMP/SockJS) 💬⚡
+
+Se ha implementado un sistema de mensajería bidireccional que permite la comunicación fluida entre los miembros del club, eliminando la necesidad de refrescar la pantalla para ver nuevos mensajes.
+
+### Arquitectura de Mensajería (Full Stack)
+- **Protocolo STOMP sobre WebSockets**:
+  - **Backend (Spring Boot)**: Uso de `spring-boot-starter-websocket`. Se configuró un **Message Broker** (`/topic`, `/queue`) que gestiona el enrutamiento de mensajes. Los controladores utilizan `@MessageMapping` para recibir datos y `SimpMessagingTemplate` para difundirlos a los clientes suscritos.
+  - **Frontend (Angular)**: Implementación de la librería `@stomp/stompjs` junto con `sockjs-client` para asegurar la compatibilidad en navegadores que no soportan WebSockets nativos (fallback).
+- **Gestión de Suscripciones Dinámicas e Inyección de Contexto**:
+  - El sistema detecta el contexto del usuario (Equipo o Privado) y se suscribe automáticamente a los canales correspondientes (`/topic/equipo/{id}` o `/queue/privado/{userId}`).
+  - **Mejora de Robustez**: Para roles de Jugador/Entrenador, se implementó un flujo de carga que recupera el `equipoId` desde el perfil antes de la conexión, asegurando que el `SUBSCRIBE` se realice con el ID correcto y evitando salas de chat huérfanas.
+- **Sincronización de Estado Reactivo (Historial REST + Socket)**:
+  - Se corrigió el desacoplamiento entre el historial persistido y el flujo en tiempo real. Mediante el uso del operador `tap` en `chat.service.ts`, las peticiones REST de historial ahora alimentan directamente el `BehaviorSubject` de mensajes, garantizando consistencia visual inmediata al entrar al chat.
+- **Persistencia Híbrida**:
+  - Aunque la comunicación es volátil (RAM/Broker), cada mensaje se persiste asíncronamente en MySQL (`MensajeRepository`) para mantener el historial completo. Se implementó una lógica de "Mensajes No Leídos" mediante un contador en la base de datos que se resetea al entrar en la sala de chat.
+
+---
+
+## 7. Notificaciones Inteligentes: Integración con WhatsApp via Twilio 📱🔔
+
+Se ha integrado el canal de comunicación preferido por los deportistas (WhatsApp) para automatizar la logística de los partidos y recordatorios.
+
+### Ingeniería de Integración de Terceros
+- **Provider: Twilio WhatsApp Business API**:
+  - Se utiliza el SDK oficial de Twilio para Java. La comunicación se realiza mediante peticiones REST autenticadas desde el servidor hacia la API de Twilio, que actúa como puente hacia los dispositivos móviles.
+- **Normalización Estricta E.164**:
+  - Se implementó una lógica de formateo automático en `WhatsAppService.java` que antepone el prefijo internacional (`+34` para España) si el número no cumple con el estándar global. Esto previene fallos silenciosos de entrega por números introducidos sin prefijo en el perfil.
+- **Disparadores Automáticos y Consistencia de Datos**:
+  - **Hook de Creación de Partido**: Al guardar un nuevo partido en `PartidoService`, se dispara la notificación a toda la plantilla.
+  - **Transaccionalidad Crítica**: Se aplicó `@Transactional` en el proceso de creación para solventar errores de `LazyInitializationException`. Esto garantiza que la sesión de Hibernate permanezca activa mientras el servicio recorre la lista de jugadores y accede a sus datos de usuario para el envío de notificaciones.
+- **Notificación Programada (Scheduler)**: Implementación de `@Scheduled` en el backend para buscar partidos en las próximas 24 horas y enviar recordatorios de "Confirmación de Asistencia" de forma automática.
+
+---
 > **Estado del Proyecto**: Arquitectura industrial, analítica integrada y visual premium validado al 100%.
