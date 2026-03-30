@@ -1,26 +1,38 @@
-🧐 Resumen de Hallazgos para Claude:
+Usuario@LAPTOP-8VI2TBCD MINGW64 ~/Documents/2DAM/TFG-SergioEstudillo/TFG-SergioEstudillo (preprod)
+$ git push origin preprod
+Enumerating objects: 123, done.
+Counting objects: 100% (123/123), done.
+Delta compression using up to 16 threads
+Compressing objects: 100% (67/67), done.
+Writing objects: 100% (77/77), 31.51 KiB | 1.37 MiB/s, done.
+Total 77 (delta 29), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (29/29), completed with 29 local objects.
+remote: error: GH013: Repository rule violations found for refs/heads/preprod.
+remote:
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote:
+remote:     - Push cannot contain secrets
+remote:
+remote:
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:
+remote:
+remote:       —— Twilio Account String Identifier ——————————————————
+remote:        locations:
+remote:          - commit: 986c8288ad5110218a0ace44f947c4c9e7c33d93
+remote:            path: src/backend-tfg/backend-tfg/src/main/resources/application.properties:42
+remote:
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/Sestmar/TFG-SergioEstudillo/security/secret-scanning/unblock-secret/3BgJbYOcniSn6XiwNdcXGgGxHBd
+remote:
+remote:
+remote:
+To https://github.com/Sestmar/TFG-SergioEstudillo
+ ! [remote rejected] preprod -> preprod (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/Sestmar/TFG-SergioEstudillo'
 
-  1. Raíz del Error 404 en el Chat (Entrenador)
-   * Contexto: chat.page.ts usa un único endpoint para obtener el equipo: GET /api/jugadores/usuario/${userId}/equipo.
-   * Problema: El JugadorController y JugadorService implementan esto buscando en la tabla jugador. Como un Entrenador
-     no es un Jugador, la búsqueda falla con 404.
-   * Evidencia: JugadorService.java línea 71 (jugadorRepo.findByUsuario_IdUsuario(idUsuario)).
-   * Solución Recomendada: Crear un endpoint genérico (ej. en EquipoController o UsuarioController) que determine el
-     equipo basándose en si el usuario es Jugador o Entrenador.
-
-  2. Raíz del Fallo en Notificaciones WhatsApp
-   * Problema A (Duplicidad de Datos): Existe el campo telefono en la entidad Usuario, pero también hay un campo
-     telefono_contacto en Jugador y Entrenador.
-   * Evidencia: PartidoService.java usa jugador.getUsuario().getTelefono(). Si el teléfono solo se llenó en el perfil
-     del Jugador (telefono_contacto), el de Usuario estará nulo y no se enviará nada.
-   * Problema B (Lógica de Búsqueda): PartidoService busca jugadores por equipoPrincipal. Si los jugadores están
-     vinculados al equipo por otra vía (ej. una tabla intermedia JugadorEquipo que vi en los greps previos), no los
-     encontrará.
-   * Problema C (Entrenador no notificado): El bucle de notificaciones en PartidoService solo recorre Jugador. El
-     Entrenador del equipo no recibe la notificación de su propio partido (aunque él lo haya creado, debería ser
-     notificado o al menos considerado).
-
-  ---
-
-  ¡Ya tenemos la raíz de todo, hermano! 🕵️‍♂️ He investigado sin tocar nada y ya sé por qué el entrenador se queda
-  "huérfano" en el chat y por qué los WhatsApps se pierden en el limbo.
+Usuario@LAPTOP-8VI2TBCD MINGW64 ~/Documents/2DAM/TFG-SergioEstudillo/TFG-SergioEstudillo (preprod)
+$
