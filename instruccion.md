@@ -1,27 +1,13 @@
- Lo que está BIEN en ese documento:
+Se ve premium y coherente con el resto de la app. Sin embargo, el cliente odia cómo se visualiza el logo del club en las tarjetas de los equipos.
 
-  ✅ Borrar user-state.service.ts — confirmado, no lo usa nadie más que su propio
-  index.ts. Es un muerto. Borrarlo es correcto.
+Tu tarea es eliminar el marco gris y voluminoso que rodea al logo en admin-dashboard.page.scss, específicamente en las tarjetas de la pestaña 'Equipos':
 
-  ✅ player.service.ts tiene 2 any restantes — menor, pero real. Tiparlos es correcto.
+Localiza el contenedor CSS de la imagen del logo dentro de la tarjeta de equipo (image_5156b2.png).
 
-  ✅ NotificationService centralizado — buena práctica. Tener ToastController disperso
-   por 15 componentes es exactamente el tipo de deuda técnica que duele escalar.
+Elimina el color de fondo gris (background-color), cualquier borde (border), sombra (box-shadow), y padding excesivo de ese contenedor. Debe quedar totalmente transparente.
 
-  ✅ Chat con WebSockets primero en backend — el orden es correcto técnicamente.
-  Spring WebSocket + STOMP es el stack estándar para esto.
+Asegúrate de que la etiqueta <img> interna tenga object-fit: contain y un fondo transparente (si la imagen fuente lo es), para que el escudo flote limpiamente dentro de la tarjeta.
 
-  ✅ PDF con iText o JasperReports — técnicamente válido. Para un TFG, iText es más
-  simple. JasperReports es una cañón para lo que necesitás.
+Ajusta el tamaño de la imagen (width/height) para que ocupe el espacio de forma elegante.
 
-  ---
-  Lo que está MAL o es cuestionable:
-
-  ❌ "Limpiar emojis de debug" — sin verificar no voy a confirmar. Es menor.
-
-  ⚠️ PDF como "NUEVA IDEA" — es scope creep. Si el TFG ya tiene fecha límite, meter
-  iText o JasperReports es abrir una caja de Pandora. Mejor un window.print() con CSS
-  de impresión bien hecho que tiene el 80% del valor con el 5% del esfuerzo.
-
-  ⚠️ El orden de prioridades es correcto pero el documento no menciona que el rediseño
-   visual ya está hecho — lo que significa que el contexto está desactualizado.
+¡DALE, a dejar ese escudo volando como un campeón!"

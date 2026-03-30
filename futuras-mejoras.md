@@ -41,7 +41,22 @@ Este documento lista las funcionalidades y mejoras técnicas pendientes, prioriz
 
 ---
 
-## 4. Deuda Técnica y Limpieza Final 🧹
+## 4. Analítica y Datos: El Cerebro del Equipo 📈🧠
+
+**Descripción:** Implementar una capa visual de datos para transformar las estadísticas de las actas en información accionable para el entrenador y motivación para el jugador.
+
+### Implementación Propuesta
+- **Stack**: Integrar **ApexCharts** o **Chart.js** (ambos tienen excelentes wrappers para Angular).
+- **Dashboard del Entrenador**:
+  - Gráfico de barras: Goles por partido y racha de victorias/derrotas.
+  - Gráfico de radar (Spider Chart): Comparativa de rendimiento por líneas (Defensa, Medio, Ataque).
+- **Dashboard del Jugador**:
+  - Gráfico de evolución: Minutos jugados y participación en goles a lo largo de la temporada.
+  - Comparativa: Rendimiento personal vs. promedio del equipo en su posición.
+
+---
+
+## 5. Deuda Técnica y Limpieza Final 🧹
 
 Estas tareas cierran el ciclo de refactorización profunda para asegurar un código de calidad profesional.
 
