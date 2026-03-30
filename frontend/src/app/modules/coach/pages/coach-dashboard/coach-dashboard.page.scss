@@ -164,9 +164,7 @@
       flex-shrink: 0;
 
       .shield-glow-effect {
-        position: absolute; width: 100%; height: 100%;
-        background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
-        filter: blur(10px); z-index: -1;
+        display: none;
       }
 
       .main-shield {
@@ -406,61 +404,99 @@
 
 // ─── EVENTS LIST ─────────────────────────────────────────────────────────────
 .events-list-pro {
-  display: flex; flex-direction: column; gap: 12px;
+  display: flex; flex-direction: column; gap: 10px;
 
   .event-card {
-    background: var(--bg-card);
-    padding: 15px; border-radius: 16px;
-    display: flex; align-items: center; gap: 14px;
+    background: rgba(15, 22, 45, 0.75);
+    padding: 14px 14px 14px 0;
+    border-radius: 18px;
+    display: flex; align-items: center; gap: 0;
     border: 1px solid rgba(255,255,255,0.05);
-    border-left: 4px solid #2d3a5a;
+    overflow: hidden;
+    transition: transform 0.15s;
 
-    &.match-card { border-left-color: #10b981; }
+    &:active { transform: scale(0.985); }
 
-    .date-col {
-      display: flex; flex-direction: column; align-items: center; min-width: 44px;
-      padding-right: 14px; border-right: 1px solid rgba(255,255,255,0.08);
-      .day   { font-size: 1.3rem; font-weight: 800; color: var(--text-main); line-height: 1; }
-      .month { font-size: 0.65rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; margin-top: 2px; }
+    &.match-card {
+      background: linear-gradient(125deg, rgba(16,185,129,0.09) 0%, rgba(15,22,45,0.82) 50%);
+      border-color: rgba(16,185,129,0.15);
     }
 
+    // ── Columna de fecha ───────────────────────────────────
+    .date-col {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-width: 62px; padding: 0 14px;
+      border-right: 1px solid rgba(255,255,255,0.07);
+
+      .day   {
+        font-size: 1.6rem; font-weight: 900; color: var(--text-main);
+        line-height: 1;
+      }
+      .month {
+        font-size: 0.6rem; font-weight: 700; color: var(--text-dim);
+        text-transform: uppercase; letter-spacing: 0.8px; margin-top: 1px;
+      }
+    }
+
+    // ── Columna de info ───────────────────────────────────
     .info-col {
-      flex: 1;
-      .top-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+      flex: 1; padding-left: 14px;
+
+      .top-row {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 6px;
+      }
 
       .type-tag {
-        font-size: 0.58rem; font-weight: 800; color: var(--text-dim);
-        text-transform: uppercase; letter-spacing: 0.5px;
+        font-size: 0.57rem; font-weight: 900;
+        text-transform: uppercase; letter-spacing: 1px;
+        color: var(--text-dim);
         &.match { color: #10b981; }
       }
       .time-tag {
-        font-size: 0.72rem; font-weight: 600; color: var(--text-main);
-        background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;
+        font-size: 0.7rem; font-weight: 700; color: var(--text-main);
+        background: rgba(255,255,255,0.07);
+        padding: 2px 8px; border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.06);
       }
 
       .event-main-title {
         margin-bottom: 6px;
-        .training-title { font-weight: 700; color: var(--text-main); font-size: 0.92rem; }
+
+        .training-title {
+          font-weight: 700; color: var(--text-main); font-size: 0.95rem;
+        }
 
         .match-vs {
-          display: flex; align-items: center; gap: 10px;
-          .vs          { color: var(--text-dim); font-size: 0.68rem; font-weight: 700; opacity: 0.6; }
-          .mini-shield { width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-          .rival-name  { color: var(--text-main); font-weight: 700; font-size: 1rem; line-height: 1.1; }
+          display: flex; align-items: center; gap: 8px;
+          .vs {
+            font-size: 0.62rem; font-weight: 900; color: var(--text-dim);
+            letter-spacing: 0.5px; opacity: 0.7;
+          }
+          .mini-shield {
+            // Dimensiones fijas — evita que SVGs rompan el layout
+            width: 28px; height: 28px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.55));
+          }
+          .rival-name {
+            color: var(--text-main); font-weight: 700; font-size: 0.95rem; line-height: 1.1;
+          }
         }
       }
 
       .location-row {
-        font-size: 0.72rem; color: var(--text-dim);
+        font-size: 0.7rem; color: var(--text-dim);
         display: flex; align-items: center; gap: 4px;
-        ion-icon { color: var(--accent-blue); }
+        ion-icon { color: var(--accent-blue); font-size: 0.75rem; }
       }
     }
 
+    // ── Columna de acciones ───────────────────────────────
     .actions-col {
-      display: flex; flex-direction: column; gap: 8px;
+      display: flex; flex-direction: column; gap: 2px; padding-right: 2px;
       .action-btn {
-        height: 36px; color: var(--text-dim);
+        height: 34px; color: var(--text-dim);
         &.gold { color: var(--gold); }
       }
     }

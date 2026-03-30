@@ -1,186 +1,263 @@
-<ion-content [fullscreen]="true" class="coach-bg">
-  
-  <div class="main-content">
-    
-    <div class="team-header-pro" *ngIf="coachTeamId">
-      <div class="shield-display">
-         <div class="glow"></div>
-         <img src="assets/img/mi-club-logo.png" alt="Escudo Club" class="team-shield">
+<ion-content [fullscreen]="true" class="page-bg">
+
+  <!-- HERO HEADER -->
+  <div class="team-hero" *ngIf="coachTeamId">
+    <div class="hero-glow"></div>
+    <ion-button fill="clear" color="light" class="back-btn" (click)="goBack()">
+      <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+    </ion-button>
+    <div class="hero-inner">
+      <div class="shield-wrap">
+        <img src="assets/img/mi-club-logo.png" class="hero-shield">
       </div>
-      <div class="team-details">
-         <h1>{{ coachTeamName }}</h1>
-         <div class="squad-count">
-            <ion-icon name="people"></ion-icon> {{ allPlayersCount }} Jugadores
-         </div>
+      <div class="hero-info">
+        <h1>{{ coachTeamName }}</h1>
+        <div class="hero-stats">
+          <div class="hs-item">
+            <span class="val">{{ allPlayersCount }}</span>
+            <span class="lbl">Total</span>
+          </div>
+          <div class="hs-div"></div>
+          <div class="hs-item">
+            <span class="val green">{{ allPlayersCount - injuredPlayers.length }}</span>
+            <span class="lbl">Disponibles</span>
+          </div>
+          <div class="hs-div"></div>
+          <div class="hs-item">
+            <span class="val red">{{ injuredPlayers.length }}</span>
+            <span class="lbl">Bajas</span>
+          </div>
+        </div>
       </div>
     </div>
+  </div>
+
+  <div class="page-content">
 
     <div *ngIf="loading" class="loading-state">
       <ion-spinner name="crescent" color="secondary"></ion-spinner>
     </div>
 
     <div *ngIf="!loading">
-      
-      <div class="position-group injury-section" *ngIf="injuredPlayers.length > 0">
-        <div class="group-title danger">
-            <ion-icon name="medkit"></ion-icon> ENFERMERÍA ({{ injuredPlayers.length }})
+
+      <!-- ENFERMERÍA -->
+      <div class="position-section" *ngIf="injuredPlayers.length > 0">
+        <div class="section-label injury-label">
+          <ion-icon name="medkit"></ion-icon>
+          <span>ENFERMERÍA</span>
+          <span class="count-pill red">{{ injuredPlayers.length }}</span>
         </div>
-        
         <div class="players-grid">
-          <div class="player-card-pro injured-card" *ngFor="let p of injuredPlayers" (click)="openEditModal(p)">
-             <div class="card-status injured"></div>
-             <img [src]="getAvatar(p)" class="player-img grayscale">
-             <div class="info">
-                 <span class="dorsal alert">BAJA</span>
-                 <span class="name">{{ p.usuario.nombre }}</span>
-                 <span class="injury-desc text-ellipsis">{{ $any(p).observaciones || 'Lesionado' }}</span>
-             </div>
-             <div class="injury-icon"><ion-icon name="bandage"></ion-icon></div>
+          <div class="player-card injured-card" *ngFor="let p of injuredPlayers" (click)="openEditModal(p)">
+            <div class="pos-bar injured"></div>
+            <img [src]="getAvatar(p)" class="p-avatar grayscale">
+            <div class="p-body">
+              <span class="p-dorsal red">BAJA</span>
+              <span class="p-name">{{ p.usuario.nombre }}</span>
+              <span class="p-pos">{{ $any(p).observaciones || 'Lesionado' }}</span>
+            </div>
+            <ion-icon name="bandage" class="injury-icon"></ion-icon>
           </div>
         </div>
       </div>
 
-      <div class="position-group" *ngIf="keepers.length > 0">
-        <div class="group-title"><ion-icon name="hand-left-outline" color="warning"></ion-icon> PORTEROS</div>
+      <!-- PORTEROS -->
+      <div class="position-section" *ngIf="keepers.length > 0">
+        <div class="section-label">
+          <span class="pos-dot keeper"></span>
+          <span>PORTEROS</span>
+          <span class="count-pill">{{ keepers.length }}</span>
+        </div>
         <div class="players-grid">
-          <div class="player-card-pro" *ngFor="let p of keepers" (click)="openEditModal(p)">
-             <div class="card-status"></div>
-             <img [src]="getAvatar(p)" class="player-img">
-             <div class="info"><span class="dorsal">#{{ p.dorsal || '-' }}</span><span class="name">{{ p.usuario.nombre }}</span></div>
+          <div class="player-card" *ngFor="let p of keepers" (click)="openEditModal(p)">
+            <div class="pos-bar keeper"></div>
+            <img [src]="getAvatar(p)" class="p-avatar">
+            <div class="p-body">
+              <span class="p-dorsal">#{{ p.dorsal || '-' }}</span>
+              <span class="p-name">{{ p.usuario.nombre }}</span>
+              <span class="p-pos">Portero</span>
+            </div>
+            <div class="status-dot available"></div>
           </div>
         </div>
       </div>
 
-      <div class="position-group" *ngIf="defenders.length > 0">
-        <div class="group-title"><ion-icon name="shield-outline" color="primary"></ion-icon> DEFENSAS</div>
+      <!-- DEFENSAS -->
+      <div class="position-section" *ngIf="defenders.length > 0">
+        <div class="section-label">
+          <span class="pos-dot defender"></span>
+          <span>DEFENSAS</span>
+          <span class="count-pill">{{ defenders.length }}</span>
+        </div>
         <div class="players-grid">
-          <div class="player-card-pro" *ngFor="let p of defenders" (click)="openEditModal(p)">
-             <div class="card-status"></div>
-             <img [src]="getAvatar(p)" class="player-img">
-             <div class="info"><span class="dorsal">#{{ p.dorsal || '-' }}</span><span class="name">{{ p.usuario.nombre }}</span></div>
+          <div class="player-card" *ngFor="let p of defenders" (click)="openEditModal(p)">
+            <div class="pos-bar defender"></div>
+            <img [src]="getAvatar(p)" class="p-avatar">
+            <div class="p-body">
+              <span class="p-dorsal">#{{ p.dorsal || '-' }}</span>
+              <span class="p-name">{{ p.usuario.nombre }}</span>
+              <span class="p-pos">{{ p.posicion | slice:0:8 }}</span>
+            </div>
+            <div class="status-dot available"></div>
           </div>
         </div>
       </div>
 
-      <div class="position-group" *ngIf="midfielders.length > 0">
-        <div class="group-title"><ion-icon name="compass-outline" color="success"></ion-icon> MEDIOCENTROS</div>
+      <!-- MEDIOCENTROS -->
+      <div class="position-section" *ngIf="midfielders.length > 0">
+        <div class="section-label">
+          <span class="pos-dot midfielder"></span>
+          <span>MEDIOCENTROS</span>
+          <span class="count-pill">{{ midfielders.length }}</span>
+        </div>
         <div class="players-grid">
-          <div class="player-card-pro" *ngFor="let p of midfielders" (click)="openEditModal(p)">
-             <div class="card-status"></div>
-             <img [src]="getAvatar(p)" class="player-img">
-             <div class="info"><span class="dorsal">#{{ p.dorsal || '-' }}</span><span class="name">{{ p.usuario.nombre }}</span></div>
+          <div class="player-card" *ngFor="let p of midfielders" (click)="openEditModal(p)">
+            <div class="pos-bar midfielder"></div>
+            <img [src]="getAvatar(p)" class="p-avatar">
+            <div class="p-body">
+              <span class="p-dorsal">#{{ p.dorsal || '-' }}</span>
+              <span class="p-name">{{ p.usuario.nombre }}</span>
+              <span class="p-pos">{{ p.posicion | slice:0:8 }}</span>
+            </div>
+            <div class="status-dot available"></div>
           </div>
         </div>
       </div>
 
-      <div class="position-group" *ngIf="forwards.length > 0">
-        <div class="group-title"><ion-icon name="flash-outline" color="danger"></ion-icon> DELANTEROS</div>
+      <!-- DELANTEROS -->
+      <div class="position-section" *ngIf="forwards.length > 0">
+        <div class="section-label">
+          <span class="pos-dot forward"></span>
+          <span>DELANTEROS</span>
+          <span class="count-pill">{{ forwards.length }}</span>
+        </div>
         <div class="players-grid">
-          <div class="player-card-pro" *ngFor="let p of forwards" (click)="openEditModal(p)">
-             <div class="card-status"></div>
-             <img [src]="getAvatar(p)" class="player-img">
-             <div class="info"><span class="dorsal">#{{ p.dorsal || '-' }}</span><span class="name">{{ p.usuario.nombre }}</span></div>
+          <div class="player-card" *ngFor="let p of forwards" (click)="openEditModal(p)">
+            <div class="pos-bar forward"></div>
+            <img [src]="getAvatar(p)" class="p-avatar">
+            <div class="p-body">
+              <span class="p-dorsal">#{{ p.dorsal || '-' }}</span>
+              <span class="p-name">{{ p.usuario.nombre }}</span>
+              <span class="p-pos">{{ p.posicion | slice:0:8 }}</span>
+            </div>
+            <div class="status-dot available"></div>
           </div>
         </div>
       </div>
 
-      <div class="position-group" *ngIf="others.length > 0">
-        <div class="group-title" style="color: #a1a1aa;"><ion-icon name="help-circle-outline"></ion-icon> SIN POSICIÓN</div>
+      <!-- SIN POSICIÓN -->
+      <div class="position-section" *ngIf="others.length > 0">
+        <div class="section-label muted">
+          <span class="pos-dot other"></span>
+          <span>SIN POSICIÓN</span>
+          <span class="count-pill muted">{{ others.length }}</span>
+        </div>
         <div class="players-grid">
-          <div class="player-card-pro" *ngFor="let p of others" (click)="openEditModal(p)" style="opacity: 0.8; border: 1px dashed #666;">
-             <div class="card-status warning"></div>
-             <img [src]="getAvatar(p)" class="player-img">
-             <div class="info"><span class="dorsal">?</span><span class="name">{{ p.usuario.nombre }}</span></div>
+          <div class="player-card other-card" *ngFor="let p of others" (click)="openEditModal(p)">
+            <div class="pos-bar other"></div>
+            <img [src]="getAvatar(p)" class="p-avatar">
+            <div class="p-body">
+              <span class="p-dorsal muted">?</span>
+              <span class="p-name">{{ p.usuario.nombre }}</span>
+              <span class="p-pos">Sin asignar</span>
+            </div>
+            <div class="status-dot available"></div>
           </div>
         </div>
       </div>
 
-      <div *ngIf="allPlayersCount === 0" class="empty-state"><p>No hay jugadores en la plantilla.</p></div>
+      <div *ngIf="allPlayersCount === 0" class="empty-state">
+        <ion-icon name="people-outline"></ion-icon>
+        <p>No hay jugadores en la plantilla.</p>
+      </div>
+
     </div>
+
+    <div style="height: 80px;"></div>
   </div>
 
+  <!-- MODAL FICHA JUGADOR -->
   <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="onEditModalDismiss()" [initialBreakpoint]="0.65" [breakpoints]="[0, 0.65, 0.9]">
     <ng-template>
-      <div class="modal-content-dark">
-         
-         <div class="modal-indicator"></div>
+      <div class="modal-sheet">
 
-         <div class="player-preview" *ngIf="selectedPlayer">
-            <img [src]="getAvatar(selectedPlayer)">
-            <h2>{{ selectedPlayer.usuario.nombre }} {{ selectedPlayer.usuario.apellidos }}</h2>
-            
-            <div class="status-badge" [class.injured]="$any(selectedPlayer).estado === 'LESIONADO'">
-                <ion-icon [name]="$any(selectedPlayer).estado === 'ACTIVO' ? 'checkmark-circle' : 'medkit'"></ion-icon>
-                <span>{{ $any(selectedPlayer).estado === 'ACTIVO' ? 'DISPONIBLE' : 'BAJA MÉDICA' }}</span>
+        <div class="modal-handle"></div>
+
+        <div class="modal-player-header" *ngIf="selectedPlayer">
+          <div class="modal-avatar-wrap" [class.injured-ring]="$any(selectedPlayer)?.estado === 'LESIONADO'">
+            <img [src]="getAvatar(selectedPlayer)" class="modal-avatar">
+          </div>
+          <h2>{{ selectedPlayer.usuario.nombre }} {{ selectedPlayer.usuario.apellidos }}</h2>
+          <span class="modal-status-pill" [class.injured]="$any(selectedPlayer)?.estado === 'LESIONADO'">
+            <ion-icon [name]="$any(selectedPlayer)?.estado === 'ACTIVO' ? 'checkmark-circle' : 'medkit'"></ion-icon>
+            {{ $any(selectedPlayer)?.estado === 'ACTIVO' ? 'DISPONIBLE' : 'BAJA MÉDICA' }}
+          </span>
+        </div>
+
+        <div class="modal-section">
+          <p class="modal-section-title">FICHA TÉCNICA</p>
+          <div class="modal-fields">
+            <div class="modal-field">
+              <label>Dorsal</label>
+              <ion-input type="number" [(ngModel)]="techData.dorsal" class="field-input"></ion-input>
             </div>
-         </div>
+            <div class="modal-field">
+              <label>Posición</label>
+              <ion-select [(ngModel)]="techData.posicion" [interfaceOptions]="customPopoverOptions" class="field-input">
+                <ion-select-option *ngFor="let pos of posicionesDisponibles" [value]="pos">{{ pos }}</ion-select-option>
+              </ion-select>
+            </div>
+          </div>
+          <ion-button expand="block" class="btn-save" (click)="saveTechnicalData()">
+            <ion-icon name="save-outline" slot="start"></ion-icon> Guardar Cambios
+          </ion-button>
+        </div>
 
-         <div class="action-tabs">
-             
-             <div class="form-section">
-                 <h4>Ficha Técnica</h4>
-                 <ion-list class="dark-list">
-                     <div class="input-row">
-                         <ion-item>
-                             <ion-label position="stacked">Dorsal</ion-label>
-                             <ion-input type="number" [(ngModel)]="techData.dorsal"></ion-input>
-                         </ion-item>
-                         <ion-item>
-                             <ion-label position="stacked">Posición</ion-label>
-                             <ion-select [(ngModel)]="techData.posicion" [interfaceOptions]="customPopoverOptions">
-                                <ion-select-option *ngFor="let pos of posicionesDisponibles" [value]="pos">{{ pos }}</ion-select-option>
-                             </ion-select>
-                         </ion-item>
-                     </div>
-                 </ion-list>
-                 <ion-button expand="block" class="save-btn" (click)="saveTechnicalData()">
-                     <ion-icon name="save-outline" slot="start"></ion-icon> Guardar Cambios
-                 </ion-button>
-             </div>
+        <div class="modal-section">
+          <p class="modal-section-title">ESTADO FÍSICO</p>
+          <ion-button *ngIf="$any(selectedPlayer)?.estado !== 'LESIONADO'"
+                      expand="block" class="btn-injury"
+                      (click)="switchToInjuryModal()">
+            <ion-icon name="bandage-outline" slot="start"></ion-icon>
+            Reportar Lesión / Baja
+          </ion-button>
+          <ion-button *ngIf="$any(selectedPlayer)?.estado === 'LESIONADO'"
+                      expand="block" class="btn-recovery"
+                      (click)="setRecovered(selectedPlayer!)">
+            <ion-icon name="medkit-outline" slot="start"></ion-icon>
+            Dar Alta Médica
+          </ion-button>
+        </div>
 
-             <div class="status-actions">
-                 <h4>Estado Físico</h4>
-                 
-                 <ion-button *ngIf="$any(selectedPlayer)?.estado !== 'LESIONADO'" 
-                             expand="block" color="danger" class="status-btn" 
-                             (click)="switchToInjuryModal()">
-                     <ion-icon name="bandage-outline" slot="start"></ion-icon>
-                     Reportar Lesión / Baja
-                 </ion-button>
-
-                 <ion-button *ngIf="$any(selectedPlayer)?.estado === 'LESIONADO'" 
-                             expand="block" color="success" class="status-btn" 
-                             (click)="setRecovered(selectedPlayer!)">
-                     <ion-icon name="medkit-outline" slot="start"></ion-icon>
-                     Dar Alta Médica
-                 </ion-button>
-             </div>
-
-         </div>
       </div>
     </ng-template>
   </ion-modal>
 
+  <!-- MODAL LESIÓN -->
   <ion-modal [isOpen]="isModalOpen" (didDismiss)="onInjuryModalDismiss()">
     <ng-template>
-      <div class="modal-content-dark injury-modal">
-        <h3>Reportar Lesión</h3>
-        <p class="modal-subtitle">Registra la baja para notificar al cuerpo técnico.</p>
-        
-        <ion-list class="dark-list">
-           <ion-item>
-               <ion-label position="stacked">Causa / Diagnóstico</ion-label>
-               <ion-input [(ngModel)]="injuryData.tipo" placeholder="Ej: Esguince Tobillo"></ion-input>
-           </ion-item>
-           <ion-item>
-               <ion-label position="stacked">Tiempo de Baja (Estimado)</ion-label>
-               <ion-input [(ngModel)]="injuryData.duracion" placeholder="Ej: 2 semanas"></ion-input>
-           </ion-item>
-        </ion-list>
-        
-        <div class="modal-footer">
-            <ion-button expand="block" fill="outline" color="light" (click)="closeModals()">Cancelar</ion-button>
-            <ion-button expand="block" color="danger" (click)="saveInjury()">Confirmar Baja</ion-button>
+      <div class="modal-sheet injury-sheet">
+        <div class="modal-handle"></div>
+        <div class="injury-header">
+          <ion-icon name="bandage" class="injury-big-icon"></ion-icon>
+          <h3>Reportar Baja</h3>
+          <p>Registra la lesión para notificar al equipo técnico.</p>
+        </div>
+        <div class="modal-section">
+          <div class="modal-fields vertical">
+            <div class="modal-field full">
+              <label>Causa / Diagnóstico</label>
+              <ion-input [(ngModel)]="injuryData.tipo" placeholder="Ej: Esguince de tobillo" class="field-input"></ion-input>
+            </div>
+            <div class="modal-field full">
+              <label>Tiempo estimado de baja</label>
+              <ion-input [(ngModel)]="injuryData.duracion" placeholder="Ej: 2 semanas" class="field-input"></ion-input>
+            </div>
+          </div>
+        </div>
+        <div class="injury-actions">
+          <ion-button expand="block" fill="outline" class="btn-cancel" (click)="closeModals()">Cancelar</ion-button>
+          <ion-button expand="block" class="btn-injury" (click)="saveInjury()">Confirmar Baja</ion-button>
         </div>
       </div>
     </ng-template>

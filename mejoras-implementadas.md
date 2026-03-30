@@ -4,67 +4,105 @@ Este documento registra la evolución técnica, arquitectónica y visual del pro
 
 ---
 
-## 1. Identidad Visual Unificada y Night Stadium Theme 🌌🏟️
+## 1. Analítica Avanzada: Integración de ApexCharts 📈🧠
 
-Se ha implementado un sistema visual coherente en toda la aplicación, elevando la estética de una app genérica a una herramienta deportiva profesional.
+Se ha implementado una capa de inteligencia de datos profesional, transformando las estadísticas crudas en dashboards analíticos de alto rendimiento.
 
-### Paleta Global y Estilizado (Navy Dark)
-- **Variables CSS**: Definición de una paleta centralizada en `variables.scss`:
-  - `--bg-color: #070b14` (Navy profundo para fondos principales).
-  - `--bg-card: rgba(15, 22, 45, 0.8)` (Glassmorphism para tarjetas y sidebars).
-  - `--accent-color: #6c63ff` (Púrpura vibrante para estados activos y botones).
-- **Efecto Estadio Nocturno**: Integración de una imagen de fondo de estadio iluminado con un gradiente oscuro superpuesto, proporcionando una atmósfera inmersiva en Landing Page, Login y Dashboards.
-- **Fix Transparencia Ionic**: Uso del selector `::part(background)` en componentes `ion-content` para permitir que el fondo del estadio sea visible a través del contenedor de scroll nativo de Ionic.
-
-### Rediseño de Pantallas Críticas
-- **Landing Page**: Transformación completa con animaciones suaves, tipografía *Oswald* para títulos y botones con efectos de brillo y glow.
-- **Login & Registro**: Nueva disposición centrada sobre el fondo del estadio, con campos de entrada estilizados y validaciones visuales integradas.
-- **Coach & Player Dashboards**: Unificación de la estructura de sidebar y contenido, utilizando tarjetas translúcidas y una jerarquía de información clara para estadísticas y próximos eventos.
-
----
-
-## 2. Refactorización Estructural del Frontend (100% Completada) ⚡
-
-El frontend ha alcanzado su estado final de arquitectura limpia tras completar las tres fases de refactorización.
-
-### Fase 1: Higiene RxJS y Gestión de Memoria
-- **Control de Fugas**: Implementación de `takeUntilDestroyed(this.destroyRef)` en todos los componentes.
-- **Linearización de Carga**: Refactorización de `tactics.page.ts` eliminando suscripciones anidadas mediante operadores como `switchMap` y `forkJoin`.
-
-### Fase 2: Tipado Estricto (Zero Any)
-- **Eliminación de `any`**: Sustitución de todos los tipos dinámicos por interfaces rigurosas en `shared/models/models.ts`.
-- **DTOs de Sincronización**: Creación de interfaces que mapean exactamente la respuesta del backend (`JugadorDTO`, `EquipoDTO`, `CategoriaDTO`), eliminando errores de visualización de datos.
-
-### Fase 3: Desacoplamiento de HttpClient
-- **Arquitectura de Servicios**: Eliminación de `HttpClient` de todos los componentes. Toda la comunicación externa se realiza ahora a través de servicios especializados en `core/services/`.
-- **Verificación Final**: Corrección de regresiones en `dashboard.page.ts` asegurando que las propiedades de usuario se accedan correctamente tras la eliminación del tipado dinámico.
+### Especificaciones Técnicas (Frontend)
+- **Control de Versiones**: Downgrade estratégico de `ng-apexcharts` a **v1.10.0** y `apexcharts` a **v3.46.0** para asegurar compatibilidad total con Angular 17.3.x (evitando errores de APIs internas como `afterEveryRender`).
+- **Reactividad de Gráficos**: Implementación del patrón de **Inmutabilidad** para forzar la detección de cambios en los componentes de ApexCharts:
+  ```typescript
+  // Ejemplo de actualización reactiva
+  this.radarChartOptions = {
+    ...this.radarChartOptions,
+    series: [
+      { name: 'Goles Prom.', data: seriesGoles },
+      { name: 'Min/10',      data: seriesMinutos }
+    ]
+  };
+  ```
+- **Clasificación Algorítmica por Líneas**: Lógica de agrupación posicional para el Radar Chart del equipo:
+  ```typescript
+  const classify = (pos: string): number => {
+    const p = pos.toUpperCase();
+    if (p.includes('POR') || p === 'PT') return 0; // Portería
+    if (p.includes('DEF') || p.includes('CENTRAL')) return 1; // Defensa
+    if (p.includes('MEDIO') || p === 'MC') return 2; // Mediocampo
+    if (p.includes('DELANTERO') || p === 'DC') return 3; // Ataque
+    return -1;
+  };
+  ```
+- **Visualización Dinámica**: Uso de `plotOptions.bar.distributed: true` en el gráfico de asistencia para aplicar colores semánticos dinámicos según el valor (Verde ≥85%, Rojo <40%).
 
 ---
 
-## 3. Pizarra Táctica Profesional 2.0 ⚽🧠
+## 2. Arquitectura Backend: Capa de Servicio y Clean Code 🏗️🛠️
 
-La herramienta de tácticas ha sido rediseñada para ofrecer una experiencia fluida y visualmente impactante.
+Migración de un modelo acoplado a una arquitectura robusta basada en servicios de dominio.
 
-### Evolución de Tokens y Campo
-- **Tokens Profesionales**: Sustitución de las cartas tipo FIFA por círculos tácticos minimalistas con anillos de color dinámicos según posición (POR, DEF, MED, DEL).
-- **Detalle del Terreno**: Césped realista con franjas, áreas de portería con efecto 3D y slots de posición dashed que se iluminan al detectar un jugador cerca (`highlight`).
+### Especificaciones Técnicas (Java/Spring)
+- **Inyección por Constructor**: Eliminación de `@Autowired` en campos en favor de la inyección por constructor, facilitando las pruebas unitarias y garantizando la inmutabilidad de las dependencias:
+  ```java
+  @Service
+  public class EntrenadorService {
+      private final EntrenadorRepository repo;
+      private final UsuarioRepository usuarioRepo;
+      // ... otras dependencias
 
-### Correcciones en Drag & Drop (CDK)
-- **Fix Estructural**: Corrección del bug donde `cdkDropListData` recibía objetos; ahora maneja arrays dinámicos `[player]`, evitando glitches visuales.
-- **Mejoras de UX**: Ampliación del área de "drop" (`pos-anchor`) para facilitar el uso en dispositivos móviles y rediseño del `placeholder` para eliminar parpadeos al arrastrar.
-- **::ng-deep CSS**: Aplicación de estilos específicos para el `cdk-drag-preview`, permitiendo que el diseño del token se mantenga perfecto incluso cuando se renderiza fuera del árbol de componentes de Angular.
+      public EntrenadorService(EntrenadorRepository repo, UsuarioRepository usuarioRepo) {
+          this.repo = repo;
+          this.usuarioRepo = usuarioRepo;
+      }
+  }
+  ```
+- **Centralización de Lógica**: Implementación de 19 servicios de dominio que encapsulan la lógica de negocio, dejando los controladores como simples orquestadores de entrada/salida.
+- **Mapeo de Datos Progresivo**: Optimización del método `procesarEstadisticasPro` en `EntrenadorService` para realizar cálculos complejos de promedios, porcentajes de asistencia y ratios de participación en una sola pasada.
+
+---
+
+## 3. Frontend: Refactorización Estructural y RxJS ⚡
+
+El frontend ha alcanzado una arquitectura blindada con un estado de **0 errores de compilación**.
+
+### Especificaciones Técnicas (Angular)
+- **Gestión de Memoria (RxJS)**: Blindaje de suscripciones mediante `takeUntilDestroyed(this.destroyRef)` para prevenir fugas de memoria (Memory Leaks).
+- **Linearización de Flujos**: Eliminación del "Callback Hell" de observables en `tactics.page.ts` mediante `switchMap` y `forkJoin`:
+  ```typescript
+  this.matchSvc.getMatchById(id).pipe(
+    switchMap(match => forkJoin({
+      players: this.playerSvc.getAllPlayers(),
+      savedSlots: this.matchSvc.getLineup(match.id)
+    })),
+    takeUntilDestroyed(this.destroyRef)
+  ).subscribe(result => { /* Procesamiento limpio */ });
+  ```
+- **Tipado Estricto**: Sustitución total de `any` por interfaces de dominio en `shared/models/models.ts`. Sincronización de DTOs con el backend para evitar errores de mapeo en tiempo de ejecución.
 
 ---
 
-## 4. Arquitectura Backend y Correcciones de Datos 🏗️🛠️
+## 4. Pizarra Táctica Profesional 2.0 ⚽🧠
 
-### Refactorización a Capa de Servicio
-- **Domain Services**: Implementación de 19 servicios de dominio para centralizar la lógica de negocio.
-- **Dependency Injection**: Migración a inyección por constructor para mejorar la testabilidad y seguir los estándares modernos de Spring Boot.
+Mejora integral de la experiencia de usuario y correcciones en la lógica de Drag & Drop.
 
-### Bugfixes Críticos
-- **Persistencia de Tarjetas**: Fix en `AdminService.cerrarActaAdmin` para garantizar que las tarjetas amarillas y rojas se guarden correctamente en la base de datos.
-- **Mapeo de Categoría**: Corrección del error `[object Object]` en el dashboard al acceder correctamente a la propiedad `nombre` del objeto `Categoria` devuelto por la API.
+### Especificaciones Técnicas
+- **Fix Estructural de CDK**: Corrección del bug visual donde los tokens parpadeaban o desaparecían. Se aseguró que `cdkDropListData` siempre reciba una colección, incluso para un solo jugador:
+  ```html
+  <!-- Solución: Wrap del objeto en un array dinámico -->
+  [cdkDropListData]="slot.player ? [slot.player] : []"
+  ```
+- **Deep CSS Scoping**: Uso de `::ng-deep` para estilizar elementos que se renderizan en el `body` (como el `.cdk-drag-preview`), manteniendo la consistencia visual de los tokens tácticos.
+- **Feedback Táctil**: Implementación de transformaciones CSS (`scale(1.25)`) y sombras proyectadas dinámicamente durante el evento de arrastre para simular profundidad física.
 
 ---
-> **Estado del Proyecto:** Refactorización finalizada, identidad visual unificada y verificado en entorno de desarrollo.
+
+## 5. Bugfixes Críticos Documentados 🛠️
+
+### Fix: Mapeo de Entidades Complejas
+- **Problema**: `[object Object]` en vistas de categoría.
+- **Detalle Técnico**: Los endpoints devolvían entidades JPA completas con relaciones cargadas en modo *Eager*. Se ajustaron los templates para acceder a la propiedad `.nombre` del objeto relacional `$any(categoryName)?.nombre`.
+
+### Fix: Persistencia de Tarjetas en Actas
+- **Implementación**: Refactor de `AdminService.cerrarActaAdmin` para extraer booleanos del `Map<String, Object>` proveniente del payload JSON y mapearlos explícitamente a los setters de la entidad `Alineacion` antes del `repo.save()`.
+
+---
+> **Estado del Proyecto**: Arquitectura industrial, analítica integrada y visual premium verificado.

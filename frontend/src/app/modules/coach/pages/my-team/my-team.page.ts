@@ -1,5 +1,5 @@
 import { Component, OnInit, DestroyRef, inject } from '@angular/core';
-import { AlertController, ToastController, LoadingController } from '@ionic/angular';
+import { AlertController, ToastController, LoadingController, NavController } from '@ionic/angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
@@ -57,8 +57,13 @@ export class MyTeamPage implements OnInit {
     private coachSvc: CoachService,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
-    private loadingCtrl: LoadingController
+    private loadingCtrl: LoadingController,
+    private navCtrl: NavController
   ) { }
+
+  goBack() {
+    this.navCtrl.back();
+  }
 
   ngOnInit() {
     this.detectCoachTeam();
