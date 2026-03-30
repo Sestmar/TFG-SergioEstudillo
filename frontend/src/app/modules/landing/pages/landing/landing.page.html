@@ -3,53 +3,70 @@
   <div class="background-layer"></div>
 
   <div class="main-wrapper">
-    
+
+    <!-- NAVBAR -->
+    <nav class="landing-nav">
+      <div class="nav-brand">
+        <div class="nav-logo">
+          <img src="assets/img/mi-club-logo.png" alt="Logo" />
+        </div>
+        <span class="nav-name">DAM UNITED</span>
+      </div>
+      <div class="nav-links">
+        <a class="nav-link active" href="#">Inicio</a>
+        <a class="nav-link" routerLink="/club">Equipos</a>
+        <a class="nav-link" href="#">Noticias</a>
+      </div>
+    </nav>
+
+    <!-- HERO SECTION -->
     <div class="hero-section">
-      <div class="app-logo">
-        <img src="assets/img/mi-club-logo.png" alt="Logo Club" style="width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));">
-     </div>
-  
-      <h1>DAM United F.C</h1>
-      
+      <div class="hero-badge">DAM UNITED F.C</div>
+
+      <h1>DAM UNITED F.C</h1>
+
       <p>La plataforma integral para la gestión deportiva profesional.<br>
          Entrenadores, jugadores y afición unidos en un solo lugar.</p>
-      
+
       <div class="hero-actions">
-        <ion-button class="btn-primary" fill="clear" routerLink="/auth/login">
-          <ion-icon name="log-in-outline" slot="start"></ion-icon>
+        <ion-button class="btn-primary" routerLink="/auth/login">
           Iniciar Sesión
         </ion-button>
 
-        <ion-button class="btn-outline" fill="clear" routerLink="/auth/register">
-          <ion-icon name="person-add-outline" slot="start"></ion-icon>
+        <ion-button class="btn-outline" fill="outline" routerLink="/auth/register">
           Registrarse
         </ion-button>
       </div>
     </div>
 
-    <div class="club-card-glass">
-      <div class="badge-pill">
-        <div class="dot"></div> Acceso Libre
-      </div>
-      
-      <div class="card-content">
-        <div class="text-side">
-            <h3>Zona del Aficionado</h3>
-            <p>Consulta las plantillas, estadísticas y resultados de todas nuestras categorías (Alevín, Infantil, Cadete...) sin necesidad de registro.</p>
-        </div>
-        
-        <div class="action-side">
-            <ion-button class="btn-club" routerLink="/club">
-                <ion-icon name="people" slot="start"></ion-icon>
-                Ver Equipos y Plantillas
-            </ion-button>
+    <!-- ZONA DEL AFICIONADO -->
+    <div class="fan-section">
+      <div class="fan-content">
+        <div class="fan-text">
+          <h2>Zona del Aficionado</h2>
+          <div class="title-underline"></div>
+          <p>Consulta las plantillas, estadísticas y resultados de todas nuestras categorías
+             (Alevín, Infantil, Cadete...) sin necesidad de registro.</p>
+          <ion-button class="btn-fan" routerLink="/club">
+            Ver Equipos y Plantillas
+          </ion-button>
         </div>
       </div>
     </div>
 
-    <div class="footer-text">
-      <p>&copy; 2025 DAM United F.C. Todos los derechos reservados.</p>
-    </div>
+    <!-- FOOTER -->
+    <footer class="landing-footer">
+      <div class="footer-left">
+        <div class="footer-brand">DAM UNITED F.C</div>
+        <p class="footer-copy">&copy; 2026 DAM UNITED F.C. Todos los derechos reservados.</p>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-title">CLUB</span>
+        <a class="footer-link" href="#">Historia</a>
+        <a class="footer-link" href="#">Estadio</a>
+        <a class="footer-link" href="#">Socios</a>
+      </div>
+    </footer>
 
   </div>
 
