@@ -17,7 +17,8 @@ import { UserService } from 'src/app/core/services/user/user.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { TeamService } from 'src/app/core/services/team/team.service';
 import { NotificationService } from 'src/app/core/services/notification/notification.service';
-import { MatchService } from 'src/app/core/services/match/match.service'; 
+import { MatchService } from 'src/app/core/services/match/match.service';
+import { ChatService } from 'src/app/core/services/chat/chat.service';
 
 interface DashboardStats {
   totalConvocations: number;
@@ -33,6 +34,7 @@ interface DashboardStats {
 })
 export class PlayerDashboardPage implements OnInit {
   currentUser$: Observable<User | null>;
+  noLeidos$: Observable<number>;
   currentPlayer: Jugador | null = null;
   currentTeam: EquipoResumen | null = null;
   loading: boolean = true;
@@ -109,14 +111,16 @@ export class PlayerDashboardPage implements OnInit {
     private authService: AuthService,
     private userService: UserService,
     private playerService: PlayerService,
-    private teamService: TeamService, 
-    private matchService: MatchService, 
+    private teamService: TeamService,
+    private matchService: MatchService,
     private notificationService: NotificationService,
+    private chatService: ChatService,
     private router: Router,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController // Inyectamos Toast
   ) {
-    this.currentUser$ = this.authService.currentUser$; 
+    this.currentUser$ = this.authService.currentUser$;
+    this.noLeidos$ = this.chatService.noLeidosEquipo$;
   }
 
   ngOnInit() {
@@ -254,6 +258,9 @@ export class PlayerDashboardPage implements OnInit {
              // Si el HTML llama a la ruta antigua, interceptamos aquí
              this.goToMyTeamDetail();
         } else {
+             if (actionOrRoute === '/chat') {
+               this.chatService.resetearNoLeidos();
+             }
              this.router.navigate([actionOrRoute]);
         }
         return;

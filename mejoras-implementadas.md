@@ -92,25 +92,84 @@ Se ha profesionalizado el backend Spring Boot siguiendo principios de **SOLID** 
   - **Decisión Estética**: Sigue la tendencia actual de interfaces deportivas premium (tipo FIFA/Stitch), alejándose del aspecto "móvil genérico" de los círculos de contacto.
 
 ---
-## 6. Chat en Tiempo Real: Comunicación Instantánea con WebSockets (STOMP/SockJS) 💬⚡
 
-Se ha implementado un sistema de mensajería bidireccional que permite la comunicación fluida entre los miembros del club, eliminando la necesidad de refrescar la pantalla para ver nuevos mensajes.
+## 6. Chat en Tiempo Real: Ingeniería de Mensajería Reactiva (STOMP/SockJS) 💬⚡
 
-### Arquitectura de Mensajería (Full Stack)
-- **Protocolo STOMP sobre WebSockets**:
-  - **Backend (Spring Boot)**: Uso de `spring-boot-starter-websocket`. Se configuró un **Message Broker** (`/topic`, `/queue`) que gestiona el enrutamiento de mensajes. Los controladores utilizan `@MessageMapping` para recibir datos y `SimpMessagingTemplate` para difundirlos a los clientes suscritos.
-  - **Frontend (Angular)**: Implementación de la librería `@stomp/stompjs` junto con `sockjs-client` para asegurar la compatibilidad en navegadores que no soportan WebSockets nativos (fallback).
-- **Gestión de Suscripciones Dinámicas e Inyección de Contexto**:
-  - El sistema detecta el contexto del usuario (Equipo o Privado) y se suscribe automáticamente a los canales correspondientes (`/topic/equipo/{id}` o `/queue/privado/{userId}`).
-  - **Mejora de Robustez**: Para roles de Jugador/Entrenador, se implementó un flujo de carga que recupera el `equipoId` desde el perfil antes de la conexión, asegurando que el `SUBSCRIBE` se realice con el ID correcto y evitando salas de chat huérfanas.
-- **Sincronización de Estado Reactivo (Historial REST + Socket)**:
-  - Se corrigió el desacoplamiento entre el historial persistido y el flujo en tiempo real. Mediante el uso del operador `tap` en `chat.service.ts`, las peticiones REST de historial ahora alimentan directamente el `BehaviorSubject` de mensajes, garantizando consistencia visual inmediata al entrar al chat.
-- **Persistencia Híbrida**:
-  - Aunque la comunicación es volátil (RAM/Broker), cada mensaje se persiste asíncronamente en MySQL (`MensajeRepository`) para mantener el historial completo. Se implementó una lógica de "Mensajes No Leídos" mediante un contador en la base de datos que se resetea al entrar en la sala de chat.
+Se ha implementado un sistema de comunicación bidireccional de alto rendimiento, diseñado bajo una arquitectura de **Message Broker** que garantiza la entrega de mensajes en milisegundos sin sobrecargar el servidor con peticiones innecesarias.
+
+### Infraestructura Backend (Spring Boot + Seguridad)
+La arquitectura se apoya en el protocolo **STOMP** sobre **WebSockets**, con un interceptor de seguridad personalizado para validar el acceso en el handshake inicial.
+
+- **Handshake Protegido con JWT**: 
+  A diferencia de las peticiones REST estándar, los WebSockets requieren una validación manual en el canal de entrada. Se implementó un `ChannelInterceptor` que extrae y valida el token `Bearer` antes de permitir la suscripción.
+  ```java
+  // WebSocketConfig.java - Intercepción de seguridad en tiempo real
+  @Override
+  public void configureClientInboundChannel(ChannelRegistration registration) {
+      registration.interceptors(new ChannelInterceptor() {
+          @Override
+          public Message<?> preSend(Message<?> message, MessageChannel channel) {
+              StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+              if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
+                  String authHeader = accessor.getFirstNativeHeader("Authorization");
+                  // Validación de JWT y seteo de Authentication en el Accessor del socket
+                  String token = authHeader.substring(7);
+                  String username = jwtService.extractUsername(token);
+                  var userDetails = userDetailsService.loadUserByUsername(username);
+                  if (jwtService.isTokenValid(token, userDetails)) {
+                      var auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                      accessor.setUser(auth);
+                  }
+              }
+              return message;
+          }
+      });
+  }
+  ```
+
+- **Ruteo Dinámico de Tópicos**:
+  Se utiliza un modelo híbrido: `/topic` para broadcast grupal (Equipo) y `/user/queue` para mensajería privada (Admin-Jugador).
+  ```java
+  // ChatController.java - Lógica de despacho
+  @MessageMapping("/chat.enviar")
+  public void enviarMensaje(@Payload EnviarMensajeDto dto, Principal principal) {
+      MensajeDto guardado = chatService.enviarMensaje(principal.getName(), dto);
+      if (dto.getEquipoId() != null) {
+          messagingTemplate.convertAndSend("/topic/equipo/" + dto.getEquipoId(), guardado);
+      } else {
+          messagingTemplate.convertAndSendToUser(emailDestinatario, "/queue/mensajes", guardado);
+      }
+  }
+  ```
+
+### Arquitectura Frontend (Angular + RxJS + StompJS)
+El frontend actúa como un consumidor reactivo, manteniendo un estado único de la sala de chat mediante `BehaviorSubjects`.
+
+- **Sincronización de Estado (REST + WS)**:
+  Para evitar duplicidades y garantizar que el usuario vea el historial al entrar, se implementó un flujo de "Hidratación de Estado". Al cargar el componente, se pide el historial vía REST y el servicio se suscribe al socket para inyectar nuevos mensajes al flujo existente.
+  ```typescript
+  // chat.service.ts - Gestión reactiva del flujo de mensajes
+  private mensajes$ = new BehaviorSubject<MensajeDto[]>([]);
+
+  private agregarMensaje(msg: MensajeDto): void {
+    const actuales = this.mensajes$.getValue();
+    // Protección contra duplicados y actualización inmutable
+    if (!actuales.find(m => m.id === msg.id)) {
+      this.mensajes$.next([...actuales, msg]);
+    }
+  }
+  ```
+
+- **Resiliencia de Conexión**:
+  Configuración de `reconnectDelay: 5000` y uso de `SockJS` como fallback automático. Si el servidor cae o el socket se cierra, el cliente intenta reconectar transparentemente, recuperando las suscripciones a los tópicos del equipo de forma dinámica.
+
+- **UX Premium (Infinite Scroll & Marcar Leídos)**:
+  Se integra un mecanismo de persistencia que cuenta los mensajes no leídos y los resetea automáticamente mediante una llamada `PUT` al entrar en la sala, sincronizando la base de datos con la interfaz de usuario.
 
 ---
 
 ## 7. Notificaciones Inteligentes: Integración con WhatsApp via Twilio 📱🔔
+
 
 Se ha integrado el canal de comunicación preferido por los deportistas (WhatsApp) para automatizar la logística de los partidos y recordatorios.
 
@@ -125,4 +184,60 @@ Se ha integrado el canal de comunicación preferido por los deportistas (WhatsAp
 - **Notificación Programada (Scheduler)**: Implementación de `@Scheduled` en el backend para buscar partidos en las próximas 24 horas y enviar recordatorios de "Confirmación de Asistencia" de forma automática.
 
 ---
-> **Estado del Proyecto**: Arquitectura industrial, analítica integrada y visual premium validado al 100%.
+
+## 8. Notificaciones Nativas y Badges: UX de Mensajería 360° 🔔🔴
+
+Se ha elevado la experiencia de usuario a un estándar de aplicación nativa mediante la implementación de un sistema de notificaciones en tiempo real y contadores visuales (Badges) que funcionan en toda la aplicación.
+
+### Arquitectura de Doble Cliente STOMP (Background Listening)
+Para que el usuario reciba alertas sin estar dentro de la pantalla de chat, se diseñó una arquitectura de **suscripción global persistente**.
+
+- **Cliente Global vs. Cliente Local**:
+  - **Local**: Se activa únicamente en `/chat` para la gestión de mensajes en pantalla.
+  - **Global**: Se instancia en el layout principal tras el login. Permanece activo en segundo plano, escuchando el tópico del equipo para disparar eventos de sistema.
+  ```typescript
+  // chat.service.ts - Lógica de escucha en segundo plano
+  private async manejarMensajeGlobal(msg: MensajeDto): Promise<void> {
+    const usuarioEnChat = this.router.url.includes('/chat');
+    // Si ya está en el chat, no molestamos con badges ni alertas
+    if (usuarioEnChat) return;
+
+    this._noLeidosEquipo$.next(this._noLeidosEquipo$.getValue() + 1);
+    await this.dispararNotificacion(msg);
+  }
+  ```
+
+### Integración con Capacitor Local Notifications
+Se ha integrado el plugin `@capacitor/local-notifications` para transformar los mensajes del WebSocket en notificaciones nativas del sistema operativo (Android/iOS).
+
+- **Flujo de Notificación Inteligente**:
+  1. **Recepción**: El `clientGlobal` detecta un mensaje nuevo.
+  2. **Validación de Ruta**: Se comprueba mediante el `Router` de Angular si el usuario está visualizando el chat.
+  3. **Disparo Nativo**: Si el usuario está en otra sección, se lanza la notificación con el nombre del remitente y el contenido.
+  4. **Navegación**: Se registró un listener global que redirige automáticamente a `/chat` cuando el usuario toca la notificación.
+  ```typescript
+  // Implementación de notificación nativa
+  private async dispararNotificacion(msg: MensajeDto): Promise<void> {
+    const permiso = await LocalNotifications.requestPermissions();
+    if (permiso.display === 'granted') {
+      await LocalNotifications.schedule({
+        notifications: [{
+          id: Date.now(),
+          title: msg.remitenteNombre,
+          body: msg.contenido,
+          extra: { route: '/chat' }
+        }]
+      });
+    }
+  }
+  ```
+
+### Indicadores Visuales (Badges Reactivos)
+El menú lateral y los accesos directos al chat ahora incluyen un `<ion-badge>` dinámico vinculado a un `BehaviorSubject` en el `ChatService`.
+
+- **Sincronización Automática**: El contador se incrementa con cada mensaje recibido globalmente y se **resetea instantáneamente** mediante el método `resetearNoLeidos()` cuando el usuario entra en la sala de chat, garantizando una interfaz limpia y precisa.
+
+---
+
+> **Estado del Proyecto**: Arquitectura industrial, comunicación en tiempo real y experiencia móvil nativa validada al 100%.
+

@@ -11,6 +11,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -33,7 +35,7 @@ public class NotificacionScheduler {
      */
     @Scheduled(cron = "0 0 * * * *")
     public void enviarRecordatorios24h() {
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = ZonedDateTime.now(ZoneId.of("Europe/Madrid")).toLocalDateTime();
         LocalDateTime ventanaInicio = ahora.plusHours(23).plusMinutes(30);
         LocalDateTime ventanaFin = ahora.plusHours(24).plusMinutes(30);
 

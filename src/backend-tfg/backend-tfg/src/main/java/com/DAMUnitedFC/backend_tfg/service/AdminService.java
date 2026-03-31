@@ -26,6 +26,7 @@ public class AdminService {
     private final AlineacionRepository alineacionRepo;
     private final AsistenciaRepository asistenciaRepo;
     private final PasswordEncoder passwordEncoder;
+    private final PartidoService partidoService;
 
     public AdminService(UsuarioRepository usuarioRepo,
                         JugadorRepository jugadorRepo,
@@ -36,7 +37,8 @@ public class AdminService {
                         PartidoRepository partidoRepo,
                         AlineacionRepository alineacionRepo,
                         AsistenciaRepository asistenciaRepo,
-                        PasswordEncoder passwordEncoder) {
+                        PasswordEncoder passwordEncoder,
+                        PartidoService partidoService) {
         this.usuarioRepo = usuarioRepo;
         this.jugadorRepo = jugadorRepo;
         this.equipoRepo = equipoRepo;
@@ -47,6 +49,7 @@ public class AdminService {
         this.alineacionRepo = alineacionRepo;
         this.asistenciaRepo = asistenciaRepo;
         this.passwordEncoder = passwordEncoder;
+        this.partidoService = partidoService;
     }
 
     public List<Usuario> getCandidatos() {
@@ -226,7 +229,7 @@ public class AdminService {
         }
         partido.setTipo("PARTIDO");
         partido.setEstado("PENDIENTE");
-        partidoRepo.save(partido);
+        partidoService.crear(partido);
     }
 
     public void crearEntrenamiento(Map<String, Object> payload) {

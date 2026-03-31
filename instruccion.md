@@ -1,49 +1,12 @@
-no funcionó los cambios para que el entrenador entrase al chat. Revisa
-instruccion.md con la propuesta de solucion
+Claude, he aplicado tus últimos cambios, he puesto mi número real en la base de datos para un jugador del equipo, pero el WhatsApp sigue sin llegarme al crear un partido. 
 
-  Read 1 file (ctrl+o to expand)
+Necesito que hagas una auditoría estricta de la implementación que me acabas de dar:
 
-● El problema ahora está en el backend: character varying(20) — alguna columna
-   es demasiado corta para el valor que se intenta procesar. El frontend ya
-  detecta bien el rol.
+1. ¿Estás seguro de que has puesto la llamada a `WhatsAppService.enviarNotificacionEvento()` en el endpoint CORRECTO? En mis pruebas de Network, la petición se hace a `POST /api/admin/crear-partido`. Si lo pusiste en otro servicio, nunca se va a ejecutar.
+2. Formato del número: Si mi número en la base de datos es "666575394", ¿tu código lo está transformando EXACTAMENTE a "whatsapp:+34666575394"? Si falta el "+34", el "whatsapp:" o hay algún espacio en blanco, Twilio lo rechazará.
+3. Logs Extremos: Necesito que modifiques el `WhatsAppService` para que imprima en consola paso por paso lo que hace. 
+   - Que imprima: "Intentando notificar a X jugadores del equipo Y"
+   - Que imprima: "Formateando número: " + numeroOriginal + " -> " + numeroFormateado
+   - Que imprima el error EXACTO si la API de Twilio falla en el `catch`.
 
-  Importante: este proyecto no usa Flyway — los scripts SQL se ejecutan
-  manualmente.
-
-● Agent(Fix VARCHAR(20) SQL error entrenador endpoint)
-  ⎿  Done (17 tool uses · 43.9k tokens · 2m 42s)
-  (ctrl+o to expand)
-
-● Fix aplicado. Lo que encontró el agente es más profundo de lo esperado:
-
-  ---
-  Dos campos problemáticos:
-
-  ┌───────────────────────┬───────┬─────────────┬─────────────┐
-  │        Entidad        │ Campo │    Antes    │   Después   │
-  ├───────────────────────┼───────┼─────────────┼─────────────┤
-  │ Usuario.java          │ rol   │ VARCHAR(20) │ VARCHAR(50) │
-  ├───────────────────────┼───────┼─────────────┼─────────────┤
-  │ EquipoEntrenador.java │ rol   │ VARCHAR(20) │ VARCHAR(50) │
-  └───────────────────────┴───────┴─────────────┴─────────────┘
-
-  Por qué explota en un GET: JPA sin @Transactional(readOnly=true) mantiene
-  dirty checking activo — al cargar el grafo del entrenador Hibernate hace un
-  flush automático que intenta hacer UPDATE sobre usuario, y ahí choca el
-  valor largo contra el VARCHAR(20).
-
-  ---
-  Ejecutá esto en tu BD local ahora:
-  ALTER TABLE usuario ALTER COLUMN rol TYPE VARCHAR(50);
-  ALTER TABLE equipo_entrenador ALTER COLUMN rol TYPE VARCHAR(50);
-
-  El archivo fix_varchar_rol.sql ya está en src/main/resources/ si preferís
-  ejecutarlo desde ahí.
-
-  ---
-  Bug adicional encontrado (para después, no urgente): AdminService guarda
-  "ROLE_ENTRENADOR" y getAuthorities() en la entidad le añade otro "ROLE_"
-  encima → queda "ROLE_ROLE_ENTRENADOR". Eso es una inconsistencia de
-  seguridad que hay que limpiar por separado.
-
-  Ejecutá el ALTER TABLE, reiniciá el backend y probá.
+Revisa tu lógica, corrige cualquier posible fallo en el prefijo o en el punto de inyección, y dame el código con esta depuración extrema. Si no veo logs, es que no lo estás conectando en el endpoint correcto.

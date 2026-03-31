@@ -7,6 +7,7 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -45,19 +46,24 @@ public class WhatsAppService {
                 ? normalizado
                 : "whatsapp:" + normalizado;
 
+        // IMPORTANTE: El número remitente (fromNumber) TAMBIÉN debe tener el prefijo 'whatsapp:'
+        String remitente = fromNumber.startsWith("whatsapp:")
+                ? fromNumber
+                : "whatsapp:" + fromNumber;
+
         try {
             Message message = Message.creator(
                     new PhoneNumber(destino),
-                    new PhoneNumber(fromNumber),
+                    new PhoneNumber(remitente),
                     cuerpo
             ).create();
-            log.info("WhatsApp enviado a {} — SID: {}", destino, message.getSid());
+            log.info("WhatsApp enviado a {} desde {} — SID: {}", destino, remitente, message.getSid());
         } catch (Exception e) {
-            log.error("Error enviando WhatsApp a {}: {}", destino, e.getMessage());
-            // No lanzamos excepción — fallo de notificación no debe romper el flujo principal
+            log.error("Error crítico enviando WhatsApp a {} desde {}: {}", destino, remitente, e.getMessage());
         }
     }
 
+    @Async
     public void enviarNotificacionPartido(String telefono, String rival, String lugar, String fechaHora) {
         String mensaje = String.format(
                 "⚽ *DAM United FC* — Nuevo partido confirmado:\n\n" +
@@ -70,6 +76,7 @@ public class WhatsAppService {
         enviarMensaje(telefono, mensaje);
     }
 
+    @Async
     public void enviarRecordatorio(String telefono, String rival, String fechaHora) {
         String mensaje = String.format(
                 "⏰ *DAM United FC* — Recordatorio:\n\n" +

@@ -8,7 +8,8 @@ import { ModalController, ToastController, AlertController } from '@ionic/angula
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
-import { CoachService } from 'src/app/core/services/coach/coach.service'; 
+import { CoachService } from 'src/app/core/services/coach/coach.service';
+import { ChatService } from 'src/app/core/services/chat/chat.service';
 import { User, Partido, Jugador, PlayerSeasonStat } from 'src/app/shared/models/models';
 
 interface CoachStats {
@@ -28,6 +29,7 @@ type ViewType = 'dashboard' | 'matches';
 export class CoachDashboardPage implements OnInit {
   private destroyRef = inject(DestroyRef);
   currentUser$: Observable<User | null>;
+  noLeidos$: Observable<number>;
   loading: boolean = true;
   
   currentView: ViewType = 'dashboard';
@@ -46,16 +48,18 @@ export class CoachDashboardPage implements OnInit {
   futureMatchesCount: number = 0;
 
   constructor(
-    private authService: AuthService, // Ya lo tenías inyectado
+    private authService: AuthService,
     private matchService: MatchService,
     private playerService: PlayerService,
     private coachService: CoachService,
+    private chatService: ChatService,
     private router: Router,
     private modalCtrl: ModalController,
     private toastCtrl: ToastController,
-    private alertCtrl: AlertController // 🔥 Nuevo Inyectado
+    private alertCtrl: AlertController
   ) {
     this.currentUser$ = this.authService.currentUser$;
+    this.noLeidos$ = this.chatService.noLeidosEquipo$;
   }
 
   ngOnInit() {}
@@ -162,6 +166,9 @@ export class CoachDashboardPage implements OnInit {
   }
   
   navigateToAction(path: string) {
+    if (path === '/chat') {
+      this.chatService.resetearNoLeidos();
+    }
     this.router.navigate([path]);
   }
 

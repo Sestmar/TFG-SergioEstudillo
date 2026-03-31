@@ -17,6 +17,29 @@ Este documento lista las funcionalidades y mejoras técnicas pendientes, prioriz
     - Suscripción con `takeUntilDestroyed`.
     - UI: Lista de mensajes con scroll automático y burbujas diferenciadas.
 
+Nuevas mejoras para el punto 1.
+1. El contador de mensajes no leídos en el menú (Badge)
+Esta es una mejora clásica de UX. Para lograrlo, necesitamos que el frontend "escuche" los mensajes entrantes incluso cuando el usuario no está metido en la pantalla del chat.
+
+Cómo se implementa a nivel técnico (Pendiente validar por Claude que conoce la arquitectura):
+
+El ChatService (que es un Singleton en Angular) debe conectarse al WebSocket desde el momento en que el usuario se loguea (por ejemplo, en el app.component.ts o en el dashboard), no solo cuando entra a la página del chat.
+
+El servicio debe mantener una variable reactiva (BehaviorSubject) con el conteo de mensajes no leídos.
+
+Si llega un mensaje y el usuario no está en la ruta /chat, el contador sube. Si entra al /chat, el contador se resetea a cero.
+
+Tu componente del menú lateral simplemente se suscribe a ese BehaviorSubject para mostrar el numerito en un "badge" rojo sobre el icono.
+
+2. Notificaciones Push en el móvil (Local/Push Notifications)
+Como bien dices, en una app móvil los usuarios esperan que el teléfono vibre o suene cuando les hablan.
+
+Cómo se implementa a nivel técnico:
+
+Si la app está abierta (en primer plano): Ionic tiene un plugin llamado @capacitor/local-notifications. Cuando el ChatService recibe un mensaje por STOMP y el usuario no está en la pantalla del chat, se dispara una notificación local nativa.
+
+Si la app está cerrada (en segundo plano/matada): Aquí los WebSockets no sirven porque el sistema operativo corta la conexión. Para esto se usa Firebase Cloud Messaging (FCM) integrado con tu backend de Spring Boot, pero es una implementación mucho más compleja.
+
 ---
 
 ## 2. Sistema de Notificaciones Pro (NotificationService) 🔔

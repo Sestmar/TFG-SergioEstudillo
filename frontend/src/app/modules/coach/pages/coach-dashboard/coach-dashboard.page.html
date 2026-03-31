@@ -21,8 +21,11 @@
       <div class="sidebar-icon" (click)="goToStats()">
         <ion-icon name="trophy-outline"></ion-icon>
       </div>
-      <div class="sidebar-icon" (click)="navigateToAction('/chat')">
+      <div class="sidebar-icon" (click)="navigateToAction('/chat')" style="position: relative;">
         <ion-icon name="chatbubbles-outline"></ion-icon>
+        <ion-badge *ngIf="((noLeidos$ | async) ?? 0) > 0" color="danger" class="chat-badge">
+          {{ noLeidos$ | async }}
+        </ion-badge>
       </div>
     </nav>
 
@@ -173,13 +176,16 @@
             <span class="more-info-link">More info →</span>
           </div>
 
-          <div class="action-card small" (click)="navigateToAction('/chat')">
+          <div class="action-card small" (click)="navigateToAction('/chat')" style="position: relative;">
             <div class="icon-circle" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
               <ion-icon name="chatbubbles-outline"></ion-icon>
             </div>
             <span class="title">Chat Equipo</span>
             <span class="desc">Mensajes del equipo</span>
             <span class="more-info-link">More info →</span>
+            <ion-badge *ngIf="((noLeidos$ | async) ?? 0) > 0" color="danger" class="chat-badge">
+              {{ noLeidos$ | async }}
+            </ion-badge>
           </div>
 
         </div>

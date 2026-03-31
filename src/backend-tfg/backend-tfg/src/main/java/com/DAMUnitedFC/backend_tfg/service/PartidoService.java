@@ -40,13 +40,16 @@ public class PartidoService {
 
     @Transactional
     public Partido crear(Partido partido) {
+        log.info("Creando nuevo partido: {} vs {}", partido.getEquipo() != null ? partido.getEquipo().getNombre() : "N/A", partido.getRival());
         Partido guardado = partidoRepo.save(partido);
 
         // Notificar a los jugadores del equipo — el fallo NO debe interrumpir el guardado
         try {
             if (guardado.getEquipo() != null) {
                 Integer idEquipo = guardado.getEquipo().getIdEquipo();
+                log.info("Buscando jugadores para el equipo ID: {}", idEquipo);
                 List<Jugador> jugadores = jugadorRepo.findByEquipoPrincipal_IdEquipo(idEquipo);
+                log.info("Se encontraron {} jugadores para notificar", jugadores.size());
 
                 String rival = guardado.getRival() != null ? guardado.getRival() : "por confirmar";
                 String lugar = guardado.getLugar() != null ? guardado.getLugar() : "por confirmar";
@@ -58,10 +61,14 @@ public class PartidoService {
                     // Prioridad: telefonoContacto del jugador, fallback al teléfono del usuario
                     String telefono = jugador.getTelefonoContacto();
                     if (telefono == null || telefono.isBlank()) {
-                        telefono = jugador.getUsuario() != null ? jugador.getUsuario().getTelefono() : null;
+                        telefono = jugador.getUsuario() != null ? jugador.getUsuario().getTelefono() : null;    
                     }
+
                     if (telefono != null && !telefono.isBlank()) {
+                        log.info("Enviando WhatsApp a jugador ID {}: {}", jugador.getIdJugador(), telefono);
                         whatsAppService.enviarNotificacionPartido(telefono, rival, lugar, fechaHora);
+                    } else {
+                        log.warn("Jugador ID {} no tiene teléfono registrado (ni contacto ni usuario)", jugador.getIdJugador());
                     }
                 }
 
@@ -73,21 +80,22 @@ public class PartidoService {
                         telEntrenador = entrenador.getUsuario() != null ? entrenador.getUsuario().getTelefono() : null;
                     }
                     if (telEntrenador != null && !telEntrenador.isBlank()) {
-                        whatsAppService.enviarNotificacionPartido(telEntrenador, rival, lugar, fechaHora);
+                        log.info("Enviando WhatsApp a Entrenador: {}", telEntrenador);
+                        whatsAppService.enviarNotificacionPartido(telEntrenador, rival, lugar, fechaHora);      
                     }
                 }
 
-                log.info("Notificaciones WhatsApp enviadas para partido {} (equipo {})",
-                        guardado.getIdPartido(), idEquipo);
+                log.info("Proceso de notificaciones WhatsApp finalizado para partido {}", guardado.getIdPartido());
+            } else {
+                log.warn("El partido no tiene un equipo asociado; no se enviarán notificaciones");
             }
         } catch (Exception e) {
-            log.error("Error enviando notificaciones WhatsApp para partido {}: {}",
-                    guardado.getIdPartido(), e.getMessage());
+            log.error("Error crítico procesando notificaciones WhatsApp para partido {}: {}",
+                    guardado.getIdPartido(), e.getMessage(), e);
         }
 
         return guardado;
     }
-
     public List<Partido> listarPorEquipo(Long idEquipo) {
         return partidoRepo.findByEquipo_IdEquipoOrderByFechaHoraAsc(idEquipo);
     }

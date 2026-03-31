@@ -21,8 +21,11 @@
       <div class="sidebar-icon" (click)="navigateTo('/profile')">
         <ion-icon name="person-outline"></ion-icon>
       </div>
-      <div class="sidebar-icon" (click)="navigateTo('/chat')">
+      <div class="sidebar-icon" (click)="navigateTo('/chat')" style="position: relative;">
         <ion-icon name="chatbubbles-outline"></ion-icon>
+        <ion-badge *ngIf="((noLeidos$ | async) ?? 0) > 0" color="danger" class="chat-badge">
+          {{ noLeidos$ | async }}
+        </ion-badge>
       </div>
     </nav>
 
@@ -130,11 +133,14 @@
         <span class="title">Estadísticas</span>
       </div>
 
-      <div class="action-card" (click)="navigateTo('/chat')">
+      <div class="action-card" (click)="navigateTo('/chat')" style="position: relative;">
         <div class="icon-circle" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
           <ion-icon name="chatbubbles"></ion-icon>
         </div>
         <span class="title">Chat</span>
+        <ion-badge *ngIf="((noLeidos$ | async) ?? 0) > 0" color="danger" class="chat-badge">
+          {{ noLeidos$ | async }}
+        </ion-badge>
       </div>
     </div>
 
