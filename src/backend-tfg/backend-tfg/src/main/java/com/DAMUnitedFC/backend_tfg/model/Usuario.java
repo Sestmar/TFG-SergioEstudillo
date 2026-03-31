@@ -32,7 +32,7 @@ public class Usuario implements UserDetails {
     @JsonIgnore
     private String passwordHash;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 50)
     private String rol;
 
     @Column(nullable = false)
@@ -54,7 +54,8 @@ public class Usuario implements UserDetails {
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (this.rol == null) return List.of();
-        return List.of(new SimpleGrantedAuthority("ROLE_" + this.rol));
+        String authority = this.rol.startsWith("ROLE_") ? this.rol : "ROLE_" + this.rol;
+        return List.of(new SimpleGrantedAuthority(authority));
     }
 
     @Override

@@ -21,6 +21,6 @@ public class EquipoEntrenador {
     @JoinColumn(name = "id_entrenador")
     private Entrenador entrenador;
 
-    @Column(name = "rol", nullable = false, length = 20)  // AÑADE ESTE CAMPO
+    @Column(name = "rol", nullable = false, length = 50)
     private String rol;
 }

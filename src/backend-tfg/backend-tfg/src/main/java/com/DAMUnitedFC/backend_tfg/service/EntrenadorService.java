@@ -4,6 +4,7 @@ import com.DAMUnitedFC.backend_tfg.dto.EntrenadorDto;
 import com.DAMUnitedFC.backend_tfg.model.*;
 import com.DAMUnitedFC.backend_tfg.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
 import java.util.*;
@@ -76,6 +77,7 @@ public class EntrenadorService {
         repo.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
     public Optional<Map<String, Object>> getEquipoDelUsuario(Integer idUsuario) {
         Optional<Entrenador> entrenadorOpt = repo.findByUsuario_IdUsuario(idUsuario);
         if (entrenadorOpt.isEmpty()) return Optional.empty();

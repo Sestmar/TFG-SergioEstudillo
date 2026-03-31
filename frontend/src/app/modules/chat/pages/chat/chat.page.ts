@@ -59,22 +59,28 @@ export class ChatPage implements OnInit, OnDestroy {
     const userId = this.currentUser?.idUsuario;
     if (!userId) return;
 
-    // ENTRENADOR tiene su propio endpoint; JUGADOR usa el de jugadores
-    const esEntrenador = this.currentUser?.rol === 'ENTRENADOR';
+    // El rol puede venir con o sin prefijo ROLE_ (depende de si el usuario fue creado
+    // por registro propio o por el admin). Normalizamos a mayúsculas y usamos includes
+    // para cubrir ambos casos: 'ENTRENADOR' y 'ROLE_ENTRENADOR'.
+    const rol = (this.currentUser?.rol ?? '').toUpperCase();
+    const esEntrenador = rol.includes('ENTRENADOR') || rol.includes('CUERPO_TECNICO') || rol.includes('COACH');
     const endpoint = esEntrenador
       ? `${environment.apiUrl}/entrenadores/usuario/${userId}/equipo`
       : `${environment.apiUrl}/jugadores/usuario/${userId}/equipo`;
 
-    console.log(`[Chat] Cargando equipo para ${esEntrenador ? 'ENTRENADOR' : 'JUGADOR'} userId=${userId}`);
+    console.log(`[Chat] Cargando equipo para ${this.currentUser?.rol} userId=${userId}`);
 
     this.http.get<any>(endpoint)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (equipo) => {
-          this.equipoId = equipo?.idEquipo;
-          console.log('[Chat] equipoId resuelto:', this.equipoId);
+        next: (respuesta) => {
+          // El endpoint de jugadores devuelve el objeto Equipo directamente (con idEquipo en raíz).
+          // El endpoint de entrenadores devuelve { equipo: {...}, rol: "...", entrenadorId: ... },
+          // por lo que hay que extraer idEquipo desde respuesta.equipo.idEquipo.
+          this.equipoId = respuesta?.idEquipo ?? respuesta?.equipo?.idEquipo;
+          console.log('[Chat] equipoId resuelto:', this.equipoId, '| respuesta:', respuesta);
           if (!this.equipoId) {
-            console.warn('[Chat] El endpoint devolvió equipo sin idEquipo — no se conectará al chat');
+            console.warn('[Chat] El endpoint devolvió respuesta sin idEquipo — no se conectará al chat');
             return;
           }
           this.iniciarChat();

@@ -5,8 +5,11 @@
        [class.other]="msg.remitenteId !== currentUserId">
 
     <div class="avatar" *ngIf="msg.remitenteId !== currentUserId">
-      <img *ngIf="msg.remitenteFotoUrl" [src]="msg.remitenteFotoUrl" alt="">
-      <div class="avatar-placeholder" *ngIf="!msg.remitenteFotoUrl">
+      <img *ngIf="msg.remitenteFotoUrl && !avatarErrorIds.has(msg.remitenteId)"
+           [src]="msg.remitenteFotoUrl"
+           alt=""
+           (error)="onImgError($event, msg)">
+      <div class="avatar-placeholder" *ngIf="!msg.remitenteFotoUrl || avatarErrorIds.has(msg.remitenteId)">
         {{ msg.remitenteNombre[0] }}{{ msg.remitenteApellidos[0] }}
       </div>
     </div>

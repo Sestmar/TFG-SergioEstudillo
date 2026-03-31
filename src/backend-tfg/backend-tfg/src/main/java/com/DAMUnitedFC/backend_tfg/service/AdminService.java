@@ -109,6 +109,7 @@ public class AdminService {
         usuarioRepo.deleteById(id);
     }
 
+    @Transactional
     public void crearUsuario(Map<String, Object> payload) {
         String nombre = (String) payload.get("nombre");
         String apellidos = payload.get("apellidos") != null ? (String) payload.get("apellidos") : "";
@@ -126,14 +127,16 @@ public class AdminService {
         u.setPasswordHash(passwordEncoder.encode(password.trim()));
 
         String rolInput = (rol != null) ? rol.toUpperCase() : "JUGADOR";
-        if (rolInput.contains("ENTRENADOR") || rolInput.contains("COACH")) u.setRol("ROLE_ENTRENADOR");
-        else if (rolInput.contains("JUGADOR")) u.setRol("ROLE_JUGADOR");
-        else u.setRol(rolInput.startsWith("ROLE_") ? rolInput : "ROLE_" + rolInput);
+        // Normalizar: quitar prefijo ROLE_ si viene, guardar siempre sin prefijo (igual que AuthService)
+        String rolNormalizado = rolInput.startsWith("ROLE_") ? rolInput.substring(5) : rolInput;
+        if (rolNormalizado.contains("ENTRENADOR") || rolNormalizado.contains("COACH")) u.setRol("ENTRENADOR");
+        else if (rolNormalizado.contains("JUGADOR")) u.setRol("JUGADOR");
+        else u.setRol(rolNormalizado);
 
         u.setFechaRegistro(new java.util.Date());
         Usuario savedUser = usuarioRepo.save(u);
 
-        if ("ROLE_ENTRENADOR".equals(savedUser.getRol())) {
+        if ("ENTRENADOR".equals(savedUser.getRol())) {
             Entrenador nuevo = new Entrenador();
             nuevo.setUsuario(savedUser);
             entrenadorRepo.save(nuevo);

@@ -1,13 +1,49 @@
-Claude, he revisado los logs del backend al intentar enviar un mensaje desde Angular y salta esta excepción exacta:
+no funcionó los cambios para que el entrenador entrase al chat. Revisa
+instruccion.md con la propuesta de solucion
 
-`org.springframework.messaging.converter.MessageConversionException: Could not read JSON: Cannot construct instance of org.springframework.security.core.userdetails.UserDetails (no Creators, like default constructor, exist)`
+  Read 1 file (ctrl+o to expand)
 
-El problema radica en la firma del método en el `ChatController` (el que tiene `@MessageMapping("/chat.enviar")`). Estás intentando inyectar o deserializar `UserDetails`, lo cual falla en WebSockets porque Jackson intenta mapear el payload JSON a esta interfaz.
+● El problema ahora está en el backend: character varying(20) — alguna columna
+   es demasiado corta para el valor que se intenta procesar. El frontend ya
+  detecta bien el rol.
 
-Por favor, refactoriza el `ChatController` (y el `ChatService` si es necesario) aplicando esto:
-1. Cambia el parámetro del usuario en el método `@MessageMapping` para usar `java.security.Principal principal` (o `Authentication`) en lugar de `UserDetails`.
-2. Obtén el email (o username) del usuario que envía el mensaje llamando a `principal.getName()`.
-3. Usa ese email para buscar al `Usuario` en la base de datos y establecerlo como el 'remitente' del mensaje.
-4. Asegúrate de que `EnviarMensajeDto` contenga solo tipos de datos simples (String contenido, Integer idEquipo, etc.) y no entidades de Spring Security.
+  Importante: este proyecto no usa Flyway — los scripts SQL se ejecutan
+  manualmente.
 
-Dame el código corregido de esos archivos para solucionar la excepción.
+● Agent(Fix VARCHAR(20) SQL error entrenador endpoint)
+  ⎿  Done (17 tool uses · 43.9k tokens · 2m 42s)
+  (ctrl+o to expand)
+
+● Fix aplicado. Lo que encontró el agente es más profundo de lo esperado:
+
+  ---
+  Dos campos problemáticos:
+
+  ┌───────────────────────┬───────┬─────────────┬─────────────┐
+  │        Entidad        │ Campo │    Antes    │   Después   │
+  ├───────────────────────┼───────┼─────────────┼─────────────┤
+  │ Usuario.java          │ rol   │ VARCHAR(20) │ VARCHAR(50) │
+  ├───────────────────────┼───────┼─────────────┼─────────────┤
+  │ EquipoEntrenador.java │ rol   │ VARCHAR(20) │ VARCHAR(50) │
+  └───────────────────────┴───────┴─────────────┴─────────────┘
+
+  Por qué explota en un GET: JPA sin @Transactional(readOnly=true) mantiene
+  dirty checking activo — al cargar el grafo del entrenador Hibernate hace un
+  flush automático que intenta hacer UPDATE sobre usuario, y ahí choca el
+  valor largo contra el VARCHAR(20).
+
+  ---
+  Ejecutá esto en tu BD local ahora:
+  ALTER TABLE usuario ALTER COLUMN rol TYPE VARCHAR(50);
+  ALTER TABLE equipo_entrenador ALTER COLUMN rol TYPE VARCHAR(50);
+
+  El archivo fix_varchar_rol.sql ya está en src/main/resources/ si preferís
+  ejecutarlo desde ahí.
+
+  ---
+  Bug adicional encontrado (para después, no urgente): AdminService guarda
+  "ROLE_ENTRENADOR" y getAuthorities() en la entidad le añade otro "ROLE_"
+  encima → queda "ROLE_ROLE_ENTRENADOR". Eso es una inconsistencia de
+  seguridad que hay que limpiar por separado.
+
+  Ejecutá el ALTER TABLE, reiniciá el backend y probá.

@@ -26,6 +26,8 @@ export class ChatRoomComponent implements AfterViewChecked, OnChanges {
 
   contenido: string = '';
   private shouldScroll = false;
+  // IDs de remitentes cuya imagen de avatar falló al cargar
+  avatarErrorIds = new Set<number>();
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['mensajes']) {
@@ -54,5 +56,11 @@ export class ChatRoomComponent implements AfterViewChecked, OnChanges {
     if (!texto) return;
     this.onEnviar.emit({ contenido: texto });
     this.contenido = '';
+  }
+
+  onImgError(event: Event, msg: MensajeDto): void {
+    // Ocultamos la imagen rota y dejamos que el avatar-placeholder tome su lugar
+    (event.target as HTMLImageElement).style.display = 'none';
+    this.avatarErrorIds.add(msg.remitenteId);
   }
 }
