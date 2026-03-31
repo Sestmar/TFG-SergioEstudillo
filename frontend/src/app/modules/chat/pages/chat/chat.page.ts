@@ -65,16 +65,23 @@ export class ChatPage implements OnInit, OnDestroy {
       ? `${environment.apiUrl}/entrenadores/usuario/${userId}/equipo`
       : `${environment.apiUrl}/jugadores/usuario/${userId}/equipo`;
 
+    console.log(`[Chat] Cargando equipo para ${esEntrenador ? 'ENTRENADOR' : 'JUGADOR'} userId=${userId}`);
+
     this.http.get<any>(endpoint)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (equipo) => {
           this.equipoId = equipo?.idEquipo;
+          console.log('[Chat] equipoId resuelto:', this.equipoId);
+          if (!this.equipoId) {
+            console.warn('[Chat] El endpoint devolvió equipo sin idEquipo — no se conectará al chat');
+            return;
+          }
           this.iniciarChat();
         },
         error: (err) => {
-          console.warn('[Chat] Sin equipo asignado:', err?.status);
-          this.iniciarChat(); // arranca igualmente (mostrará chat vacío)
+          console.warn('[Chat] Sin equipo asignado (error', err?.status, ') — no se conectará al chat de equipo');
+          // No llamar iniciarChat() si no hay equipoId: no tiene sentido conectar sin equipo
         }
       });
   }

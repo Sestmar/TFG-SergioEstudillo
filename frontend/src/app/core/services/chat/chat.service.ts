@@ -57,29 +57,38 @@ export class ChatService implements OnDestroy {
         if (!environment.production) console.log('[STOMP]', msg);
       },
       onConnect: () => {
+        console.log('[ChatService] STOMP conectado. idEquipo:', idEquipo, '| idDestinatario:', idDestinatario);
         this.conectado$.next(true);
         this.limpiarSuscripciones();
 
         if (idEquipo) {
+          const topicEquipo = `/topic/equipo/${idEquipo}`;
+          console.log('[ChatService] Suscribiendo a', topicEquipo);
           const sub = this.client!.subscribe(
-            `/topic/equipo/${idEquipo}`,
+            topicEquipo,
             (frame: IMessage) => {
+              console.log('[ChatService] Mensaje recibido en', topicEquipo, frame.body);
               const msg: MensajeDto = JSON.parse(frame.body);
               this.agregarMensaje(msg);
             }
           );
           this.subscriptions.push(sub);
+          console.log('[ChatService] Suscripción activa:', topicEquipo);
         }
 
         if (idDestinatario !== undefined) {
+          const topicPrivado = '/user/queue/mensajes';
+          console.log('[ChatService] Suscribiendo a', topicPrivado);
           const sub = this.client!.subscribe(
-            '/user/queue/mensajes',
+            topicPrivado,
             (frame: IMessage) => {
+              console.log('[ChatService] Mensaje privado recibido', frame.body);
               const msg: MensajeDto = JSON.parse(frame.body);
               this.agregarMensaje(msg);
             }
           );
           this.subscriptions.push(sub);
+          console.log('[ChatService] Suscripción activa:', topicPrivado);
         }
       },
       onDisconnect: () => this.conectado$.next(false),

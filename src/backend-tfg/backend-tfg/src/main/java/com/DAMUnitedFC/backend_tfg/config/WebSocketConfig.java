@@ -10,6 +10,7 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -60,10 +61,26 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                                 var auth = new UsernamePasswordAuthenticationToken(
                                         userDetails, null, userDetails.getAuthorities());
                                 accessor.setUser(auth);
+                            } else {
+                                // Token inválido (expirado o mal formado) → rechazar conexión STOMP
+                                StompHeaderAccessor errorAccessor = StompHeaderAccessor.create(StompCommand.ERROR);
+                                errorAccessor.setMessage("Token inválido o expirado. Reconectate con credenciales válidas.");
+                                errorAccessor.setLeaveMutable(true);
+                                return MessageBuilder.createMessage(new byte[0], errorAccessor.getMessageHeaders());
                             }
                         } catch (Exception e) {
-                            // Token inválido — conexión sin autenticación
+                            // Token malformado → rechazar conexión STOMP
+                            StompHeaderAccessor errorAccessor = StompHeaderAccessor.create(StompCommand.ERROR);
+                            errorAccessor.setMessage("Token inválido: " + e.getMessage());
+                            errorAccessor.setLeaveMutable(true);
+                            return MessageBuilder.createMessage(new byte[0], errorAccessor.getMessageHeaders());
                         }
+                    } else {
+                        // Sin header Authorization → rechazar conexión STOMP
+                        StompHeaderAccessor errorAccessor = StompHeaderAccessor.create(StompCommand.ERROR);
+                        errorAccessor.setMessage("Se requiere autenticación. Incluí el header Authorization: Bearer <token>.");
+                        errorAccessor.setLeaveMutable(true);
+                        return MessageBuilder.createMessage(new byte[0], errorAccessor.getMessageHeaders());
                     }
                 }
                 return message;

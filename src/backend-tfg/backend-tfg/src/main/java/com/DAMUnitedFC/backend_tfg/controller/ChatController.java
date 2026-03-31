@@ -30,6 +30,11 @@ public class ChatController {
     @MessageMapping("/chat.enviar")
     public void enviarMensaje(@Payload EnviarMensajeDto dto,
                                @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            // El interceptor rechazó la conexión o el token es inválido; no procesar el mensaje
+            return;
+        }
+
         MensajeDto guardado = chatService.enviarMensaje(userDetails.getUsername(), dto);
 
         if (dto.getEquipoId() != null) {
@@ -37,9 +42,14 @@ public class ChatController {
             messagingTemplate.convertAndSend(
                     "/topic/equipo/" + dto.getEquipoId(), guardado);
         } else if (dto.getDestinatarioId() != null) {
-            // Mensaje privado → cola del destinatario
+            // Mensaje privado → necesitamos el email del destinatario porque Spring Security
+            // usa el email (username) como nombre de principal, no el ID numérico
+            String emailDestinatario = usuarioRepository.findById(dto.getDestinatarioId())
+                    .orElseThrow(() -> new RuntimeException("Destinatario no encontrado: " + dto.getDestinatarioId()))
+                    .getEmail();
+
             messagingTemplate.convertAndSendToUser(
-                    String.valueOf(dto.getDestinatarioId()),
+                    emailDestinatario,
                     "/queue/mensajes",
                     guardado);
             // También se lo mandamos al remitente para que vea su propio mensaje

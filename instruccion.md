@@ -1,48 +1,64 @@
-Bien, vamos a dejar esto blindado de una vez. Déjame ver el .gitignore primero.
+Backend listo. Mientras espero el frontend, te resumo lo que encontró:
 
-  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+  El chat de equipo nunca funcionó por dos razones encadenadas:
 
-● Perfecto. La arquitectura ya es correcta — application-local.properties ya está en el .gitignore. El problema es que
-  le faltan las credenciales de la BD. Solo hay que completarlo.
+  1. WebSocketConfig.java — el catch del interceptor era vacío. Token inválido
+   → excepción silenciada → accessor.setUser() nunca se llamaba → el STOMP
+  CONNECT pasaba sin Principal. Ahora devuelve un frame STOMP ERROR explícito
+  en vez de ignorarlo.
+  2. ChatController.java — userDetails llegaba null (por el punto 1), y
+  userDetails.getUsername() lanzaba NPE antes de llegar al convertAndSend. El
+  broadcast al topic ni siquiera se ejecutaba. El fix: null-guard al principio
+   del método + lookup del email del destinatario para mensajes privados.
 
-  El flujo es este:
-  - application.properties → placeholders, se commitea, nunca tiene credenciales
-  - application-local.properties → credenciales reales, gitignored, nunca se commitea
+  El broadcast a /topic/equipo/{id} estaba bien escrito — simplemente nunca
+  llegaba a ejecutarse.
 
-  Spring Boot con perfil local mergea ambos automáticamente. Es exactamente lo que necesitás.
+  Esperando al sub-agente de frontend...
 
-● Update(src\backend-tfg\backend-tfg\src\main\resources\application-local.properties)
-  ⎿  Added 6 lines
-       3  # Ya esta excluido en .gitignore
-       4  # ============================================================
-       5
-       6 +# Base de datos local
-       7 +DB_URL=jdbc:postgresql://localhost:5432/damunitedfc_local
-       8 +DB_USERNAME=postgres
-       9 +DB_PASSWORD=postgres
-      10 +DDL_AUTO=update
-      11 +
-      12  # Gmail
-      13  MAIL_USERNAME=sergio.estudilloo7@gmail.com
-      14  MAIL_PASSWORD=khtbwtqgloxjbkgu
+● Agent "Fix frontend WebSocket chat" completed
 
-● Listo. Ahora levantás el backend exactamente igual que antes:
+● Los dos terminaron. Acá el panorama completo:
 
-  $env:JAVA_HOME = "C:\Program Files\Java\jdk-21"
-  $env:SPRING_PROFILES_ACTIVE = "local"
-  ./mvnw spring-boot:run
+  ---
+  Todo lo que se corrigió
 
-  Lo que cambió: DB_URL, DB_USERNAME, DB_PASSWORD y DDL_AUTO=update ahora están en el archivo local. Spring los resuelve
-   y no los ve como literales.
+  Backend
 
-  La arquitectura queda así:
+  ┌──────────────────────┬─────────────────────────────────────────────────┐
+  │       Archivo        │                 Qué se arregló                  │
+  ├──────────────────────┼─────────────────────────────────────────────────┤
+  │ WebSocketConfig.java │ Interceptor preSend ya no silencia errores de   │
+  │                      │ token — devuelve STOMP ERROR explícito          │
+  ├──────────────────────┼─────────────────────────────────────────────────┤
+  │ ChatController.java  │ Null-guard para userDetails null + lookup de    │
+  │                      │ email para mensajes privados                    │
+  └──────────────────────┴─────────────────────────────────────────────────┘
 
-  ┌──────────────────────────────┬───────────────────────┬───────────────────────────────┐
-  │           Archivo            │     ¿Se commitea?     │          ¿Qué tiene?          │
-  ├──────────────────────────────┼───────────────────────┼───────────────────────────────┤
-  │ application.properties       │ ✅ Sí                 │ Solo placeholders ${VAR}      │
-  ├──────────────────────────────┼───────────────────────┼───────────────────────────────┤
-  │ application-local.properties │ ❌ Nunca (gitignored) │ Todas las credenciales reales │
-  └──────────────────────────────┴───────────────────────┴───────────────────────────────┘
+  Frontend
 
-  Probá levantarlo y me decís.
+  ┌─────────────────┬──────────────────────────────────────────────────────┐
+  │     Archivo     │                    Qué se arregló                    │
+  ├─────────────────┼──────────────────────────────────────────────────────┤
+  │                 │ cargarEquipoYConectar() ya no llama iniciarChat() si │
+  │ chat.page.ts    │  equipoId es undefined — ni en error ni en respuesta │
+  │                 │  sin id                                              │
+  ├─────────────────┼──────────────────────────────────────────────────────┤
+  │ chat.service.ts │ Logs de debug en onConnect para confirmar            │
+  │                 │ suscripciones activas                                │
+  └─────────────────┴──────────────────────────────────────────────────────┘
+
+  ---
+  El flujo ahora es:
+  1. STOMP CONNECT llega → interceptor valida token → si inválido, ERROR frame
+   explícito
+  2. Si token OK → accessor.setUser(auth) se ejecuta → userDetails llega al
+  controller
+  3. Jugador/Entrenador conecta → equipoId definido → suscripción a
+  /topic/equipo/{id}
+  4. Se envía mensaje → controller recibe, persiste, broadcast a
+  /topic/equipo/{id} → todos los suscriptos lo reciben
+
+  Levantá el backend (./mvnw spring-boot:run con el perfil local que ya
+  fijamos) y probá. Si ves en consola del frontend [ChatService] Suscripción
+  activa: /topic/equipo/X, la conexión está bien establecida.
