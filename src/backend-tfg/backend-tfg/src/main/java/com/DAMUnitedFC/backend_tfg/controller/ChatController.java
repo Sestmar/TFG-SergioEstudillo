@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
@@ -28,14 +29,14 @@ public class ChatController {
     // --- STOMP: envío en tiempo real ---
 
     @MessageMapping("/chat.enviar")
-    public void enviarMensaje(@Payload EnviarMensajeDto dto,
-                               @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+    public void enviarMensaje(@Payload EnviarMensajeDto dto, Principal principal) {
+        if (principal == null) {
             // El interceptor rechazó la conexión o el token es inválido; no procesar el mensaje
             return;
         }
 
-        MensajeDto guardado = chatService.enviarMensaje(userDetails.getUsername(), dto);
+        String emailRemitente = principal.getName();
+        MensajeDto guardado = chatService.enviarMensaje(emailRemitente, dto);
 
         if (dto.getEquipoId() != null) {
             // Mensaje grupal → broadcast al topic del equipo
@@ -54,7 +55,7 @@ public class ChatController {
                     guardado);
             // También se lo mandamos al remitente para que vea su propio mensaje
             messagingTemplate.convertAndSendToUser(
-                    userDetails.getUsername(),
+                    emailRemitente,
                     "/queue/mensajes",
                     guardado);
         }

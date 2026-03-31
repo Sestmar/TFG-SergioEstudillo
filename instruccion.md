@@ -1,64 +1,13 @@
-Backend listo. Mientras espero el frontend, te resumo lo que encontró:
+Claude, he revisado los logs del backend al intentar enviar un mensaje desde Angular y salta esta excepción exacta:
 
-  El chat de equipo nunca funcionó por dos razones encadenadas:
+`org.springframework.messaging.converter.MessageConversionException: Could not read JSON: Cannot construct instance of org.springframework.security.core.userdetails.UserDetails (no Creators, like default constructor, exist)`
 
-  1. WebSocketConfig.java — el catch del interceptor era vacío. Token inválido
-   → excepción silenciada → accessor.setUser() nunca se llamaba → el STOMP
-  CONNECT pasaba sin Principal. Ahora devuelve un frame STOMP ERROR explícito
-  en vez de ignorarlo.
-  2. ChatController.java — userDetails llegaba null (por el punto 1), y
-  userDetails.getUsername() lanzaba NPE antes de llegar al convertAndSend. El
-  broadcast al topic ni siquiera se ejecutaba. El fix: null-guard al principio
-   del método + lookup del email del destinatario para mensajes privados.
+El problema radica en la firma del método en el `ChatController` (el que tiene `@MessageMapping("/chat.enviar")`). Estás intentando inyectar o deserializar `UserDetails`, lo cual falla en WebSockets porque Jackson intenta mapear el payload JSON a esta interfaz.
 
-  El broadcast a /topic/equipo/{id} estaba bien escrito — simplemente nunca
-  llegaba a ejecutarse.
+Por favor, refactoriza el `ChatController` (y el `ChatService` si es necesario) aplicando esto:
+1. Cambia el parámetro del usuario en el método `@MessageMapping` para usar `java.security.Principal principal` (o `Authentication`) en lugar de `UserDetails`.
+2. Obtén el email (o username) del usuario que envía el mensaje llamando a `principal.getName()`.
+3. Usa ese email para buscar al `Usuario` en la base de datos y establecerlo como el 'remitente' del mensaje.
+4. Asegúrate de que `EnviarMensajeDto` contenga solo tipos de datos simples (String contenido, Integer idEquipo, etc.) y no entidades de Spring Security.
 
-  Esperando al sub-agente de frontend...
-
-● Agent "Fix frontend WebSocket chat" completed
-
-● Los dos terminaron. Acá el panorama completo:
-
-  ---
-  Todo lo que se corrigió
-
-  Backend
-
-  ┌──────────────────────┬─────────────────────────────────────────────────┐
-  │       Archivo        │                 Qué se arregló                  │
-  ├──────────────────────┼─────────────────────────────────────────────────┤
-  │ WebSocketConfig.java │ Interceptor preSend ya no silencia errores de   │
-  │                      │ token — devuelve STOMP ERROR explícito          │
-  ├──────────────────────┼─────────────────────────────────────────────────┤
-  │ ChatController.java  │ Null-guard para userDetails null + lookup de    │
-  │                      │ email para mensajes privados                    │
-  └──────────────────────┴─────────────────────────────────────────────────┘
-
-  Frontend
-
-  ┌─────────────────┬──────────────────────────────────────────────────────┐
-  │     Archivo     │                    Qué se arregló                    │
-  ├─────────────────┼──────────────────────────────────────────────────────┤
-  │                 │ cargarEquipoYConectar() ya no llama iniciarChat() si │
-  │ chat.page.ts    │  equipoId es undefined — ni en error ni en respuesta │
-  │                 │  sin id                                              │
-  ├─────────────────┼──────────────────────────────────────────────────────┤
-  │ chat.service.ts │ Logs de debug en onConnect para confirmar            │
-  │                 │ suscripciones activas                                │
-  └─────────────────┴──────────────────────────────────────────────────────┘
-
-  ---
-  El flujo ahora es:
-  1. STOMP CONNECT llega → interceptor valida token → si inválido, ERROR frame
-   explícito
-  2. Si token OK → accessor.setUser(auth) se ejecuta → userDetails llega al
-  controller
-  3. Jugador/Entrenador conecta → equipoId definido → suscripción a
-  /topic/equipo/{id}
-  4. Se envía mensaje → controller recibe, persiste, broadcast a
-  /topic/equipo/{id} → todos los suscriptos lo reciben
-
-  Levantá el backend (./mvnw spring-boot:run con el perfil local que ya
-  fijamos) y probá. Si ves en consola del frontend [ChatService] Suscripción
-  activa: /topic/equipo/X, la conexión está bien establecida.
+Dame el código corregido de esos archivos para solucionar la excepción.
