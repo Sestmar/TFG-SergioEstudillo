@@ -1,38 +1,48 @@
-Usuario@LAPTOP-8VI2TBCD MINGW64 ~/Documents/2DAM/TFG-SergioEstudillo/TFG-SergioEstudillo (preprod)
-$ git push origin preprod
-Enumerating objects: 123, done.
-Counting objects: 100% (123/123), done.
-Delta compression using up to 16 threads
-Compressing objects: 100% (67/67), done.
-Writing objects: 100% (77/77), 31.51 KiB | 1.37 MiB/s, done.
-Total 77 (delta 29), reused 0 (delta 0), pack-reused 0 (from 0)
-remote: Resolving deltas: 100% (29/29), completed with 29 local objects.
-remote: error: GH013: Repository rule violations found for refs/heads/preprod.
-remote:
-remote: - GITHUB PUSH PROTECTION
-remote:   —————————————————————————————————————————
-remote:     Resolve the following violations before pushing again
-remote:
-remote:     - Push cannot contain secrets
-remote:
-remote:
-remote:      (?) Learn how to resolve a blocked push
-remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
-remote:
-remote:
-remote:       —— Twilio Account String Identifier ——————————————————
-remote:        locations:
-remote:          - commit: 986c8288ad5110218a0ace44f947c4c9e7c33d93
-remote:            path: src/backend-tfg/backend-tfg/src/main/resources/application.properties:42
-remote:
-remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
-remote:        https://github.com/Sestmar/TFG-SergioEstudillo/security/secret-scanning/unblock-secret/3BgJbYOcniSn6XiwNdcXGgGxHBd
-remote:
-remote:
-remote:
-To https://github.com/Sestmar/TFG-SergioEstudillo
- ! [remote rejected] preprod -> preprod (push declined due to repository rule violations)
-error: failed to push some refs to 'https://github.com/Sestmar/TFG-SergioEstudillo'
+Bien, vamos a dejar esto blindado de una vez. Déjame ver el .gitignore primero.
 
-Usuario@LAPTOP-8VI2TBCD MINGW64 ~/Documents/2DAM/TFG-SergioEstudillo/TFG-SergioEstudillo (preprod)
-$
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Perfecto. La arquitectura ya es correcta — application-local.properties ya está en el .gitignore. El problema es que
+  le faltan las credenciales de la BD. Solo hay que completarlo.
+
+  El flujo es este:
+  - application.properties → placeholders, se commitea, nunca tiene credenciales
+  - application-local.properties → credenciales reales, gitignored, nunca se commitea
+
+  Spring Boot con perfil local mergea ambos automáticamente. Es exactamente lo que necesitás.
+
+● Update(src\backend-tfg\backend-tfg\src\main\resources\application-local.properties)
+  ⎿  Added 6 lines
+       3  # Ya esta excluido en .gitignore
+       4  # ============================================================
+       5
+       6 +# Base de datos local
+       7 +DB_URL=jdbc:postgresql://localhost:5432/damunitedfc_local
+       8 +DB_USERNAME=postgres
+       9 +DB_PASSWORD=postgres
+      10 +DDL_AUTO=update
+      11 +
+      12  # Gmail
+      13  MAIL_USERNAME=sergio.estudilloo7@gmail.com
+      14  MAIL_PASSWORD=khtbwtqgloxjbkgu
+
+● Listo. Ahora levantás el backend exactamente igual que antes:
+
+  $env:JAVA_HOME = "C:\Program Files\Java\jdk-21"
+  $env:SPRING_PROFILES_ACTIVE = "local"
+  ./mvnw spring-boot:run
+
+  Lo que cambió: DB_URL, DB_USERNAME, DB_PASSWORD y DDL_AUTO=update ahora están en el archivo local. Spring los resuelve
+   y no los ve como literales.
+
+  La arquitectura queda así:
+
+  ┌──────────────────────────────┬───────────────────────┬───────────────────────────────┐
+  │           Archivo            │     ¿Se commitea?     │          ¿Qué tiene?          │
+  ├──────────────────────────────┼───────────────────────┼───────────────────────────────┤
+  │ application.properties       │ ✅ Sí                 │ Solo placeholders ${VAR}      │
+  ├──────────────────────────────┼───────────────────────┼───────────────────────────────┤
+  │ application-local.properties │ ❌ Nunca (gitignored) │ Todas las credenciales reales │
+  └──────────────────────────────┴───────────────────────┴───────────────────────────────┘
+
+  Probá levantarlo y me decís.
