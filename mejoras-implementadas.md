@@ -214,20 +214,36 @@ public CorsConfigurationSource corsConfigurationSource() {
 }
 ```
 
-### Nueva Funcionalidad: Historial Detallado del Jugador
-Como parte de la limpieza de datos, se implementó un sistema de agregación para consultar el historial completo de un jugador (partidos, convocatorias e incidencias) en un solo endpoint.
+---
 
-```java
-// Agregación de datos en JugadorService.java
-public PlayerHistoryDto getHistorial(Integer id) {
-    List<Incidencia> incidencias = incidenciaRepo.findByJugadorId(id);
-    List<Alineacion> alineaciones = alineacionRepo.findByJugadorId(id);
-    // Transformación reactiva a DTO unificado...
-    return PlayerHistoryDto.builder()
-        .partidos(mapToPartidoDto(alineaciones))
-        .incidencias(mapToIncidenciaDto(incidencias))
-        .build();
-}
+## 9. Sincronización de Contacto: Gestión Multicapa del Perfil 📱
+
+Se ha implementado un mecanismo de sincronización en caliente para asegurar la integridad de los datos de contacto entre las tablas de identidad (Usuario) y las de rol (Jugador/Entrenador).
+
+### Desafío Técnico
+La arquitectura original almacenaba el teléfono en dos lugares independientes. Al actualizar el perfil, solo se modificaba la tabla de rol (`telefonoContacto`), pero el sistema de notificaciones WhatsApp (Twilio) consultaba la tabla `Usuario`, lo que provocaba que las alertas se enviaran a números obsoletos.
+
+### Solución: Sincronización Reactiva de Doble Capa
+Se ha inyectado el `AuthService` en los componentes de perfil para realizar un "fix quirúrgico" en el bloque de éxito del guardado.
+
+- **Persistencia Atómica (Best-Effort)**: El sistema primero asegura el guardado del perfil de rol. Si este es exitoso, dispara una petición asíncrona para actualizar la tabla `Usuario`.
+- **Validación de Datos**: Se implementó un *guard* explícito para evitar llamadas innecesarias al servidor cuando el campo de teléfono está vacío o no ha cambiado.
+
+```typescript
+// Sincronización en profile.page.ts y coach-profile.page.ts
+this.playerService.updateProfile(this.editForm).subscribe({
+  next: () => {
+    // Sincronización con la tabla Usuario (necesaria para Twilio/WhatsApp)
+    const userId = this.currentUser?.idUsuario;
+    if (userId && this.editForm.telefono) {
+      this.authSvc.updateUser(userId, { telefono: this.editForm.telefono })
+        .subscribe({
+          error: (err) => console.error('Error sincronizando teléfono en Usuario', err)
+        });
+    }
+    this.showSuccessToast('Perfil actualizado correctamente');
+  }
+});
 ```
 
 ---

@@ -116,6 +116,17 @@ export class CoachProfilePage implements OnInit {
       next: async () => {
         await loading.dismiss();
         this.presentToast('Perfil actualizado correctamente', 'success');
+
+        // Sincronizar teléfono en tabla usuario para que Twilio pueda enviar notificaciones
+        const userId = this.coachData.usuario.idUsuario || this.coachData.usuario.id;
+        if (userId && this.coachData.telefonoContacto) {
+          this.authSvc.updateUser(userId, { telefono: this.coachData.telefonoContacto })
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              error: (err) => console.error('Error sincronizando teléfono en usuario:', err)
+            });
+        }
+
         this.goBack();
       },
       error: async (err) => {

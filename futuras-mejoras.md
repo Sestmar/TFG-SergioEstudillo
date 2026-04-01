@@ -33,3 +33,13 @@ Mantener la consistencia del diseño "Night Stadium" en toda la app.
 - **Listado de Jugadores (`my-team`)**: Implementar badges visuales para estados de disponibilidad (activo, lesionado, baja).
 - **Formulario de Perfil**: Reorganizar el layout para agrupar campos (Datos Personales, Datos Deportivos) y evitar el scroll infinito de inputs.
 - **Consistencia de Modales**: Verificar que todos los diálogos emergentes sigan la paleta `#0a0e1a` / `#6c63ff` y el estilo de bordes redondeados.
+
+---
+
+## 4. Mejoras en el Chat de Equipo 💬
+
+Mejorar la experiencia de comunicación y restringir el acceso según el rol.
+
+### Tareas
+- **Icono de Notificación (Badge)**: Implementar un indicador visual (exclamación o punto rojo) en el icono del menú de chat cuando haya mensajes nuevos sin leer. Requiere que `ChatService` escuche en segundo plano y gestione un estado global (`BehaviorSubject`).
+- **Restricción de Rol Admin**: Eliminar el acceso al chat para el rol **ADMIN**, ya que al no tener equipo asignado, la funcionalidad carece de contexto y genera errores de carga.

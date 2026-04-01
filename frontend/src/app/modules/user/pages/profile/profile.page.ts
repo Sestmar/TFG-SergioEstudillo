@@ -159,7 +159,18 @@ export class ProfilePage implements OnInit {
       next: async () => {
         await loader.dismiss();
         this.showToast('Perfil actualizado correctamente', 'success');
-        this.loadProfile(); 
+
+        // Sincronizar teléfono en tabla usuario para que Twilio pueda enviarlo notificaciones
+        const userId = this.currentUser?.idUsuario;
+        if (userId && this.editForm.telefono) {
+          this.authSvc.updateUser(userId, { telefono: this.editForm.telefono })
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              error: (err) => console.error('Error sincronizando teléfono en usuario:', err)
+            });
+        }
+
+        this.loadProfile();
       },
       error: async (err) => {
         await loader.dismiss();

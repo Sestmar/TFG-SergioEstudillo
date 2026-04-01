@@ -1,60 +1,88 @@
-¡Buenísima idea, loco! Es un detalle de UX que marca la diferencia. Como ya
-  tenemos la base de los WebSockets y el ChatService, implementar esa
-  "exclamación" (o badge) es totalmente viable.
+URL:          http://127.0.0.1:8000
+  Backend:      Anthropic (direct API)
+  Mode:         token_headroom
+  Optimization: ENABLED
+  Caching:      ENABLED
+  Rate Limit:   ENABLED
+  Memory:       DISABLED
+  License:      OSS (no license key)
 
-  Para que esto funcione "de diez", hay que pensar en la Persistencia y el Estado
-  Global. Te tiro el análisis de cómo se podría encarar:
+Usage with Claude Code:
+  ANTHROPIC_BASE_URL=http://127.0.0.1:8000 claude
 
-  1. El "Escuchador Global" (Ya tenés la base)
-  Para que el icono del chat se entere de que hay un mensaje nuevo, el ChatService
-  (que es un Singleton) tiene que estar conectado al WebSocket siempre, no solo
-  cuando entrás a la pantalla de chat.
-   * Cómo funciona: Cuando llega un mensaje por el /topic/equipo/{id}, el servicio
-     lo recibe.
-   * La lógica: El servicio chequea: "¿Estoy parado en la ruta /chat?".
-       * Si SÍ, no hace nada (el usuario ya lo está viendo).
-       * Si NO, dispara una señal de "Tenés algo sin leer".
+Usage with OpenAI-compatible clients:
+  OPENAI_BASE_URL=http://127.0.0.1:8000/v1 your-app
 
-  2. Gestión del Estado (BehaviorSubject)
-  En Angular, la mejor forma de comunicar esto a componentes que están "lejos"
-  (como el menú lateral o el icono del chat) es un BehaviorSubject.
-   * Podrías tener una variable reactiva tieneMensajesNuevos$ (un booleano).
-   * Cualquier componente que tenga el icono del chat se "suscribe" a ese
-     booleano. Si es true, mostrás la exclamación; si es false, la ocultás.
+Endpoints:
+  GET  /health     Health check
+  GET  /stats      Detailed statistics
+  GET  /metrics    Prometheus metrics
+  POST /v1/messages           Anthropic API
+  POST /v1/chat/completions   OpenAI API
 
-  3. El desafío de la Persistencia (Dos niveles)
-  Acá es donde se separa un TFG normal de uno profesional:
+Press Ctrl+C to stop.
 
-   * Nivel A (Memoria - Volátil): Si el usuario refresca la página (F5), la
-     exclamación desaparece porque el estado de Angular se reinicia. Es fácil de
-     hacer pero "barato".
-   * Nivel B (Base de Datos - Pro):
-       * Backend: Necesitás guardar en la base de datos cuándo fue la última vez
-         que el usuario leyó el chat (un last_read_at).
-       * Lógica: Al cargar la app, el backend compara la fecha del último mensaje
-         del equipo con tu last_read_at. Si hay mensajes posteriores, el backend
-         le dice al front: "Che, mandale la exclamación que tiene cosas
-         pendientes".
+2026-04-01 12:21:35,895 - headroom.transforms.cache_aligner - INFO - CacheAligner: DynamicContentDetector initialized with tiers: ['regex']
 
-  4. La Visual (UI)
-  En Ionic/Angular, esto es muy sencillo de representar:
-   * Un ion-badge pequeñito con un color llamativo (como un naranja o el lila que
-     venís usando) encima del icono.
-   * O simplemente un punto brillante (estilo "punto de notificación") que
-     aparezca mediante un *ngIf.
+╔══════════════════════════════════════════════════════════════════════╗
+║                      HEADROOM PROXY SERVER                           ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  Version: 1.0.0                                                      ║
+║  Listening: http://127.0.0.1:8000                                       ║
+║  Workers: 1    Concurrency Limit: 1000                           ║
+║  Backend: ANTHROPIC (direct API)                                     ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  FEATURES:                                                           ║
+║    Optimization:    ENABLED                                        ║
+║    Caching:         ENABLED    (TTL: 3600s)                          ║
+║    Rate Limiting:   ENABLED    (60 req/min, 100,000 tok/min)       ║
+║    Retry:           ENABLED    (max 3 attempts)                       ║
+║    Cost Tracking:   ENABLED    (budget: unlimited)          ║
+║    Code-Aware:      ENABLED  (AST-based)                                ║
+║    HTTP/2:          ENABLED                                             ║
+║    Conn Pool:       max=500, keepalive=100                              ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  USAGE:                                                              ║
+║    Claude Code:   ANTHROPIC_BASE_URL=http://127.0.0.1:8000 claude     ║
+║    Cursor:        Set base URL in settings                           ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  ENDPOINTS:                                                          ║
+║    /health                  Health check                             ║
+║    /stats                   Detailed statistics                      ║
+║    /metrics                 Prometheus metrics                       ║
+║    /cache/clear             Clear response cache                     ║
+║    /v1/retrieve             CCR: Retrieve compressed content         ║
+║    /v1/retrieve/stats       CCR: Compression store stats             ║
+║    /v1/retrieve/tool_call   CCR: Handle LLM tool calls               ║
+║    /v1/feedback             CCR: Feedback loop stats & patterns      ║
+║    /v1/feedback/{tool}    CCR: Compression hints for a tool        ║
+║    /v1/telemetry            Data flywheel: Telemetry stats           ║
+║    /v1/telemetry/export     Data flywheel: Export for aggregation    ║
+║    /v1/telemetry/tools      Data flywheel: Per-tool stats            ║
+║    /v1/toin/stats           TOIN: Overall intelligence stats         ║
+║    /v1/toin/patterns        TOIN: List learned patterns              ║
+║    /v1/toin/pattern/{hash} TOIN: Pattern details by hash            ║
+╚══════════════════════════════════════════════════════════════════════╝
 
-  5. ¿Cuándo se quita la exclamación?
-  Esto es clave para que no sea molesto:
-   * En el momento en que el usuario entra a la ruta /chat, el componente debe
-     llamar a una función marcarComoLeido().
-   * Esa función pone el BehaviorSubject en false y (si elegís el Nivel B) le
-     avisa al backend para que actualice la fecha de lectura.
-
-  Conclusión:
-  Como ya tenés el Global Listener y el ChatService (según tu archivo de mejoras),
-  el "caño" por donde viaja la información ya está construido. Solo te falta poner
-  el "tanque" (el estado global) y la "canilla" (el icono con la exclamación) para
-  que el usuario lo vea.
-
-  ¿Se entiende la lógica detrás del flujo, hermano? Es básicamente mover un
-  booleano por toda la app de forma reactiva.
+2026-04-01 12:21:37,192 - headroom.proxy - INFO - Headroom Proxy started
+2026-04-01 12:21:37,194 - headroom.proxy - INFO - Optimization: ENABLED
+2026-04-01 12:21:37,195 - headroom.proxy - INFO - Mode: token_headroom
+2026-04-01 12:21:37,196 - headroom.proxy - INFO -   Prefix freeze: re-freeze after compression
+2026-04-01 12:21:37,196 - headroom.proxy - INFO -   Read protection window: 30%% of excluded-tool messages
+2026-04-01 12:21:37,197 - headroom.proxy - INFO -   CCR TTL: extended for session lifetime
+2026-04-01 12:21:37,198 - headroom.proxy - INFO -   Compression cache: active
+2026-04-01 12:21:37,198 - headroom.proxy - INFO - Caching: ENABLED
+2026-04-01 12:21:37,198 - headroom.proxy - INFO - Rate Limiting: ENABLED
+2026-04-01 12:21:37,199 - headroom.proxy - INFO - Connection Pool: max_connections=500, max_keepalive=100, http2=ENABLED
+2026-04-01 12:21:37,200 - headroom.proxy - INFO - Smart Routing: ENABLED (intelligent content detection)
+2026-04-01 12:21:37,200 - headroom.proxy - INFO - Pre-loading compressors and parsers...
+2026-04-01 12:21:37,212 - headroom.transforms.content_router - INFO - Kompress model pre-loaded at startup
+2026-04-01 12:21:37,440 - headroom.transforms.content_router - INFO - Magika content detector pre-loaded at startup
+2026-04-01 12:21:37,977 - headroom.transforms.content_router - INFO - Tree-sitter parsers pre-loaded: python, javascript, typescript, go, rust, java, c, cpp
+2026-04-01 12:21:37,978 - headroom.proxy - INFO - Kompress: ENABLED (ModernBERT token compressor)
+2026-04-01 12:21:37,980 - headroom.proxy - INFO - Code-Aware: ENABLED (AST-based compression)
+2026-04-01 12:21:37,980 - headroom.proxy - INFO - Tree-Sitter: loaded (8 languages)
+2026-04-01 12:21:37,981 - headroom.proxy - INFO - Magika: ENABLED (ML content detection)
+2026-04-01 12:21:37,982 - headroom.proxy - INFO - CCR (Compress-Cache-Retrieve): ENABLED (tool_injection, response_handling, context_tracking, proactive_expansion)
+2026-04-01 12:21:37,982 - headroom.proxy - INFO - Savings history: C:\Users\Usuario\.headroom\proxy_savings.json
+2026-04-01 12:21:37,986 - headroom.telemetry.beacon - INFO - Telemetry: ENABLED (anonymous aggregate stats, opt out: HEADROOM_TELEMETRY=off)
