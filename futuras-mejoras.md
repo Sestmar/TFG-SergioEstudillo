@@ -4,7 +4,7 @@ Este documento lista las funcionalidades, mejoras técnicas y tareas de pulido q
 
 ---
 
-## 1. Sistema de Notificaciones Pro (NotificationService) 🔔
+## 1. Sistema de Notificaciones Pro (NotificationService) ✅ DONE
 
 **Descripción:** Centralizar la lógica de `ToastController` que actualmente está dispersa por los componentes.
 
@@ -55,4 +55,19 @@ Mejorar la experiencia de comunicación y restringir el acceso según el rol.
 
 ### Tareas
 - **Icono de Notificación (Badge)**: Implementar un indicador visual (exclamación o punto rojo) en el icono del menú de chat cuando haya mensajes nuevos sin leer. Requiere que `ChatService` escuche en segundo plano y gestione un estado global (`BehaviorSubject`).
-- **Restricción de Rol Admin**: Eliminar el acceso al chat para el rol **ADMIN**, ya que al no tener equipo asignado, la funcionalidad carece de contexto y genera errores de carga.
+
+Diagnóstico de por qué no aparece la alerta:
+
+   1. Sincronización Offline: El sistema de badges actual es puramente "reactivo" en tiempo
+      real. Si el jugador envía el mensaje y el entrenador se loguea 5 minutos después, el
+      entrenador entra con el contador en 0 porque el WebSocket solo le avisará de los
+      mensajes que lleguen a partir de ese momento.
+   2. Falta de inicialización: El ChatService no está haciendo una petición al backend para
+      preguntar "¿cuántos mensajes tengo pendientes de antes?" al conectarse globalmente.
+   3. Filtrado de mensajes propios: Si el entrenador es quien envía el mensaje, el socket
+      se lo devuelve a él también (depende de cómo esté el backend), pero normalmente los
+      badges se filtran para no contar tus propios mensajes.
+
+  Resumen técnico: La lógica del badge está bien para el "tiempo real", pero le falta la
+  "persistencia" inicial al cargar la app. El entrenador (o cualquier usuario) debería
+  hacer un GET /chat/no-leidos al arrancar para inicializar el BehaviorSubject.

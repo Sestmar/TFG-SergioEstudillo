@@ -76,8 +76,9 @@ export class AdminDashboardPage implements OnInit {
 
   async logout() {
       const alert = await this.alertCtrl.create({
-          header: 'Cerrar Sesión',
+          header: '🔒 Cerrar Sesión',
           message: '¿Estás seguro de que quieres salir?',
+          cssClass: 'night-alert',
           buttons: [
               { text: 'Cancelar', role: 'cancel' },
               { 
@@ -197,8 +198,9 @@ export class AdminDashboardPage implements OnInit {
 
   async deleteUser(user: AdminUserDto) {
       const alert = await this.alertCtrl.create({
-          header: 'Confirmar Eliminación',
+          header: '⚠️ Confirmar Eliminación',
           message: `¿Seguro que quieres eliminar a ${user.nombre}?`,
+          cssClass: 'night-alert',
           buttons: [
               { text: 'Cancelar', role: 'cancel' },
               { 

@@ -259,8 +259,9 @@ export class MyTeamPage implements OnInit {
 
   async setRecovered(player: Jugador) {
       const alert = await this.alertCtrl.create({
-      header: '¿Alta Médica?',
+      header: '🏥 ¿Alta Médica?',
       subHeader: `${player.usuario?.nombre || ''} volverá a estar disponible.`,
+      cssClass: 'night-alert',
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         {

@@ -130,12 +130,13 @@ export class PlayerDashboardPage implements OnInit {
   // 🔥 MÉTODO LOGOUT
   async logout() {
       const alert = await this.alertCtrl.create({
-          header: 'Desconectar',
+          header: '🔒 Cerrar Sesión',
           message: '¿Quieres cerrar sesión?',
+          cssClass: 'night-alert',
           buttons: [
               { text: 'No', role: 'cancel' },
-              { 
-                  text: 'Sí, salir', 
+              {
+                  text: 'Sí, salir',
                   role: 'destructive',
                   handler: () => {
                       this.authService.logout();
@@ -327,11 +328,11 @@ export class PlayerDashboardPage implements OnInit {
 
   async showTrainingAlert(match: Partido) {
       const alert = await this.alertCtrl.create({
-        header: 'Entrenamiento',
+        header: '⚽ Entrenamiento',
         subHeader: match.lugar,
         message: match.observaciones || 'Sin observaciones.',
+        cssClass: 'night-alert',
         buttons: ['OK'],
-        cssClass: 'custom-alert'
       });
       await alert.present();
   }

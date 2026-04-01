@@ -72,8 +72,9 @@ export class CoachDashboardPage implements OnInit {
   // 🔥 MÉTODO LOGOUT AÑADIDO
   async logout() {
       const alert = await this.alertCtrl.create({
-          header: 'Cerrar Sesión',
+          header: '🔒 Cerrar Sesión',
           message: '¿Estás seguro de que quieres salir, Míster?',
+          cssClass: 'night-alert',
           buttons: [
               { text: 'Cancelar', role: 'cancel' },
               { 

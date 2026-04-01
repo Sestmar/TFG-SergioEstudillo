@@ -81,6 +81,7 @@ export class NotificationService {
     const alert = await this.alertController.create({
       header,
       message,
+      cssClass: 'night-alert',
       buttons: buttons.map(text => ({ text }))
     });
 
@@ -100,6 +101,7 @@ export class NotificationService {
       const alert = await this.alertController.create({
         header,
         message,
+        cssClass: 'night-alert',
         buttons: [
           {
             text: cancelText,
@@ -159,6 +161,7 @@ export class NotificationService {
       const alert = await this.alertController.create({
         header,
         message,
+        cssClass: 'night-alert',
         inputs,
         buttons: [
           {
@@ -175,6 +178,35 @@ export class NotificationService {
 
       await alert.present();
     });
+  }
+
+  // ─── Notificaciones Pro — API simplificada Night Stadium ────────────────────
+
+  async success(message: string): Promise<void> {
+    await this.presentNightToast(message, 2500, 'toast-success');
+  }
+
+  async error(message: string): Promise<void> {
+    await this.presentNightToast(message, 4000, 'toast-error');
+  }
+
+  async warning(message: string): Promise<void> {
+    await this.presentNightToast(message, 3500, 'toast-warning');
+  }
+
+  async info(message: string): Promise<void> {
+    await this.presentNightToast(message, 3000, 'toast-info');
+  }
+
+  private async presentNightToast(message: string, duration: number, typeClass: string): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration,
+      position: 'top',
+      cssClass: ['night-toast', typeClass],
+      buttons: [{ icon: 'close-outline', role: 'cancel' }]
+    });
+    await toast.present();
   }
 
   /**

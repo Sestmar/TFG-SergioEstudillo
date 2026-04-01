@@ -110,30 +110,24 @@ public class PartidoService {
 
 ## 5. Chat en Tiempo Real: Mensajería Bidireccional con STOMP 💬
 
-Implementación de una infraestructura de mensajería basada en el protocolo STOMP sobre WebSockets para comunicación instantánea.
+Implementación de una infraestructura de mensajería basada en el protocolo STOMP sobre WebSockets para comunicación instantánea y persistencia de estado.
 
 ### Arquitectura de Mensajería
 - **Interceptor de Handshake**: Validación de tokens JWT en la fase de conexión inicial del socket, impidiendo accesos no autorizados al broker.
 - **Doble Cliente STOMP**: Se configuró un cliente para la vista activa del chat y un **Global Listener** que reside en el layout principal para gestionar notificaciones en segundo plano.
+- **Sincronización de Sesión (Self-Filtering)**: El servicio ahora rastrea el `currentUserId` para evitar que el emisor reciba alertas o incrementos de badge por sus propios mensajes enviados desde otros dispositivos o pestañas.
 
-```java
-// Interceptor de seguridad STOMP
-@Override
-public void configureClientInboundChannel(ChannelRegistration registration) {
-    registration.interceptors(new ChannelInterceptor() {
-        @Override
-        public Message<?> preSend(Message<?> message, MessageChannel channel) {
-            StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-            if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                String token = accessor.getFirstNativeHeader("Authorization").substring(7);
-                // Validación de JWT para autorizar la conexión al Socket
-                if (jwtService.isTokenValid(token)) {
-                    accessor.setUser(new UsernamePasswordAuthenticationToken(...));
-                }
-            }
-            return message;
-        }
-    });
+```typescript
+// Lógica de filtrado de mensajes propios en ChatService
+private async manejarMensajeGlobal(msg: MensajeDto): Promise<void> {
+    // Si el mensaje es mío, no cuento el badge ni disparo notificación
+    if (msg.remitenteId === this.currentUserId) return;
+
+    const usuarioEnChat = this.router.url.includes('/chat');
+    if (usuarioEnChat) return;
+
+    this._noLeidosEquipo$.next(this._noLeidosEquipo$.getValue() + 1);
+    await this.dispararNotificacion(msg);
 }
 ```
 
@@ -161,29 +155,30 @@ public void enviarNotificacionPartido(String telefono, String rival, String fech
 
 ---
 
-## 7. Notificaciones Locales y Badges: UX Nativa con Capacitor 🔔
+## 7. Notificaciones Locales y Badges: UX Nativa y Sincronización Offline 🔔
 
-Se mejoró la retención de usuarios mediante la integración de APIs nativas del dispositivo.
+Se mejoró la retención de usuarios mediante la integración de APIs nativas y un sistema de sincronización de estado que resuelve el problema de los mensajes "perdidos" entre sesiones.
 
-### Implementación
+### Implementación y Sincronización
 - **Push Local con Capacitor**: Uso del plugin `@capacitor/local-notifications` para mostrar alertas cuando el usuario recibe un mensaje y no está dentro de la pantalla de chat.
-- **Gestión de Estado de Badges**: Uso de `BehaviorSubject` para sincronizar el contador de mensajes no leídos entre el servicio de chat y el menú lateral de la aplicación.
+- **Sincronización Offline (Badge Recovery)**: Al conectar el WebSocket, el sistema realiza automáticamente una petición `GET /chat/no-leidos` al servidor. Esto asegura que el contador del badge refleje la realidad incluso si el usuario ha recibido mensajes mientras la aplicación estaba cerrada.
+- **Gestión de Estado de Badges**: Uso de `BehaviorSubject` para sincronizar el contador de mensajes no leídos entre el servicio de chat y el menú lateral de la aplicación en tiempo real.
 
 ```typescript
-// Lógica de disparo de notificación local
-private async manejarMensajeGlobal(msg: MensajeDto): Promise<void> {
-    const isChatActive = this.router.url.includes('/chat');
-    if (!isChatActive) {
-        this.contadorNoLeidos.next(this.contadorNoLeidos.value + 1);
-        await LocalNotifications.schedule({
-            notifications: [{
-                title: msg.remitenteNombre,
-                body: msg.contenido,
-                id: Date.now()
-            }]
-        });
-    }
-}
+// Sincronización inicial del contador de no leídos al conectar
+this.clientGlobal = this.crearClienteStomp(token, () => {
+    // 1. Obtener histórico de no leídos del servidor (Mensajes Offline)
+    this.obtenerNoLeidos().subscribe(resp => {
+        this._noLeidosEquipo$.next(resp.count);
+    });
+
+    // 2. Escuchar nuevos mensajes en tiempo real (Mensajes Online)
+    const topicEquipo = `/topic/equipo/${equipoId}`;
+    this.clientGlobal!.subscribe(topicEquipo, (frame) => {
+        const msg = JSON.parse(frame.body);
+        this.manejarMensajeGlobal(msg);
+    });
+});
 ```
 
 ---
@@ -281,6 +276,54 @@ La aplicación presentaba una "fractura visual": mientras el Dashboard usaba est
   <ion-icon [name]="isPlayerAvailable() ? 'checkmark-circle' : 'close-circle'"></ion-icon>
   <span>{{ isPlayerAvailable() ? 'DISPONIBLE' : 'BAJA MÉDICA' }}</span>
 </div>
+```
+
+---
+
+## 11. Sistema de Notificaciones Pro: Centralización y UX de Alertas 🔔
+
+Se ha transformado la gestión de mensajes al usuario mediante la creación de un motor de notificaciones centralizado, eliminando la dependencia directa de componentes de UI en la lógica de negocio y unificando la experiencia visual.
+
+### Desafío Técnico
+La aplicación utilizaba `ToastController` de forma dispersa, lo que provocaba inconsistencias en la duración de los mensajes, posiciones aleatorias (top/bottom) y una estética genérica de Ionic que rompía con el tema "Night Stadium". Además, la API nativa de Ionic requiere múltiples líneas de configuración para cada alerta, generando ruido visual en los componentes.
+
+### Solución e Implementación
+- **API Fluida (Short-hand methods)**: Se implementó una capa de abstracción en `NotificationService` con métodos semánticos `.success()`, `.error()`, `.warning()` e `.info()`. Esto permite disparar alertas con una sola línea de código, abstrayendo la configuración de tiempos y estilos.
+- **Posicionamiento Estratégico**: Se fijó la posición `top` para todas las notificaciones, garantizando visibilidad inmediata sin obstruir los botones de acción principales que suelen ubicarse en la zona inferior (tab bars o fab buttons).
+- **Estilización mediante Shadow Parts**: Uso avanzado de `::part(container)` en el CSS global para inyectar bordes laterales de color neón y fondos con opacidad controlada (`0.96`), manteniendo la coherencia con el resto de la interfaz oscura.
+
+```typescript
+// Nueva API simplificada en NotificationService
+async success(message: string): Promise<void> {
+  await this.presentNightToast(message, 2500, 'toast-success');
+}
+
+private async presentNightToast(message: string, duration: number, typeClass: string): Promise<void> {
+  const toast = await this.toastController.create({
+    message,
+    duration,
+    position: 'top',
+    cssClass: ['night-toast', typeClass],
+    buttons: [{ icon: 'close-outline', role: 'cancel' }] // Botón de cierre siempre presente
+  });
+  await toast.present();
+}
+```
+
+```scss
+// CSS Global para la identidad Night Toast
+.night-toast {
+  --background: rgba(10, 14, 26, 0.96);
+  --color: #e2e8f0;
+  --border-radius: 12px;
+
+  &::part(container) {
+    border-left: 3px solid #6c63ff; // Acento base violeta
+  }
+
+  &.toast-success::part(container) { border-left-color: #22c55e; } // Verde Neón
+  &.toast-error::part(container)   { border-left-color: #ef4444; } // Rojo Alerta
+}
 ```
 
 ---

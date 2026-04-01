@@ -471,3 +471,72 @@ ion-alert {
   --background: #0a0e1a;
   color-scheme: dark;
   }
+
+// Night Alert — Alertas Night Stadium
+.night-alert {
+  --background: rgba(10, 14, 26, 0.97);
+  --backdrop-opacity: 0.7;
+
+  .alert-wrapper {
+    background: rgba(10, 14, 26, 0.97);
+    border: 1px solid rgba(108, 99, 255, 0.4);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(108, 99, 255, 0.15);
+    backdrop-filter: blur(12px);
+  }
+
+  .alert-head {
+    border-bottom: 1px solid rgba(108, 99, 255, 0.2);
+    padding-bottom: 12px;
+  }
+
+  .alert-title {
+    color: #e2e8f0;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .alert-message {
+    color: #94a3b8;
+    font-size: 14px;
+  }
+
+  .alert-button-group {
+    border-top: 1px solid rgba(108, 99, 255, 0.15);
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .alert-button {
+    border-radius: 10px;
+    font-weight: 600;
+
+    &.alert-button-role-cancel {
+      background: rgba(108, 99, 255, 0.1);
+      color: #94a3b8;
+    }
+
+    &.alert-button-role-destructive {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+  }
+}
+
+// Night Toast — Notificaciones Pro
+.night-toast {
+  --background: rgba(10, 14, 26, 0.96);
+  --color: #e2e8f0;
+  --border-radius: 12px;
+  --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --min-width: 280px;
+
+  &::part(container) {
+    border-left: 3px solid #6c63ff;
+  }
+
+  &.toast-success::part(container) { border-left-color: #22c55e; }
+  &.toast-error::part(container)   { border-left-color: #ef4444; }
+  &.toast-warning::part(container) { border-left-color: #f59e0b; }
+  &.toast-info::part(container)    { border-left-color: #6c63ff; }
+}

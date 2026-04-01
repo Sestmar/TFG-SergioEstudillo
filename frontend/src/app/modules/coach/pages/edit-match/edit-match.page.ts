@@ -216,8 +216,9 @@ export class EditMatchPage implements OnInit {
 
   async confirmarCierreActa() {
       const alert = await this.alertCtrl.create({
-          header: 'Cerrar Acta Oficial',
+          header: '📋 Cerrar Acta Oficial',
           message: `Resultado: ${this.matchStats.golesFavor} - ${this.matchStats.golesContra}\n\n¿Seguro que quieres finalizar el partido?`,
+          cssClass: 'night-alert',
           buttons: [
               { text: 'Cancelar', role: 'cancel' },
               { 

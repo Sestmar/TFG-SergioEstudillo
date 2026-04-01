@@ -45,6 +45,8 @@ export class AppComponent implements OnInit {
    * - ADMIN y otros roles sin equipo: no se conecta (no tiene equipoId)
    */
   private iniciarConexionGlobalChat(): void {
+    let capturedUserId: number | null = null;
+
     this.authService.currentUser$
       .pipe(
         takeUntilDestroyed(this.destroyRef),
@@ -52,6 +54,7 @@ export class AppComponent implements OnInit {
         take(1),
         switchMap(user => {
           const userId = user!.idUsuario;
+          capturedUserId = userId;
           const rol = (user!.rol ?? '').toUpperCase();
 
           if (rol.includes('JUGADOR')) {
@@ -83,7 +86,7 @@ export class AppComponent implements OnInit {
           }
 
           if (equipoId) {
-            this.chatService.conectarGlobal(equipoId);
+            this.chatService.conectarGlobal(equipoId, capturedUserId ?? undefined);
           }
         },
         error: (err) => {

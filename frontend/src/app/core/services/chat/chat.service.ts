@@ -51,6 +51,8 @@ export class ChatService implements OnDestroy {
   private _noLeidosEquipo$ = new BehaviorSubject<number>(0);
   readonly noLeidosEquipo$: Observable<number> = this._noLeidosEquipo$.asObservable();
 
+  private currentUserId: number | null = null;
+
   get mensajes(): Observable<MensajeDto[]> { return this.mensajes$.asObservable(); }
   get conectado(): Observable<boolean> { return this.conectado$.asObservable(); }
   get noLeidos(): Observable<number> { return this.noLeidos$.asObservable(); }
@@ -72,15 +74,25 @@ export class ChatService implements OnDestroy {
    * Llamar desde el layout principal tras el login.
    * No llamar si el usuario es ADMIN u otros roles sin equipo (equipoId null).
    */
-  conectarGlobal(equipoId: number): void {
+  conectarGlobal(equipoId: number, currentUserId?: number): void {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
+
+    if (currentUserId !== undefined) {
+      this.currentUserId = currentUserId;
+    }
 
     // Evitar duplicar conexiones globales ya activas
     if (this.clientGlobal?.active) return;
 
     this.clientGlobal = this.crearClienteStomp(token, () => {
       this.limpiarSuscripcionesGlobal();
+
+      // Inicializar badge con mensajes no leídos acumulados offline
+      this.http.get<{ count: number }>(`${this.apiUrl}/chat/no-leidos`).subscribe({
+        next: ({ count }) => this._noLeidosEquipo$.next(count),
+        error: () => {}
+      });
 
       const topicEquipo = `/topic/equipo/${equipoId}`;
       const sub = this.clientGlobal!.subscribe(
@@ -233,6 +245,8 @@ export class ChatService implements OnDestroy {
   private async manejarMensajeGlobal(msg: MensajeDto): Promise<void> {
     const usuarioEnChat = this.router.url.includes('/chat');
     if (usuarioEnChat) return;
+
+    if (this.currentUserId !== null && msg.remitenteId === this.currentUserId) return;
 
     this._noLeidosEquipo$.next(this._noLeidosEquipo$.getValue() + 1);
     await this.dispararNotificacion(msg);

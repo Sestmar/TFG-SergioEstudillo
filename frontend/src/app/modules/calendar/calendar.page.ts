@@ -149,8 +149,9 @@ export class CalendarPage implements OnInit {
     if (!this.canDelete) return;
 
     const alert = await this.alertCtrl.create({
-      header: '¿Borrar Evento?',
+      header: '🗑️ ¿Borrar Evento?',
       message: `Vas a eliminar: <strong>${event.rival || 'Entrenamiento'}</strong>.<br>Esta acción no se puede deshacer.`,
+      cssClass: 'night-alert',
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         {
