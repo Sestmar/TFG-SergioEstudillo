@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../api/api.service';
-import { Jugador, PlayerCreateDto, PlayerPosition, PlayerStats } from 'src/app/shared/models/models';
+import { Jugador, PlayerCreateDto, PlayerPosition, PlayerStats, EquipoResumen, PlayerHistory } from 'src/app/shared/models/models';
 
 @Injectable({
   providedIn: 'root'
@@ -34,8 +34,8 @@ export class PlayerService {
     return this.apiService.get<Jugador>(`/jugadores/usuario/${userId}`);
   }
 
-  getPlayerTeamByUserId(userId: number): Observable<any> {
-    return this.apiService.get<any>(`/jugadores/usuario/${userId}/equipo`);
+  getPlayerTeamByUserId(userId: number): Observable<EquipoResumen> {
+    return this.apiService.get<EquipoResumen>(`/jugadores/usuario/${userId}/equipo`);
   }
 
   createPlayer(playerData: PlayerCreateDto): Observable<Jugador> {
@@ -66,8 +66,8 @@ export class PlayerService {
     return this.getStats(playerId);
   }
 
-  getPlayerHistory(playerId: number): Observable<unknown> {
-    return this.apiService.get<unknown>(`/jugadores/${playerId}/history`);
+  getPlayerHistory(playerId: number): Observable<PlayerHistory> {
+    return this.apiService.get<PlayerHistory>(`/jugadores/${playerId}/history`);
   }
 
   searchPlayers(term: string, params?: { page?: number; size?: number }): Observable<Jugador[]> {

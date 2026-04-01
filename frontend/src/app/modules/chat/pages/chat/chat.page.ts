@@ -68,8 +68,6 @@ export class ChatPage implements OnInit, OnDestroy {
       ? `${environment.apiUrl}/entrenadores/usuario/${userId}/equipo`
       : `${environment.apiUrl}/jugadores/usuario/${userId}/equipo`;
 
-    console.log(`[Chat] Cargando equipo para ${this.currentUser?.rol} userId=${userId}`);
-
     this.http.get<any>(endpoint)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -78,7 +76,6 @@ export class ChatPage implements OnInit, OnDestroy {
           // El endpoint de entrenadores devuelve { equipo: {...}, rol: "...", entrenadorId: ... },
           // por lo que hay que extraer idEquipo desde respuesta.equipo.idEquipo.
           this.equipoId = respuesta?.idEquipo ?? respuesta?.equipo?.idEquipo;
-          console.log('[Chat] equipoId resuelto:', this.equipoId, '| respuesta:', respuesta);
           if (!this.equipoId) {
             console.warn('[Chat] El endpoint devolvió respuesta sin idEquipo — no se conectará al chat');
             return;

@@ -102,7 +102,6 @@ export class TeamDetailPage implements OnInit {
 
       if (event.tipo === 'TRAINING') {
           // Opcional: Mostrar mensaje o navegar a detalle de entrenamiento si existiera
-          console.log("Vista de entrenamiento");
       } else {
           // Si es partido -> Ver Acta pública
           this.router.navigate(['/match-detail', id]);

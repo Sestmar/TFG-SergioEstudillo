@@ -78,7 +78,6 @@ export class RegisterPage implements OnInit {
     if (this.selectedFile) {
       this.mediaService.uploadImage(this.selectedFile).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (response) => {
-          console.log('Imagen subida con éxito:', response.url);
           userData.fotoUrl = response.url; // Añadimos la URL al usuario
           this.doRegister(userData);
         },

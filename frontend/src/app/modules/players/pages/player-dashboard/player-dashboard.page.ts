@@ -153,8 +153,6 @@ export class PlayerDashboardPage implements OnInit {
         const userId = user?.idUsuario;
         if (userId) {
           this.loadPlayerProfile(userId);
-        } else {
-          console.log("Esperando datos de usuario...");
         }
       },
       error: (error) => {

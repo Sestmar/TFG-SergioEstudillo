@@ -11,7 +11,6 @@ export class LandingPage implements OnInit {
 
   ngOnInit() {
     // Aquí puedes añadir lógica de inicialización si fuera necesaria
-    console.log('Landing Page cargada 🚀');
   }
 
 }

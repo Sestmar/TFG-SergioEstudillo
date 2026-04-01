@@ -29,13 +29,11 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('Aplicación inicializada');
     this.iniciarConexionGlobalChat();
   }
 
   initializeApp() {
     this.platform.ready().then(() => {
-      console.log('Aplicación Ionic inicializada correctamente');
     });
   }
 
@@ -74,12 +72,15 @@ export class AppComponent implements OnInit {
 
           // Jugador devuelve el objeto equipo directamente (EquipoResumen)
           // Entrenador devuelve CoachDashboardResponse con { equipo: { idEquipo, ... } }
-          const equipoId: number | null =
-            respuesta.idEquipo       ??   // EquipoResumen directo
-            respuesta.id             ??   // EquipoResumen con campo 'id'
-            respuesta.equipo?.idEquipo ?? // CoachDashboardResponse
-            respuesta.equipo?.id     ??   // CoachDashboardResponse alternativo
-            null;
+          // Discriminante: EquipoResumen tiene `nombre` requerido; CoachDashboardResponse no lo tiene.
+          let equipoId: number | null = null;
+          if ('nombre' in respuesta) {
+            // EquipoResumen — el ID está en la raíz
+            equipoId = respuesta.idEquipo ?? respuesta.id ?? null;
+          } else {
+            // CoachDashboardResponse — el equipo está anidado
+            equipoId = respuesta.equipo?.idEquipo ?? respuesta.equipo?.id ?? null;
+          }
 
           if (equipoId) {
             this.chatService.conectarGlobal(equipoId);

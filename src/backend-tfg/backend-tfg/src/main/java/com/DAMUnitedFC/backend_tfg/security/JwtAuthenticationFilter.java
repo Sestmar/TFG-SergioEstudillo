@@ -61,8 +61,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // Loguear error pero no romper la cadena para que devuelva 403 limpio
-            System.out.println("Error procesando JWT: " + e.getMessage());
+            // No romper la cadena para que devuelva 403 limpio
         }
         filterChain.doFilter(request, response);
     }

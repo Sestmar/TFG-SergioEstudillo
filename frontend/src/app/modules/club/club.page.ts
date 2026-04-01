@@ -65,7 +65,6 @@ export class ClubPage implements OnInit {
     // 1. OBTENER DETALLE Y EXTRAER ENTRENADOR
     this.openSvc.getTeamDetail(teamId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (fullTeam) => {
-            console.log('✅ FICHA:', fullTeam);
             this.selectedTeam = fullTeam; 
 
             // 🔥 INTENTO DE EXTRACCIÓN DIRECTA (Buscamos en todos los rincones)
@@ -98,7 +97,7 @@ export class ClubPage implements OnInit {
                 this.coachName = fullTeam.entrenadorNombre;
             }
         },
-        error: () => console.log('Error carga detalle')
+        error: () => {}
     });
 
     // 2. CARGAR JUGADORES

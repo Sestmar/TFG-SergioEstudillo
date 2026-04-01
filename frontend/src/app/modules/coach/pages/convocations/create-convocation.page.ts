@@ -41,7 +41,6 @@ export class CreateConvocationPage implements OnInit {
   ) { }
 
   ngOnInit() {
-    console.log('✅ Modal abierto. ID de Equipo recibido:', this.teamId);
   }
 
   close() {
@@ -115,8 +114,6 @@ export class CreateConvocationPage implements OnInit {
         competicion: this.formData.competicion,
         observaciones: this.formData.observaciones
       };
-
-      console.log('Enviando payload:', payload);
 
       this.matchSvc.createMatch(payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: async (res) => {

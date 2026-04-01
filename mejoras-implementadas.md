@@ -188,4 +188,48 @@ private async manejarMensajeGlobal(msg: MensajeDto): Promise<void> {
 
 ---
 
+## 8. Refactorización Final: Resolución de Deuda Técnica y Seguridad 🧹
+
+Se ha realizado una limpieza profunda del sistema para garantizar estándares de producción, eliminando código muerto, mejorando el tipado y securizando los accesos externos.
+
+### Acciones de Limpieza y Tipado
+- **Eliminación de Código Muerto**: Borrado definitivo de `user-state.service.ts` y sus referencias en los barriles (`index.ts`), reduciendo la superficie de mantenimiento.
+- **Tipado Estricto en Servicios**: Refactorización de `player.service.ts` para eliminar el uso de `any` y `unknown`, sustituyéndolos por interfaces de dominio como `EquipoResumen` y `PlayerHistory`.
+- **Saneamiento de Logs**: Eliminación masiva de `console.log` en el frontend (24 instancias) y `System.out.println` en el backend (3 instancias) para evitar polución de logs en producción.
+
+### Seguridad y CORS
+- **Whitelist de Producción**: Se sustituyó el wildcard de seguridad `"*"` por una configuración de CORS restrictiva que solo permite peticiones desde orígenes autorizados.
+
+```java
+// Configuración CORS restrictiva en SecurityConfig.java
+@Bean
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+    configuration.setAllowedOrigins(Arrays.asList(
+        "http://localhost:4200", 
+        "http://localhost:8100", 
+        "https://tfg-dam-united-web.onrender.com"
+    ));
+    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+}
+```
+
+### Nueva Funcionalidad: Historial Detallado del Jugador
+Como parte de la limpieza de datos, se implementó un sistema de agregación para consultar el historial completo de un jugador (partidos, convocatorias e incidencias) en un solo endpoint.
+
+```java
+// Agregación de datos en JugadorService.java
+public PlayerHistoryDto getHistorial(Integer id) {
+    List<Incidencia> incidencias = incidenciaRepo.findByJugadorId(id);
+    List<Alineacion> alineaciones = alineacionRepo.findByJugadorId(id);
+    // Transformación reactiva a DTO unificado...
+    return PlayerHistoryDto.builder()
+        .partidos(mapToPartidoDto(alineaciones))
+        .incidencias(mapToIncidenciaDto(incidencias))
+        .build();
+}
+```
+
+---
+
 > **Estado de la Plataforma**: Arquitectura robusta, escalable y validada bajo estándares profesionales de desarrollo de software.

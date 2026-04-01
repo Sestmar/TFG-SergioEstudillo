@@ -109,7 +109,6 @@ export class AdminDashboardPage implements OnInit {
   loadUsersAndCalculateCandidates() {
       this.adminSvc.getAllActiveUsers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: (res: AdminUserDto[]) => {
-              console.log("👥 Usuarios Totales recibidos:", res.length);
               this.activeUsers = res;
 
               // Reiniciamos las listas de pendientes
@@ -138,7 +137,6 @@ export class AdminDashboardPage implements OnInit {
                   }
               });
 
-              console.log(`✅ Calculados: ${this.candidates.length} Jugadores y ${this.coachCandidates.length} Staff pendientes.`);
               this.loading = false;
           },
           error: (err) => {

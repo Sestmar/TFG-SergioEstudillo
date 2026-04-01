@@ -407,3 +407,56 @@ export interface CoachProfileUpdateDto {
   telefonoContacto?: string;
   fechaAlta?: string;
 }
+
+export interface PlayerHistoryPartido {
+  idPartido: number;
+  fechaHora: string;
+  rival: string | null;
+  escudoRivalUrl: string | null;
+  competicion: string | null;
+  golesFavor: number;
+  golesContra: number;
+  estado: EstadoPartido;
+  esTitular: boolean;
+  golesJugador: number;
+  asistenciasJugador: number;
+  minutosJugados: number;
+  minutoEntrada: number | null;
+  minutoSalida: number | null;
+  esCapitan: boolean;
+  tarjetaAmarilla: number;
+  tarjetaRoja: number;
+}
+
+export interface PlayerHistoryConvocatoria {
+  idConvocatoria: number;
+  fechaEvento: string;
+  tipo: TipoEvento;
+  observaciones: string | null;
+}
+
+export interface PlayerHistoryIncidencia {
+  idIncidencia: number;
+  fechaReporte: string;
+  tipo: IncidentType;
+  estado: string;
+  descripcion: string;
+}
+
+export interface PlayerHistory {
+  idJugador: number;
+  nombreCompleto: string;
+  posicion: string;
+  dorsal: number;
+  estado: EstadoJugador;
+  equipoActual: string;
+  partidosTotales: number;
+  minutosJugados: number;
+  goles: number;
+  asistencias: number;
+  tarjetasAmarillas: number;
+  tarjetasRojas: number;
+  partidos: PlayerHistoryPartido[];
+  convocatorias: PlayerHistoryConvocatoria[];
+  incidencias: PlayerHistoryIncidencia[];
+}

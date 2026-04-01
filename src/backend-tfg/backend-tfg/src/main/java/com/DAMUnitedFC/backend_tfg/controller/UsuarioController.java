@@ -78,7 +78,7 @@ public class UsuarioController {
                             "Por favor, entra en la app y cámbiala lo antes posible."
             );
         } catch (Exception e) {
-            System.out.println("⚠️ [EMAIL NO ENVIADO] Usuario: " + email + " | Clave temporal: " + tempPassword);
+            // Email no enviado — se continúa sin interrumpir el flujo
         }
 
         return ResponseEntity.ok(Map.of("message", "Si el email existe, se han enviado las instrucciones."));

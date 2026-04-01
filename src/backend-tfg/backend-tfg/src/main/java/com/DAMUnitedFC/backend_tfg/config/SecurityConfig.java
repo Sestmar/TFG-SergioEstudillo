@@ -75,7 +75,11 @@ public class SecurityConfig {
 
         // CORRECCIÓN: Usar setAllowedOriginPatterns en lugar de setAllowedOrigins
         // Esto es mucho más flexible y a menudo soluciona problemas con credenciales
-        configuration.setAllowedOriginPatterns(Collections.singletonList("*")); // Permitir TODO para probar (luego lo cierras si quieres)
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:4200",
+            "http://localhost:8100",
+            "https://tfg-dam-united-web.onrender.com"
+        ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Allow-Origin"));

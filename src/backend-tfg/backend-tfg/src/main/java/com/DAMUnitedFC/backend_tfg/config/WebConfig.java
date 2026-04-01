@@ -15,8 +15,6 @@ public class WebConfig implements WebMvcConfigurer {
         // Construimos la ruta hacia target/uploads de forma segura para Windows
         String uploadPath = Paths.get(projectDir, "target", "uploads").toUri().toString();
 
-        System.out.println("📂 [WEBCONFIG] Sirviendo imágenes desde: " + uploadPath);
-
         registry.addResourceHandler("/api/uploads/**")
                 .addResourceLocations(uploadPath);
     }

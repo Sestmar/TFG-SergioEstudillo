@@ -90,7 +90,7 @@ export class CalendarPage implements OnInit {
                         this.loadEvents();
                     }
                 },
-                error: (err) => console.log("Usuario sin equipo asignado o Admin")
+                error: (err) => {}
             });
         } else if (rol.includes('ADMIN') && this.currentTeamId) {
              // Si es Admin y ya tiene teamId por URL, cargamos

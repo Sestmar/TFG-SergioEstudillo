@@ -25,9 +25,6 @@ export class ConvocationModalComponent implements OnInit {
   constructor(private modalCtrl: ModalController) { }
 
   ngOnInit() {
-    console.log("Modal abierto. Total jugadores recibidos:", this.allPlayers.length);
-    console.log("Convocados actuales:", this.currentSquad.length);
-
     // Usamos un Map para comparar IDs de forma segura
     const squadIds = new Set(this.currentSquad.map(p => this.getPlayerId(p)));
 

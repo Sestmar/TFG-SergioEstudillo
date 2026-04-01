@@ -2,6 +2,7 @@ package com.DAMUnitedFC.backend_tfg.controller;
 
 import com.DAMUnitedFC.backend_tfg.dto.EstadisticasJugadorDto;
 import com.DAMUnitedFC.backend_tfg.dto.JugadorDto;
+import com.DAMUnitedFC.backend_tfg.dto.PlayerHistoryDto;
 import com.DAMUnitedFC.backend_tfg.model.Jugador;
 import com.DAMUnitedFC.backend_tfg.service.JugadorService;
 import org.springframework.http.ResponseEntity;
@@ -54,5 +55,10 @@ public class JugadorController {
         return jugadorService.getEquipoDelJugador(idUsuario)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/history")
+    public ResponseEntity<PlayerHistoryDto> getHistorial(@PathVariable Integer id) {
+        return ResponseEntity.ok(jugadorService.getHistorial(id));
     }
 }
