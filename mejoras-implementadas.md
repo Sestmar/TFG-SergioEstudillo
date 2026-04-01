@@ -328,4 +328,55 @@ private async presentNightToast(message: string, duration: number, typeClass: st
 
 ---
 
+## 12. Arquitectura de Alertas Globales: Night Alert 🔒
+
+Se ha extendido el sistema de diseño "Night Stadium" a todos los diálogos de confirmación (`AlertController`) de la aplicación, eliminando la discrepancia estética entre las notificaciones rápidas y las decisiones críticas del usuario (Cerrar Sesión, Borrar Eventos, Altas Médicas).
+
+### Desafío Técnico
+A diferencia de los Toasts, las alertas de Ionic inyectan su HTML directamente en el `ion-app` fuera del árbol de componentes estándar. Esto provocaba que los diálogos de confirmación mantuvieran un estilo "blanco/gris" nativo que rompía la inmersión del usuario. Además, configurar manualmente cada alerta en múltiples archivos (`player-dashboard`, `calendar`, `admin`) generaba una deuda técnica de mantenimiento alta.
+
+### Solución e Implementación
+- **Estilo Inmersivo (Glassmorphism)**: Se diseñó la clase `.night-alert` en el CSS global, utilizando fondos `#0a0e1a` con un borde neón violeta sutil y un sombreado profundo para simular la iluminación de un estadio nocturno.
+- **Inyección Automatizada**: Se refactorizó `NotificationService.ts` para que sus métodos de utilidad (`showAlert`, `showConfirm`, `showPrompt`) incluyan automáticamente la clase `night-alert`. Esto garantiza que cualquier nueva alerta creada a través del servicio herede el diseño premium sin esfuerzo adicional.
+- **Refactorización de Diálogos Críticos**: Se actualizaron 8 puntos de control clave en la aplicación (incluyendo el cierre de sesión y la gestión de entrenamientos) para adoptar esta nueva identidad visual.
+
+```scss
+// Definición de la estética Night Alert en global.scss
+.night-alert {
+  --background: #0a0e1a;
+  --backdrop-filter: blur(12px);
+
+  button {
+    color: #6c63ff !important; // Botones con acento violeta
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .alert-wrapper {
+    border: 1px solid rgba(108, 99, 255, 0.3); // Borde neón sutil
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+  }
+}
+```
+
+```typescript
+// Automatización en NotificationService (Inyección de Clase)
+async showConfirm(header: string, message: string): Promise<boolean> {
+  return new Promise(async (resolve) => {
+    const alert = await this.alertController.create({
+      header,
+      message,
+      cssClass: 'night-alert', // Aplicación global automática
+      buttons: [
+        { text: 'Cancelar', role: 'cancel', handler: () => resolve(false) },
+        { text: 'Confirmar', handler: () => resolve(true) }
+      ]
+    });
+    await alert.present();
+  });
+}
+```
+
+---
+
 > **Estado de la Plataforma**: Arquitectura robusta, escalable y validada bajo estándares profesionales de desarrollo de software.
