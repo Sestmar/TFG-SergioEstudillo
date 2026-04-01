@@ -175,7 +175,7 @@
 
   </div>
 
-  <ion-modal [isOpen]="isUserModalOpen" (didDismiss)="isUserModalOpen = false" [initialBreakpoint]="0.75" [breakpoints]="[0, 0.75]">
+  <ion-modal [isOpen]="isUserModalOpen" (didDismiss)="isUserModalOpen = false" [initialBreakpoint]="0.75" [breakpoints]="[0, 0.75]" cssClass="night-modal">
     <ng-template>
         <div class="modal-content-dark">
             <h3>Nuevo Fichaje</h3>
@@ -197,7 +197,7 @@
     </ng-template>
   </ion-modal>
 
-  <ion-modal [isOpen]="isTeamModalOpen" (didDismiss)="isTeamModalOpen = false" [initialBreakpoint]="0.5" [breakpoints]="[0, 0.5]">
+  <ion-modal [isOpen]="isTeamModalOpen" (didDismiss)="isTeamModalOpen = false" [initialBreakpoint]="0.5" [breakpoints]="[0, 0.5]" cssClass="night-modal">
     <ng-template>
         <div class="modal-content-dark">
             <h3>Nuevo Equipo</h3>
@@ -210,7 +210,7 @@
     </ng-template>
   </ion-modal>
 
-  <ion-modal [isOpen]="isMatchModalOpen" (didDismiss)="isMatchModalOpen = false" [initialBreakpoint]="0.90" [breakpoints]="[0, 0.90, 1]">
+  <ion-modal [isOpen]="isMatchModalOpen" (didDismiss)="isMatchModalOpen = false" [initialBreakpoint]="0.90" [breakpoints]="[0, 0.90, 1]" cssClass="night-modal">
     <ng-template>
         <ion-content class="ion-padding" style="--background: transparent;">
             

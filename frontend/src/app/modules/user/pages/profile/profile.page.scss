@@ -132,7 +132,7 @@ ion-content {
 
 // 4. INPUTS DATOS PERSONALES
 .input-group {
-    margin-bottom: 20px;
+    margin-bottom: 8px;
     &:last-child { margin-bottom: 0; }
 
     label { display: block; font-size: 0.65rem; color: var(--primary); font-weight: 800; margin-bottom: 8px; text-transform: uppercase; }
@@ -164,3 +164,24 @@ ion-content {
 // Animación
 .animate-fade-in { animation: fadeIn 0.5s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+// Secciones del formulario de perfil
+.form-section {
+    margin-bottom: 16px;
+
+    &:last-child { margin-bottom: 0; }
+
+    .form-section-header {
+        padding: 8px 0 6px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid rgba(108, 99, 255, 0.25);
+
+        span {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(108, 99, 255, 0.8);
+        }
+    }
+}

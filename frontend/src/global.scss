@@ -443,3 +443,31 @@ ion-alert {
         padding: 15px;
     }
 }
+
+// Night Modal — consistencia visual Night Stadium
+.night-modal {
+  --background: #0a0e1a;
+  --border-radius: 16px;
+
+  &::part(content) {
+    background: #0a0e1a;
+    border-radius: 16px;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(108, 99, 255, 0.15);
+  }
+
+  ion-header, ion-toolbar {
+    --background: transparent;
+    --border-color: rgba(108, 99, 255, 0.2);
+  }
+
+  ion-content {
+    --background: #0a0e1a;
+  }
+  }
+
+  // Estilos globales de respaldo para calendarios ion-datetime
+  ion-datetime {
+  --background: #0a0e1a;
+  color-scheme: dark;
+  }

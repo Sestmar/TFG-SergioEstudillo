@@ -25,7 +25,7 @@ Este documento lista las funcionalidades, mejoras técnicas y tareas de pulido q
 
 ---
 
-## 3. Pulido Estético y UX (Pantallas Secundarias) 🎨
+## 3. Pulido Estético y UX (Pantallas Secundarias) ✅ DONE
 
 Mantener la consistencia del diseño "Night Stadium" en toda la app.
 

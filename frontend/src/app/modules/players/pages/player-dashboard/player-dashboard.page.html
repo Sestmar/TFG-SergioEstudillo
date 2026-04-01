@@ -69,7 +69,12 @@
         </div>
         
         <div class="info-section">
-          <div class="role-badge" [class.active]="isPlayerAvailable()">
+          <div class="role-badge"
+               [ngClass]="{
+                 'estado-activo':    isPlayerAvailable(),
+                 'estado-baja':      !isPlayerAvailable()
+               }">
+            <ion-icon [name]="isPlayerAvailable() ? 'checkmark-circle' : 'close-circle'" style="margin-right: 4px; font-size: 0.75rem;"></ion-icon>
             {{ isPlayerAvailable() ? 'ACTIVO' : 'BAJA' }}
           </div>
           

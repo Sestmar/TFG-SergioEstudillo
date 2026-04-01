@@ -239,6 +239,18 @@
       box-shadow: 0 0 0 2px rgba(16,185,129,0.2), 0 0 8px rgba(16,185,129,0.5);
     }
     &.injured { background: var(--color-forward); }
+    &.activo {
+      background: #22c55e;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+    }
+    &.lesionado {
+      background: #f59e0b;
+      box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+    }
+    &.baja {
+      background: #ef4444;
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+    }
   }
 
   .injury-icon {

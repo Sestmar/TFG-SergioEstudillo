@@ -248,4 +248,41 @@ this.playerService.updateProfile(this.editForm).subscribe({
 
 ---
 
+## 10. Pulido Estético y UX: Experiencia "Premium Stadium" en Pantallas Secundarias 🎨
+
+Se ha extendido la identidad visual "Night Stadium" a las interfaces de gestión y perfiles, eliminando la discrepancia estética entre las pantallas principales (Dashboard) y las de configuración o administración.
+
+### Desafío Técnico
+La aplicación presentaba una "fractura visual": mientras el Dashboard usaba estilos inmersivos, los modales y formularios de perfil mantenían componentes estándar de Ionic. Además, la información de disponibilidad de jugadores carecía de jerarquía visual clara (Badges planos), lo que dificultaba la lectura rápida para el cuerpo técnico.
+
+### Solución e Implementación
+- **Estandarización de Modales (Night Modal)**: Se implementó una clase global en `global.scss` que actúa sobre los *shadow parts* de Ionic para inyectar la estética Night Stadium (fondos `#0a0e1a` y bordes violeta neón) de forma consistente en toda la app.
+- **Arquitectura de Formularios Compactos**: Reorganización del perfil de usuario mediante contenedores `form-section` y cabeceras semánticas, reduciendo la fatiga visual mediante el ajuste de espaciados verticales (`--margin-bottom`).
+- **Estados Dinámicos Reactivos**: Implementación de lógica `[ngClass]` en los badges de rol, vinculando el color y el icono directamente al estado de disponibilidad del jugador mediante un sistema de clases CSS funcionales.
+
+```scss
+// Definición global del Night Modal para consistencia visual
+.night-modal {
+  --background: #0a0e1a;
+  --border-radius: 16px;
+
+  &::part(content) {
+    background: #0a0e1a;
+    border: 1px solid rgba(108, 99, 255, 0.3); // Borde violeta sutil
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); // Profundidad stadium
+  }
+}
+```
+
+```html
+<!-- Implementación de Badges de Estado en Dashboard de Jugadores -->
+<div class="role-badge" 
+     [ngClass]="{ 'estado-activo': isPlayerAvailable(), 'estado-baja': !isPlayerAvailable() }">
+  <ion-icon [name]="isPlayerAvailable() ? 'checkmark-circle' : 'close-circle'"></ion-icon>
+  <span>{{ isPlayerAvailable() ? 'DISPONIBLE' : 'BAJA MÉDICA' }}</span>
+</div>
+```
+
+---
+
 > **Estado de la Plataforma**: Arquitectura robusta, escalable y validada bajo estándares profesionales de desarrollo de software.

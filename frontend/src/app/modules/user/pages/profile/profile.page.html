@@ -82,28 +82,36 @@
     </div>
 
     <div class="dark-card padding-lg">
-        
-        <div class="input-group">
-            <label>TELÉFONO DE CONTACTO</label>
-            <div class="input-wrapper">
-                <input type="tel" [(ngModel)]="editForm.telefono" placeholder="+34 000 000 000" class="neon-input">
-                <ion-icon name="call-outline"></ion-icon>
+
+        <div class="form-section">
+            <div class="form-section-header"><span>Información de Cuenta</span></div>
+
+            <div class="input-group">
+                <label>TELÉFONO DE CONTACTO</label>
+                <div class="input-wrapper">
+                    <input type="tel" [(ngModel)]="editForm.telefono" placeholder="+34 000 000 000" class="neon-input">
+                    <ion-icon name="call-outline"></ion-icon>
+                </div>
             </div>
         </div>
 
-        <div class="input-group">
-            <label>DIRECCIÓN / CIUDAD</label>
-            <div class="input-wrapper">
-                <input type="text" [(ngModel)]="editForm.direccion" placeholder="Ej: Madrid, España" class="neon-input">
-                <ion-icon name="location-outline"></ion-icon>
-            </div>
-        </div>
+        <div class="form-section">
+            <div class="form-section-header"><span>Preferencias de Usuario</span></div>
 
-        <div class="input-group">
-            <label>URL FOTO (Opcional)</label>
-            <div class="input-wrapper">
-                <input type="text" [(ngModel)]="editForm.fotoUrl" placeholder="https://..." class="neon-input" readonly>
-                <ion-icon name="image-outline"></ion-icon>
+            <div class="input-group">
+                <label>DIRECCIÓN / CIUDAD</label>
+                <div class="input-wrapper">
+                    <input type="text" [(ngModel)]="editForm.direccion" placeholder="Ej: Madrid, España" class="neon-input">
+                    <ion-icon name="location-outline"></ion-icon>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>URL FOTO (Opcional)</label>
+                <div class="input-wrapper">
+                    <input type="text" [(ngModel)]="editForm.fotoUrl" placeholder="https://..." class="neon-input" readonly>
+                    <ion-icon name="image-outline"></ion-icon>
+                </div>
             </div>
         </div>
 

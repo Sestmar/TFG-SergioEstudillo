@@ -140,11 +140,15 @@
 
     .info-section {
       flex: 1; overflow: hidden;
-      .role-badge { 
+      .role-badge {
         display: inline-flex; align-items: center;
         font-size: 0.6rem; text-transform: uppercase; font-weight: 800; color: white;
         background: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 6px; margin-bottom: 8px;
+        border: 1px solid rgba(255,255,255,0.15);
         &.active { background: #10b981; color: #064e3b; }
+        &.estado-activo    { background: rgba(34, 197, 94, 0.15);  color: #22c55e; border-color: rgba(34, 197, 94, 0.4); }
+        &.estado-lesionado { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); }
+        &.estado-baja      { background: rgba(239, 68, 68, 0.15);  color: #ef4444; border-color: rgba(239, 68, 68, 0.4); }
       }
       
       .team-name { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
