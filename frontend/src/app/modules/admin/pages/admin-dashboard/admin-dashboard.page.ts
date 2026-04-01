@@ -344,10 +344,6 @@ export class AdminDashboardPage implements OnInit {
     t.present();
   }
 
-  goToChat() {
-      this.router.navigate(['/chat']);
-  }
-
   segmentChanged(ev: any) {
       this.currentView = ev.detail.value;
   }
