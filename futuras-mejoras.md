@@ -1,73 +1,54 @@
-# Futuras Mejoras - DAM United FC (Pendientes) 🚀
+# 📋 Backlog de Implementación Final - DAM United FC
 
-Este documento lista las funcionalidades, mejoras técnicas y tareas de pulido que aún quedan por implementar para cerrar el TFG con broche de oro.
-
----
-
-## 1. Sistema de Notificaciones Pro (NotificationService) ✅ DONE
-
-**Descripción:** Centralizar la lógica de `ToastController` que actualmente está dispersa por los componentes.
-
-### Tareas
-- **Centralización**: Inyectar `ToastController` únicamente en `core/services/NotificationService.ts`.
-- **Tipología Visual**: Crear métodos `.success()`, `.error()`, `.warning()` e `.info()` con colores y duraciones predefinidas.
-- **Consistencia**: Unificar posición (`top` o `bottom`) y estilo en toda la aplicación.
+Este documento centraliza las tareas pendientes para el cierre del TFG. Está diseñado para ser procesado por un agente de IA (Claude/Gemini) de forma secuencial.
 
 ---
 
-## 2. Generación de Reportes / Actas (Print-Friendly) 📄
+## 🚀 1. Módulo de Reportes y Actas (Print-Friendly)
+**Objetivo:** Permitir que el staff técnico obtenga fichas y actas en papel/PDF usando solo CSS.
 
-**Descripción:** Permitir que el entrenador o admin obtenga un documento PDF con el resumen del partido o la ficha del jugador de forma sencilla.
-
-### Estrategia (Low Cost / High Value)
-- **Solución CSS**: Implementar **Media Queries de Impresión** (`@media print`) en las vistas de detalle.
-- **Acción**: Añadir un botón que dispare `window.print()`, configurado para ocultar elementos de navegación y dejar solo el contenido relevante.
-
----
-
-## 3. Pulido Estético y UX (Pantallas Secundarias) ✅ DONE
-
-Mantener la consistencia del diseño "Night Stadium" en toda la app.
-
-### Análisis del Terreno (Para Claude 🤖)
-- **Ruta Listado Jugadores**: `frontend/src/app/modules/players/pages/player-dashboard/player-dashboard.page.html` (usa clase `role-badge`).
-- **Ruta Perfil**: `frontend/src/app/modules/user/pages/profile/profile.page.html` (usa clases `dark-card` y `input-group`).
-- **Ruta Modales**: Localizados en `frontend/src/app/shared/models/convocation-modal/`.
-- **Estilos Globales**: `frontend/src/theme/variables.scss`.
-
-### Plan de Acción Exacto
-1.  **Listado de Jugadores (`my-team`)**:
-    - Localizar la clase `.role-badge` en `player-dashboard.page.scss`.
-    - Implementar lógica de colores en el HTML: `ACTIVO` (verde neón), `LESIONADO` (ámbar), `BAJA` (rojo peligro).
-    - Añadir tooltips o iconos descriptivos junto al badge.
-2.  **Formulario de Perfil**:
-    - En `profile.page.html`, envolver los `input-group` en dos nuevos contenedores `<div class="form-section">` con títulos de cabecera: "Información de Cuenta" y "Preferencias de Usuario".
-    - Ajustar el SCSS para reducir el padding vertical de los inputs y permitir una vista más compacta.
-3.  **Consistencia de Modales**:
-    - Crear una clase global `.night-modal` en `global.scss` que fuerce `background: #0a0e1a`, `border-radius: 16px` y `border: 1px solid rgba(108, 99, 255, 0.3)`.
-    - Aplicar esta clase usando `cssClass: 'night-modal'` en todas las llamadas a `modalController.create()` encontradas en el análisis previo.
+- [ ] **Definición de Estilos de Impresión (`@media print`)**:
+  - Archivo: `frontend/src/global.scss`.
+  - Tarea: Crear un bloque `@media print` que oculte: `ion-menu-button`, `ion-tabs`, botones de acción y fondos innecesarios. Forzar colores negros sobre blanco para ahorrar tinta.
+- [ ] **Botón de Impresión Global**:
+  - Archivos: `match-detail.page.html`, `player-dashboard.page.html`.
+  - Tarea: Añadir un `<ion-button fill="clear" (click)="print()">` con el icono `print-outline`.
+  - Lógica: Implementar `print() { window.print(); }` en los componentes correspondientes.
 
 ---
 
-## 4. Mejoras en el Chat de Equipo 💬
+## 💬 2. Persistencia y Badges del Chat
+**Objetivo:** Que el contador de mensajes no leídos sea verídico y no dependa solo de estar conectado en ese momento.
 
-Mejorar la experiencia de comunicación y restringir el acceso según el rol.
+- [ ] **Sincronización Inicial de Mensajes**:
+  - Archivo: `frontend/src/app/core/services/chat.service.ts`.
+  - Tarea: Crear un método `getUnreadCount()` que haga un GET al backend al inicializar el servicio.
+  - Lógica: Actualizar el `BehaviorSubject` del badge con el valor devuelto por el servidor.
+- [ ] **Persistencia del Estado**:
+  - Tarea: Asegurar que al leer un mensaje (abrir el chat), se dispare una petición al backend para marcar como leídos y resetear el badge localmente.
 
-### Tareas
-- **Icono de Notificación (Badge)**: Implementar un indicador visual (exclamación o punto rojo) en el icono del menú de chat cuando haya mensajes nuevos sin leer. Requiere que `ChatService` escuche en segundo plano y gestione un estado global (`BehaviorSubject`).
+---
 
-Diagnóstico de por qué no aparece la alerta:
+## 🎨 3. Refuerzo Visual y Coherencia de Marca
+**Objetivo:** Eliminar inconsistencias de diseño en pantallas secundarias.
 
-   1. Sincronización Offline: El sistema de badges actual es puramente "reactivo" en tiempo
-      real. Si el jugador envía el mensaje y el entrenador se loguea 5 minutos después, el
-      entrenador entra con el contador en 0 porque el WebSocket solo le avisará de los
-      mensajes que lleguen a partir de ese momento.
-   2. Falta de inicialización: El ChatService no está haciendo una petición al backend para
-      preguntar "¿cuántos mensajes tengo pendientes de antes?" al conectarse globalmente.
-   3. Filtrado de mensajes propios: Si el entrenador es quien envía el mensaje, el socket
-      se lo devuelve a él también (depende de cómo esté el backend), pero normalmente los
-      badges se filtran para no contar tus propios mensajes.
+- [ ] **Lógica de Colores en Badges de Jugador**:
+  - Archivo: `frontend/src/app/modules/players/pages/player-dashboard/player-dashboard.page.html`.
+  - Tarea: Usar `[ngClass]` o `[style.color]` para que el badge de estado sea:
+    - `ACTIVO` -> `#00ff88` (Verde Neón).
+    - `LESIONADO` -> `#ffaa00` (Ámbar).
+    - `BAJA` -> `#ff4d4d` (Rojo).
+- [ ] **Estructura del Formulario de Perfil**:
+  - Archivo: `frontend/src/app/modules/user/pages/profile/profile.page.html`.
+  - Tarea: Agrupar campos en `<div class="form-section">` con encabezados H3 estilizados (Account vs Preferences).
+- [ ] **Estandarización de Modales (`.night-modal`)**:
+  - Archivo: `frontend/src/global.scss`.
+  - Tarea: Definir la clase `.night-modal` con fondo `#0a0e1a` y borde neón.
+  - Tarea: Revisar todos los `modalController.create()` y añadir `cssClass: 'night-modal'`.
 
-  Resumen técnico: La lógica del badge está bien para el "tiempo real", pero le falta la
-  "persistencia" inicial al cargar la app. El entrenador (o cualquier usuario) debería
-  hacer un GET /chat/no-leidos al arrancar para inicializar el BehaviorSubject.
+---
+
+## 🛠️ Notas para el Agente
+- **Stack**: Angular + Ionic (Frontend), Spring Boot (Backend).
+- **Estilo**: "Night Stadium" (Oscuro, bordes con transparencias, acentos neón).
+- **Prioridad**: 1. Reportes -> 2. Chat -> 3. UX.

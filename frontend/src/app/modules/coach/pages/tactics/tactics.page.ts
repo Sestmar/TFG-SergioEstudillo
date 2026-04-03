@@ -7,7 +7,8 @@ import { forkJoin, of } from 'rxjs';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
-import { ToastController, ActionSheetController, ModalController } from '@ionic/angular';
+import { ActionSheetController, ModalController } from '@ionic/angular';
+import { NotificationService } from 'src/app/core/services/notification/notification.service';
 import { Jugador, Partido, LineupSlotDto, EquipoResumen } from 'src/app/shared/models/models';
 import { ConvocationModalComponent } from 'src/app/shared/models/convocation-modal/convocation-modal.component';
 
@@ -55,7 +56,7 @@ export class TacticsPage implements OnInit {
     private playerSvc: PlayerService,
     private matchSvc: MatchService,
     private authSvc: AuthService,
-    private toastCtrl: ToastController,
+    private notificationSvc: NotificationService,
     private actionSheetCtrl: ActionSheetController,
     private modalCtrl: ModalController
   ) {}
@@ -183,7 +184,7 @@ export class TacticsPage implements OnInit {
         allPlayers: this.allTeamPlayers,
         currentSquad: currentSquad
       },
-      cssClass: 'my-custom-modal-css'
+      cssClass: 'night-modal'
     });
 
     await modal.present();
@@ -332,14 +333,12 @@ export class TacticsPage implements OnInit {
 
     if (!isConvocation) {
       if (playersOnPitch.length !== 11) {
-        const t = await this.toastCtrl.create({ message: `Alineación incompleta: ${playersOnPitch.length}/11`, duration: 2000, color: 'warning' });
-        t.present();
+        await this.notificationSvc.warning(`Alineación incompleta: ${playersOnPitch.length}/11`);
         return;
       }
 
       if (!this.goalkeeper[0]?.player) {
-        const t = await this.toastCtrl.create({ message: `¡Falta el portero!`, duration: 2000, color: 'warning' });
-        t.present();
+        await this.notificationSvc.warning('¡Falta el portero!');
         return;
       }
     }
@@ -372,13 +371,11 @@ export class TacticsPage implements OnInit {
       next: async () => {
         this.saving = false;
         const msg = isConvocation ? 'Squad List Updated ✅' : 'Tácticas guardadas. 💾';
-        const t = await this.toastCtrl.create({ message: msg, duration: 2000, color: 'success' });
-        t.present();
+        await this.notificationSvc.success(msg);
       },
       error: async () => {
         this.saving = false;
-        const t = await this.toastCtrl.create({ message: 'Error al guardar tácticas', duration: 2000, color: 'danger' });
-        t.present();
+        await this.notificationSvc.error('Error al guardar tácticas');
       }
     });
   }

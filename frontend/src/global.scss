@@ -540,3 +540,63 @@ ion-alert {
   &.toast-warning::part(container) { border-left-color: #f59e0b; }
   &.toast-info::part(container)    { border-left-color: #6c63ff; }
 }
+
+// Night Modal — ModalController Night Stadium
+.night-modal {
+  --backdrop-opacity: 0.7;
+
+  &::part(content) {
+    background: rgba(10, 14, 26, 0.97);
+    border: 1px solid rgba(108, 99, 255, 0.4);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(108, 99, 255, 0.15);
+    backdrop-filter: blur(12px);
+  }
+}
+
+// Formation Popover — ion-select Night Stadium
+.formation-popover {
+  --backdrop-opacity: 0.5;
+
+  &::part(content) {
+    background: rgba(10, 14, 26, 0.95) !important;
+    border: 1px solid rgba(108, 99, 255, 0.6) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(108, 99, 255, 0.2) !important;
+    backdrop-filter: blur(15px) !important;
+    min-width: 140px;
+  }
+
+  ion-list {
+    background: transparent !important;
+    padding: 4px;
+  }
+
+  ion-item {
+    --background: transparent;
+    --background-focused: rgba(108, 99, 255, 0.1);
+    --color: #e2e8f0;
+    --border-color: rgba(108, 99, 255, 0.1);
+    --padding-start: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+
+    &.item-radio-checked {
+      --background: rgba(108, 99, 255, 0.2);
+      --color: #6c63ff;
+      font-weight: 700;
+    }
+
+    &:hover {
+      --background: rgba(108, 99, 255, 0.15);
+    }
+  }
+
+  ion-radio {
+    --color: rgba(108, 99, 255, 0.4);
+    --color-checked: #6c63ff;
+    margin-inline-end: 8px;
+  }
+}
