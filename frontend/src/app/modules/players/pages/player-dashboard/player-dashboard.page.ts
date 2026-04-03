@@ -127,6 +127,10 @@ export class PlayerDashboardPage implements OnInit {
     this.loadPlayerData();
   }
 
+  print() {
+    window.print();
+  }
+
   // 🔥 MÉTODO LOGOUT
   async logout() {
       const alert = await this.alertCtrl.create({

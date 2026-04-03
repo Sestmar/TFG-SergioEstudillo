@@ -600,3 +600,70 @@ ion-alert {
     margin-inline-end: 8px;
   }
 }
+
+// ─── @media print — Reportes y Actas Print-Friendly ─────────────────────────
+@media print {
+
+  // Ocultar navegación, controles de UI y elementos de layout
+  ion-menu-button,
+  ion-tabs,
+  ion-tab-bar,
+  ion-back-button,
+  ion-menu,
+  ion-button,
+  .sidebar-left,
+  .actions-grid-pro,
+  .section-title .link,
+  ion-spinner,
+  .loading-container {
+    display: none !important;
+  }
+
+  // Forzar fondo blanco y texto negro para ahorrar tinta
+  body,
+  ion-app,
+  ion-content,
+  ion-page,
+  .dashboard-bg {
+    background: #ffffff !important;
+    --background: #ffffff !important;
+    color: #000000 !important;
+    --color: #000000 !important;
+  }
+
+  // Resetear glassmorphism y decoración visual
+  .scoreboard-card,
+  .player-card-dark,
+  .player-identity-card,
+  .detailed-stats-card,
+  .event-card,
+  .main-container,
+  .dashboard-layout,
+  .main-content {
+    background: #ffffff !important;
+    border: 1px solid #cccccc !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    color: #000000 !important;
+  }
+
+  // Ocultar gráficos (no se renderizan bien en papel)
+  .chart-card,
+  apx-chart {
+    display: none !important;
+  }
+
+  // Texto negro universal
+  h1, h2, h3, h4, p, span, ion-label, ion-title {
+    color: #000000 !important;
+    text-shadow: none !important;
+  }
+
+  // Garantizar que el contenido sea scrollable/visible al imprimir
+  ion-content {
+    overflow: visible !important;
+    --overflow: visible !important;
+    height: auto !important;
+  }
+}

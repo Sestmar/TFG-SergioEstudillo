@@ -7,10 +7,10 @@ Este documento centraliza las tareas pendientes para el cierre del TFG. Está di
 ## 🚀 1. Módulo de Reportes y Actas (Print-Friendly)
 **Objetivo:** Permitir que el staff técnico obtenga fichas y actas en papel/PDF usando solo CSS.
 
-- [ ] **Definición de Estilos de Impresión (`@media print`)**:
+- [x] **Definición de Estilos de Impresión (`@media print`)**:
   - Archivo: `frontend/src/global.scss`.
   - Tarea: Crear un bloque `@media print` que oculte: `ion-menu-button`, `ion-tabs`, botones de acción y fondos innecesarios. Forzar colores negros sobre blanco para ahorrar tinta.
-- [ ] **Botón de Impresión Global**:
+- [x] **Botón de Impresión Global**:
   - Archivos: `match-detail.page.html`, `player-dashboard.page.html`.
   - Tarea: Añadir un `<ion-button fill="clear" (click)="print()">` con el icono `print-outline`.
   - Lógica: Implementar `print() { window.print(); }` en los componentes correspondientes.

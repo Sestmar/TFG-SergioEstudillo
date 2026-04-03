@@ -123,4 +123,8 @@ export class MatchDetailPage implements OnInit {
   goBack() {
     this.location.back();
   }
+
+  print() {
+    window.print();
+  }
 }

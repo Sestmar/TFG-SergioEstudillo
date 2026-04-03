@@ -379,4 +379,37 @@ async showConfirm(header: string, message: string): Promise<boolean> {
 
 ---
 
+## 13. Módulo de Reportes y Actas: Ingeniería de Impresión CSS 📄
+
+Se ha implementado un sistema de generación de documentos físicos y digitales (PDF) mediante el uso estratégico de Media Queries, permitiendo que el cuerpo técnico obtenga actas de partidos y fichas de jugadores sin necesidad de librerías externas pesadas.
+
+### Desafío Técnico
+Las aplicaciones web modernas con temas oscuros e interfaces densas no son aptas para impresión por defecto; consumen demasiada tinta y muestran elementos de navegación (menús, botones de logout, pestañas) que ensucian el documento final. Además, los gráficos de ApexCharts no suelen renderizarse correctamente en el flujo de impresión estándar.
+
+### Solución e Implementación
+- **Motor de Limpieza `@media print`**: Creación de una capa de estilos en `global.scss` que se activa únicamente al imprimir. Esta capa oculta automáticamente más de 10 elementos de la interfaz (menús, spinners, botones de acción) y elimina decoraciones de *glassmorphism* (sombras, filtros de desenfoque).
+- **Inversión Cromática Automática**: Forzado de un esquema de color "Papel" (Fondo blanco, texto negro puro) mediante el uso de `!important` en las variables de root. Esto garantiza legibilidad máxima y ahorro de consumibles.
+- **Puntos de Entrada Estratégicos**: Integración de botones de impresión con el icono `print-outline` en el Acta de Partido (`match-detail`) y en el Panel del Jugador (`player-dashboard`), disparando la API nativa del navegador de forma reactiva.
+
+```scss
+// Lógica de purga de UI para impresión en global.scss
+@media print {
+  ion-menu-button, ion-tabs, .actions-grid-pro, apx-chart, .sidebar-left {
+    display: none !important;
+  }
+
+  body, ion-content, .dashboard-bg {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .scoreboard-card, .player-card-dark {
+    border: 1px solid #cccccc !important;
+    box-shadow: none !important;
+  }
+}
+```
+
+---
+
 > **Estado de la Plataforma**: Arquitectura robusta, escalable y validada bajo estándares profesionales de desarrollo de software.
