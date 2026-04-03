@@ -1,0 +1,90 @@
+
+// ─── @media print — Ingeniería de Impresión Final (ACTAS OFICIALES) ─────────
+@media print {
+
+  // 1. OCULTAR TODO LO QUE NO ES EL REPORTE
+  ion-header,
+  ion-footer,
+  ion-menu-button,
+  ion-tabs,
+  ion-tab-bar,
+  ion-back-button,
+  ion-menu,
+  ion-button,
+  .main-container,
+  .sidebar-left,
+  .actions-grid-pro,
+  .section-title,
+  ion-spinner,
+  .loading-container {
+    display: none !important;
+  }
+
+  // 2. REPORTE VISIBLE
+  .print-only-report {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+    padding: 0 !important;
+  }
+
+  // 3. RESET DE ESTRUCTURA
+  html, body, ion-app, ion-page, ion-content {
+    background: white !important;
+    --background: white !important;
+    height: auto !important;
+    overflow: visible !important;
+    --overflow: visible !important;
+  }
+
+  ion-content::part(scroll) {
+    overflow: visible !important;
+    height: auto !important;
+    position: static !important;
+  }
+
+  // 4. ESTILOS DEL REPORTE (A4)
+  .p-header {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 20px;
+  }
+  .p-logo { width: 80px; height: 80px; object-fit: contain; }
+  .p-title-box { text-align: right; }
+  .p-title-box h1 { margin: 0; font-size: 1.8rem; color: black !important; }
+  .p-title-box h2 { margin: 0; font-size: 1rem; color: #555 !important; }
+
+  .p-match-info { margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 15px; }
+  .p-scoreboard { display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 10px; }
+  .p-team { font-size: 1.4rem; font-weight: bold; color: black !important; }
+  .p-result { font-size: 2.2rem; font-weight: 800; border: 1px solid black; padding: 5px 20px; background: #eee; }
+  .p-meta { text-align: center; font-size: 0.9rem; }
+  .p-meta p { margin: 5px 0; color: black !important; }
+
+  .p-section-title { 
+    background: #000; color: #fff !important; 
+    padding: 8px 15px; font-weight: bold; letter-spacing: 1px;
+    margin-bottom: 10px; -webkit-print-color-adjust: exact;
+  }
+
+  .p-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+  .p-table th { background: #f0f0f0 !important; border: 1px solid #ccc; padding: 10px; text-align: left; font-size: 0.85rem; -webkit-print-color-adjust: exact; }
+  .p-table td { border: 1px solid #ccc; padding: 8px; font-size: 0.85rem; color: black !important; }
+  .p-table tr:nth-child(even) { background: #fafafa !important; -webkit-print-color-adjust: exact; }
+
+  .p-footer { border-top: 1px solid #ddd; padding-top: 10px; text-align: center; font-size: 0.75rem; color: #777 !important; }
+
+  // 5. AJUSTES FINALES
+  @page {
+    margin: 1.5cm;
+    size: auto;
+  }
+}
+
+// Ocultar reporte en pantalla por defecto
+.print-only-report {
+  display: none;
+}

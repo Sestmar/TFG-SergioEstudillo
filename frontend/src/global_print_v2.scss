@@ -1,0 +1,121 @@
+
+// ─── @media print — Ingeniería de Impresión Final (Actas y Reportes) ────────
+@media print {
+
+  // 1. OCULTAR UI NO PERTINENTE (Limpieza total)
+  ion-menu-button,
+  ion-tabs,
+  ion-tab-bar,
+  ion-back-button,
+  ion-menu,
+  ion-button,
+  .sidebar-left,
+  .actions-grid-pro,
+  .section-title .link,
+  ion-spinner,
+  .loading-container,
+  .chart-card,
+  apx-chart,
+  .logo-box::after,
+  .scoreboard-card::before {
+    display: none !important;
+  }
+
+  // 2. RESET DE ESTRUCTURA (App a Documento)
+  html, body, ion-app, ion-page {
+    background: #ffffff !important;
+    --background: #ffffff !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  // 🔥 EL FIX MAESTRO PARA ION-CONTENT (Paginación completa)
+  ion-content {
+    --background: #ffffff !important;
+    background: #ffffff !important;
+    height: auto !important;
+    overflow: visible !important;
+    --overflow: visible !important;
+    contain: none !important;
+    position: static !important;
+  }
+
+  ion-content::part(scroll) {
+    overflow: visible !important;
+    height: auto !important;
+    position: static !important;
+    contain: none !important;
+  }
+
+  // 3. SHADOW DOM (Texto Negro legible)
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  ion-label, ion-text, ion-title, h1, h2, h3, h4, p, span, b, div {
+    color: #000000 !important;
+    --color: #000000 !important;
+    text-shadow: none !important;
+  }
+
+  ion-label::part(native),
+  ion-item::part(native),
+  ion-title::part(native),
+  ion-toolbar::part(native) {
+    color: #000000 !important;
+    background: transparent !important;
+  }
+
+  // 4. ESTILIZACIÓN DE TARJETAS (Sin Dark Mode)
+  .main-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .scoreboard-card,
+  .player-card-dark,
+  .player-identity-card,
+  .detailed-stats-card,
+  .event-card {
+    background: #ffffff !important;
+    border: 1px solid #000000 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    margin-bottom: 12px !important;
+    color: #000000 !important;
+    page-break-inside: avoid !important;
+  }
+
+  // 🟨 🟥 Gestión de Tarjetas Deportivas (Visibles en PDF)
+  .card-indicator.yellow {
+    background-color: #f1c40f !important;
+    border: 1.5px solid #000000 !important;
+    width: 14px !important;
+    height: 20px !important;
+    display: inline-block !important;
+    visibility: visible !important;
+  }
+
+  .card-indicator.red {
+    background-color: #e74c3c !important;
+    border: 1.5px solid #000000 !important;
+    width: 14px !important;
+    height: 20px !important;
+    display: inline-block !important;
+    visibility: visible !important;
+  }
+
+  .score-num { color: #000000 !important; font-size: 3.5rem !important; font-weight: 800 !important; }
+  .divider { color: #333333 !important; font-size: 2rem !important; }
+  .status-pill { background: #f0f0f0 !important; border: 1px solid #999999 !important; padding: 4px 10px !important; }
+  .dorsal-badge { background: #000000 !important; color: #ffffff !important; border: 1px solid #000000 !important; }
+
+  @page {
+    margin: 1.5cm;
+    size: auto;
+  }
+}

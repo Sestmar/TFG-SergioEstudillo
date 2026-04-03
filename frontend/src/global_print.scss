@@ -1,0 +1,120 @@
+
+// ─── @media print — Ingeniería de Impresión para Actas y Reportes ───────────
+@media print {
+
+  // 1. LIMPIEZA TOTAL DE UI (Ocultar lo que no es contenido)
+  ion-menu-button,
+  ion-tabs,
+  ion-tab-bar,
+  ion-back-button,
+  ion-menu,
+  ion-button,
+  .sidebar-left,
+  .actions-grid-pro,
+  .section-title .link,
+  ion-spinner,
+  .loading-container,
+  .chart-card,
+  apx-chart,
+  .logo-box::after,
+  .scoreboard-card::before {
+    display: none !important;
+  }
+
+  // 2. RESET ESTRUCTURAL
+  html, body, ion-app, ion-page {
+    background: #ffffff !important;
+    --background: #ffffff !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  // 🚀 FIX ION-CONTENT (Expansión total para paginación)
+  ion-content {
+    --background: #ffffff !important;
+    background: #ffffff !important;
+    height: auto !important;
+    overflow: visible !important;
+    --overflow: visible !important;
+    contain: none !important;
+    position: static !important;
+  }
+
+  ion-content::part(scroll) {
+    overflow: visible !important;
+    height: auto !important;
+    position: static !important;
+    contain: none !important;
+  }
+
+  // 3. SHADOW DOM PENETRATION (Texto Negro)
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  ion-label, ion-text, ion-title, h1, h2, h3, h4, p, span, b, div {
+    color: #000000 !important;
+    --color: #000000 !important;
+    text-shadow: none !important;
+  }
+
+  ion-label::part(native),
+  ion-item::part(native),
+  ion-title::part(native),
+  ion-toolbar::part(native) {
+    color: #000000 !important;
+    background: transparent !important;
+  }
+
+  // 4. ESTILO DE TARJETAS (Fichas y Actas)
+  .main-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .scoreboard-card,
+  .player-card-dark,
+  .player-identity-card,
+  .detailed-stats-card,
+  .event-card {
+    background: #ffffff !important;
+    border: 1px solid #000000 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    margin-bottom: 10px !important;
+    color: #000000 !important;
+    page-break-inside: avoid !important;
+  }
+
+  // 🟨 🟥 Tarjetas de Jugadores (Indicadores)
+  .card-indicator.yellow {
+    background-color: #f1c40f !important;
+    border: 1px solid #000000 !important;
+    width: 14px !important;
+    height: 20px !important;
+    display: inline-block !important;
+    visibility: visible !important;
+  }
+
+  .card-indicator.red {
+    background-color: #e74c3c !important;
+    border: 1px solid #000000 !important;
+    width: 14px !important;
+    height: 20px !important;
+    display: inline-block !important;
+    visibility: visible !important;
+  }
+
+  .score-num { color: #000000 !important; font-size: 3rem !important; }
+  .divider { color: #333333 !important; }
+  .status-pill { background: #eeeeee !important; border: 1px solid #999999 !important; }
+  .dorsal-badge { background: #333333 !important; color: #ffffff !important; }
+
+  @page {
+    margin: 1.5cm;
+    size: auto;
+  }
+}
