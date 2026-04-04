@@ -4,16 +4,12 @@ Este documento centraliza las tareas pendientes para el cierre del TFG. Está di
 
 ---
 
-## 🚀 1. Módulo de Reportes y Actas (Print-Friendly)
-**Objetivo:** Permitir que el staff técnico obtenga fichas y actas en papel/PDF usando solo CSS.
+## ✅ 1. Módulo de Reportes y Actas (FINALIZADO)
+**Logro:** Generación de actas profesionales en A4 con fidelidad de color.
 
-- [x] **Definición de Estilos de Impresión (`@media print`)**:
-  - Archivo: `frontend/src/global.scss`.
-  - Tarea: Crear un bloque `@media print` que oculte: `ion-menu-button`, `ion-tabs`, botones de acción y fondos innecesarios. Forzar colores negros sobre blanco para ahorrar tinta.
-- [x] **Botón de Impresión Global**:
-  - Archivos: `match-detail.page.html`, `player-dashboard.page.html`.
-  - Tarea: Añadir un `<ion-button fill="clear" (click)="print()">` con el icono `print-outline`.
-  - Lógica: Implementar `print() { window.print(); }` en los componentes correspondientes.
+- [x] **Definición de Estilos de Impresión (`@media print`)**: Implementado en `global.scss` con fix de tarjetas.
+- [x] **Unificación de Estilos**: Eliminación de archivos `global_print_vX.scss` obsoletos.
+- [x] **Botón de Impresión Global**: Integrado en `match-detail` y `player-dashboard`.
 
 ---
 
@@ -34,21 +30,17 @@ Este documento centraliza las tareas pendientes para el cierre del TFG. Está di
 
 - [ ] **Lógica de Colores en Badges de Jugador**:
   - Archivo: `frontend/src/app/modules/players/pages/player-dashboard/player-dashboard.page.html`.
-  - Tarea: Usar `[ngClass]` o `[style.color]` para que el badge de estado sea:
-    - `ACTIVO` -> `#00ff88` (Verde Neón).
-    - `LESIONADO` -> `#ffaa00` (Ámbar).
-    - `BAJA` -> `#ff4d4d` (Rojo).
+  - Tarea: Usar `[ngClass]` para que el badge de estado sea dinámico (Verde Neón para Activo, Ámbar para Lesionado, Rojo para Baja).
 - [ ] **Estructura del Formulario de Perfil**:
   - Archivo: `frontend/src/app/modules/user/pages/profile/profile.page.html`.
-  - Tarea: Agrupar campos en `<div class="form-section">` con encabezados H3 estilizados (Account vs Preferences).
+  - Tarea: Agrupar campos en `<div class="form-section">` con encabezados H3 estilizados.
 - [ ] **Estandarización de Modales (`.night-modal`)**:
   - Archivo: `frontend/src/global.scss`.
-  - Tarea: Definir la clase `.night-modal` con fondo `#0a0e1a` y borde neón.
-  - Tarea: Revisar todos los `modalController.create()` y añadir `cssClass: 'night-modal'`.
+  - Tarea: Asegurar que todos los modales usen la clase `night-modal` para mantener la estética oscura y neón.
 
 ---
 
 ## 🛠️ Notas para el Agente
 - **Stack**: Angular + Ionic (Frontend), Spring Boot (Backend).
 - **Estilo**: "Night Stadium" (Oscuro, bordes con transparencias, acentos neón).
-- **Prioridad**: 1. Reportes -> 2. Chat -> 3. UX.
+- **Prioridad Actual**: 1. Chat (Sincronización) -> 2. UX (Badges y Modales).

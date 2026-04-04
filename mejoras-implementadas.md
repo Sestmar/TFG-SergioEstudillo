@@ -412,4 +412,39 @@ Las aplicaciones web modernas con temas oscuros e interfaces densas no son aptas
 
 ---
 
+## 14. Ingeniería de Impresión y Resolución de Invisibilidad de Actas 📄✅
+
+Se ha perfeccionado el motor de impresión CSS para garantizar que las actas oficiales de los partidos sean 100% fieles a la realidad deportiva, resolviendo problemas críticos de visibilidad de datos y de "limpieza" excesiva del DOM.
+
+### Desafío Técnico: El "Bug de la Tarjeta Invisible"
+Los navegadores, por una política de ahorro de tinta, omiten los colores de fondo (`background-color`) en la impresión. Esto provocaba que las tarjetas amarillas y rojas en el acta (`.card-indicator`) aparecieran como recuadros blancos vacíos, perdiendo información vital del partido. Además, un intento previo de optimización ocultó el contenedor raíz (`.main-container`), dejando el PDF totalmente en blanco.
+
+### Solución e Implementación
+- **Forzado de Renderizado Cromático**: Implementación de la propiedad de CSS nivel 4 `print-color-adjust: exact` (con su prefijo `-webkit` para compatibilidad con Safari/Chrome). Esto obliga al motor de renderizado a pintar los fondos de las tarjetas con sus colores reglamentarios (`#ffd700` y `#ff0000`).
+- **Refactorización de Selectores de Exclusión**: Se ajustó el bloque `@media print` para ser selectivo. Ahora oculta elementos de UI (header, footer, menús, botones) pero mantiene explícitamente el `.main-container` e `ion-content`, asegurando que el flujo de datos del acta sea visible.
+- **Unificación de Versiones (Limpieza de Deuda Técnica)**: Se eliminaron tres archivos de estilos obsoletos (`global_print.scss`, `v2` y `v3`), consolidando toda la lógica de impresión en el archivo raíz `global.scss`.
+
+```scss
+// Fix maestro para tarjetas y visibilidad en global.scss
+@media print {
+  // Asegurar que el contenedor principal sea visible
+  .main-container, ion-content {
+    display: block !important;
+    background: white !important;
+  }
+
+  // Ingeniería de color para tarjetas deportivas
+  .card-indicator {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact; // Forzar color en PDF
+    border: 1px solid rgba(0, 0, 0, 0.4) !important;
+
+    &.yellow { background-color: #ffd700 !important; }
+    &.red    { background-color: #ff0000 !important; }
+  }
+}
+```
+
+---
+
 > **Estado de la Plataforma**: Arquitectura robusta, escalable y validada bajo estándares profesionales de desarrollo de software.
