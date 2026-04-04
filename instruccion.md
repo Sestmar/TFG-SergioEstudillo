@@ -1,253 +1,79 @@
-Mira instruccion.md para saber la tarea que debes hacer. Hazla sin sub agentes, y
- evita cargar tools inncesarias, enfocate en resolver la tarea simplemente
+lee instruccion.md para dejar sellado el apartado de chat
 
   Read 1 file (ctrl+o to expand)
 
-● Bien, déjame leer los archivos relevantes de una.
+● Bien, el cuello de botella es claro. El take(1) mata la suscripción y si el
+  usuario se logea después del arranque, la conexión global nunca se dispara. Déjame
+   verificar estado actual y hacer los cambios.
 
   Read 2 files (ctrl+o to expand)
 
-● Dejame ver qué clases usan las tarjetas en el componente de acta.
+● Perfecto, ahora los dos cambios:
 
-  Searched for 1 pattern (ctrl+o to expand)
+  1. AppComponent — Eliminar take(1):
 
-● Bien. Las tarjetas en el acta son .card-indicator.yellow y .card-indicator.red.
-  Ahora tengo todo lo que necesito. Voy a:
+● Update(frontend\src\app\app.component.ts)
+  ⎿  Added 1 line, removed 1 line
+      1  import { Component, OnInit, DestroyRef, inject } from '@angular/core
+         ';
+      2  import { Platform } from '@ionic/angular';
+      3 -import { filter, switchMap, take } from 'rxjs/operators';
+      3 +import { filter, switchMap } from 'rxjs/operators';
+      4  import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+      5  import { of } from 'rxjs';
+      6
 
-  1. Integrar el contenido de global_print_v3.scss en global.scss (reemplazando el
-  @media print existente y añadiendo el fix de tarjetas)
-  2. Añadir .print-only-report { display: none } fuera del media query
-  3. Eliminar los tres archivos obsoletos
-
-● Update(frontend\src\global.scss)
-  ⎿  Added 85 lines, removed 41 lines
-      601    }
-      602  }
-      603
-      604 -// ─── @media print — Reportes y Actas Print-Friendly ────────────
-          -─────────────
-      604 +// ─── @media print — Ingeniería de Impresión Final (ACTAS OFICIAL
-          +ES) ─────────
-      605  @media print {
-      606
-      607 -  // Ocultar navegación, controles de UI y elementos de layout
-      607 +  // 1. OCULTAR TODO LO QUE NO ES EL REPORTE
-      608 +  ion-header,
-      609 +  ion-footer,
-      610    ion-menu-button,
-      611    ion-tabs,
-      612    ion-tab-bar,
-      613    ion-back-button,
-      614    ion-menu,
-      615    ion-button,
-      616 +  .main-container,
-      617    .sidebar-left,
-      618    .actions-grid-pro,
-      616 -  .section-title .link,
-      619 +  .section-title,
-      620    ion-spinner,
-      621    .loading-container {
-      622      display: none !important;
-      623    }
-      624
-      622 -  // Forzar fondo blanco y texto negro para ahorrar tinta
-      623 -  body,
-      624 -  ion-app,
-      625 -  ion-content,
-      626 -  ion-page,
-      627 -  .dashboard-bg {
-      628 -    background: #ffffff !important;
-      629 -    --background: #ffffff !important;
-      630 -    color: #000000 !important;
-      631 -    --color: #000000 !important;
-      625 +  // 2. REPORTE VISIBLE
-      626 +  .print-only-report {
-      627 +    display: block !important;
-      628 +    visibility: visible !important;
-      629 +    position: absolute;
-      630 +    top: 0; left: 0; right: 0;
-      631 +    width: 100%;
-      632 +    background: white !important;
-      633 +    color: black !important;
-      634 +    padding: 0 !important;
-      635    }
-      636
-      634 -  // Resetear glassmorphism y decoración visual
-      635 -  .scoreboard-card,
-      636 -  .player-card-dark,
-      637 -  .player-identity-card,
-      638 -  .detailed-stats-card,
-      639 -  .event-card,
-      640 -  .main-container,
-      641 -  .dashboard-layout,
-      642 -  .main-content {
-      643 -    background: #ffffff !important;
-      644 -    border: 1px solid #cccccc !important;
-      645 -    box-shadow: none !important;
-      646 -    backdrop-filter: none !important;
-      647 -    -webkit-backdrop-filter: none !important;
-      648 -    color: #000000 !important;
-      637 +  // 3. RESET DE ESTRUCTURA
-      638 +  html, body, ion-app, ion-page, ion-content {
-      639 +    background: white !important;
-      640 +    --background: white !important;
-      641 +    height: auto !important;
-      642 +    overflow: visible !important;
-      643 +    --overflow: visible !important;
-      644    }
-      645
-      651 -  // Ocultar gráficos (no se renderizan bien en papel)
-      652 -  .chart-card,
-      653 -  apx-chart {
-      654 -    display: none !important;
-      646 +  ion-content::part(scroll) {
-      647 +    overflow: visible !important;
-      648 +    height: auto !important;
-      649 +    position: static !important;
-      650    }
-      651
-      657 -  // Texto negro universal
-      658 -  h1, h2, h3, h4, p, span, ion-label, ion-title {
-      659 -    color: #000000 !important;
-      660 -    text-shadow: none !important;
-      652 +  // 4. ESTILOS DEL REPORTE (A4)
-      653 +  .p-header {
-      654 +    display: flex; align-items: center; justify-content: space-bet
-          +ween;
-      655 +    border-bottom: 2px solid black; padding-bottom: 10px; margin-b
-          +ottom: 20px;
-      656    }
-      657 +  .p-logo { width: 80px; height: 80px; object-fit: contain; }
-      658 +  .p-title-box { text-align: right; }
-      659 +  .p-title-box h1 { margin: 0; font-size: 1.8rem; color: black !im
-          +portant; }
-      660 +  .p-title-box h2 { margin: 0; font-size: 1rem; color: #555 !impor
-          +tant; }
-      661
-      663 -  // Garantizar que el contenido sea scrollable/visible al imprimi
-          -r
-      664 -  ion-content {
-      665 -    overflow: visible !important;
-      666 -    --overflow: visible !important;
-      667 -    height: auto !important;
-      662 +  .p-match-info { margin-bottom: 20px; border-bottom: 1px solid #d
-          +dd; padding-bottom: 15px; }
-      663 +  .p-scoreboard { display: flex; justify-content: center; align-it
-          +ems: center; gap: 40px; margin-bottom: 10px; }
-      664 +  .p-team { font-size: 1.4rem; font-weight: bold; color: black !im
-          +portant; }
-      665 +  .p-result { font-size: 2.2rem; font-weight: 800; border: 1px sol
-          +id black; padding: 5px 20px; background: #eee; }
-      666 +  .p-meta { text-align: center; font-size: 0.9rem; }
-      667 +  .p-meta p { margin: 5px 0; color: black !important; }
-      668 +
-      669 +  .p-section-title {
-      670 +    background: #000; color: #fff !important;
-      671 +    padding: 8px 15px; font-weight: bold; letter-spacing: 1px;
-      672 +    margin-bottom: 10px;
-      673 +    -webkit-print-color-adjust: exact;
-      674 +    print-color-adjust: exact;
-      675    }
-      676 +
-      677 +  .p-table { width: 100%; border-collapse: collapse; margin-bottom
-          +: 30px; }
-      678 +  .p-table th { background: #f0f0f0 !important; border: 1px solid
-          +#ccc; padding: 10px; text-align: left; font-size: 0.85rem; -webkit
-          +-print-color-adjust: exact; print-color-adjust: exact; }
-      679 +  .p-table td { border: 1px solid #ccc; padding: 8px; font-size: 0
-          +.85rem; color: black !important; }
-      680 +  .p-table tr:nth-child(even) { background: #fafafa !important; -w
-          +ebkit-print-color-adjust: exact; print-color-adjust: exact; }
-      681 +
-      682 +  .p-footer { border-top: 1px solid #ddd; padding-top: 10px; text-
-          +align: center; font-size: 0.75rem; color: #777 !important; }
-      683 +
-      684 +  // 5. TARJETAS DEPORTIVAS (Amarilla / Roja) — Fix de color en PD
-          +F
-      685 +  .card-indicator {
-      686 +    -webkit-print-color-adjust: exact;
-      687 +    print-color-adjust: exact;
-      688 +    border: 1px solid rgba(0, 0, 0, 0.4) !important;
-      689 +  }
-      690 +
-      691 +  .card-indicator.yellow {
-      692 +    background-color: #ffd700 !important;
-      693 +    -webkit-print-color-adjust: exact;
-      694 +    print-color-adjust: exact;
-      695 +  }
-      696 +
-      697 +  .card-indicator.red {
-      698 +    background-color: #ff0000 !important;
-      699 +    -webkit-print-color-adjust: exact;
-      700 +    print-color-adjust: exact;
-      701 +  }
-      702 +
-      703 +  // 6. AJUSTES FINALES
-      704 +  @page {
-      705 +    margin: 1.5cm;
-      706 +    size: auto;
-      707 +  }
-      708 +}
-      709 +
-      710 +// Ocultar reporte en pantalla por defecto
-      711 +.print-only-report {
-      712 +  display: none;
-      713  }
-      714   No newline at end of file
-
-● Ahora elimino los tres archivos obsoletos.
-
-● Bash(rm "C:\Users\Usuario\Documents\2DAM\TFG-SergioEstudillo\TFG-SergioEstudillo\f
-      rontend\src\global_print.scss"
-      "C:\Users\Usuario\Documents\2DAM\TFG-SergioEstudillo…)
-  ⎿  Done
-
-● Verifico que los archivos fueron eliminados y que angular.json no los referencia.
-
-  Listed 1 directory (ctrl+o to expand)
-
-● Perfecto. Solo queda global.scss. Listo.
-
-  ---
-  Acá te resumo lo que se hizo:
-
-  Refactorización completada:
-  - Se reemplazó el bloque @media print existente en global.scss con el contenido
-  completo de global_print_v3.scss (que tenía la lógica de actas oficiales)
-  - Se eliminaron global_print.scss, global_print_v2.scss y global_print_v3.scss
-
-  Fix de tarjetas (el bug real):
-  - Se agregaron .card-indicator.yellow y .card-indicator.red dentro del @media
-  print con background-color forzado y -webkit-print-color-adjust: exact +
-  print-color-adjust: exact — esto le dice al navegador que sí imprima los fondos de
-   color, que es exactamente lo que lo hacía invisible en el PDF
-
-  Limpieza de UI:
-  - El nuevo bloque oculta ion-header, ion-footer, todos los botones y controles de
-  navegación
-  - Reset completo de fondo blanco en html/body/ion-app/ion-page/ion-content
-  - @page { margin: 1.5cm } para que el acta quede bien en A4
-
-✻ Baked for 1m 13s
-
-
-Tras los cambios que has hecho no se imprime nada del acta. Necesito que no
-ocultes el .main-container ni ion-content para que se cargue el acta entera!
-
-  Searched for 1 pattern (ctrl+o to expand)
-
-● Update(frontend\src\global.scss)
+● Update(frontend\src\app\app.component.ts)
   ⎿  Removed 1 line
-      613    ion-back-button,
-      614    ion-menu,
-      615    ion-button,
-      616 -  .main-container,
-      616    .sidebar-left,
-      617    .actions-grid-pro,
-      618    .section-title,
+      51        .pipe(
+      52          takeUntilDestroyed(this.destroyRef),
+      53          filter(user => !!user),
+      54 -        take(1),
+      54          switchMap(user => {
+      55            const userId = user!.idUsuario;
+      56            capturedUserId = userId;
 
-● Listo. Saqué .main-container de la lista de elementos ocultos. ion-content ya no
-  estaba en esa lista — solo se reseteaba su fondo y overflow, que está bien.
+● 2. ChatService — Log de trazabilidad en conectarGlobal:
 
-  El problema era exactamente ese: el .main-container es el wrapper donde vive el
-  acta, así que ocultarlo dejaba la página en blanco. Ahora debería imprimirse todo.
+● Update(frontend\src\app\core\services\chat\chat.service.ts)
+  ⎿  Added 1 line
+      75     * No llamar si el usuario es ADMIN u otros roles sin equipo (equ
+          ipoId null).
+      76     */
+      77    conectarGlobal(equipoId: number, currentUserId?: number): void {
+      78 +    console.log(`[ChatService] Intentando conectar global -> Equipo
+         + ID: ${equipoId}, Usuario ID: ${currentUserId}`);
+      79      const token = localStorage.getItem('auth_token');
+      80      if (!token) return;
+      81
+
+● Ahora verifico los bindings en los HTMLs (punto 4):
+
+  Searched for 3 patterns (ctrl+o to expand)
+
+● Bindings correctos en ambos dashboards. Verifico que los constructores están bien:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Todo cuadra. Resumen de lo que se hizo:
+
+  1. AppComponent — take(1) eliminado (el fix crítico). Con take(1), la suscripción
+  se completaba tras la primera emisión. Si al arrancar la app currentUser$ era null
+   (lo cual es lo normal — el usuario aún no se logueó), el filter lo bloqueaba,
+  pero cuando el usuario se logueaba, switchMap se disparaba bien. El problema real
+  era que tras un logout y re-login, o si el BehaviorSubject emitía null primero y
+  luego el usuario, el take(1) ya había cortado el flujo. Sin take(1), el stream
+  queda vivo y es reactivo a cada login. conectarGlobal ya tiene el guard if
+  (this.clientGlobal?.active) return; que previene conexiones duplicadas, así que es
+   seguro.
+
+  2. ChatService — Log de trazabilidad en conectarGlobal. Ahora al abrir la consola
+  vas a ver exactamente: [ChatService] Intentando conectar global -> Equipo ID: 5,
+  Usuario ID: 12. Esto te deja confirmar en las pruebas cruzadas que Jugador y
+  Entrenador están escuchando el mismo equipoId. Si ves IDs distintos, ahí está el
+  bug.
+
+  3 y 4. Verificados — El log de noLeidosEquipo$ emitiendo: X de la sesión anterior
+  ya está en manejarMensajeGlobal, y los bindings de ambos dashboards usan
+  ((noLeidos$ | async) ?? 0) > 0 con la variable noLeidos$ correctamente asignada
+  desde chatService.noLeidosEquipo$ en los constructores.

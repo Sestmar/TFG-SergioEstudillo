@@ -1,6 +1,6 @@
 import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { Platform } from '@ionic/angular';
-import { filter, switchMap, take } from 'rxjs/operators';
+import { filter, switchMap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
 
@@ -51,7 +51,6 @@ export class AppComponent implements OnInit {
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         filter(user => !!user),
-        take(1),
         switchMap(user => {
           const userId = user!.idUsuario;
           capturedUserId = userId;

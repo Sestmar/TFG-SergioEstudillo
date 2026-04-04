@@ -75,6 +75,7 @@ export class ChatService implements OnDestroy {
    * No llamar si el usuario es ADMIN u otros roles sin equipo (equipoId null).
    */
   conectarGlobal(equipoId: number, currentUserId?: number): void {
+    console.log(`[ChatService] Intentando conectar global -> Equipo ID: ${equipoId}, Usuario ID: ${currentUserId}`);
     const token = localStorage.getItem('auth_token');
     if (!token) return;
 
@@ -248,7 +249,9 @@ export class ChatService implements OnDestroy {
 
     if (this.currentUserId !== null && msg.remitenteId === this.currentUserId) return;
 
-    this._noLeidosEquipo$.next(this._noLeidosEquipo$.getValue() + 1);
+    const nuevo = this._noLeidosEquipo$.getValue() + 1;
+    this._noLeidosEquipo$.next(nuevo);
+    console.log('[ChatService] noLeidosEquipo$ emitiendo:', nuevo);
     await this.dispararNotificacion(msg);
   }
 

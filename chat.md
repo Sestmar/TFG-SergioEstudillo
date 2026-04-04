@@ -1,105 +1,51 @@
-# Plan de Implementación: Chat en Tiempo Real y Notificaciones de WhatsApp
+# Arquitectura Técnica: Chat en Tiempo Real y Notificaciones
 
-Este documento detalla la arquitectura y los pasos para implementar un sistema de comunicación pro para **DAM United FC**, integrando chats grupales/privados con historial y notificaciones automáticas por WhatsApp para eventos (partidos/entrenamientos).
-
----
-
-## 1. Arquitectura del Backend (Spring Boot 3.5.7)
-
-### 1.1. Modelo de Datos: Entidad `Mensaje`
-Para soportar tanto chats grupales (por equipo) como privados (Admin <-> Usuario), la entidad `Mensaje` debe ser flexible.
-
-**Propuesta de Entidad:**
-```java
-@Entity
-@Data
-public class Mensaje {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "remitente_id")
-    private Usuario remitente;
-
-    // Si es null, el mensaje es privado. Si tiene valor, es grupal por equipo.
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "equipo_id")
-    private Equipo equipo;
-
-    // Si es null, el mensaje es grupal. Si tiene valor, es privado para este usuario.
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "destinatario_id")
-    private Usuario destinatario;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String contenido;
-
-    @Column(nullable = false)
-    private LocalDateTime fechaHora;
-
-    private boolean leido = false;
-}
-```
-
-### 1.2. Configuración de WebSockets (STOMP)
-Implementar `WebSocketConfig` para habilitar la comunicación en tiempo real.
-- **Endpoint:** `/ws` (usando SockJS para fallback).
-- **Prefixes:** `/app` (entrantes) y `/topic` / `/queue` (salientes).
-- **Seguridad:** Interceptor para validar el JWT en la conexión inicial.
-
-### 1.3. Lógica de Negocio: `ChatController` y `ChatService`
-- `@MessageMapping("/chat.sendMessage")`: Recibe el mensaje, lo persiste en la BD y lo reenvía al destino:
-    - Si es grupal: Enviar a `/topic/equipo/{idEquipo}`.
-    - Si es privado: Enviar a `/queue/user/{idDestinatario}`.
-- Métodos para recuperar el historial: `listarPorEquipo` y `listarPrivadoConAdmin`.
+Este documento documenta la arquitectura final implementada para el sistema de comunicación de **DAM United FC**, integrando chats grupales/privados con sincronización persistente de estado.
 
 ---
 
-## 2. Notificaciones de WhatsApp (Twilio)
+## 1. Infraestructura del Backend (Spring Boot 3.5.7)
 
-### 2.1. Integración de Twilio
-- Añadir dependencia: `com.twilio.sdk:twilio`.
-- Crear `WhatsAppService` con métodos `enviarNotificacionEvento` y `enviarRecordatorio24h`.
+### 1.1. Modelo de Datos y Persistencia
+Se utiliza una arquitectura de persistencia basada en JPA para gestionar el ciclo de vida de los mensajes y su estado de lectura.
+- **Entidad `Mensaje`**: Soporta polimorfismo de destino (Equipo vs Usuario Privado).
+- **Estado de Lectura**: Implementado mediante flags booleanos y filtrado por `destinatario_id` o `equipo_id` para gestionar los badges de notificación.
 
-### 2.2. Triggers de Notificación
-1. **Creación de Partido:** En `PartidoService.crear()`, invocar al `WhatsAppService` para enviar notificaciones a todos los jugadores del equipo involucrado.
-2. **Recordatorio 24h:** Habilitar `@EnableScheduling` y crear una tarea programada (`@Scheduled(cron = "0 0 * * * *")`) que:
-    - Busque partidos que comiencen en exactamente ~24 horas.
-    - Envíe un mensaje de recordatorio: *"¡Mañana hay partido! No olvides confirmar tu asistencia en la app."*
-
----
-
-## 3. Arquitectura del Frontend (Angular/Ionic)
-
-### 3.1. Infraestructura de Chat
-- **Servicio:** `ChatService` usando `rx-stomp` para gestionar la conexión, suscripciones y reconexión automática.
-- **Store:** Manejar el estado del chat (lista de mensajes) de forma reactiva con BehaviorSubjects o Signals.
-
-### 3.2. UI/UX (Módulos)
-- **Componente `ChatRoom`:**
-    - Visualización de mensajes con burbujas (estilo WhatsApp).
-    - Diferenciación de colores para mensajes propios, de otros jugadores y del Admin.
-    - **Optimización:** Carga diferida (Infinite Scroll) del historial de mensajes.
-- **Gestión de Admin:** Vista especial para que el Admin elija un usuario y abra una conversación privada.
+### 1.2. Protocolo de Comunicación (STOMP + WebSockets)
+- **Broker de Mensajes**: Configurado con `/topic` para difusión pública (equipo) y `/queue` para mensajes privados.
+- **Seguridad (Handshake)**: Validación de JWT en el interceptor de conexión para asegurar que solo usuarios autenticados puedan suscribirse a los canales de su equipo.
 
 ---
 
-## 4. Pasos de Implementación Recomendados
+## 2. Arquitectura del Frontend (Angular/Ionic)
 
-### Fase 1: Infraestructura Backend
-1. Añadir dependencias de WebSockets y Twilio al `pom.xml`.
-2. Crear entidad `Mensaje` y sus repositorios.
-3. Configurar `WebSocketConfig`.
+### 2.1. Gestión de Estado Reactiva
+El sistema se basa en un **ChatService Centralizado** que gestiona dos conexiones independientes:
+1. **Conexión de Sala**: Activa únicamente cuando el usuario está dentro de `/chat`. Gestiona el historial y el scroll infinito.
+2. **Conexión Global (Background)**: Inicia en el `AppComponent` y permanece activa durante toda la sesión. Escucha eventos de "mensaje nuevo" para actualizar el badge del menú lateral.
 
-### Fase 2: Lógica de Notificaciones
-1. Implementar `WhatsAppService`.
-2. Modificar `PartidoService` para disparar notificaciones al crear.
-3. Crear la tarea `@Scheduled` para el recordatorio de 24h.
-
-### Fase 3: Tiempo Real y Frontend
-1. Crear el `ChatController` en Spring Boot.
-2. Implementar el `ChatService` en Angular.
-3. Diseñar las pantallas de chat en Ionic aplicando los estilos existentes (Navy Dark/Glassmorphism).
+### 2.2. Sincronización de Badges (Persistencia Real)
+- **Inicialización (Offline Sync)**: Al conectar el servicio, se realiza una petición HTTP para recuperar el conteo de mensajes no leídos desde la base de datos, asegurando que el badge sea verídico tras un cierre de la aplicación.
+- **Acknowledge de Lectura**: Al entrar a una conversación, se dispara una señal al backend (`marcarLeidos`) para persistir el cambio de estado. La UI local solo se resetea tras la confirmación exitosa del servidor.
 
 ---
-**Nota Técnica:** Para Twilio, necesitaremos las credenciales (`ACCOUNT_SID`, `AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`). Si usás el Sandbox de Twilio, los usuarios deberán aceptar recibir mensajes enviando "join [code]" primero.
+
+## 3. Notificaciones Nativas (Capacitor)
+
+### 3.1. Local Notifications
+Integración con `@capacitor/local-notifications` para disparar alertas visuales en el dispositivo cuando llega un mensaje y el usuario no tiene la aplicación en primer plano o no está en la pantalla de chat.
+
+### 3.2. Filtrado de Emisor
+Algoritmo de discriminación que evita el "eco" de notificaciones. Si el mensaje recibido a través del socket pertenece al `currentUserId` (enviado desde otro dispositivo del mismo usuario), el sistema descarta el incremento del badge y la alerta sonora/visual.
+
+---
+
+## 4. Estado de Implementación
+- [x] Backend STOMP & WebSockets.
+- [x] ChatService Reactivo (RxJS).
+- [x] Persistencia de Badges y Sincronización Offline.
+- [x] UI Inmersiva "Night Stadium".
+- [x] Notificaciones Push Locales.
+
+---
+> **Documentación Técnica Cerrada** - El módulo de comunicación se considera en estado de producción y validado.

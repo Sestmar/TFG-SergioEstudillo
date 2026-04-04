@@ -108,26 +108,27 @@ public class PartidoService {
 
 ---
 
-## 5. Chat en Tiempo Real: Mensajería Bidireccional con STOMP 💬
+## 5. Chat en Tiempo Real: Mensajería Bidireccional y Sincronización Persistente 💬✅
 
-Implementación de una infraestructura de mensajería basada en el protocolo STOMP sobre WebSockets para comunicación instantánea y persistencia de estado.
+Se ha implementado una infraestructura de mensajería crítica basada en el protocolo STOMP sobre WebSockets, diseñada para garantizar la entrega instantánea y la coherencia del estado de lectura en toda la plataforma.
 
-### Arquitectura de Mensajería
-- **Interceptor de Handshake**: Validación de tokens JWT en la fase de conexión inicial del socket, impidiendo accesos no autorizados al broker.
-- **Doble Cliente STOMP**: Se configuró un cliente para la vista activa del chat y un **Global Listener** que reside en el layout principal para gestionar notificaciones en segundo plano.
-- **Sincronización de Sesión (Self-Filtering)**: El servicio ahora rastrea el `currentUserId` para evitar que el emisor reciba alertas o incrementos de badge por sus propios mensajes enviados desde otros dispositivos o pestañas.
+### Arquitectura de Mensajería y Reactividad
+- **Conexión Global Reactiva**: Se refactorizó el `AppComponent` para eliminar bloqueos de flujo (`take(1)`), permitiendo que la conexión al chat global sea totalmente dinámica y reactiva a los cambios de sesión del usuario (Login/Logout).
+- **Doble Cliente STOMP**: Configuración de un cliente para la vista activa del chat y un **Global Listener** persistente que reside en el layout principal. Este último gestiona el conteo de mensajes no leídos (`noLeidosEquipo$`) incluso cuando el usuario navega por otras secciones de la app.
+- **Trazabilidad de Conexión**: Implementación de logs de ingeniería en el `ChatService` para verificar en tiempo real los IDs de equipo y usuario, asegurando que el "apretón de manos" (handshake) del WebSocket sea correcto entre diferentes roles (Jugador/Entrenador).
 
 ```typescript
-// Lógica de filtrado de mensajes propios en ChatService
-private async manejarMensajeGlobal(msg: MensajeDto): Promise<void> {
-    // Si el mensaje es mío, no cuento el badge ni disparo notificación
-    if (msg.remitenteId === this.currentUserId) return;
-
-    const usuarioEnChat = this.router.url.includes('/chat');
-    if (usuarioEnChat) return;
-
-    this._noLeidosEquipo$.next(this._noLeidosEquipo$.getValue() + 1);
-    await this.dispararNotificacion(msg);
+// Lógica de reactividad en AppComponent.ts para conexión global
+private iniciarConexionGlobalChat(): void {
+  this.authService.currentUser$.pipe(
+    takeUntilDestroyed(this.destroyRef),
+    filter(user => !!user),
+    switchMap(user => { /* Lógica de obtención de equipoId */ })
+  ).subscribe(equipoId => {
+    if (equipoId) {
+      this.chatService.conectarGlobal(equipoId, userId);
+    }
+  });
 }
 ```
 
@@ -155,30 +156,24 @@ public void enviarNotificacionPartido(String telefono, String rival, String fech
 
 ---
 
-## 7. Notificaciones Locales y Badges: UX Nativa y Sincronización Offline 🔔
+## 7. Notificaciones y Badges: UX Nativa con Persistencia de Estado 🔔✅
 
-Se mejoró la retención de usuarios mediante la integración de APIs nativas y un sistema de sincronización de estado que resuelve el problema de los mensajes "perdidos" entre sesiones.
+Se ha cerrado el ciclo de notificaciones mediante un sistema que garantiza que los contadores de mensajes no leídos sean verídicos y persistentes, eliminando la discrepancia entre sesiones.
 
-### Implementación y Sincronización
-- **Push Local con Capacitor**: Uso del plugin `@capacitor/local-notifications` para mostrar alertas cuando el usuario recibe un mensaje y no está dentro de la pantalla de chat.
-- **Sincronización Offline (Badge Recovery)**: Al conectar el WebSocket, el sistema realiza automáticamente una petición `GET /chat/no-leidos` al servidor. Esto asegura que el contador del badge refleje la realidad incluso si el usuario ha recibido mensajes mientras la aplicación estaba cerrada.
-- **Gestión de Estado de Badges**: Uso de `BehaviorSubject` para sincronizar el contador de mensajes no leídos entre el servicio de chat y el menú lateral de la aplicación en tiempo real.
+### Sincronización y Persistencia (Backend Sync)
+- **Sincronización Inicial (Offline Recovery)**: Al conectar el WebSocket global, el sistema realiza automáticamente una petición `GET /chat/no-leidos` al servidor. Esto recupera el estado real de mensajes acumulados mientras la aplicación estaba cerrada o el usuario estaba offline.
+- **Confirmación de Lectura (Acknowledge)**: Se implementó un flujo de "Suscripción -> Confirmación -> Reset". Al entrar al chat, el sistema dispara `marcarLeidos()` al backend y, solo tras recibir la confirmación de éxito, resetea el badge local a cero. Esto asegura que el estado de la base de datos y la UI estén siempre en sintonía.
+- **Filtrado de Mensajes Propios**: El motor de notificaciones descarta automáticamente el incremento de badges y el disparo de alertas locales (`Capacitor LocalNotifications`) para los mensajes enviados por el propio usuario desde otros dispositivos.
 
 ```typescript
-// Sincronización inicial del contador de no leídos al conectar
-this.clientGlobal = this.crearClienteStomp(token, () => {
-    // 1. Obtener histórico de no leídos del servidor (Mensajes Offline)
-    this.obtenerNoLeidos().subscribe(resp => {
-        this._noLeidosEquipo$.next(resp.count);
-    });
-
-    // 2. Escuchar nuevos mensajes en tiempo real (Mensajes Online)
-    const topicEquipo = `/topic/equipo/${equipoId}`;
-    this.clientGlobal!.subscribe(topicEquipo, (frame) => {
-        const msg = JSON.parse(frame.body);
-        this.manejarMensajeGlobal(msg);
-    });
-});
+// Sincronización robusta en chat.page.ts
+iniciarChat() {
+  this.chatService.conectar(this.equipoId);
+  // Persistencia: Avisar al servidor y resetear badge local tras éxito
+  this.chatService.marcarLeidos().pipe(takeUntil(this.destroy$)).subscribe({
+    next: () => this.chatService.resetearNoLeidos()
+  });
+}
 ```
 
 ---

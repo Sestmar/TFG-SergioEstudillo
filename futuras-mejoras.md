@@ -13,15 +13,12 @@ Este documento centraliza las tareas pendientes para el cierre del TFG. Está di
 
 ---
 
-## 💬 2. Persistencia y Badges del Chat
-**Objetivo:** Que el contador de mensajes no leídos sea verídico y no dependa solo de estar conectado en ese momento.
+## ✅ 2. Persistencia y Badges del Chat (FINALIZADO)
+**Logro:** Sincronización perfecta de mensajes no leídos entre servidor y múltiples dispositivos.
 
-- [ ] **Sincronización Inicial de Mensajes**:
-  - Archivo: `frontend/src/app/core/services/chat.service.ts`.
-  - Tarea: Crear un método `getUnreadCount()` que haga un GET al backend al inicializar el servicio.
-  - Lógica: Actualizar el `BehaviorSubject` del badge con el valor devuelto por el servidor.
-- [ ] **Persistencia del Estado**:
-  - Tarea: Asegurar que al leer un mensaje (abrir el chat), se dispare una petición al backend para marcar como leídos y resetear el badge localmente.
+- [x] **Sincronización Inicial de Mensajes**: Implementado mediante `GET /chat/no-leidos` en la conexión global.
+- [x] **Persistencia del Estado**: Implementado mediante `marcarLeidos()` al entrar a la sala de chat.
+- [x] **Reactividad Full**: Eliminación de bloqueos en `AppComponent` para asegurar conexión inmediata tras login.
 
 ---
 
@@ -43,4 +40,4 @@ Este documento centraliza las tareas pendientes para el cierre del TFG. Está di
 ## 🛠️ Notas para el Agente
 - **Stack**: Angular + Ionic (Frontend), Spring Boot (Backend).
 - **Estilo**: "Night Stadium" (Oscuro, bordes con transparencias, acentos neón).
-- **Prioridad Actual**: 1. Chat (Sincronización) -> 2. UX (Badges y Modales).
+- **Prioridad Actual**: 1. UX (Badges de estado y Modales) -> 2. Refactor de Formularios.

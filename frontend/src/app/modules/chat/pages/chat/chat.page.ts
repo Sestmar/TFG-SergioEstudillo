@@ -109,6 +109,9 @@ export class ChatPage implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({ error: (err) => console.error('Error historial equipo', err) });
       this.chatService.conectar(this.equipoId);
+      this.chatService.marcarLeidos().pipe(takeUntil(this.destroy$)).subscribe({
+        next: () => this.chatService.resetearNoLeidos()
+      });
     } else if (this.modoChat === 'privado' && this.destinatarioSeleccionado) {
       this.chatService.cargarHistorialPrivado(this.destinatarioSeleccionado.id)
         .pipe(takeUntil(this.destroy$))
