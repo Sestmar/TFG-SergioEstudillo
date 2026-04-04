@@ -617,7 +617,12 @@ ion-alert {
   .actions-grid-pro,
   .section-title,
   ion-spinner,
-  .loading-container {
+  .loading-container,
+  ion-select,
+  ion-checkbox,
+  ion-toggle,
+  .link-text,
+  .arrow {
     display: none !important;
   }
 
@@ -699,7 +704,27 @@ ion-alert {
     print-color-adjust: exact;
   }
 
-  // 6. AJUSTES FINALES
+  // 6. RESET VISUAL — Texto negro, sin sombras ni fondos oscuros
+  h1, h2, h3, h4, p, span, ion-label, ion-title {
+    color: black !important;
+    text-shadow: none !important;
+  }
+
+  .scoreboard-card,
+  .player-card-dark,
+  .player-identity-card,
+  .detailed-stats-card,
+  .event-card,
+  .dashboard-layout,
+  .main-content {
+    background: white !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    color: black !important;
+  }
+
+  // 7. AJUSTES FINALES
   @page {
     margin: 1.5cm;
     size: auto;

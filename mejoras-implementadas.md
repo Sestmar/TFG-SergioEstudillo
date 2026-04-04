@@ -374,66 +374,39 @@ async showConfirm(header: string, message: string): Promise<boolean> {
 
 ---
 
-## 13. Módulo de Reportes y Actas: Ingeniería de Impresión CSS 📄
+## 13. Módulo de Reportes y Actas: Ingeniería de Impresión Unificada 📄✅
 
-Se ha implementado un sistema de generación de documentos físicos y digitales (PDF) mediante el uso estratégico de Media Queries, permitiendo que el cuerpo técnico obtenga actas de partidos y fichas de jugadores sin necesidad de librerías externas pesadas.
+Se ha consolidado el sistema de generación de documentos físicos en un único punto oficial, garantizando la integridad de los reportes y eliminando el ruido visual de impresión en pantallas dinámicas.
 
 ### Desafío Técnico
-Las aplicaciones web modernas con temas oscuros e interfaces densas no son aptas para impresión por defecto; consumen demasiada tinta y muestran elementos de navegación (menús, botones de logout, pestañas) que ensucian el documento final. Además, los gráficos de ApexCharts no suelen renderizarse correctamente en el flujo de impresión estándar.
+La dispersión de botones de impresión en múltiples dashboards y ventanas modales generaba una experiencia fragmentada y propensa a errores de formato. Además, imprimir ventanas emergentes (modales) no proporcionaba el acabado profesional de un folio A4 requerido para un TFG.
 
 ### Solución e Implementación
-- **Motor de Limpieza `@media print`**: Creación de una capa de estilos en `global.scss` que se activa únicamente al imprimir. Esta capa oculta automáticamente más de 10 elementos de la interfaz (menús, spinners, botones de acción) y elimina decoraciones de *glassmorphism* (sombras, filtros de desenfoque).
-- **Inversión Cromática Automática**: Forzado de un esquema de color "Papel" (Fondo blanco, texto negro puro) mediante el uso de `!important` en las variables de root. Esto garantiza legibilidad máxima y ahorro de consumibles.
-- **Puntos de Entrada Estratégicos**: Integración de botones de impresión con el icono `print-outline` en el Acta de Partido (`match-detail`) y en el Panel del Jugador (`player-dashboard`), disparando la API nativa del navegador de forma reactiva.
-
-```scss
-// Lógica de purga de UI para impresión en global.scss
-@media print {
-  ion-menu-button, ion-tabs, .actions-grid-pro, apx-chart, .sidebar-left {
-    display: none !important;
-  }
-
-  body, ion-content, .dashboard-bg {
-    background: #ffffff !important;
-    color: #000000 !important;
-  }
-
-  .scoreboard-card, .player-card-dark {
-    border: 1px solid #cccccc !important;
-    box-shadow: none !important;
-  }
-}
-```
+- **Consolidación en Acta Oficial (MatchDetail)**: Se definió el componente `MatchDetailPage` como el único origen legítimo de impresión. Este componente actúa como un documento "vivo" que se adapta al estado del partido:
+    - **Fase Pre-Partido**: El acta imprime automáticamente la **Lista de Convocados** y alineaciones.
+    - **Fase Post-Partido**: El acta imprime los resultados finales, estadísticas y eventos (goles/tarjetas).
+- **Purga de Interfaz Dinámica**: Se eliminaron todos los métodos `print()` y botones de impresión de los Dashboards y del Modal de Convocatoria. Esto obliga al usuario a utilizar el flujo documental oficial, asegurando que el diseño del reporte sea consistente.
+- **Motor de Renderizado Plano**: Optimización del `@media print` para ignorar completamente la estructura de modales y menús, centrando el 100% de la tinta en la estructura de tabla del acta sobre fondo blanco puro.
 
 ---
 
 ## 14. Ingeniería de Impresión y Resolución de Invisibilidad de Actas 📄✅
 
-Se ha perfeccionado el motor de impresión CSS para garantizar que las actas oficiales de los partidos sean 100% fieles a la realidad deportiva, resolviendo problemas críticos de visibilidad de datos y de "limpieza" excesiva del DOM.
+Se ha perfeccionado el motor de impresión CSS para garantizar que las actas oficiales de los partidos sean 100% fieles a la realidad deportiva, resolviendo problemas críticos de visibilidad de datos.
 
 ### Desafío Técnico: El "Bug de la Tarjeta Invisible"
-Los navegadores, por una política de ahorro de tinta, omiten los colores de fondo (`background-color`) en la impresión. Esto provocaba que las tarjetas amarillas y rojas en el acta (`.card-indicator`) aparecieran como recuadros blancos vacíos, perdiendo información vital del partido. Además, un intento previo de optimización ocultó el contenedor raíz (`.main-container`), dejando el PDF totalmente en blanco.
+Los navegadores omiten los colores de fondo en la impresión por defecto. Esto provocaba que las tarjetas amarillas y rojas en el acta aparecieran blancas. 
 
 ### Solución e Implementación
-- **Forzado de Renderizado Cromático**: Implementación de la propiedad de CSS nivel 4 `print-color-adjust: exact` (con su prefijo `-webkit` para compatibilidad con Safari/Chrome). Esto obliga al motor de renderizado a pintar los fondos de las tarjetas con sus colores reglamentarios (`#ffd700` y `#ff0000`).
-- **Refactorización de Selectores de Exclusión**: Se ajustó el bloque `@media print` para ser selectivo. Ahora oculta elementos de UI (header, footer, menús, botones) pero mantiene explícitamente el `.main-container` e `ion-content`, asegurando que el flujo de datos del acta sea visible.
-- **Unificación de Versiones (Limpieza de Deuda Técnica)**: Se eliminaron tres archivos de estilos obsoletos (`global_print.scss`, `v2` y `v3`), consolidando toda la lógica de impresión en el archivo raíz `global.scss`.
+- **Forzado de Renderizado Cromático**: Implementación de `print-color-adjust: exact` para obligar al motor de renderizado a pintar los fondos de las tarjetas con sus colores reglamentarios.
+- **Refactorización de Selectores de Exclusión**: El bloque `@media print` ahora es selectivo: oculta UI molesta pero mantiene el contenedor de datos (`.main-container`) para evitar páginas en blanco.
 
 ```scss
-// Fix maestro para tarjetas y visibilidad en global.scss
+// Fix maestro para tarjetas en global.scss
 @media print {
-  // Asegurar que el contenedor principal sea visible
-  .main-container, ion-content {
-    display: block !important;
-    background: white !important;
-  }
-
-  // Ingeniería de color para tarjetas deportivas
   .card-indicator {
     -webkit-print-color-adjust: exact;
-    print-color-adjust: exact; // Forzar color en PDF
-    border: 1px solid rgba(0, 0, 0, 0.4) !important;
-
+    print-color-adjust: exact; 
     &.yellow { background-color: #ffd700 !important; }
     &.red    { background-color: #ff0000 !important; }
   }

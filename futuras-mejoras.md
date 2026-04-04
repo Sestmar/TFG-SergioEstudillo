@@ -8,8 +8,8 @@ Este documento centraliza las tareas pendientes para el cierre del TFG. Está di
 **Logro:** Generación de actas profesionales en A4 con fidelidad de color.
 
 - [x] **Definición de Estilos de Impresión (`@media print`)**: Implementado en `global.scss` con fix de tarjetas.
+- [x] **Consolidación en Acta de Partido (MatchDetail)**: Se eliminó la impresión de dashboards y modales para centralizar el flujo oficial en el detalle del partido (Pre y Post evento).
 - [x] **Unificación de Estilos**: Eliminación de archivos `global_print_vX.scss` obsoletos.
-- [x] **Botón de Impresión Global**: Integrado en `match-detail` y `player-dashboard`.
 
 ---
 
