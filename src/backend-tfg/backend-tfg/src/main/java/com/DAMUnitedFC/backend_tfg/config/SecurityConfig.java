@@ -79,6 +79,7 @@ public class SecurityConfig {
             "http://localhost:4200",
             "http://localhost:8100",
             "http://localhost",
+            "https://localhost",
             "capacitor://localhost",
             "https://tfg-dam-united-web.onrender.com"
         ));
