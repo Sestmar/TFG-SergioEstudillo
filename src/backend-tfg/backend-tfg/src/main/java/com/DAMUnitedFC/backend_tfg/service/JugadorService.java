@@ -54,6 +54,12 @@ public class JugadorService {
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
     }
 
+    public boolean isOwner(Integer idJugador, String email) {
+        return jugadorRepo.findById(idJugador)
+                .map(j -> j.getUsuario() != null && email.equals(j.getUsuario().getEmail()))
+                .orElse(false);
+    }
+
     public Jugador crear(JugadorDto dto) {
         return guardarOActualizar(new Jugador(), dto);
     }

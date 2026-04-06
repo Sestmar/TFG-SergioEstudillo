@@ -38,7 +38,7 @@ public class JugadorController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR') or @jugadorService.isOwner(#id, authentication.name)")
     public Jugador actualizar(@PathVariable Integer id, @RequestBody JugadorDto dto) {
         return jugadorService.actualizar(id, dto);
     }
