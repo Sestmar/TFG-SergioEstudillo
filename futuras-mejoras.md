@@ -32,8 +32,8 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 *Objetivo: Mitigar vectores comunes de ataque y corregir bugs funcionales de seguridad.*
 
 ### 2.1 Refactor de CORS y WebSockets
-- [ ] **CORS:** Eliminar `CorsConfig.java` (duplicado) y centralizar en `SecurityConfig.java` con whitelist estricta.
-- [ ] **WebSockets:** Restringir orígenes en `WebSocketConfig.java` (punto separado del CORS) para evitar ataques de Cross-Site WebSocket Hijacking.
+- [x] **CORS:** Eliminar `CorsConfig.java` (duplicado) y centralizar en `SecurityConfig.java` con whitelist estricta.
+- [x] **WebSockets:** Restringir orígenes en `WebSocketConfig.java` (punto separado del CORS) para evitar ataques de Cross-Site WebSocket Hijacking.
 
 ### 2.2 Validación de Archivos (Path Traversal)
 - [ ] **Sanitización en FileController:** Validar que el nombre del archivo no contenga `../` ni caracteres especiales.
