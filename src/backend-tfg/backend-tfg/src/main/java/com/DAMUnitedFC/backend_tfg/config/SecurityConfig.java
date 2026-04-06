@@ -78,6 +78,8 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:4200",
             "http://localhost:8100",
+            "http://localhost",
+            "capacitor://localhost",
             "https://tfg-dam-united-web.onrender.com"
         ));
 
