@@ -141,6 +141,11 @@ export class AuthService {
   getCurrentUser(): Observable<User> {
     return this.apiService.get<User>('/auth/me').pipe(
       tap(user => {
+        // El backend devuelve 'rol' (singular). Los guards usan 'roles' (array).
+        // Normalizamos para que ambos formatos estén disponibles.
+        if (user.rol && !user.roles) {
+          user.roles = [user.rol];
+        }
         this.currentUserSubject.next(user);
         this.isAuthenticatedSubject.next(true);
       })
