@@ -1,37 +1,68 @@
-# 📋 Backlog de Implementación Final - DAM United FC
+# 🛡️ Hoja de Ruta: Blindaje de Seguridad 2.0 — DAM United FC
 
-Este documento centraliza las tareas pendientes para el cierre del TFG. Está diseñado para ser procesado por un agente de IA (Claude/Gemini) de forma secuencial.
-
----
-
-## ✅ 1. Módulo de Reportes y Actas (FINALIZADO)
-**Logro:** Generación de actas profesionales en A4 con fidelidad de color.
-
-- [x] **Definición de Estilos de Impresión (`@media print`)**: Implementado en `global.scss` con fix de tarjetas.
-- [x] **Consolidación en Acta de Partido (MatchDetail)**: Se eliminó la impresión de dashboards y modales para centralizar el flujo oficial en el detalle del partido (Pre y Post evento).
-- [x] **Unificación de Estilos**: Eliminación de archivos `global_print_vX.scss` obsoletos.
+Este documento detalla el plan de acción técnico definitivo para resolver los hallazgos de la Auditoría de Seguridad. Integra el diagnóstico inicial de Claude y el análisis de arquitectura de Gemini.
 
 ---
 
-## ✅ 2. Persistencia y Badges del Chat (FINALIZADO)
-**Logro:** Sincronización perfecta de mensajes no leídos entre servidor y múltiples dispositivos.
+## 🚨 FASE 1: INCENDIOS (Prioridad Crítica — Ejecutar YA)
 
-- [x] **Sincronización Inicial de Mensajes**: Implementado mediante `GET /chat/no-leidos` en la conexión global.
-- [x] **Persistencia del Estado**: Implementado mediante `marcarLeidos()` al entrar a la sala de chat.
-- [x] **Reactividad Full**: Eliminación de bloqueos en `AppComponent` para asegurar conexión inmediata tras login.
+*Objetivo: Detener la exposición de credenciales, blindar el acceso administrativo y parchar vulnerabilidades del core.*
+
+### 1.1 Gestión de Secretos y Credenciales (Backend)
+- [x] **Externalizar Secretos:** Mover JWT Secret, Passwords de DB, Gmail y Twilio a variables de entorno en Render.
+- [x] **Configuración Segura:** Usar `${VARIABLE_NAME}` en `application.properties` sin valores hardcodeados.
+- [x] **Limpieza de Repo:** Agregar `application-local.properties` al `.gitignore`.
+- [x] **ROTACIÓN DE CLAVES:** Generar un nuevo JWT Secret y cambiar las passwords de Gmail/Twilio (están comprometidas).
+
+### 1.2 Autorización en Backend (Spring Security)
+- [x] **Habilitar Method Security:** Activar `@EnableMethodSecurity` en la configuración.
+- [x] **Blindar AdminController:** Aplicar `@PreAuthorize("hasRole('ADMIN')")` a todos sus métodos.
+- [x] **Blindar EquipoController:** Aplicar `@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")` (Usar rol `ENTRENADOR`, no `COACH`).
+- [x] **Blindar JugadorController:** Asegurar que solo el admin o el propio jugador puedan editar su perfil.
+
+### 1.3 Seguridad en Navegación y Vulnerabilidades de Angular (Frontend)
+- [ ] **ACTUALIZACIÓN CRÍTICA:** Migrar Angular de v17 a v18.2.15+ para cerrar múltiples CVEs de XSS (SVG, i18n).
+- [ ] **Guardias de Ruta:** Implementar `canActivate: [AuthGuard]` y `RoleGuard` en todas las rutas privadas de `app-routing.module.ts`.
+- [ ] **Bloqueo de UI:** Asegurar que los menús de Admin/Entrenador no se rendericen para usuarios sin el rol correspondiente.
 
 ---
 
-## ✅ 3. Refuerzo Visual y Coherencia de Marca (FINALIZADO)
-**Logro:** Identidad visual "Night Stadium" unificada en toda la plataforma.
+## ⚔️ FASE 2: FORTALECIMIENTO (Prioridad Alta — Esta Semana)
 
-- [x] **Estructura del Formulario de Perfil**: Agrupación en `form-section` con headers semánticos.
-- [x] **Estandarización de Modales (`.night-modal`)**: Clase global implementada e inyectada en controladores de modales (Tácticas, Convocatorias).
-- [x] **Lógica de Badges**: Los badges de estado del jugador ya reflejan la identidad visual del club.
+*Objetivo: Mitigar vectores comunes de ataque y corregir bugs funcionales de seguridad.*
+
+### 2.1 Refactor de CORS y WebSockets
+- [ ] **CORS:** Eliminar `CorsConfig.java` (duplicado) y centralizar en `SecurityConfig.java` con whitelist estricta.
+- [ ] **WebSockets:** Restringir orígenes en `WebSocketConfig.java` (punto separado del CORS) para evitar ataques de Cross-Site WebSocket Hijacking.
+
+### 2.2 Validación de Archivos (Path Traversal)
+- [ ] **Sanitización en FileController:** Validar que el nombre del archivo no contenga `../` ni caracteres especiales.
+- [ ] **Restricción de Directorio:** Forzar que las lecturas ocurran exclusivamente dentro de `target/uploads`.
+
+### 2.3 Seguridad y Lógica de Passwords
+- [ ] **Mínimo de caracteres:** Subir el requerimiento a 8 caracteres (Frontend + Backend).
+- [ ] **Fix Reset Password:** 
+  - El token debe tener expiración (1 hora).
+  - **Lógica Atómica:** No cambiar la contraseña en la DB si el envío del email falla. Informar al usuario del error.
+- [ ] **Protección XSRF:** Configurar la protección contra Cross-Site Request Forgery en Spring Security.
 
 ---
 
-## 🛠️ Notas para el Agente
-- **Stack**: Angular + Ionic (Frontend), Spring Boot (Backend).
-- **Estilo**: "Night Stadium" (Oscuro, bordes con transparencias, acentos neón).
-- **Estado Actual**: Fase de cierre y documentación final.
+## 💎 FASE 3: PULIDO PROFESIONAL (Prioridad Media/Baja — Antes de Junio)
+
+*Objetivo: Eliminar rastros de desarrollo y mejorar la observabilidad segura.*
+
+### 3.1 Limpieza de Entorno y Manejo de Errores
+- [ ] **URLs Hardcodeadas:** Eliminar referencias a `localhost:8080` en `MediaController.java` y otros.
+- [ ] **Global Exception Handler:** Dejar de exponer mensajes internos de excepciones al cliente. Devolver mensajes genéricos y loguear el detalle internamente.
+- [ ] **Eliminar e.printStackTrace():** Sustituir todas las trazas de error en consola por un logger profesional (`slf4j`).
+- [ ] **Limpiar Frontend:** Eliminar `console.log` y `console.error` que expongan objetos de usuario o tokens.
+
+### 3.2 Seguridad de Cabeceras y Cookies
+- [ ] **CSP Headers:** Agregar un `Content-Security-Policy` básico en el `index.html`.
+- [ ] **Migración JWT:** Mover el token de `localStorage` a una cookie `httpOnly` y `Secure` para mitigar ataques XSS residuales.
+
+---
+
+## 📈 NOTA PARA EL TFG
+Este documento sirve como evidencia de un proceso de **Auditoría y Remediación**. Al finalizar cada tarea, se debe marcar aquí para mantener la trazabilidad de la mejora continua del sistema.

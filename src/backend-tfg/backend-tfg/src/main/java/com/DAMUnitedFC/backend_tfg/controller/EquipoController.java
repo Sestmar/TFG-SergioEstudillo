@@ -3,6 +3,7 @@ package com.DAMUnitedFC.backend_tfg.controller;
 import com.DAMUnitedFC.backend_tfg.dto.EquipoDto;
 import com.DAMUnitedFC.backend_tfg.model.Equipo;
 import com.DAMUnitedFC.backend_tfg.service.EquipoService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,16 +29,19 @@ public class EquipoController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")
     public Equipo crearEquipo(@RequestBody EquipoDto equipoDto) {
         return equipoService.crear(equipoDto);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")
     public Equipo actualizarEquipo(@PathVariable Integer id, @RequestBody EquipoDto equipoDto) {
         return equipoService.actualizar(id, equipoDto);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void borrarEquipo(@PathVariable Integer id) {
         equipoService.borrar(id);
     }

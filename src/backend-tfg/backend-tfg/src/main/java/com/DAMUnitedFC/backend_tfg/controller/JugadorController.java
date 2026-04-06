@@ -6,6 +6,7 @@ import com.DAMUnitedFC.backend_tfg.dto.PlayerHistoryDto;
 import com.DAMUnitedFC.backend_tfg.model.Jugador;
 import com.DAMUnitedFC.backend_tfg.service.JugadorService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,16 +32,19 @@ public class JugadorController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")
     public Jugador crear(@RequestBody JugadorDto dto) {
         return jugadorService.crear(dto);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")
     public Jugador actualizar(@PathVariable Integer id, @RequestBody JugadorDto dto) {
         return jugadorService.actualizar(id, dto);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void borrar(@PathVariable Integer id) {
         jugadorService.borrar(id);
     }
