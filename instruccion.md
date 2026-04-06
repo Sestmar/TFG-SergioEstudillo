@@ -1,29 +1,26 @@
-Fase 2 COMPLETA. Resumen del 2.3:
+Resumen del fix:
 
-  Passwords — mínimo 8 caracteres
+  ┌─────────────────────┬────────┬────────┬─────────────────────┐
+  │       Paquete       │ Antes  │ Ahora  │       Por qué       │
+  ├─────────────────────┼────────┼────────┼─────────────────────┤
+  │                     │        │        │ Requería            │
+  │ @angular-eslint/*   │ ^17.0. │ ^18.0. │ @angular/cli < 18,  │
+  │ (5 paquetes)        │ 0      │ 0      │ conflicto con       │
+  │                     │        │        │ Angular 18          │
+  ├─────────────────────┼────────┼────────┼─────────────────────┤
+  │ @typescript-eslint/ │ ^6.0.0 │ ^7.0.0 │ Compatibilidad con  │
+  │ * (2 paquetes)      │        │        │ TypeScript 5.5      │
+  ├─────────────────────┼────────┼────────┼─────────────────────┤
+  │                     │        │        │ ^1.10.0 resolvía a  │
+  │ ng-apexcharts       │ ^1.10. │ ~1.12. │ 1.17.1 que requiere │
+  │                     │ 0      │ 0      │  Angular 20. 1.12.0 │
+  │                     │        │        │  soporta Angular 18 │
+  ├─────────────────────┼────────┼────────┼─────────────────────┤
+  │                     │        │        │ ng-apexcharts@1.12. │
+  │ apexcharts          │ ^3.46. │ ^3.53. │ 0 requiere          │
+  │                     │ 0      │ 0      │ apexcharts >=       │
+  │                     │        │        │ 3.53.0              │
+  └─────────────────────┴────────┴────────┴─────────────────────┘
 
-  - Frontend: login.page.ts, register.page.ts, reset-password.page.ts
-  → minLength(4/6) → minLength(8)
-  - Backend: RegistroUsuario.java → @Size(min = 8) + @NotBlank +
-  @Email. Controller con @Valid.
-
-  Reset Password — token con expiración
-
-  - Nueva entidad: PasswordResetToken.java — token UUID, relación con
-  Usuario, expiración 60 min
-  - Nuevo repositorio: PasswordResetTokenRepository.java
-  - forgot-password reescrito: genera token → guarda en DB → envía
-  email con link → todo @Transactional (si el email falla, el token se
-   revierte). Ya no cambia la contraseña directamente.
-  - reset-password nuevo endpoint: recibe token + newPassword → valida
-   expiración → cambia contraseña → elimina token usado.
-  - El frontend ya tenía los métodos correctos en auth.service.ts —
-  encaja sin cambios.
-
-  CSRF
-
-  - No se implementó porque JWT via header Authorization es inmune a
-  CSRF por diseño. Comentario técnico agregado en SecurityConfig.java.
-
-  Las 3 subtareas de la Fase 2 están tachadas. ¿Seguimos con la Fase
-  3?
+  El deploy en Render debería funcionar ahora. npm install pasa limpio
+   sin --legacy-peer-deps.
