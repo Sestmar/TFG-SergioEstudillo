@@ -36,6 +36,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // CSRF deshabilitado: la app usa JWT via header Authorization (no cookies).
+                // Los browsers no envían headers custom automáticamente, por lo que CSRF no aplica.
+                // Si se migra JWT a httpOnly cookies (Fase 3.2), habilitar CSRF con CookieCsrfTokenRepository.
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // 1. Permitir OPTIONS (Preflight)

@@ -29,7 +29,7 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
         </ion-item>
         <div *ngIf="password?.invalid && (password?.dirty || password?.touched)" class="validation-error">
           <span *ngIf="password?.errors?.['required']">La contraseña es requerida.</span>
-          <span *ngIf="password?.errors?.['minlength']">Debe tener al menos 6 caracteres.</span>
+          <span *ngIf="password?.errors?.['minlength']">Debe tener al menos 8 caracteres.</span>
         </div>
         <ion-item lines="full" class="ion-margin-bottom auth-item">
           <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
@@ -70,7 +70,7 @@ export class ResetPasswordPage implements OnInit {
     this.token = this.route.snapshot.queryParamMap.get('token'); // Captura el token de la URL
 
     this.resetForm = this.fb.group({
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', Validators.required]
     }, { validators: this.passwordMatchValidator });
   }

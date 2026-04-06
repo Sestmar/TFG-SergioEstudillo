@@ -36,15 +36,15 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 - [x] **WebSockets:** Restringir orígenes en `WebSocketConfig.java` (punto separado del CORS) para evitar ataques de Cross-Site WebSocket Hijacking.
 
 ### 2.2 Validación de Archivos (Path Traversal)
-- [ ] **Sanitización en FileController:** Validar que el nombre del archivo no contenga `../` ni caracteres especiales.
-- [ ] **Restricción de Directorio:** Forzar que las lecturas ocurran exclusivamente dentro de `target/uploads`.
+- [x] **Sanitización en FileController:** Validar que el nombre del archivo no contenga `../` ni caracteres especiales.
+- [x] **Restricción de Directorio:** Forzar que las lecturas ocurran exclusivamente dentro de `target/uploads`.
 
 ### 2.3 Seguridad y Lógica de Passwords
-- [ ] **Mínimo de caracteres:** Subir el requerimiento a 8 caracteres (Frontend + Backend).
-- [ ] **Fix Reset Password:** 
+- [x] **Mínimo de caracteres:** Subir el requerimiento a 8 caracteres (Frontend + Backend).
+- [x] **Fix Reset Password:** 
   - El token debe tener expiración (1 hora).
   - **Lógica Atómica:** No cambiar la contraseña en la DB si el envío del email falla. Informar al usuario del error.
-- [ ] **Protección XSRF:** Configurar la protección contra Cross-Site Request Forgery en Spring Security.
+- [x] **Protección XSRF:** No aplica — la app usa JWT via header Authorization (no cookies), por lo que es inmune a CSRF por diseño. Documentado en SecurityConfig.
 
 ---
 

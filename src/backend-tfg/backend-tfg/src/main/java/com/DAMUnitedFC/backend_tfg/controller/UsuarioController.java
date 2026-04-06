@@ -3,7 +3,9 @@ package com.DAMUnitedFC.backend_tfg.controller;
 import com.DAMUnitedFC.backend_tfg.dto.AuthResponseDto;
 import com.DAMUnitedFC.backend_tfg.dto.LoginDto;
 import com.DAMUnitedFC.backend_tfg.dto.RegistroUsuario;
+import com.DAMUnitedFC.backend_tfg.model.PasswordResetToken;
 import com.DAMUnitedFC.backend_tfg.model.Usuario;
+import com.DAMUnitedFC.backend_tfg.repository.PasswordResetTokenRepository;
 import com.DAMUnitedFC.backend_tfg.service.AuthService;
 import com.DAMUnitedFC.backend_tfg.service.EmailService;
 import com.DAMUnitedFC.backend_tfg.service.JwtService;
@@ -14,6 +16,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.transaction.annotation.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,21 +37,24 @@ public class UsuarioController {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final UsuarioService usuarioService;
+    private final PasswordResetTokenRepository tokenRepository;
 
     public UsuarioController(AuthService authService,
                              JwtService jwtService,
                              AuthenticationManager authenticationManager,
                              EmailService emailService,
-                             UsuarioService usuarioService) {
+                             UsuarioService usuarioService,
+                             PasswordResetTokenRepository tokenRepository) {
         this.authService = authService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.emailService = emailService;
         this.usuarioService = usuarioService;
+        this.tokenRepository = tokenRepository;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegistroUsuario registroDto) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegistroUsuario registroDto) {
         try {
             if (registroDto.getEmail() != null) {
                 registroDto.setEmail(registroDto.getEmail().trim().toLowerCase());
@@ -60,28 +67,65 @@ public class UsuarioController {
     }
 
     @PostMapping("/forgot-password")
+    @Transactional
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");
 
-        Usuario usuario = usuarioService.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        String tempPassword = UUID.randomUUID().toString().substring(0, 8);
-        usuarioService.resetPassword(email, tempPassword);
-
-        try {
-            emailService.sendEmail(
-                    email,
-                    "Recuperación de Contraseña - Tu Club de Fútbol",
-                    "Hola " + usuario.getNombre() + ",\n\n" +
-                            "Tu nueva contraseña temporal es: " + tempPassword + "\n\n" +
-                            "Por favor, entra en la app y cámbiala lo antes posible."
-            );
-        } catch (Exception e) {
-            // Email no enviado — se continúa sin interrumpir el flujo
+        // Siempre devolvemos el mismo mensaje para no revelar si el email existe
+        var usuarioOpt = usuarioService.findByEmail(email);
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.ok(Map.of("message", "Si el email existe, se han enviado las instrucciones."));
         }
 
+        Usuario usuario = usuarioOpt.get();
+
+        // Eliminar tokens previos de este usuario
+        tokenRepository.deleteByUsuario(usuario);
+
+        // Generar token seguro con expiración de 60 minutos
+        String resetToken = UUID.randomUUID().toString();
+        tokenRepository.save(new PasswordResetToken(resetToken, usuario));
+
+        // Enviar email — si falla, @Transactional revierte el token guardado
+        String resetLink = "https://tfg-dam-united-web.onrender.com/auth/reset-password?token=" + resetToken;
+        emailService.sendEmail(
+                email,
+                "Recuperación de Contraseña - DAM United FC",
+                "Hola " + usuario.getNombre() + ",\n\n" +
+                        "Se ha solicitado un cambio de contraseña para tu cuenta.\n\n" +
+                        "Hacé clic en el siguiente enlace para restablecer tu contraseña:\n" +
+                        resetLink + "\n\n" +
+                        "Este enlace expira en 60 minutos.\n" +
+                        "Si no solicitaste este cambio, ignorá este mensaje."
+        );
+
         return ResponseEntity.ok(Map.of("message", "Si el email existe, se han enviado las instrucciones."));
+    }
+
+    @PostMapping("/reset-password")
+    @Transactional
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        String token = request.get("token");
+        String newPassword = request.get("newPassword");
+
+        if (newPassword == null || newPassword.length() < 8) {
+            return ResponseEntity.badRequest().body(Map.of("error", "La contraseña debe tener al menos 8 caracteres."));
+        }
+
+        PasswordResetToken resetToken = tokenRepository.findByToken(token)
+                .orElse(null);
+
+        if (resetToken == null || resetToken.isExpired()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El enlace es inválido o ha expirado."));
+        }
+
+        // Cambiar contraseña
+        usuarioService.resetPassword(resetToken.getUsuario().getEmail(), newPassword);
+
+        // Eliminar token usado
+        tokenRepository.delete(resetToken);
+
+        return ResponseEntity.ok(Map.of("message", "Contraseña actualizada correctamente."));
     }
 
     @PostMapping("/login")

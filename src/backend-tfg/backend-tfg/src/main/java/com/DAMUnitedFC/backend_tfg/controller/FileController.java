@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -57,7 +58,18 @@ public class FileController {
     @GetMapping("/files/{fileName:.+}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) {
         try {
+            // Sanitización: rechazar secuencias de escape de directorio
+            if (fileName.contains("..")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+
+            // Validación: el archivo debe estar DENTRO del directorio de uploads
+            if (!filePath.startsWith(this.fileStorageLocation)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
             Resource resource = new UrlResource(filePath.toUri());
 
             if (resource.exists()) {

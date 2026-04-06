@@ -39,7 +39,7 @@ export class RegisterPage implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       // El teléfono es opcional en tu HTML, pero si lo pones, valida el formato
       // telefono: ['', [Validators.pattern(/^[0-9]{9}$/)]], 
-      password: ['', [Validators.required, Validators.minLength(4)]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', [Validators.required]]
     }, {
       validators: (group: FormGroup) => {
