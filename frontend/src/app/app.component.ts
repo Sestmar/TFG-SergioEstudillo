@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
 
 import { AuthService } from './core/services/auth/auth.service';
-import { ChatService } from './core/services/chat/chat.service';
+import { ChatService } from '@core/services/chat/chat.service';
 import { PlayerService } from './core/services/player/player.service';
 import { CoachService } from './core/services/coach/coach.service';
 

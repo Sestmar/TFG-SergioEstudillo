@@ -18,7 +18,7 @@ import { PlayerService } from 'src/app/core/services/player/player.service';
 import { TeamService } from 'src/app/core/services/team/team.service';
 import { NotificationService } from 'src/app/core/services/notification/notification.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
-import { ChatService } from 'src/app/core/services/chat/chat.service';
+import { ChatService } from '@core/services/chat/chat.service';
 
 interface DashboardStats {
   totalConvocations: number;

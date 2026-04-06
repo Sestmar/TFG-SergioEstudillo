@@ -9,7 +9,7 @@ import {
   OnChanges,
   SimpleChanges
 } from '@angular/core';
-import { MensajeDto, EnviarMensajeDto } from 'src/app/core/services/chat/chat.service';
+import { MensajeDto, EnviarMensajeDto } from '@core/services/chat/chat.service';
 
 @Component({
   selector: 'app-chat-room',

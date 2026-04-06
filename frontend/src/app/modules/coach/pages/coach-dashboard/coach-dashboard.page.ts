@@ -9,7 +9,7 @@ import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
-import { ChatService } from 'src/app/core/services/chat/chat.service';
+import { ChatService } from '@core/services/chat/chat.service';
 import { User, Partido, Jugador, PlayerSeasonStat } from 'src/app/shared/models/models';
 
 interface CoachStats {

@@ -4,7 +4,7 @@ import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { AuthService } from 'src/app/core/services/auth/auth.service';
-import { ChatService, MensajeDto, EnviarMensajeDto } from 'src/app/core/services/chat/chat.service';
+import { ChatService, MensajeDto, EnviarMensajeDto } from '@core/services/chat/chat.service';
 import { AdminService } from 'src/app/core/services/admin/admin.service';
 import { User, AdminUserDto } from 'src/app/shared/models/models';
 import { environment } from 'src/environments/environment';
