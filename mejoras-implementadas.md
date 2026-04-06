@@ -397,4 +397,72 @@ Los navegadores omiten los colores de fondo en la impresión por defecto. Esto p
 
 ---
 
+## 5. Blindaje de Seguridad y Gestión de Secretos 🛡️
+
+Se ha realizado una auditoría y re-arquitectura completa de la seguridad para eliminar vulnerabilidades críticas de exposición de datos y accesos no autorizados.
+
+### Desafío Técnico
+El proyecto presentaba credenciales críticas (JWT Secret, contraseñas de Gmail y Twilio) hardcodeadas en el código fuente, lo que comprometía la integridad de la plataforma. Además, la autorización en el backend era permisiva, permitiendo acceso a rutas administrativas sin validación de roles y exponiendo CVEs de seguridad en Angular 17.
+
+### Solución e Implementación
+- **Externalización de Secretos**: Migración total de la configuración sensible a **Variables de Envorno** (`System.getenv()`). Se configuró `application.properties` para inyectar valores dinámicos desde el panel de Render en producción y desde un perfil local ignorado por Git en desarrollo.
+- **Autorización Granular (Method Security)**: Activación de `@EnableMethodSecurity` en Spring Security. Se implementó el control de acceso a nivel de método mediante la anotación `@PreAuthorize` en controladores críticos (`AdminController`, `EquipoController`, `JugadorController`).
+- **Infraestructura de Navegación Segura**:
+  - **Actualización Angular 18**: Migración a la versión 18.2.15+ para cerrar múltiples vulnerabilidades conocidas de *Cross-Site Scripting* (XSS) en el motor de renderizado.
+  - **Guardias de Ruta Reactivos**: Implementación de `AuthGuard` y `RoleGuard` en Angular para prevenir el acceso a vistas administrativas mediante la manipulación de la URL en el navegador.
+
+```java
+// Implementación de seguridad a nivel de controlador
+@RestController
+@RequestMapping("/api/admin")
+@PreAuthorize("hasRole('ADMIN')") // Bloqueo total a nivel de clase
+public class AdminController {
+    
+    @PostMapping("/usuarios/rol")
+    @PreAuthorize("hasRole('ADMIN')") // Doble validación para operaciones críticas
+    public ResponseEntity<?> cambiarRol(@RequestBody RolUpdateDto dto) {
+        return authService.updateUserRole(dto);
+    }
+}
+```
+
+---
+
+## 6. Fortalecimiento de Accesos y Lógica de Recuperación Segura ⚔️
+
+Se ha reforzado la robustez de los vectores de ataque más comunes (CORS, Path Traversal) y se ha re-diseñado el flujo de recuperación de cuentas para cumplir con estándares profesionales de seguridad.
+
+### Desafío Técnico
+La aplicación permitía peticiones desde cualquier origen (`*`) y carecía de validación en la lectura de archivos, lo que abría la puerta a ataques de *Cross-Site WebSocket Hijacking* y *Path Traversal*. Además, el sistema de recuperación de contraseña enviaba claves temporales por email antes de confirmar su persistencia, generando inconsistencias y riesgos de seguridad.
+
+### Solución e Implementación
+- **Centralización de CORS y WebSocket Security**: Se eliminaron configuraciones dispersas (`CorsConfig.java`) para centralizar la seguridad en `SecurityConfig.java`. Se implementó una whitelist estricta y se restringieron los orígenes de WebSockets para evitar el secuestro de conexiones.
+- **Blindaje contra Path Traversal**: Implementación de algoritmos de sanitización en `FileController.java`. El sistema ahora normaliza las rutas y bloquea explícitamente cualquier secuencia de escape (`..`) o acceso fuera del directorio raíz de `uploads`.
+- **Sistema de Recuperación por Tokens (Atomicidad)**:
+  - **Entidad `PasswordResetToken`**: Creación de una tabla de tokens con relación uno-a-uno, UUID seguro y expiración automática de 60 minutos.
+  - **Atomicidad Transaccional**: El flujo de recuperación se marcó con `@Transactional`. Si el servicio de Gmail falla al enviar el correo, la base de datos realiza un *rollback* automático del token, evitando que el usuario intente usar un enlace que nunca recibió.
+  - **Validación de 8 Caracteres**: Se elevó el requisito mínimo de seguridad en contraseñas a 8 caracteres, validado mediante `@Size` en Spring Boot y `Validators.minLength` en Angular 18.
+
+```java
+// Lógica atómica de recuperación de contraseña en UsuarioController.java
+@PostMapping("/forgot-password")
+@Transactional
+public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+    Usuario usuario = usuarioService.findByEmail(request.get("email")).get();
+    
+    // Generación de token único con expiración (60 min)
+    String resetToken = UUID.randomUUID().toString();
+    tokenRepository.save(new PasswordResetToken(resetToken, usuario));
+
+    // Si sendEmail lanza excepción, el token se borra automáticamente (Rollback)
+    emailService.sendEmail(email, "Recuperación de Contraseña", "Link: " + resetLink);
+    
+    return ResponseEntity.ok("Instrucciones enviadas");
+}
+```
+
+---
+
 > **Estado de la Plataforma**: Arquitectura robusta, escalable y validada bajo estándares profesionales de desarrollo de software.
+
+
