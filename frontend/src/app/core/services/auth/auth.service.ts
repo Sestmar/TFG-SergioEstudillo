@@ -141,11 +141,16 @@ export class AuthService {
   getCurrentUser(): Observable<User> {
     return this.apiService.get<User>('/auth/me').pipe(
       tap(user => {
-        // El backend devuelve 'rol' (singular). Los guards usan 'roles' (array).
-        // Normalizamos para que ambos formatos estén disponibles.
-        if (user.rol && !user.roles) {
-          user.roles = [user.rol];
+        // Normalizar roles: eliminar prefijo ROLE_ y pasar a MAYÚSCULAS.
+        // El backend puede enviar "ADMIN", "ROLE_ADMIN", "admin", etc.
+        // El frontend siempre trabaja con: ADMIN, ENTRENADOR, JUGADOR.
+        const normalizeRole = (r: string) => r.toUpperCase().replace('ROLE_', '');
+
+        if (user.rol) {
+          user.rol = normalizeRole(user.rol);
         }
+        user.roles = user.roles?.map(normalizeRole) ?? (user.rol ? [user.rol] : []);
+
         this.currentUserSubject.next(user);
         this.isAuthenticatedSubject.next(true);
       })

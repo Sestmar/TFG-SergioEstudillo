@@ -95,11 +95,15 @@ export class AdminDashboardPage implements OnInit {
 
   async loadData() {
     this.loading = true;
-    
+
     // 1. Cargar Equipos
     this.adminSvc.getTeams().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => { this.teams = res; },
-      error: () => this.loading = false
+      error: (err) => {
+        console.error('Error cargando equipos:', err);
+        this.presentToast('Error cargando equipos (' + (err.status || 'sin conexión') + ')', 'danger');
+        this.loading = false;
+      }
     });
 
     // 2. Cargar Usuarios y calcular candidatos manualmente

@@ -54,8 +54,8 @@ public class Usuario implements UserDetails {
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (this.rol == null) return List.of();
-        String authority = this.rol.startsWith("ROLE_") ? this.rol : "ROLE_" + this.rol;
-        return List.of(new SimpleGrantedAuthority(authority));
+        String normalized = this.rol.toUpperCase().replace("ROLE_", "");
+        return List.of(new SimpleGrantedAuthority("ROLE_" + normalized));
     }
 
     @Override

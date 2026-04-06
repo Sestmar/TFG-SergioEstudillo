@@ -52,14 +52,17 @@ public class AdminService {
         this.partidoService = partidoService;
     }
 
+    @Transactional(readOnly = true)
     public List<Usuario> getCandidatos() {
         return usuarioRepo.findCandidatosSinEquipo();
     }
 
+    @Transactional(readOnly = true)
     public List<Entrenador> getCandidatosEntrenadores() {
         return entrenadorRepo.findEntrenadoresSinEquipo();
     }
 
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> getUsuariosActivos() {
         List<Map<String, Object>> activos = new ArrayList<>();
         for (Usuario u : usuarioRepo.findAll()) {
@@ -146,6 +149,7 @@ public class AdminService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> getEquiposAdmin() {
         List<Map<String, Object>> respuesta = new ArrayList<>();
         for (Equipo eq : equipoRepo.findAll()) {

@@ -64,7 +64,10 @@ public class SecurityConfig {
                         // 5. WebSocket endpoint
                         .requestMatchers("/ws/**").permitAll()
 
-                        // 4. Todo lo demás cerrado
+                        // 6. Rutas de admin: protegidas por rol a nivel de filtro (belt+suspenders con @PreAuthorize)
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // 4. Todo lo demás requiere autenticación
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
