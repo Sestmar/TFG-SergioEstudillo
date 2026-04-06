@@ -21,9 +21,9 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 - [x] **Blindar JugadorController:** Asegurar que solo el admin o el propio jugador puedan editar su perfil.
 
 ### 1.3 Seguridad en Navegación y Vulnerabilidades de Angular (Frontend)
-- [ ] **ACTUALIZACIÓN CRÍTICA:** Migrar Angular de v17 a v18.2.15+ para cerrar múltiples CVEs de XSS (SVG, i18n).
-- [ ] **Guardias de Ruta:** Implementar `canActivate: [AuthGuard]` y `RoleGuard` en todas las rutas privadas de `app-routing.module.ts`.
-- [ ] **Bloqueo de UI:** Asegurar que los menús de Admin/Entrenador no se rendericen para usuarios sin el rol correspondiente.
+- [x] **ACTUALIZACIÓN CRÍTICA:** Migrar Angular de v17 a v18.2.15+ para cerrar múltiples CVEs de XSS (SVG, i18n).
+- [x] **Guardias de Ruta:** Implementar `canActivate: [AuthGuard]` y `RoleGuard` en todas las rutas privadas de `app-routing.module.ts`.
+- [x] **Bloqueo de UI:** Asegurar que los menús de Admin/Entrenador no se rendericen para usuarios sin el rol correspondiente.
 
 ---
 
