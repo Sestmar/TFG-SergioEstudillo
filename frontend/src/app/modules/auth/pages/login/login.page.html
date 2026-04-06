@@ -42,7 +42,8 @@
             <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" (click)="togglePasswordVisibility()" class="eye-icon"></ion-icon>
           </div>
           <div class="error-msg" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-            La contraseña es requerida.
+            <span *ngIf="loginForm.get('password')?.errors?.['required']">La contraseña es requerida.</span>
+            <span *ngIf="loginForm.get('password')?.errors?.['minlength']">Mínimo 4 caracteres.</span>
           </div>
         </div>
 
