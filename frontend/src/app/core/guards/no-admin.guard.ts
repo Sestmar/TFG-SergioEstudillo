@@ -36,7 +36,7 @@ export class NoAdminGuard implements CanActivate {
         const isAdmin = rol.includes('ADMIN');
 
         if (isAdmin) {
-          this.router.navigate(['/admin-dashboard']);
+          this.router.navigate(['/admin']);
           return false;
         }
 

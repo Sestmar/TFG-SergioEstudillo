@@ -31,12 +31,12 @@ export class DashboardPage implements OnInit {
     // IMPORTANTE: Failsafe Redirect (Redirección de seguridad según rol)
     this.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       if (user) {
-        if (user.roles.includes('ADMIN')) {
-          this.router.navigate(['/admin/dashboard'], { replaceUrl: true });
-        } else if (user.roles.includes('ENTRENADOR')) {
-          this.router.navigate(['/coach/dashboard'], { replaceUrl: true });
-        } else if (user.roles.includes('JUGADOR')) {
-          this.router.navigate(['/player/dashboard'], { replaceUrl: true });
+        if (user.roles?.includes('ADMIN')) {
+          this.router.navigate(['/admin'], { replaceUrl: true });
+        } else if (user.roles?.includes('ENTRENADOR')) {
+          this.router.navigate(['/coach-dashboard'], { replaceUrl: true });
+        } else if (user.roles?.includes('JUGADOR')) {
+          this.router.navigate(['/player-dashboard'], { replaceUrl: true });
         }
       }
     });

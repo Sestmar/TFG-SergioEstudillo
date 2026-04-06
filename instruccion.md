@@ -1,12 +1,35 @@
-El problema era una desincronización entre backend y frontend:
+Resumen de lo que encontré y corregí:
 
-  - Backend devuelve { rol: "ADMIN" } (campo singular)
-  - RoleGuard busca user.roles?.some(...) (array)
-  - roles era siempre undefined → guard rechazaba → rebote a landing
+  El admin no estaba "ciego" por un problema de backend o CORS. El
+  problema eran rutas fantasma — redirects a rutas que no existen en
+  app-routing.module.ts:
 
-  El fix: en getCurrentUser(), cuando llega el usuario del backend, si
-   tiene rol pero no roles, se crea roles = [rol]. Así el RoleGuard,
-  el login.page.ts, y cualquier otro componente que busque roles como
-  array funcionan correctamente.
+  Archivo: no-admin.guard.ts:39
+  Ruta incorrecta: /admin-dashboard
+  Ruta correcta: /admin
+  Efecto: Admin rebotado al intentar entrar al chat
+  ────────────────────────────────────────
+  Archivo: dashboard.page.ts:35
+  Ruta incorrecta: /admin/dashboard
+  Ruta correcta: /admin
+  Efecto: Admin redirigido a wildcard → landing
+  ────────────────────────────────────────
+  Archivo: dashboard.page.ts:37
+  Ruta incorrecta: /coach/dashboard
+  Ruta correcta: /coach-dashboard
+  Efecto: Coach redirigido a landing
+  ────────────────────────────────────────
+  Archivo: dashboard.page.ts:39
+  Ruta incorrecta: /player/dashboard
+  Ruta correcta: /player-dashboard
+  Efecto: Jugador redirigido a landing
 
-  Un cambio de 3 líneas. Es así de simple. ¿Se entiende?
+  También agregué ?. (optional chaining) en user.roles?.includes() del
+   dashboard para evitar crash si roles es undefined.
+
+  Con el fix anterior de getCurrentUser() que normaliza rol → roles, y
+   estos redirects corregidos, el flujo ahora es:
+
+  Login → Token guardado → GET /me → roles = [user.rol] →
+  redirectByRole → ruta correcta → AuthGuard ve isAuthenticated = true
+   → RoleGuard ve roles con datos → acceso concedido.
