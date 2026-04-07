@@ -150,7 +150,25 @@ ion-content { --background: linear-gradient(180deg, #0f172a 0%, #050505 100%); }
 
             .status-dot {
                 display: flex; align-items: center; gap: 5px;
-                .dot { width: 8px; height: 8px; background: var(--secondary); border-radius: 50%; box-shadow: 0 0 5px var(--secondary); }
+                cursor: default;
+
+                .dot {
+                    width: 8px; height: 8px;
+                    border-radius: 50%;
+
+                    &.estado-activo {
+                        background: #22c55e;
+                        box-shadow: 0 0 6px #22c55e;
+                    }
+                    &.estado-lesionado {
+                        background: #f59e0b;
+                        box-shadow: 0 0 6px #f59e0b;
+                    }
+                    &.estado-baja {
+                        background: #ef4444;
+                        box-shadow: 0 0 6px #ef4444;
+                    }
+                }
             }
         }
     }

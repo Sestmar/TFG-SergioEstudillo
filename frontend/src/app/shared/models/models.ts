@@ -240,6 +240,7 @@ export interface PublicPlayer {
     fotoUrl: string;
     goles: number;
     asistencias: number;
+    estado?: string;
 }
 
 export type UserRole = 'ADMIN' | 'ENTRENADOR' | 'JUGADOR' | 'PADRE';

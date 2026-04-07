@@ -115,8 +115,8 @@
                     <span class="label">ASISTENCIAS</span>
                     <span class="val">{{ p.asistencias || 0 }}</span>
                 </div>
-                <div class="status-dot">
-                    <div class="dot"></div>
+                <div class="status-dot" [title]="p.estado || 'ACTIVO'">
+                    <div class="dot" [ngClass]="getEstadoClass(p.estado)"></div>
                 </div>
             </div>
         </div>

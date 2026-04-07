@@ -61,6 +61,7 @@ public class PublicService {
             List<Alineacion> participaciones = alineacionRepo.findByJugador(j);
             dto.setGoles(participaciones.stream().mapToInt(a -> a.getGoles() != null ? a.getGoles() : 0).sum());
             dto.setAsistencias(participaciones.stream().mapToInt(a -> a.getAsistencias() != null ? a.getAsistencias() : 0).sum());
+            dto.setEstado(j.getEstado());
             return dto;
         }).collect(Collectors.toList());
     }

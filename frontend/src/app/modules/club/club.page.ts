@@ -128,4 +128,13 @@ export class ClubPage implements OnInit {
     this.staff = [];
     this.coachName = null;
   }
+
+  getEstadoClass(estado?: string): string {
+    switch (estado?.toUpperCase()) {
+      case 'LESIONADO': return 'estado-lesionado';
+      case 'BAJA':      return 'estado-baja';
+      case 'ACTIVO':
+      default:          return 'estado-activo';
+    }
+  }
 }

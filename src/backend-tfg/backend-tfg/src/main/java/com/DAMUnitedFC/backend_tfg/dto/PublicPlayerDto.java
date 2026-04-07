@@ -15,4 +15,7 @@ public class PublicPlayerDto {
     // Estadísticas básicas para la ficha pública
     private int goles;
     private int asistencias;
+
+    // Estado físico del jugador (ACTIVO, LESIONADO, BAJA)
+    private String estado;
 }

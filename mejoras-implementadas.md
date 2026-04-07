@@ -565,4 +565,52 @@ Todos los `href="#..."` del navbar y footer se reemplazaron por `(click)="scroll
 - `landing.page.html` — reemplazados `href="#..."` por `(click)="scrollTo('...')"`
 - `landing.page.scss` — añadido `cursor: pointer` a `.nav-link` y `.footer-link`
 
+---
+
+## 17. Zona Pública /club: Estado Físico del Jugador en Tiempo Real 🟢🟡🔴✅
+
+Se dio vida al `status-dot` de las tarjetas de jugador en la Zona del Aficionado, conectándolo al campo `estado` real de cada jugador en la base de datos.
+
+### Desafío Técnico
+
+El componente `club.page` mostraba un punto verde fijo en cada tarjeta de jugador — hardcodeado en CSS con `background: var(--secondary)`. El campo `estado` del modelo `Jugador` existía en el backend pero nunca se exponía en el endpoint público, por lo que el frontend no tenía forma de conocer si un jugador estaba activo, lesionado o de baja.
+
+### Solución e Implementación
+
+**Cadena de cambios backend → frontend sin romper nada existente**
+
+- **`PublicPlayerDto.java`**: Se añadió el campo `private String estado` al DTO público. Al ser un campo nuevo, los clientes que no lo consumen simplemente lo ignoran — sin breaking change.
+- **`PublicService.java`**: Se añadió `dto.setEstado(j.getEstado())` en el método `getPublicRoster()`, justo tras el mapping de goles y asistencias. Un única línea que lee el campo ya existente del modelo `Jugador`.
+- **`models.ts`**: Se añadió `estado?: string` como campo opcional en la interfaz `PublicPlayer`. El `?` garantiza compatibilidad total hacia atrás — si el backend devuelve null o el campo no existe, TypeScript no lanza error.
+- **`club.page.ts`**: Se añadió el método `getEstadoClass(estado?)` con un `switch` normalizado (`toUpperCase()`) que devuelve la clase CSS correspondiente. El `default` devuelve siempre `estado-activo`, por lo que cualquier valor desconocido o nulo se muestra en verde sin errores.
+
+```typescript
+getEstadoClass(estado?: string): string {
+  switch (estado?.toUpperCase()) {
+    case 'LESIONADO': return 'estado-lesionado';
+    case 'BAJA':      return 'estado-baja';
+    case 'ACTIVO':
+    default:          return 'estado-activo';
+  }
+}
+```
+
+- **`club.page.html`**: El `.dot` estático se reemplazó por `[ngClass]="getEstadoClass(p.estado)"`. Se añadió `[title]="p.estado || 'ACTIVO'"` para mostrar el texto del estado como tooltip nativo al hacer hover.
+- **`club.page.scss`**: Los tres estados tienen color y glow neón propio. El dot base ya no tiene color hardcodeado — solo lo recibe por clase.
+
+| Clase CSS | Color | Significado |
+|---|---|---|
+| `estado-activo` | Verde `#22c55e` | Disponible (fallback por defecto) |
+| `estado-lesionado` | Naranja `#f59e0b` | Fuera por lesión |
+| `estado-baja` | Rojo `#ef4444` | Baja temporal o definitiva |
+
+### Archivos modificados
+
+- `PublicPlayerDto.java` — campo `estado` añadido al DTO público
+- `PublicService.java` — `dto.setEstado(j.getEstado())` en el mapping del roster
+- `models.ts` — `estado?: string` en interfaz `PublicPlayer`
+- `club.page.ts` — método `getEstadoClass()` con fallback seguro
+- `club.page.html` — dot con `[ngClass]` y `[title]` dinámicos
+- `club.page.scss` — tres variantes de color con glow neón
+
 
