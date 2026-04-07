@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { IonContent } from '@ionic/angular';
 
 @Component({
   selector: 'app-landing',
@@ -7,10 +8,18 @@ import { Component, OnInit } from '@angular/core';
 })
 export class LandingPage implements OnInit {
 
+  @ViewChild(IonContent) content!: IonContent;
+
   constructor() { }
 
-  ngOnInit() {
-    // Aquí puedes añadir lógica de inicialización si fuera necesaria
+  ngOnInit() { }
+
+  async scrollTo(sectionId: string) {
+    const el = document.getElementById(sectionId);
+    if (el) {
+      const offset = el.offsetTop;
+      await this.content.scrollToPoint(0, offset, 600);
+    }
   }
 
 }

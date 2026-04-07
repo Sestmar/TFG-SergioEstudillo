@@ -481,4 +481,88 @@ getCurrentUser(): Observable<User> {
 
 > **Estado de la Plataforma**: Fase 1 y 2 de seguridad completadas al 100%. Arquitectura profesional, blindada contra ataques comunes y optimizada para despliegue continuo (CI/CD) en Angular 18 y Spring Boot.
 
+---
+
+## 15. Landing Page Completa: Identidad Pública del Club 🌐✅
+
+Se ha transformado la landing page de una pantalla de bienvenida básica (solo botones de login/registro) a una página pública de presentación completa del club, con scroll fluido entre secciones y todos los enlaces del navbar y footer funcionales.
+
+### Desafío Técnico
+
+La landing original tenía cuatro enlaces con `href="#"` que no llevaban a ningún lugar (Noticias, Historia, Estadio, Socios) y el scroll nativo de `ion-content` no animaba el salto entre anclas. Esto daba una imagen de producto inacabado, especialmente relevante para la presentación del TFG ante tribunal.
+
+### Solución e Implementación
+
+**Arquitectura de secciones (scroll en una sola página)**
+
+Se optó por el patrón de *Single Page Scroll* en lugar de crear rutas separadas. Esto es más impactante visualmente y evita la creación de páginas vacías o con contenido hardcodeado disperso en múltiples componentes.
+
+- **Scroll suave nativo**: Se aplicó `scroll-behavior: smooth` sobre el `::part(scroll)` del `ion-content`, el selector correcto para acceder al contenedor de scroll interno de Ionic (no el elemento host).
+- **Anclas semánticas**: Cada nueva sección tiene su propio `id` (`#hero`, `#historia`, `#noticias`, `#estadio`), permitiendo navegación directa tanto desde el navbar como desde el footer.
+
+**Secciones implementadas**
+
+| Sección | Técnica visual | Posición en el DOM |
+|---|---|---|
+| `#hero` | Ya existía — se añadió el `id` | Hero principal |
+| `#historia` | Dos columnas flex (texto + escudo con glow púrpura) | Antes de Zona Aficionado |
+| `#noticias` | CSS Grid 3 columnas, tarjetas con hover elevation | Después de Zona Aficionado |
+| `#estadio` | Hero secundario con imagen de campo de fondo + overlay + 3 KPIs | Antes del footer |
+
+**Footer actualizado**
+
+- Historia → `href="#historia"` (scroll interno)
+- Estadio → `href="#estadio"` (scroll interno)
+- Socios → `routerLink="/auth/register"` (redirige al registro, rol natural de un socio)
+
+**Responsive Mobile**
+
+Las tres nuevas secciones tienen breakpoints específicos en `@media (max-width: 768px)`:
+- Historia: cambia de dos columnas a columna única, escudo centrado.
+- Noticias: el grid pasa de 3 columnas a 1 columna.
+- Estadio: los 3 KPIs se apilan verticalmente con divisores horizontales.
+
+### Archivos modificados
+
+- `landing.page.html` — añadidas secciones Historia, Noticias y Estadio; anclas en navbar y footer
+- `landing.page.scss` — estilos de las tres secciones + `scroll-behavior: smooth` + responsive
+
+---
+
+## 16. Landing Page: Scroll Programático y Ruta /club Pública 🔓✅
+
+Corrección de dos bugs funcionales descubiertos al probar la landing en local: los enlaces de scroll no funcionaban y los botones de Equipos redirigían al login.
+
+### Bug 1 — Scroll con `href="#seccion"` no funciona en Ionic
+
+**Causa raíz**: `ion-content` gestiona su propio contenedor de scroll dentro del shadow DOM. Los anclas nativas del browser (`href="#id"`) intentan hacer scroll sobre el `document`, que en Ionic no es el elemento scrollable real. El resultado es que el clic no hace nada.
+
+**Solución**: Scroll programático mediante `IonContent.scrollToPoint()`. Se inyectó `@ViewChild(IonContent)` en el componente y se creó un método `scrollTo(sectionId)` que localiza el elemento por `id`, lee su `offsetTop` y delega el scroll al API de Ionic con 600ms de animación.
+
+```typescript
+@ViewChild(IonContent) content!: IonContent;
+
+async scrollTo(sectionId: string) {
+  const el = document.getElementById(sectionId);
+  if (el) {
+    await this.content.scrollToPoint(0, el.offsetTop, 600);
+  }
+}
+```
+
+Todos los `href="#..."` del navbar y footer se reemplazaron por `(click)="scrollTo('...')"`. Se añadió `cursor: pointer` en SCSS a `.nav-link` y `.footer-link` para mantener el aspecto clicable sin `href`.
+
+### Bug 2 — `/club` protegida por `AuthGuard`
+
+**Causa raíz**: La ruta `/club` tenía `canActivate: [AuthGuard]` en `app-routing.module.ts`. Al no estar autenticado, el guard redirigía a `/auth/login` en lugar de mostrar el contenido público.
+
+**Solución**: Se eliminó el `canActivate` de la ruta `/club`. Esta ruta es la "Zona del Aficionado" — por diseño debe ser accesible sin registro para cualquier visitante de la landing.
+
+### Archivos modificados
+
+- `app-routing.module.ts` — eliminado `canActivate: [AuthGuard]` de la ruta `/club`
+- `landing.page.ts` — añadidos `@ViewChild(IonContent)` e import de `IonContent`; método `scrollTo()`
+- `landing.page.html` — reemplazados `href="#..."` por `(click)="scrollTo('...')"`
+- `landing.page.scss` — añadido `cursor: pointer` a `.nav-link` y `.footer-link`
+
 

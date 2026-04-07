@@ -12,6 +12,9 @@
 .landing-content::part(background) {
     background: transparent;
 }
+.landing-content::part(scroll) {
+    scroll-behavior: smooth;
+}
 
 .landing-content {
     position: relative;
@@ -84,6 +87,7 @@
                 font-size: 0.9rem;
                 font-weight: 500;
                 text-decoration: none;
+                cursor: pointer;
                 transition: color 0.2s;
 
                 &:hover, &.active {
@@ -165,6 +169,62 @@
         }
     }
 
+    // --- HISTORIA ---
+    .historia-section {
+        background: rgba(4, 7, 15, 0.88);
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        padding: 80px 40px;
+
+        .historia-content {
+            max-width: 960px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 60px;
+        }
+
+        .historia-text {
+            flex: 1;
+
+            h2 {
+                font-size: 2rem;
+                font-weight: 800;
+                color: var(--text-white);
+                margin-bottom: 12px;
+            }
+
+            .title-underline {
+                width: 50px;
+                height: 3px;
+                background: var(--purple);
+                border-radius: 2px;
+                margin-bottom: 24px;
+            }
+
+            p {
+                font-size: 0.95rem;
+                color: var(--text-gray);
+                line-height: 1.75;
+                margin-bottom: 16px;
+            }
+        }
+
+        .historia-image {
+            flex-shrink: 0;
+            width: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            img {
+                width: 100%;
+                object-fit: contain;
+                filter: drop-shadow(0 0 40px rgba(124, 58, 237, 0.35));
+                opacity: 0.9;
+            }
+        }
+    }
+
     // --- ZONA DEL AFICIONADO ---
     .fan-section {
         background: rgba(4, 7, 15, 0.82);
@@ -214,6 +274,189 @@
         }
     }
 
+    // --- NOTICIAS ---
+    .noticias-section {
+        background: rgba(4, 7, 15, 0.92);
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        padding: 80px 40px;
+
+        .noticias-content {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            margin-bottom: 48px;
+
+            h2 {
+                font-size: 2rem;
+                font-weight: 800;
+                color: var(--text-white);
+                margin-bottom: 12px;
+            }
+
+            .title-underline {
+                width: 50px;
+                height: 3px;
+                background: var(--purple);
+                border-radius: 2px;
+            }
+        }
+
+        .noticias-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .noticia-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color 0.25s, transform 0.25s;
+
+            &:hover {
+                border-color: rgba(124, 58, 237, 0.45);
+                transform: translateY(-4px);
+            }
+
+            .noticia-img {
+                height: 140px;
+                background: rgba(124, 58, 237, 0.08);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+                img {
+                    height: 70px;
+                    object-fit: contain;
+                    opacity: 0.5;
+                    filter: drop-shadow(0 0 12px rgba(124, 58, 237, 0.3));
+                }
+            }
+
+            .noticia-body {
+                padding: 20px;
+
+                .noticia-fecha {
+                    font-size: 0.72rem;
+                    font-weight: 700;
+                    color: var(--purple);
+                    letter-spacing: 0.5px;
+                    display: block;
+                    margin-bottom: 10px;
+                    opacity: 0.85;
+                }
+
+                h3 {
+                    font-size: 0.95rem;
+                    font-weight: 700;
+                    color: var(--text-white);
+                    margin-bottom: 10px;
+                    line-height: 1.4;
+                }
+
+                p {
+                    font-size: 0.83rem;
+                    color: var(--text-gray);
+                    line-height: 1.65;
+                    margin: 0;
+                }
+            }
+        }
+    }
+
+    // --- ESTADIO ---
+    .estadio-section {
+        position: relative;
+        padding: 100px 40px;
+        text-align: center;
+        overflow: hidden;
+        background:
+            url('/assets/img/campo-landing.png') center center / cover no-repeat;
+
+        .estadio-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(4, 7, 15, 0.75) 0%,
+                rgba(4, 7, 15, 0.60) 50%,
+                rgba(4, 7, 15, 0.85) 100%
+            );
+        }
+
+        .estadio-content {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+            margin: 0 auto;
+
+            .estadio-label {
+                font-size: 0.72rem;
+                font-weight: 800;
+                color: var(--purple);
+                letter-spacing: 4px;
+                margin-bottom: 14px;
+                opacity: 0.9;
+            }
+
+            h2 {
+                font-size: 2.2rem;
+                font-weight: 900;
+                color: var(--text-white);
+                margin-bottom: 40px;
+                text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+            }
+
+            .estadio-datos {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0;
+                margin-bottom: 32px;
+
+                .dato {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    padding: 0 40px;
+
+                    .dato-valor {
+                        font-size: 2rem;
+                        font-weight: 900;
+                        color: var(--text-white);
+                        line-height: 1;
+                        margin-bottom: 6px;
+                    }
+
+                    .dato-label {
+                        font-size: 0.75rem;
+                        color: var(--text-gray);
+                        letter-spacing: 1px;
+                        font-weight: 500;
+                    }
+                }
+
+                .dato-divider {
+                    width: 1px;
+                    height: 44px;
+                    background: rgba(255, 255, 255, 0.15);
+                    flex-shrink: 0;
+                }
+            }
+
+            .estadio-dir {
+                font-size: 0.88rem;
+                color: rgba(255, 255, 255, 0.45);
+                margin: 0;
+                letter-spacing: 0.5px;
+            }
+        }
+    }
+
     // --- FOOTER ---
     .landing-footer {
         background: rgba(4, 7, 15, 0.95);
@@ -257,6 +500,7 @@
                 font-size: 0.85rem;
                 color: rgba(255, 255, 255, 0.55);
                 text-decoration: none;
+                cursor: pointer;
                 transition: color 0.2s;
 
                 &:hover { color: var(--text-white); }
@@ -284,6 +528,42 @@
     }
 
     .fan-section { padding: 40px 20px !important; }
+
+    .historia-section {
+        padding: 60px 20px !important;
+
+        .historia-content {
+            flex-direction: column !important;
+            gap: 32px !important;
+        }
+
+        .historia-image {
+            width: 140px !important;
+            margin: 0 auto;
+        }
+    }
+
+    .noticias-section {
+        padding: 60px 20px !important;
+
+        .noticias-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
+    .estadio-section {
+        padding: 70px 20px !important;
+
+        .estadio-datos {
+            flex-direction: column !important;
+            gap: 24px !important;
+
+            .dato-divider {
+                width: 40px !important;
+                height: 1px !important;
+            }
+        }
+    }
 
     .landing-footer {
         flex-direction: column !important;

@@ -64,5 +64,45 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 
 ---
 
+## 🌐 FASE 4: LANDING PAGE COMPLETA (Prioridad Media — Antes de Junio)
+
+*Objetivo: Convertir la landing en una página pública de presentación del club con scroll fluido, dando vida a los enlaces muertos del navbar y footer.*
+
+### 4.1 Navegación por anclas (navbar)
+
+- [ ] **Inicio:** Ancla `#hero` — ya existe, simplemente actualizar el `href="#"` a `href="#hero"`.
+- [ ] **Noticias:** Ancla `#noticias` — nueva sección con las últimas novedades del club.
+- [ ] **Equipos:** Ya funciona con `routerLink="/club"` — no tocar.
+
+### 4.2 Sección "Noticias" (`#noticias`)
+
+- [ ] **Contenido:** 3 tarjetas de noticias/novedades hardcodeadas (título, fecha, imagen, extracto breve). No requiere backend nuevo.
+- [ ] **Estética:** Misma paleta gold/leather de la landing. Tarjetas con borde dorado, fondo oscuro y efecto hover.
+- [ ] **Posición en el HTML:** Entre la `fan-section` y el `footer`.
+
+### 4.3 Sección "Historia" (`#historia`)
+
+- [ ] **Contenido:** Bloque de texto con la historia del club + imagen ilustrativa (puede ser el escudo grande). Hardcodeado.
+- [ ] **Layout:** Dos columnas en desktop (texto izquierda, imagen derecha), columna única en mobile.
+- [ ] **Posición en el HTML:** Antes de la `fan-section`.
+
+### 4.4 Sección "Estadio" (`#estadio`)
+
+- [ ] **Contenido:** Nombre del estadio, aforo, dirección y una imagen. Hardcodeado.
+- [ ] **Layout:** Imagen de fondo con overlay oscuro y datos superpuestos (estilo hero secundario).
+- [ ] **Posición en el HTML:** Después de la sección "Historia".
+
+### 4.5 Footer — enlaces internos
+
+- [ ] **Historia:** Cambiar `href="#"` a `href="#historia"` (scroll suave).
+- [ ] **Estadio:** Cambiar `href="#"` a `href="#estadio"` (scroll suave).
+- [ ] **Socios:** Redirigir a `routerLink="/auth/register"` — el registro ya cumple este rol.
+
+### 4.6 Scroll suave global
+
+- [ ] Agregar `scroll-behavior: smooth` al `:host` o `ion-content` de la landing para que las anclas animen el scroll en lugar de saltar.
+
+---
+
 ## 📈 NOTA PARA EL TFG
 Este documento sirve como evidencia de un proceso de **Auditoría y Remediación**. Al finalizar cada tarea, se debe marcar aquí para mantener la trazabilidad de la mejora continua del sistema.

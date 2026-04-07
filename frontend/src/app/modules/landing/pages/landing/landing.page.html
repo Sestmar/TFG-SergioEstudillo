@@ -13,14 +13,14 @@
         <span class="nav-name">DAM UNITED</span>
       </div>
       <div class="nav-links">
-        <a class="nav-link active" href="#">Inicio</a>
+        <a class="nav-link active" (click)="scrollTo('hero')">Inicio</a>
         <a class="nav-link" routerLink="/club">Equipos</a>
-        <a class="nav-link" href="#">Noticias</a>
+        <a class="nav-link" (click)="scrollTo('noticias')">Noticias</a>
       </div>
     </nav>
 
     <!-- HERO SECTION -->
-    <div class="hero-section">
+    <div class="hero-section" id="hero">
 
       <h1>DAM UNITED F.C</h1>
 
@@ -38,6 +38,22 @@
       </div>
     </div>
 
+    <!-- HISTORIA -->
+    <section class="historia-section" id="historia">
+      <div class="historia-content">
+        <div class="historia-text">
+          <h2>Nuestra Historia</h2>
+          <div class="title-underline"></div>
+          <p>DAM United F.C nació en 2018 como un proyecto deportivo y educativo, con la misión de unir a jóvenes talentos bajo una filosofía de juego colectivo, disciplina y superación personal.</p>
+          <p>A lo largo de los años hemos formado equipos en todas las categorías de base — desde Alevín hasta Juvenil — construyendo una identidad propia en el fútbol local que va mucho más allá del resultado en el marcador.</p>
+          <p>Hoy somos más de 150 jugadores, 12 entrenadores y cientos de familias que forman parte de una comunidad apasionada por el fútbol y los valores del deporte.</p>
+        </div>
+        <div class="historia-image">
+          <img src="assets/img/mi-club-logo.png" alt="Escudo DAM United F.C">
+        </div>
+      </div>
+    </section>
+
     <!-- ZONA DEL AFICIONADO -->
     <div class="fan-section">
       <div class="fan-content">
@@ -53,6 +69,77 @@
       </div>
     </div>
 
+    <!-- NOTICIAS -->
+    <section class="noticias-section" id="noticias">
+      <div class="noticias-content">
+        <div class="section-header">
+          <h2>Últimas Noticias</h2>
+          <div class="title-underline"></div>
+        </div>
+        <div class="noticias-grid">
+
+          <article class="noticia-card">
+            <div class="noticia-img">
+              <img src="assets/img/mi-club-logo.png" alt="Noticia 1">
+            </div>
+            <div class="noticia-body">
+              <span class="noticia-fecha">15 Mar 2026</span>
+              <h3>El equipo Cadete se proclama campeón de liga</h3>
+              <p>Tras una temporada impecable, nuestros cadetes lograron el título con una victoria en el último partido frente al segundo clasificado.</p>
+            </div>
+          </article>
+
+          <article class="noticia-card">
+            <div class="noticia-img">
+              <img src="assets/img/mi-club-logo.png" alt="Noticia 2">
+            </div>
+            <div class="noticia-body">
+              <span class="noticia-fecha">28 Feb 2026</span>
+              <h3>Nuevo sistema de gestión digital para el club</h3>
+              <p>DAM United lanza su plataforma interna para entrenadores y jugadores, centralizando convocatorias, estadísticas y comunicación del club.</p>
+            </div>
+          </article>
+
+          <article class="noticia-card">
+            <div class="noticia-img">
+              <img src="assets/img/mi-club-logo.png" alt="Noticia 3">
+            </div>
+            <div class="noticia-body">
+              <span class="noticia-fecha">10 Feb 2026</span>
+              <h3>Apertura del período de inscripciones 2026/27</h3>
+              <p>Ya están abiertas las inscripciones para la próxima temporada en todas las categorías. Registrate en la plataforma para completar tu solicitud.</p>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ESTADIO -->
+    <section class="estadio-section" id="estadio">
+      <div class="estadio-overlay"></div>
+      <div class="estadio-content">
+        <p class="estadio-label">NUESTRA CASA</p>
+        <h2>Campo Municipal de DAM United</h2>
+        <div class="estadio-datos">
+          <div class="dato">
+            <span class="dato-valor">2.500</span>
+            <span class="dato-label">Aforo</span>
+          </div>
+          <div class="dato-divider"></div>
+          <div class="dato">
+            <span class="dato-valor">2018</span>
+            <span class="dato-label">Inauguración</span>
+          </div>
+          <div class="dato-divider"></div>
+          <div class="dato">
+            <span class="dato-valor">Natural</span>
+            <span class="dato-label">Césped</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- FOOTER -->
     <footer class="landing-footer">
       <div class="footer-left">
@@ -61,9 +148,9 @@
       </div>
       <div class="footer-col">
         <span class="footer-col-title">CLUB</span>
-        <a class="footer-link" href="#">Historia</a>
-        <a class="footer-link" href="#">Estadio</a>
-        <a class="footer-link" href="#">Socios</a>
+        <a class="footer-link" (click)="scrollTo('historia')">Historia</a>
+        <a class="footer-link" (click)="scrollTo('estadio')">Estadio</a>
+        <a class="footer-link" routerLink="/auth/register">Socios</a>
       </div>
     </footer>
 

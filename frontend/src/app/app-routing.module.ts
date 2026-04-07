@@ -115,8 +115,7 @@ const routes: Routes = [
 
   {
     path: 'club',
-    loadChildren: () => import('./modules/club/club.module').then( m => m.ClubPageModule),
-    canActivate: [AuthGuard]
+    loadChildren: () => import('./modules/club/club.module').then( m => m.ClubPageModule)
   },
 
   // ADMIN
