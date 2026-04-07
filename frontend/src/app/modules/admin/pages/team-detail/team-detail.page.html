@@ -162,67 +162,107 @@
   <ng-template>
     <div class="player-sheet" *ngIf="selectedPlayer">
 
-      <div class="sheet-handle"></div>
+      <!-- HERO BAND: dorsal + handle -->
+      <div class="sheet-hero">
+        <div class="sheet-handle"></div>
+        <span class="hero-dorsal">#{{ selectedPlayer.dorsal || '—' }}</span>
+        <span class="hero-position">{{ selectedPlayer.posicion || 'SIN POSICIÓN' }}</span>
+      </div>
 
+      <!-- IDENTIDAD: avatar + nombre + estado -->
       <div class="sheet-header">
         <div class="sheet-avatar-wrap">
-          <img [src]="selectedPlayer.fotoUrl || 'https://ui-avatars.com/api/?name='+selectedPlayer.nombre+'&background=random&color=fff&size=128'"
+          <img [src]="selectedPlayer.fotoUrl || 'https://ui-avatars.com/api/?name='+selectedPlayer.nombre+'&background=1e293b&color=a78bfa&size=128'"
                class="sheet-avatar">
-          <div class="sheet-dorsal">{{ selectedPlayer.dorsal || '-' }}</div>
+          <div class="sheet-estado-dot" [style.background]="getEstadoColor(selectedPlayer.estado)"></div>
         </div>
         <div class="sheet-identity">
           <h2>{{ selectedPlayer.nombre }} {{ selectedPlayer.apellidos }}</h2>
-          <span class="sheet-position">{{ selectedPlayer.posicion || 'Sin posición' }}</span>
-          <span class="sheet-estado" [style.color]="getEstadoColor(selectedPlayer.estado)">
-            ● {{ getEstadoLabel(selectedPlayer.estado) }}
-          </span>
+          <div class="sheet-badges">
+            <span class="sheet-position">{{ selectedPlayer.posicion || 'Sin posición' }}</span>
+            <span class="sheet-estado-badge" [style.color]="getEstadoColor(selectedPlayer.estado)"
+                  [style.border-color]="getEstadoColor(selectedPlayer.estado)">
+              {{ getEstadoLabel(selectedPlayer.estado) }}
+            </span>
+          </div>
         </div>
       </div>
 
+      <!-- RENDIMIENTO -->
+      <div class="sheet-section-label">RENDIMIENTO</div>
       <div class="sheet-stats">
         <div class="sheet-stat">
+          <ion-icon name="football-outline" class="stat-icon icon-goals"></ion-icon>
           <span class="s-val">{{ selectedPlayer.goles || 0 }}</span>
           <span class="s-label">Goles</span>
         </div>
+        <div class="stat-sep"></div>
         <div class="sheet-stat">
+          <ion-icon name="git-network-outline" class="stat-icon icon-assists"></ion-icon>
           <span class="s-val">{{ selectedPlayer.asistencias || 0 }}</span>
           <span class="s-label">Asistencias</span>
         </div>
+        <div class="stat-sep"></div>
         <div class="sheet-stat">
+          <ion-icon name="time-outline" class="stat-icon icon-time"></ion-icon>
           <span class="s-val">{{ selectedPlayer.minutosJugados || 0 }}</span>
           <span class="s-label">Minutos</span>
         </div>
       </div>
 
+      <!-- INFORMACIÓN PERSONAL -->
+      <div class="sheet-section-label">INFORMACIÓN</div>
       <div class="sheet-info-grid">
-        <div class="info-item" *ngIf="selectedPlayer.fechaNacimiento">
-          <ion-icon name="calendar-outline"></ion-icon>
+
+        <div class="info-item">
+          <div class="info-icon-wrap purple">
+            <ion-icon name="calendar-outline"></ion-icon>
+          </div>
           <div>
             <span class="info-label">EDAD</span>
-            <span class="info-val">{{ getAge(selectedPlayer.fechaNacimiento) }}</span>
+            <span class="info-val">{{ selectedPlayer.fechaNacimiento ? getAge(selectedPlayer.fechaNacimiento) : '—' }}</span>
           </div>
         </div>
-        <div class="info-item" *ngIf="selectedPlayer.fechaAlta">
-          <ion-icon name="enter-outline"></ion-icon>
+
+        <div class="info-item">
+          <div class="info-icon-wrap green">
+            <ion-icon name="enter-outline"></ion-icon>
+          </div>
           <div>
-            <span class="info-label">ALTA</span>
-            <span class="info-val">{{ selectedPlayer.fechaAlta | date:'dd/MM/yyyy' }}</span>
+            <span class="info-label">ALTA EN EL CLUB</span>
+            <span class="info-val">{{ selectedPlayer.fechaAlta ? (selectedPlayer.fechaAlta | date:'dd/MM/yyyy') : '—' }}</span>
           </div>
         </div>
+
         <div class="info-item" *ngIf="selectedPlayer.telefono || selectedPlayer.telefonoContacto">
-          <ion-icon name="call-outline"></ion-icon>
+          <div class="info-icon-wrap blue">
+            <ion-icon name="call-outline"></ion-icon>
+          </div>
           <div>
             <span class="info-label">TELÉFONO</span>
             <span class="info-val">{{ selectedPlayer.telefono || selectedPlayer.telefonoContacto }}</span>
           </div>
         </div>
-        <div class="info-item" *ngIf="selectedPlayer.observaciones">
-          <ion-icon name="document-text-outline"></ion-icon>
+
+        <div class="info-item" *ngIf="selectedPlayer.email">
+          <div class="info-icon-wrap yellow">
+            <ion-icon name="mail-outline"></ion-icon>
+          </div>
           <div>
-            <span class="info-label">OBSERVACIONES</span>
-            <span class="info-val">{{ selectedPlayer.observaciones }}</span>
+            <span class="info-label">EMAIL</span>
+            <span class="info-val">{{ selectedPlayer.email }}</span>
           </div>
         </div>
+
+      </div>
+
+      <!-- OBSERVACIONES: tarjeta especial -->
+      <div class="sheet-obs-card" *ngIf="selectedPlayer.observaciones">
+        <div class="obs-header">
+          <ion-icon name="clipboard-outline"></ion-icon>
+          <span>Observaciones del cuerpo técnico</span>
+        </div>
+        <p class="obs-text">{{ selectedPlayer.observaciones }}</p>
       </div>
 
     </div>

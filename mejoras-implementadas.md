@@ -613,4 +613,170 @@ getEstadoClass(estado?: string): string {
 - `club.page.html` — dot con `[ngClass]` y `[title]` dinámicos
 - `club.page.scss` — tres variantes de color con glow neón
 
+---
+
+## 18. Calendario: Rediseño Estético Completo (Dark Pro) 📅✅
+
+Se reescribió completamente la hoja de estilos y se reestructuró parcialmente el HTML del módulo de calendario, elevando su aspecto al mismo nivel visual que el resto de la plataforma "Night Stadium".
+
+### Desafío Técnico
+
+La versión anterior del calendario usaba estilos básicos de Ionic sin coherencia visual con el resto de módulos. Los puntos de eventos eran demasiado pequeños, el header carecía de identidad, las tarjetas de evento no diferenciaban visualmente entre partidos y entrenamientos, y el botón de eliminación estaba suelto sin agrupación lógica.
+
+### Solución e Implementación
+
+**Paleta y estructura global**
+- Fondo con gradiente `#020617 → #0f172a` (igual que team-detail y dashboard).
+- Variables de host separadas por tipo de evento: `--match-green` (#10b981) y `--training-blue` (#3b82f6), cada una con su variante `*-dim` para backgrounds sutiles.
+
+**Header con identidad propia**
+- Botón "Volver" como círculo semitransparente con efecto `:active`.
+- Botón "Hoy" como pill violeta con borde neón (`--neon-purple-dim`), reemplazando el texto plano anterior.
+
+**Cuadrícula de días mejorada**
+- Separador visual entre cabecera de días y el grid principal (`border-bottom` en `.weekdays-grid`).
+- Celdas con `height: 42px`, `border-radius: 10px` y hover sutil.
+- `today`: fondo violeta translúcido + borde neón + número en violeta.
+- `selected`: fondo violeta sólido + `box-shadow` con glow.
+- Puntos de eventos aumentados a `5px` con `box-shadow` de glow por tipo.
+
+**Tarjetas de evento**
+- Gradiente de fondo diferencial: verde para PARTIDO, azul para TRAINING.
+- Borde izquierdo grueso con el color del tipo de evento.
+- `type-tag` con ícono (`football-outline` / `barbell-outline`) + texto "MATCHDAY" / "TRAINING".
+- Hora agrupada con el botón de borrar en un contenedor `.right-meta` para alineación perfecta.
+- Tiempo mostrado como pill redondeada (`.time-tag`) en vez de texto suelto.
+
+**Estado vacío rediseñado**
+- Card punteada `border: 1px dashed` con ícono grande y texto explicativo.
+
+### Archivos modificados
+
+- `calendar.page.scss` — reescritura completa de todos los estilos
+- `calendar.page.html` — agrupación de `.time-tag` + `.delete-btn` en `.right-meta`; ícono en `.type-tag`
+
+---
+
+## 19. Admin Dashboard: Tarjetas de Equipos con Estilo Competición 🃏✅
+
+Las tarjetas del listado de equipos en el dashboard de administrador se rediseñaron para reutilizar exactamente el mismo componente visual de las tarjetas de competición, eliminando la discontinuidad estética entre secciones del panel.
+
+### Desafío Técnico
+
+Las tarjetas de equipos usaban un grid de cuadrados compactos sin suficiente información ni jerarquía visual. Las tarjetas de competición, en cambio, tenían un estilo horizontal más elaborado con escudo, nombre, categoría y flecha de navegación que el usuario ya conocía.
+
+### Solución e Implementación
+
+Se reemplazó la estructura HTML de las tarjetas de equipos por la misma estructura ya existente de `.team-calendar-card` (definida en el SCSS del dashboard). Esto evitó duplicar CSS y aprovechó el trabajo ya realizado.
+
+La insignia de categoría incluye ahora también el contador de jugadores (`jugadoresCount`) junto al nombre de la categoría, dando información relevante de un vistazo sin añadir una línea extra.
+
+```html
+<!-- Estructura reutilizada de competición -->
+<div class="team-calendar-card" *ngFor="let team of teams" (click)="goToTeam(team)">
+  <img [src]="team.escudoUrl || 'assets/img/mi-club-logo.png'" class="team-shield">
+  <div class="team-info">
+    <span class="team-name">{{ team.nombre }}</span>
+    <span class="category-badge">{{ team.categoriaNombre }} · {{ team.jugadoresCount }} jugadores</span>
+  </div>
+  <ion-icon name="chevron-forward" class="chevron"></ion-icon>
+</div>
+```
+
+### Archivos modificados
+
+- `admin-dashboard.page.html` — reemplazada estructura de grid por `.team-calendar-card`
+
+---
+
+## 20. Team Detail: Corrección de Header en Scroll y Rediseño de Botones de Acción 🔧✅
+
+Se solucionó el problema visual del header de la ficha de equipo que se desplazaba con el scroll, y se rediseñaron los botones de acción de las tarjetas de partido para mejorar claridad y usabilidad.
+
+### Bug — Header flotante con `[fullscreen]="true"`
+
+**Causa raíz**: `ion-content` con `[fullscreen]="true"` hace que el contenido se extienda bajo el header (efecto blur/transparencia de iOS). Al hacer scroll, el header se movía junto al contenido en lugar de mantenerse fijo. El fondo transparente del toolbar hacía que el texto del contenido se superpusiera sobre el título.
+
+**Solución**: Se eliminó `[fullscreen]="true"` del `ion-content` y se cambió el `--background` del toolbar de `transparent` a `#020617` (el color base de la aplicación). Esto ancla el header de forma permanente sin perder la identidad visual.
+
+### Rediseño de botones de acción (icon-only → action pills)
+
+Los iconos solos (`clipboard-outline`, `eye-outline`) en las tarjetas de partido no comunicaban su función a primera vista, especialmente para usuarios no técnicos.
+
+**Solución**: Reemplazo de `ion-button` icon-only por elementos `<button>` nativos con clase `.action-pill`. Cada pill tiene un ícono + etiqueta de texto:
+
+| Tipo de evento | Pill "Editar" | Pill "Ver" |
+|---|---|---|
+| PARTIDO | `clipboard-outline` + "Acta" | `document-text-outline` + "Ver" |
+| TRAINING | `people-outline` + "Asist." | — (no aplica) |
+
+Los pills tienen estilos diferenciados: amarillo (`.edit-pill`) para acciones de gestión, violeta (`.view-pill`) para lectura.
+
+### Archivos modificados
+
+- `team-detail.page.html` — eliminado `[fullscreen]="true"`; reemplazados `ion-button` por `.action-pill` nativos
+- `team-detail.page.scss` — toolbar `--background: #020617`; estilos `.action-pill`, `.edit-pill`, `.view-pill`
+
+---
+
+## 21. Team Detail: Bottom Sheet Modal con Ficha Completa del Jugador 📋✅
+
+Las tarjetas de jugadores en la sección "Plantilla" de la ficha de equipo son ahora interactivas. Al pulsar sobre una tarjeta se despliega un bottom sheet modal con toda la información disponible del jugador.
+
+### Desafío Técnico
+
+Las tarjetas de jugador solo mostraban nombre, posición, goles y asistencias. Para acceder a datos como fecha de nacimiento, fecha de alta, teléfono de contacto u observaciones, el administrador tenía que navegar a otra pantalla. El usuario pedía más información sin cambiar de página.
+
+### Solución e Implementación
+
+**Bottom sheet con `ion-modal` y breakpoints**
+
+Se usó el API de breakpoints de Ionic para crear un modal tipo "bottom sheet" que aparece desde abajo con el 75% de la pantalla visible por defecto, y que se puede arrastrar hasta el 100% o cerrar hacia el 0%.
+
+```typescript
+// team-detail.page.ts
+openPlayerSheet(player: any) {
+  this.selectedPlayer = player;
+  this.isPlayerSheetOpen = true;
+}
+```
+
+```html
+<ion-modal [isOpen]="isPlayerSheetOpen"
+           (didDismiss)="closePlayerSheet()"
+           [initialBreakpoint]="0.75"
+           [breakpoints]="[0, 0.75, 1]"
+           cssClass="night-modal">
+```
+
+**Contenido del sheet (tres bloques)**
+
+1. **Header**: Avatar grande (80px) con borde violeta glow, dorsal como bubble, nombre en grande, badge de posición y dot de estado con color reactivo.
+2. **Stats row**: Goles · Asistencias · Minutos jugados — los tres datos disponibles del backend, mostrados como KPIs grandes sobre fondo semitransparente.
+3. **Info grid**: Items condicionales (`*ngIf`) para cada campo adicional disponible:
+   - Edad calculada a partir de `fechaNacimiento` (método `getAge()`)
+   - Fecha de alta formateada
+   - Teléfono de contacto
+   - Observaciones del entrenador
+
+**Mejoras en las tarjetas del grid**
+
+- Añadido `cursor: pointer` y efecto `:active` (scale 0.98).
+- Ícono `chevron-forward` tenue en la esquina derecha para indicar que la tarjeta es clickable.
+- Tercer stat en el pie de tarjeta: **ESTADO** con el color reactivo verde/naranja/rojo según `getEstadoColor()`.
+
+**Métodos añadidos al controlador**
+
+```typescript
+getAge(fechaNacimiento?: string): string  // Calcula años desde fecha ISO
+getEstadoLabel(estado?: string): string   // LESIONADO → "Lesionado", default "Activo"
+getEstadoColor(estado?: string): string   // Devuelve hex para usar en [style.color]
+```
+
+### Archivos modificados
+
+- `team-detail.page.ts` — `selectedPlayer`, `isPlayerSheetOpen`, `openPlayerSheet()`, `closePlayerSheet()`, `getAge()`, `getEstadoLabel()`, `getEstadoColor()`
+- `team-detail.page.html` — `(click)="openPlayerSheet(p)"` en tarjetas; stat ESTADO; `ion-modal` bottom sheet completo
+- `team-detail.page.scss` — cursor pointer + `:active` en tarjetas; `.card-chevron`; `.estado-dot`; sección completa `.player-sheet` con handle, header, stats y info-grid
+
 

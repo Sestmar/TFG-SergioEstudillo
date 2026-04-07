@@ -327,12 +327,20 @@ public class AdminService {
             p.put("id", j.getIdJugador());
             p.put("nombre", j.getUsuario().getNombre());
             p.put("apellidos", j.getUsuario().getApellidos());
+            p.put("email", j.getUsuario().getEmail());
+            p.put("telefono", j.getUsuario().getTelefono());
+            p.put("telefonoContacto", j.getTelefonoContacto());
             p.put("dorsal", j.getDorsal());
             p.put("posicion", j.getPosicion());
+            p.put("estado", j.getEstado());
+            p.put("fechaNacimiento", j.getFechaNacimiento());
+            p.put("fechaAlta", j.getFechaAlta());
+            p.put("observaciones", j.getObservaciones());
             p.put("fotoUrl", j.getFotoUrl() != null ? j.getFotoUrl() : j.getUsuario().getFotoUrl());
             List<Alineacion> alineaciones = alineacionRepo.findByJugador(j);
             p.put("goles", alineaciones.stream().mapToInt(a -> a.getGoles() == null ? 0 : a.getGoles()).sum());
             p.put("asistencias", alineaciones.stream().mapToInt(a -> a.getAsistencias() == null ? 0 : a.getAsistencias()).sum());
+            p.put("minutosJugados", alineaciones.stream().mapToInt(a -> a.getMinutosJugados() == null ? 0 : a.getMinutosJugados()).sum());
             jugadoresDto.add(p);
         }
         response.put("jugadores", jugadoresDto);
