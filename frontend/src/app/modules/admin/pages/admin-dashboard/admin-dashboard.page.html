@@ -143,12 +143,14 @@
                 <ion-icon name="add" slot="start"></ion-icon> Nuevo
             </ion-button>
         </div>
-        <div class="teams-grid">
-            <div class="team-card" *ngFor="let team of teams" (click)="openTeamDetail(team)">
-                <img [src]="team.escudoUrl || 'assets/img/mi-club-logo.png'" class="team-logo">
-                <h4>{{ team.nombre }}</h4>
-                <p>{{ team.categoriaNombre }}</p>
-                <div class="team-stats"><span>{{ team.jugadoresCount || 0 }} Jug.</span></div>
+        <div>
+            <div class="team-calendar-card" *ngFor="let team of teams" (click)="openTeamDetail(team)">
+                <div class="card-left"><img [src]="team.escudoUrl || 'assets/img/mi-club-logo.png'" class="team-mini-logo"></div>
+                <div class="card-center">
+                    <h4>{{ team.nombre }}</h4>
+                    <span class="category-badge">{{ team.categoriaNombre || 'General' }} · {{ team.jugadoresCount || 0 }} jug.</span>
+                </div>
+                <div class="card-right"><ion-icon name="chevron-forward"></ion-icon></div>
             </div>
         </div>
     </div>

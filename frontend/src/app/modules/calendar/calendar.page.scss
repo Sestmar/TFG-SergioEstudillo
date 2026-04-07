@@ -1,119 +1,267 @@
 // --- PALETA DARK PRO ---
 :host {
-  --bg-color: #09090b;
-  --card-bg: #18181b;
+  --bg-color: #020617;
+  --card-bg: #0f172a;
+  --card-border: rgba(255, 255, 255, 0.06);
   --text-main: #ffffff;
-  --text-muted: #a1a1aa;
-  
+  --text-muted: #64748b;
+
   --neon-purple: #8b5cf6;
-  --neon-blue: #3b82f6;
-  --gold: #fbbf24;
+  --neon-purple-dim: rgba(139, 92, 246, 0.15);
   --match-green: #10b981;
+  --match-green-dim: rgba(16, 185, 129, 0.12);
+  --training-blue: #3b82f6;
+  --training-blue-dim: rgba(59, 130, 246, 0.12);
 }
 
-.dashboard-bg { --background: var(--bg-color); }
+.dashboard-bg {
+  --background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+}
 
-.main-content { padding: 20px; }
+.main-content { padding: 20px 16px 40px; }
 
-// HEADER
+// --- HEADER ---
 .header-pro {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
-  
-  .back-btn { font-size: 1.5rem; color: var(--text-main); cursor: pointer; }
-  h1 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--text-main); }
-  .today-btn { 
-    color: var(--neon-blue); font-weight: 700; font-size: 0.9rem; cursor: pointer;
-    background: rgba(59, 130, 246, 0.1); padding: 5px 12px; border-radius: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; padding: 0 4px;
+
+  .back-btn {
+    font-size: 1.4rem; color: var(--text-main); cursor: pointer;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.05); border-radius: 50%;
+    transition: background 0.2s;
+    &:active { background: rgba(255,255,255,0.1); }
+  }
+
+  h1 {
+    margin: 0; font-size: 1.4rem; font-weight: 800;
+    color: var(--text-main); letter-spacing: 0.3px;
+  }
+
+  .today-btn {
+    color: var(--neon-purple); font-weight: 700; font-size: 0.85rem;
+    cursor: pointer; background: var(--neon-purple-dim);
+    padding: 6px 14px; border-radius: 20px;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    transition: all 0.2s;
+    &:active { background: rgba(139, 92, 246, 0.25); }
   }
 }
 
-// CALENDARIO CARD
+// --- CALENDARIO CARD ---
 .calendar-card {
-  background: var(--card-bg); border-radius: 24px; padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
-  margin-bottom: 30px;
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 18px 16px;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  margin-bottom: 28px;
 
   .month-header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
-    h2 { 
-      margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-main); text-transform: capitalize;
-      .year { color: var(--text-muted); font-weight: 400; margin-left: 5px; }
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+
+    h2 {
+      margin: 0; font-size: 1.1rem; font-weight: 700;
+      color: var(--text-main); text-transform: capitalize;
+      .year { color: var(--text-muted); font-weight: 400; margin-left: 6px; }
     }
-    ion-button { --color: var(--text-main); }
+
+    ion-button {
+      --color: var(--text-muted);
+      --padding-start: 4px; --padding-end: 4px;
+    }
   }
 
   .weekdays-grid {
-    display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin-bottom: 10px;
-    span { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; }
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    text-align: center; margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding-bottom: 10px;
+
+    span {
+      font-size: 0.72rem; color: var(--text-muted);
+      font-weight: 700; letter-spacing: 0.5px;
+    }
   }
 
   .days-grid {
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; row-gap: 10px;
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 4px; row-gap: 8px;
 
     .day-cell {
-      height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      border-radius: 12px; position: relative; cursor: pointer; transition: all 0.2s;
-      
-      .day-number { font-size: 0.9rem; font-weight: 500; color: var(--text-main); z-index: 2; }
+      height: 42px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      border-radius: 10px; position: relative;
+      cursor: pointer; transition: all 0.15s;
 
-      // Estados
-      &.today { 
-        background: rgba(59, 130, 246, 0.2); color: var(--neon-blue); border: 1px solid var(--neon-blue);
+      &:not(.empty):hover {
+        background: rgba(255,255,255,0.06);
       }
+
+      .day-number {
+        font-size: 0.88rem; font-weight: 500;
+        color: var(--text-main); line-height: 1;
+      }
+
+      &.today {
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        .day-number { color: var(--neon-purple); font-weight: 700; }
+      }
+
       &.selected {
-        background: var(--neon-purple); box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        background: var(--neon-purple);
+        box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
         .day-number { color: white; font-weight: 800; }
       }
 
-      // Dots (Indicadores)
       .dots {
-        display: flex; gap: 3px; position: absolute; bottom: 4px;
-        .dot { width: 4px; height: 4px; border-radius: 50%; }
-        .dot.match { background: var(--match-green); box-shadow: 0 0 4px var(--match-green); }
-        .dot.training { background: var(--neon-blue); }
+        display: flex; gap: 4px;
+        position: absolute; bottom: 5px;
+
+        .dot {
+          width: 5px; height: 5px; border-radius: 50%;
+
+          &.match {
+            background: var(--match-green);
+            box-shadow: 0 0 5px var(--match-green);
+          }
+          &.training {
+            background: var(--training-blue);
+            box-shadow: 0 0 5px var(--training-blue);
+          }
+        }
       }
     }
   }
 }
 
-// LISTA DE EVENTOS (Estilo Unificado)
-.section-title h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 15px; }
+// --- SECCIÓN EVENTOS ---
+.section-title {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px; padding: 0 2px;
 
-.events-list-pro {
-  display: flex; flex-direction: column; gap: 12px;
-
-  .event-card {
-    background: var(--card-bg); padding: 15px; border-radius: 18px;
-    border: 1px solid rgba(255,255,255,0.05); border-left: 4px solid #52525b;
-    
-    &.match-card { border-left-color: var(--match-green); }
-
-    .top-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-    
-    .type-tag { 
-        font-size: 0.6rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; 
-        &.match { color: var(--match-green); }
-    }
-    .time-tag { font-size: 0.75rem; color: var(--text-main); background: #27272a; padding: 2px 6px; border-radius: 4px; }
-
-    .event-main-title {
-        margin-bottom: 5px;
-        .match-vs { 
-            display: flex; align-items: center; gap: 8px;
-            .vs { color: var(--text-muted); font-size: 0.7rem; font-weight: 700; }
-            .mini-shield { width: 24px; height: 24px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-            .rival-name { color: var(--text-main); font-weight: 700; font-size: 1rem; }
-        }
-        .training-title { font-weight: 700; color: var(--text-main); font-size: 0.95rem; }
-    }
-    
-    .location-row { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  h3 {
+    margin: 0; font-size: 0.8rem; font-weight: 800;
+    color: var(--neon-purple); text-transform: uppercase;
+    letter-spacing: 1.5px; white-space: nowrap;
   }
 
+  &::after {
+    content: '';
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, rgba(139,92,246,0.3), transparent);
+  }
+}
+
+// --- TARJETAS DE EVENTO ---
+.events-list-pro {
+  display: flex; flex-direction: column; gap: 10px;
+
+  .event-card {
+    background: var(--card-bg);
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid var(--card-border);
+    border-left: 3px solid #334155;
+    transition: border-color 0.2s, transform 0.15s;
+    cursor: pointer;
+
+    &:active { transform: scale(0.99); }
+
+    &.match-card {
+      border-left-color: var(--match-green);
+      background: linear-gradient(135deg, var(--match-green-dim) 0%, var(--card-bg) 50%);
+    }
+
+    &:not(.match-card) {
+      border-left-color: var(--training-blue);
+      background: linear-gradient(135deg, var(--training-blue-dim) 0%, var(--card-bg) 50%);
+    }
+
+    .top-row {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 10px;
+
+      .type-tag {
+        display: flex; align-items: center; gap: 5px;
+        font-size: 0.65rem; font-weight: 800;
+        color: var(--text-muted); text-transform: uppercase;
+        letter-spacing: 1px;
+
+        ion-icon { font-size: 0.85rem; }
+
+        &.match {
+          color: var(--match-green);
+          ion-icon { color: var(--match-green); }
+        }
+        &:not(.match) {
+          color: var(--training-blue);
+          ion-icon { color: var(--training-blue); }
+        }
+      }
+
+      .right-meta {
+        display: flex; align-items: center; gap: 4px;
+
+        .time-tag {
+          font-size: 0.8rem; font-weight: 700;
+          color: var(--text-main);
+          background: rgba(255,255,255,0.08);
+          padding: 3px 10px; border-radius: 20px;
+          letter-spacing: 0.5px;
+        }
+
+        .delete-btn {
+          --padding-start: 4px; --padding-end: 4px;
+          margin: 0;
+        }
+      }
+    }
+
+    .event-main-title {
+      margin-bottom: 8px;
+
+      .match-vs {
+        display: flex; align-items: center; gap: 8px;
+
+        .vs {
+          font-size: 0.65rem; font-weight: 800;
+          color: var(--text-muted); letter-spacing: 1px;
+        }
+        .mini-shield {
+          width: 22px; height: 22px; object-fit: contain;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        .rival-name {
+          color: var(--text-main); font-weight: 700; font-size: 1rem;
+        }
+      }
+
+      .training-title {
+        font-weight: 700; color: var(--text-main); font-size: 0.95rem;
+      }
+    }
+
+    .location-row {
+      font-size: 0.75rem; color: var(--text-muted);
+      display: flex; align-items: center; gap: 5px;
+      ion-icon { font-size: 0.8rem; flex-shrink: 0; }
+    }
+  }
+
+  // ESTADO VACÍO
   .empty-day-state {
-    text-align: center; padding: 30px; color: var(--text-muted);
-    background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);
-    ion-icon { font-size: 2rem; margin-bottom: 10px; opacity: 0.5; }
-    p { margin: 0; font-size: 0.9rem; }
+    text-align: center; padding: 36px 20px;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.02);
+    border-radius: 14px;
+    border: 1px dashed rgba(255,255,255,0.08);
+
+    ion-icon { font-size: 2.2rem; margin-bottom: 10px; opacity: 0.4; display: block; }
+    p { margin: 0; font-size: 0.88rem; }
   }
 }

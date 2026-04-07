@@ -22,10 +22,13 @@ export class TeamDetailPage implements OnInit {
   players: Jugador[] = [];
   staff: UsuarioResumen[] = [];
   matches: Partido[] = [];
-  
+
   loading = true;
-  selectedSegment = 'squad'; 
+  selectedSegment = 'squad';
   isAdmin = false;
+
+  selectedPlayer: any = null;
+  isPlayerSheetOpen = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -106,6 +109,39 @@ export class TeamDetailPage implements OnInit {
           // Si es partido -> Ver Acta pública
           this.router.navigate(['/match-detail', id]);
       }
+  }
+
+  openPlayerSheet(player: any) {
+    this.selectedPlayer = player;
+    this.isPlayerSheetOpen = true;
+  }
+
+  closePlayerSheet() {
+    this.isPlayerSheetOpen = false;
+    this.selectedPlayer = null;
+  }
+
+  getAge(fechaNacimiento?: string): string {
+    if (!fechaNacimiento) return '—';
+    const diff = Date.now() - new Date(fechaNacimiento).getTime();
+    const age = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+    return `${age} años`;
+  }
+
+  getEstadoLabel(estado?: string): string {
+    switch (estado?.toUpperCase()) {
+      case 'LESIONADO': return 'Lesionado';
+      case 'BAJA':      return 'Baja';
+      default:          return 'Activo';
+    }
+  }
+
+  getEstadoColor(estado?: string): string {
+    switch (estado?.toUpperCase()) {
+      case 'LESIONADO': return '#f59e0b';
+      case 'BAJA':      return '#ef4444';
+      default:          return '#22c55e';
+    }
   }
 
   goBack() {

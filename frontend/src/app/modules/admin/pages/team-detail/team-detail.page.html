@@ -14,7 +14,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content>
   
   <div *ngIf="loading" class="spinner-center">
     <ion-spinner name="crescent" color="secondary"></ion-spinner>
@@ -53,10 +53,10 @@
     <div *ngIf="selectedSegment === 'squad'" class="content-section">
         <div class="section-header">JUGADORES ({{ players.length }})</div>
         <div class="roster-grid">
-            <div class="player-card-pro" *ngFor="let p of players">
+            <div class="player-card-pro" *ngFor="let p of players" (click)="openPlayerSheet(p)">
                 <div class="card-top">
                     <div class="avatar-container">
-                        <img [src]="p.fotoUrl || 'https://ui-avatars.com/api/?name='+p.nombre+'&background=random'" 
+                        <img [src]="p.fotoUrl || 'https://ui-avatars.com/api/?name='+p.nombre+'&background=random'"
                              (error)="p.fotoUrl = 'https://ui-avatars.com/api/?name='+p.nombre+'&background=random'">
                         <div class="dorsal-bubble">{{ p.dorsal || '-' }}</div>
                     </div>
@@ -64,6 +64,7 @@
                         <h3>{{ p.nombre }} {{ p.apellidos }}</h3>
                         <div class="role-badge">{{ p.posicion || 'JUGADOR' }}</div>
                     </div>
+                    <ion-icon name="chevron-forward" class="card-chevron"></ion-icon>
                 </div>
                 <div class="divider"></div>
                 <div class="card-stats">
@@ -74,6 +75,12 @@
                     <div class="stat">
                         <span class="label">ASISTENCIAS</span>
                         <span class="val">{{ p.asistencias || 0 }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">ESTADO</span>
+                        <span class="val estado-dot" [style.color]="getEstadoColor(p.estado)">
+                            ● {{ getEstadoLabel(p.estado) }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -125,13 +132,15 @@
                 </div>
 
                 <div class="actions">
-                    <ion-button *ngIf="isAdmin" fill="clear" (click)="handleEdit(m)">
-                        <ion-icon [name]="m.tipo === 'TRAINING' ? 'checkbox-outline' : 'create-outline'" slot="icon-only"></ion-icon>
-                    </ion-button>
-                    
-                    <ion-button fill="clear" (click)="handleView(m)" *ngIf="m.tipo !== 'TRAINING'">
-                        <ion-icon name="eye-outline" slot="icon-only"></ion-icon>
-                    </ion-button>
+                    <button *ngIf="isAdmin" class="action-pill edit-pill" (click)="handleEdit(m)">
+                        <ion-icon [name]="m.tipo === 'TRAINING' ? 'people-outline' : 'clipboard-outline'"></ion-icon>
+                        <span>{{ m.tipo === 'TRAINING' ? 'Asist.' : 'Acta' }}</span>
+                    </button>
+
+                    <button *ngIf="m.tipo !== 'TRAINING'" class="action-pill view-pill" (click)="handleView(m)">
+                        <ion-icon name="document-text-outline"></ion-icon>
+                        <span>Ver</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -143,4 +152,81 @@
     </div>
 
   </div>
+
+<!-- BOTTOM SHEET: FICHA JUGADOR -->
+<ion-modal [isOpen]="isPlayerSheetOpen"
+           (didDismiss)="closePlayerSheet()"
+           [initialBreakpoint]="0.75"
+           [breakpoints]="[0, 0.75, 1]"
+           cssClass="night-modal">
+  <ng-template>
+    <div class="player-sheet" *ngIf="selectedPlayer">
+
+      <div class="sheet-handle"></div>
+
+      <div class="sheet-header">
+        <div class="sheet-avatar-wrap">
+          <img [src]="selectedPlayer.fotoUrl || 'https://ui-avatars.com/api/?name='+selectedPlayer.nombre+'&background=random&color=fff&size=128'"
+               class="sheet-avatar">
+          <div class="sheet-dorsal">{{ selectedPlayer.dorsal || '-' }}</div>
+        </div>
+        <div class="sheet-identity">
+          <h2>{{ selectedPlayer.nombre }} {{ selectedPlayer.apellidos }}</h2>
+          <span class="sheet-position">{{ selectedPlayer.posicion || 'Sin posición' }}</span>
+          <span class="sheet-estado" [style.color]="getEstadoColor(selectedPlayer.estado)">
+            ● {{ getEstadoLabel(selectedPlayer.estado) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="sheet-stats">
+        <div class="sheet-stat">
+          <span class="s-val">{{ selectedPlayer.goles || 0 }}</span>
+          <span class="s-label">Goles</span>
+        </div>
+        <div class="sheet-stat">
+          <span class="s-val">{{ selectedPlayer.asistencias || 0 }}</span>
+          <span class="s-label">Asistencias</span>
+        </div>
+        <div class="sheet-stat">
+          <span class="s-val">{{ selectedPlayer.minutosJugados || 0 }}</span>
+          <span class="s-label">Minutos</span>
+        </div>
+      </div>
+
+      <div class="sheet-info-grid">
+        <div class="info-item" *ngIf="selectedPlayer.fechaNacimiento">
+          <ion-icon name="calendar-outline"></ion-icon>
+          <div>
+            <span class="info-label">EDAD</span>
+            <span class="info-val">{{ getAge(selectedPlayer.fechaNacimiento) }}</span>
+          </div>
+        </div>
+        <div class="info-item" *ngIf="selectedPlayer.fechaAlta">
+          <ion-icon name="enter-outline"></ion-icon>
+          <div>
+            <span class="info-label">ALTA</span>
+            <span class="info-val">{{ selectedPlayer.fechaAlta | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+        <div class="info-item" *ngIf="selectedPlayer.telefono || selectedPlayer.telefonoContacto">
+          <ion-icon name="call-outline"></ion-icon>
+          <div>
+            <span class="info-label">TELÉFONO</span>
+            <span class="info-val">{{ selectedPlayer.telefono || selectedPlayer.telefonoContacto }}</span>
+          </div>
+        </div>
+        <div class="info-item" *ngIf="selectedPlayer.observaciones">
+          <ion-icon name="document-text-outline"></ion-icon>
+          <div>
+            <span class="info-label">OBSERVACIONES</span>
+            <span class="info-val">{{ selectedPlayer.observaciones }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </ng-template>
+</ion-modal>
+
 </ion-content>

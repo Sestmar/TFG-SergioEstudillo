@@ -55,18 +55,20 @@
         <div class="info-col">
           <div class="top-row">
             <span class="type-tag" [class.match]="event.tipo === 'PARTIDO'">
-               {{ event.tipo === 'PARTIDO' ? 'MATCHDAY' : 'TRAINING' }}
+              <ion-icon [name]="event.tipo === 'PARTIDO' ? 'football-outline' : 'barbell-outline'"></ion-icon>
+              {{ event.tipo === 'PARTIDO' ? 'MATCHDAY' : 'TRAINING' }}
             </span>
-            <span class="time-tag">{{ event.fechaHora | date:'HH:mm' }}</span>
-            
-            <ion-button *ngIf="canDelete" 
-                        fill="clear" 
-                        color="danger" 
-                        size="small" 
-                        class="delete-btn"
-                        (click)="deleteEvent(event, $event)">
-                <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-            </ion-button>
+            <div class="right-meta">
+              <span class="time-tag">{{ event.fechaHora | date:'HH:mm' }}</span>
+              <ion-button *ngIf="canDelete"
+                          fill="clear"
+                          color="danger"
+                          size="small"
+                          class="delete-btn"
+                          (click)="deleteEvent(event, $event)">
+                  <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
           </div>
 
           <div class="event-main-title">
