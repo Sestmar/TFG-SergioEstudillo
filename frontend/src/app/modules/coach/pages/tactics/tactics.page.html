@@ -8,7 +8,7 @@
 
       <div class="formation-pill">
         <span class="label">ESQUEMA</span>
-        <ion-select [value]="selectedFormation" (ionChange)="onFormationChange($event)" interface="popover" class="formation-select" cssClass="formation-popover">
+        <ion-select [value]="selectedFormation" (ionChange)="onFormationChange($event)" interface="popover" class="formation-select" [interfaceOptions]="{ cssClass: 'night-select-popover' }">
           <ion-select-option *ngFor="let f of formations" [value]="f">{{ f }}</ion-select-option>
         </ion-select>
         <ion-icon name="caret-down-outline" class="select-arrow"></ion-icon>
