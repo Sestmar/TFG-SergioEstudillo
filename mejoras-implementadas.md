@@ -942,4 +942,75 @@ get filteredActiveUsers(): AdminUserDto[] {
 - `admin-dashboard.page.html` — bloque "Base de Datos" reemplazado por segment + searchbar + select de equipo + tarjetas enriquecidas
 - `admin-dashboard.page.scss` — estilos `.role-segment`, `.search-filter-row`, `.night-searchbar`, `.equipo-select`, `.card-actions`, `.estado-badge` (variantes `.activo` y `.lesionado`)
 
+---
+
+## 26. Panel Administrativo: Modal de Edición con Reactive Forms 📝✅
+
+Se implementó el `UserEditModalComponent`, un componente modal dedicado que permite al administrador editar la identidad y el perfil deportivo de cualquier usuario directamente desde la lista de la Base de Datos.
+
+### Desafío Técnico
+
+El modal de edición necesitaba: (1) validación de campos obligatorios y formato de email sin lógica dispersa en el template, (2) mostrar secciones condicionales según el rol del usuario (solo mostrar Dorsal/Posición/Estado si es Jugador), y (3) integrarse con el `ModalController` de Ionic para poder devolver un resultado al componente padre y desencadenar la recarga de datos.
+
+### Solución e Implementación
+
+**Arquitectura del componente**
+
+Se creó `UserEditModalComponent` en `frontend/src/app/modules/admin/components/user-edit-modal/` y se declaró en `AdminModule`. Recibe los datos del usuario mediante `@Input()` desde el padre, que lo abre vía `ModalController.create({ component: UserEditModalComponent, componentProps: { user, teams } })`.
+
+**ReactiveFormsModule + Validación**
+
+Se usó `FormBuilder` para definir el formulario con validadores declarativos, evitando lógica de validación en el template:
+
+```typescript
+this.editForm = this.fb.group({
+  nombre:    ['', [Validators.required, Validators.minLength(2)]],
+  apellidos: ['', [Validators.required, Validators.minLength(2)]],
+  email:     ['', [Validators.required, Validators.email]],
+  telefono:  [''],
+  dorsal:    [null],
+  posicion:  [''],
+  estado:    ['ACTIVO'],
+  equipoId:  [null]
+});
+```
+
+El botón de guardar está `[disabled]="editForm.invalid || isSaving"`, eliminando la necesidad de guards manuales en `onSave()`.
+
+**Sección condicional de Perfil Deportivo**
+
+La sección de datos de jugador (Dorsal, Posición, Equipo, Estado) solo se renderiza cuando `user.rol?.toUpperCase().includes('JUGADOR')`. Se usa `.includes()` en lugar de `===` para manejar el prefijo `ROLE_` que puede devolver el backend.
+
+**Flujo de guardado y comunicación con el padre**
+
+Al guardar con éxito, el modal llama a `modalCtrl.dismiss(true)` — el valor `true` actúa como señal para que el padre recargue la lista. Si se cancela o hay un error, el padre recibe `undefined` y no recarga.
+
+```typescript
+async onSave() {
+  if (this.editForm.invalid) return this.notificationService.error('⚠️ Revisa los campos obligatorios');
+  this.isSaving = true;
+  this.adminService.updateUser(this.user.id!, this.editForm.value).subscribe({
+    next: () => {
+      this.notificationService.success('¡Perfil actualizado correctamente! ⚽');
+      this.modalCtrl.dismiss(true); // señal de recarga al padre
+    },
+    error: () => {
+      this.isSaving = false;
+      this.notificationService.error('No se pudo actualizar el perfil');
+    }
+  });
+}
+```
+
+**Estética Night Stadium**
+
+El componente tiene su propio SCSS con fondo `#0a0e1a`, inputs nativos estilizados con borde violeta neón en focus, selects con flecha SVG personalizada y un footer de botones con `btn-cancel` (transparente) y `btn-save` (violeta con `box-shadow` de glow).
+
+### Archivos modificados
+
+- `frontend/src/app/modules/admin/components/user-edit-modal/user-edit-modal.component.ts` — componente con `@Input() user`, `@Input() teams`, `FormGroup`, `onSave()`, `close()`
+- `frontend/src/app/modules/admin/components/user-edit-modal/user-edit-modal.component.html` — formulario con secciones Identidad y Perfil Deportivo condicional
+- `frontend/src/app/modules/admin/components/user-edit-modal/user-edit-modal.component.scss` — estilos Night Stadium para inputs, selects y botones de acción
+- `frontend/src/app/modules/admin/admin.module.ts` — `UserEditModalComponent` declarado e importado
+- `frontend/src/app/modules/admin/pages/admin-dashboard/admin-dashboard.page.ts` — `openEditModal()` usando `ModalController`, recarga de datos al recibir `data === true`
 

@@ -735,3 +735,45 @@ ion-alert {
 .print-only-report {
   display: none;
 }
+
+// ─── Night Select Popover (Admin Dashboard - Filtro Equipo) ───────────────────
+.night-select-popover {
+  --background: #0d1526;
+  --backdrop-opacity: 0.5;
+
+  .popover-content {
+    background: #0d1526;
+    border: 1px solid rgba(108, 99, 255, 0.25);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(108, 99, 255, 0.1);
+    overflow: hidden;
+  }
+
+  ion-list {
+    background: transparent;
+    padding: 6px 0;
+  }
+
+  ion-item {
+    --background: transparent;
+    --background-hover: rgba(108, 99, 255, 0.12);
+    --color: #cbd5e1;
+    --border-color: rgba(255, 255, 255, 0.04);
+    --padding-start: 16px;
+    --inner-padding-end: 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.15s ease;
+
+    &.item-radio-checked,
+    &.item-radio-checked:hover {
+      --background: rgba(108, 99, 255, 0.18);
+      --color: #a78bfa;
+    }
+  }
+
+  ion-radio {
+    --color: #475569;
+    --color-checked: #8b5cf6;
+  }
+}

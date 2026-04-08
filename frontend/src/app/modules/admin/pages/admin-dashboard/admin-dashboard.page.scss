@@ -487,8 +487,10 @@
     border: 1px solid rgba(255,255,255,0.08);
     color: white;
     font-size: 0.85rem;
-    min-width: 110px;
+    width: 120px;
+    max-width: 120px;
     padding: 6px 8px;
+    flex-shrink: 0;
   }
 }
 

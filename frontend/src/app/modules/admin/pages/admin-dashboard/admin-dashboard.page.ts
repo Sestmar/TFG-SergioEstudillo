@@ -1,7 +1,6 @@
 import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { AdminService } from 'src/app/core/services/admin/admin.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { ToastController, LoadingController, AlertController, ModalController } from '@ionic/angular';
@@ -50,7 +49,6 @@ export class AdminDashboardPage implements OnInit {
   // Búsqueda y filtros en Base de Datos
   searchTerm = '';
   equipoFilter: number | null = null;
-  private searchSubject = new Subject<string>();
 
   // Control de Modales
   isUserModalOpen = false;
@@ -84,13 +82,6 @@ export class AdminDashboardPage implements OnInit {
 
   ngOnInit() {
     this.loadData();
-    this.searchSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(term => {
-      this.searchTerm = term;
-    });
   }
 
   get filteredActiveUsers(): AdminUserDto[] {
@@ -107,7 +98,7 @@ export class AdminDashboardPage implements OnInit {
   }
 
   onSearch(event: any) {
-    this.searchSubject.next(event.detail.value ?? '');
+    this.searchTerm = event.detail.value ?? '';
   }
 
   onRoleSegmentChange(ev: any) {

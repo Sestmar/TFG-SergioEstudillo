@@ -134,21 +134,24 @@
 
           <!-- Buscador + filtro de equipo -->
           <div class="search-filter-row">
-            <ion-searchbar
-              placeholder="Buscar por nombre..."
-              [debounce]="300"
-              (ionInput)="onSearch($event)"
-              class="night-searchbar">
-            </ion-searchbar>
             <ion-select
               *ngIf="activeRoleSegment === 'JUGADOR'"
               [(ngModel)]="equipoFilter"
               placeholder="Equipo"
               interface="popover"
-              class="dark-select equipo-select">
+              [interfaceOptions]="{ cssClass: 'night-select-popover' }"
+              class="dark-select equipo-select"
+              style="flex: 0 0 auto;">
               <ion-select-option [value]="null">Todos</ion-select-option>
               <ion-select-option *ngFor="let t of teams" [value]="t.idEquipo ?? t.id">{{ t.nombre }}</ion-select-option>
             </ion-select>
+            <ion-searchbar
+              placeholder="Buscar por nombre..."
+              [debounce]="300"
+              (ionChange)="onSearch($event)"
+              class="night-searchbar"
+              style="flex: 1; min-width: 0;">
+            </ion-searchbar>
           </div>
 
           <!-- Lista filtrada -->
