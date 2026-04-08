@@ -25,8 +25,8 @@ export class UserEditModalComponent implements OnInit {
   ) {
     this.editForm = this.fb.group({
       // Identidad
-      nombre: ['', [Validators.required, Validators.minLength(2)]],
-      apellidos: ['', [Validators.required, Validators.minLength(2)]],
+      nombre: ['', Validators.required],
+      apellidos: [''],
       email: ['', [Validators.required, Validators.email]],
       telefono: [''],
       
@@ -41,14 +41,14 @@ export class UserEditModalComponent implements OnInit {
   ngOnInit() {
     if (this.user) {
       this.editForm.patchValue({
-        nombre: this.user.nombre,
-        apellidos: this.user.apellidos,
-        email: this.user.email,
-        telefono: this.user.telefono,
-        dorsal: this.user.dorsal,
-        posicion: this.user.posicion,
-        estado: this.user.estado || 'ACTIVO',
-        equipoId: this.user.equipoId
+        nombre:   this.user.nombre    ?? '',
+        apellidos: this.user.apellidos ?? '',
+        email:    this.user.email     ?? '',
+        telefono: this.user.telefono  ?? '',
+        dorsal:   this.user.dorsal    ?? null,
+        posicion: this.user.posicion  ?? '',
+        estado:   this.user.estado    ?? 'ACTIVO',
+        equipoId: this.user.equipoId  ?? null
       });
     }
   }
