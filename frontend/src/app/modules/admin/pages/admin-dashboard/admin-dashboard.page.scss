@@ -455,3 +455,76 @@
 }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+// BASE DE DATOS — Sub-segment y búsqueda
+.role-segment {
+  margin: 16px 0 12px;
+  --background: rgba(15, 23, 42, 0.6);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.search-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  .night-searchbar {
+    flex: 1;
+    --background: rgba(15, 23, 42, 0.7);
+    --color: white;
+    --placeholder-color: #64748b;
+    --icon-color: #64748b;
+    --border-radius: 12px;
+    --box-shadow: none;
+    padding: 0;
+  }
+
+  .equipo-select {
+    --background: rgba(15, 23, 42, 0.7);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: white;
+    font-size: 0.85rem;
+    min-width: 110px;
+    padding: 6px 8px;
+  }
+}
+
+// Acciones de tarjeta (edit + delete)
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  flex-shrink: 0;
+
+  .edit-btn {
+    --color: #64748b;
+    transition: all 0.2s ease;
+    &:hover { --color: var(--accent); transform: scale(1.1); }
+  }
+}
+
+// Badges de estado
+.estado-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.activo {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  &.lesionado {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+}

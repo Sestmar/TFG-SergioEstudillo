@@ -119,20 +119,70 @@
         </div>
 
         <div *ngIf="userSegment === 'active'">
-            <div class="users-list">
-                <div class="admin-card compact" *ngFor="let user of activeUsers">
-                    <div class="user-row">
-                        <img [src]="user.fotoUrl || 'https://ui-avatars.com/api/?name=' + user.nombre" class="avatar-img">
-                        <div class="info">
-                            <h4>{{ user.nombre }} {{ user.apellidos }}</h4>
-                            <p class="role-text">{{ cleanRoleName(user.rol) }} • {{ user.equipoNombre || 'Sin Equipo' }}</p>
-                        </div>
-                        <ion-button fill="clear" class="delete-btn" (click)="deleteUser(user)">
-                            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-                        </ion-button>
-                    </div>
+
+          <!-- Sub-segment: Jugadores / Entrenadores -->
+          <ion-segment [(ngModel)]="activeRoleSegment" mode="ios" (ionChange)="onRoleSegmentChange($event)" class="role-segment">
+            <ion-segment-button value="JUGADOR">
+              <ion-icon name="football-outline"></ion-icon>
+              <ion-label>Jugadores</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="ENTRENADOR">
+              <ion-icon name="clipboard-outline"></ion-icon>
+              <ion-label>Entrenadores</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+
+          <!-- Buscador + filtro de equipo -->
+          <div class="search-filter-row">
+            <ion-searchbar
+              placeholder="Buscar por nombre..."
+              [debounce]="300"
+              (ionInput)="onSearch($event)"
+              class="night-searchbar">
+            </ion-searchbar>
+            <ion-select
+              *ngIf="activeRoleSegment === 'JUGADOR'"
+              [(ngModel)]="equipoFilter"
+              placeholder="Equipo"
+              interface="popover"
+              class="dark-select equipo-select">
+              <ion-select-option [value]="null">Todos</ion-select-option>
+              <ion-select-option *ngFor="let t of teams" [value]="t.idEquipo ?? t.id">{{ t.nombre }}</ion-select-option>
+            </ion-select>
+          </div>
+
+          <!-- Lista filtrada -->
+          <div class="users-list">
+            <div class="admin-card compact" *ngFor="let user of filteredActiveUsers">
+              <div class="user-row">
+                <img [src]="user.fotoUrl || 'https://ui-avatars.com/api/?name=' + (user.nombre + '+' + user.apellidos) + '&background=1e3a5f&color=fff'" class="avatar-img">
+                <div class="info">
+                  <h4>{{ user.nombre }} {{ user.apellidos }}</h4>
+                  <p class="role-text">
+                    {{ user.equipoNombre || 'Sin Equipo' }}
+                    <span *ngIf="user.dorsal"> · #{{ user.dorsal }}</span>
+                    <span *ngIf="user.posicion"> · {{ user.posicion }}</span>
+                  </p>
                 </div>
+                <div class="card-actions">
+                  <span class="estado-badge" *ngIf="user.estado" [class.activo]="user.estado === 'Activo'" [class.lesionado]="user.estado === 'Lesionado'">
+                    {{ user.estado }}
+                  </span>
+                  <ion-button fill="clear" class="edit-btn" (click)="openEditModal(user)">
+                    <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" class="delete-btn" (click)="deleteUser(user)">
+                    <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </div>
+              </div>
             </div>
+
+            <div *ngIf="filteredActiveUsers.length === 0" class="empty-state">
+              <ion-icon name="search-outline"></ion-icon>
+              <p>No se encontraron resultados.</p>
+            </div>
+          </div>
         </div>
     </div>
 
@@ -281,6 +331,70 @@
 
             </div>
         </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Modal de Edición de Usuario -->
+  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="isEditModalOpen = false" [initialBreakpoint]="0.90" [breakpoints]="[0, 0.90, 1]" cssClass="night-modal">
+    <ng-template>
+      <ion-content class="ion-padding" style="--background: transparent;">
+        <div class="modal-content-dark" style="min-height: 100%;">
+
+          <h3>Editar Perfil</h3>
+          <p class="modal-subtitle" *ngIf="editingUser">{{ editingUser.nombre }} {{ editingUser.apellidos }}</p>
+
+          <ion-list class="dark-list">
+            <ion-item>
+              <ion-label position="stacked">Nombre *</ion-label>
+              <ion-input [(ngModel)]="editForm.nombre"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Apellidos *</ion-label>
+              <ion-input [(ngModel)]="editForm.apellidos"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Email *</ion-label>
+              <ion-input type="email" [(ngModel)]="editForm.email"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Teléfono</ion-label>
+              <ion-input type="tel" [(ngModel)]="editForm.telefono" placeholder="+34 600 000 000"></ion-input>
+            </ion-item>
+
+            <ng-container *ngIf="editingUser?.jugadorId">
+              <ion-item>
+                <ion-label position="stacked">Dorsal</ion-label>
+                <ion-input type="number" [(ngModel)]="editForm.dorsal" placeholder="Ej: 10"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Posición</ion-label>
+                <ion-select [(ngModel)]="editForm.posicion" interface="popover" placeholder="Seleccionar...">
+                  <ion-select-option *ngFor="let p of posiciones" [value]="p">{{ p }}</ion-select-option>
+                </ion-select>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Estado Físico</ion-label>
+                <ion-select [(ngModel)]="editForm.estado" interface="popover" placeholder="Seleccionar...">
+                  <ion-select-option *ngFor="let e of estadosFisicos" [value]="e">{{ e }}</ion-select-option>
+                </ion-select>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Equipo</ion-label>
+                <ion-select [(ngModel)]="editForm.equipoId" interface="popover" placeholder="Sin equipo">
+                  <ion-select-option [value]="null">Sin Equipo</ion-select-option>
+                  <ion-select-option *ngFor="let t of teams" [value]="t.idEquipo ?? t.id">{{ t.nombre }}</ion-select-option>
+                </ion-select>
+              </ion-item>
+            </ng-container>
+          </ion-list>
+
+          <ion-button expand="block" color="primary" class="mt-4" (click)="saveEditUser()">
+            <ion-icon name="save-outline" slot="start"></ion-icon>
+            Guardar Cambios
+          </ion-button>
+
+        </div>
+      </ion-content>
     </ng-template>
   </ion-modal>
 

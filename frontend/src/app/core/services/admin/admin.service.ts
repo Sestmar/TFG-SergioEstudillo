@@ -37,6 +37,10 @@ export class AdminService {
     return this.http.delete<void>(`${this.apiUrl}/usuario/${id}`);
   }
 
+  updateUser(id: number, payload: Record<string, any>): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/usuarios/${id}`, payload);
+  }
+
   assignTeam(idUsuario: number, idEquipo: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/asignar-equipo`, { idUsuario, idEquipo });
   }

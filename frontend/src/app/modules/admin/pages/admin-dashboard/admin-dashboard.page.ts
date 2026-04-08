@@ -1,11 +1,13 @@
 import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { AdminService } from 'src/app/core/services/admin/admin.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
-import { ToastController, LoadingController, AlertController } from '@ionic/angular';
+import { ToastController, LoadingController, AlertController, ModalController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AdminUserDto, AdminEquipoDto } from 'src/app/shared/models/models';
+import { UserEditModalComponent } from '../../components/user-edit-modal/user-edit-modal.component';
 
 interface CandidatoJugador extends AdminUserDto {
   selectedTeamId: number | null;
@@ -42,12 +44,21 @@ export class AdminDashboardPage implements OnInit {
   // Control de vista
   currentView = 'users';
   userSegment = 'pending';
+  activeRoleSegment: 'JUGADOR' | 'ENTRENADOR' = 'JUGADOR';
   loading = false;
+
+  // Búsqueda y filtros en Base de Datos
+  searchTerm = '';
+  equipoFilter: number | null = null;
+  private searchSubject = new Subject<string>();
 
   // Control de Modales
   isUserModalOpen = false;
   isTeamModalOpen = false;
   isMatchModalOpen = false;
+
+  posiciones = ['Portero', 'Defensa Central', 'Lateral Derecho', 'Lateral Izquierdo', 'Pivote', 'Centrocampista', 'Mediapunta', 'Extremo Derecho', 'Extremo Izquierdo', 'Delantero Centro'];
+  estadosFisicos = ['Activo', 'Lesionado', 'Sancionado', 'Baja Temporal'];
 
   // Control del tipo de evento (Partido vs Entrenamiento)
   eventType: 'MATCH' | 'TRAINING' = 'MATCH';
@@ -67,11 +78,42 @@ export class AdminDashboardPage implements OnInit {
     private toastCtrl: ToastController,
     private loadingCtrl: LoadingController,
     private alertCtrl: AlertController,
+    private modalCtrl: ModalController,
     private router: Router
   ) { }
 
   ngOnInit() {
     this.loadData();
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(term => {
+      this.searchTerm = term;
+    });
+  }
+
+  get filteredActiveUsers(): AdminUserDto[] {
+    const rol = this.activeRoleSegment;
+    const term = this.searchTerm.toLowerCase().trim();
+
+    return this.activeUsers.filter(u => {
+      const matchRol = (u.rol || '').toUpperCase().includes(rol);
+      const fullName = ((u.nombre || '') + ' ' + (u.apellidos || '')).toLowerCase();
+      const matchSearch = !term || fullName.includes(term) || (u.email || '').toLowerCase().includes(term);
+      const matchEquipo = !this.equipoFilter || u.equipoId === this.equipoFilter;
+      return matchRol && matchSearch && matchEquipo;
+    });
+  }
+
+  onSearch(event: any) {
+    this.searchSubject.next(event.detail.value ?? '');
+  }
+
+  onRoleSegmentChange(ev: any) {
+    this.activeRoleSegment = ev.detail.value;
+    this.equipoFilter = null;
+    this.searchTerm = '';
   }
 
   async logout() {
@@ -198,6 +240,24 @@ export class AdminDashboardPage implements OnInit {
       setTimeout(() => {
           this.loadUsersAndCalculateCandidates();
       }, 500);
+  }
+
+  async openEditModal(user: AdminUserDto) {
+    const modal = await this.modalCtrl.create({
+      component: UserEditModalComponent,
+      componentProps: {
+        user: { ...user },
+        teams: this.teams
+      },
+      cssClass: 'night-modal'
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    if (data) {
+      this.loadUsersAndCalculateCandidates();
+    }
   }
 
   async deleteUser(user: AdminUserDto) {

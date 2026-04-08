@@ -479,33 +479,61 @@ getCurrentUser(): Observable<User> {
 
 ---
 
-## 22. Panel de Control Administrativo Profesional (En Proceso) 🛠️🚀
+## 22. Panel de Gestión Administrativa: Edición Maestra de Usuarios y Jugadores 🛠️👑
 
-Se ha iniciado la transformación de la sección de "Base de Datos" del administrador en una herramienta de gestión profesional, permitiendo la edición completa de perfiles y una visualización organizada por categorías.
+Se ha completado la Fase 1 del panel administrativo, permitiendo a los gestores del club editar de forma integral la información de cualquier usuario y su perfil deportivo asociado (Jugador) en una sola operación atómica y segura.
 
-### Fase 1: Backend y Endpoints de Gestión (Completado ✅)
-- **Centralización de CRUDs**: Se ha mantenido la arquitectura de *Thin Controllers* separando la gestión de identidad (`UsuarioController`) de la gestión de perfiles de rol (`UserController`, `JugadorController`).
-- **Endpoints de Actualización Atómica**:
-    - `UserController`: Implementación de `@PutMapping("/{id}")` que permite la actualización dinámica de datos de identidad (Email, Nombre, Teléfono) mediante el patrón de mapeo de actualizaciones parciales.
-    - `JugadorController`: Implementación de `@PutMapping("/{id}")` protegido con `@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")` para la edición de datos deportivos (Dorsal, Posición, Estado Físico).
-- **Seguridad Granular**: Refuerzo de la seguridad a nivel de método, asegurando que solo el Administrador pueda realizar bajas definitivas (`DELETE`) y que la edición esté restringida a roles de gestión.
+### Desafío Técnico
+La información de una persona en el sistema está fragmentada: la identidad (Nombre, Email, Teléfono) reside en la tabla `Usuario`, mientras que la ficha técnica (Dorsal, Posición, Estado, Equipo) reside en la tabla `Jugador`. Una actualización parcial desde el frontend requería un mecanismo flexible que pudiera identificar qué campos han cambiado y asegurar que ambas tablas se sincronicen sin dejar datos inconsistentes si una de las operaciones fallaba.
+
+### Solución e Implementación
+- **Payload Dinámico (Map Reflection)**: Se implementó un controlador que recibe un `Map<String, Object>`. Esto permite un envío "Patch-style": solo se procesan y actualizan los campos presentes en el JSON enviado desde el frontend.
+- **Transaccionalidad Atómica (`@Transactional`)**: Se marcó el método del servicio con `@Transactional` de Spring. Esto garantiza que si la actualización del `Usuario` es exitosa pero la del `Jugador` falla, toda la operación se revierte (Rollback), manteniendo la integridad total de la base de datos.
+- **Orquestación de Entidades**: El `AdminService` actúa como orquestador, recuperando ambas entidades por ID, aplicando los setters condicionales y gestionando la relación con la entidad `Equipo` mediante sus repositorios correspondientes.
 
 ```java
-// Endpoint de actualización deportiva en JugadorController.java
-@PutMapping("/{id}")
-@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR') or @jugadorService.isOwner(#id, authentication.name)")
-public Jugador actualizar(@PathVariable Integer id, @RequestBody JugadorDto dto) {
-    return jugadorService.actualizar(id, dto);
+// Implementación de actualización multientidad en AdminService.java
+@Transactional
+public void actualizarUsuario(Integer id, Map<String, Object> payload) {
+    Usuario u = usuarioRepo.findById(id)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+    // Actualización dinámica de identidad
+    if (payload.containsKey("nombre")) u.setNombre((String) payload.get("nombre"));
+    if (payload.containsKey("email")) u.setEmail((String) payload.get("email"));
+    if (payload.containsKey("telefono")) u.setTelefono((String) payload.get("telefono"));
+    usuarioRepo.save(u);
+
+    // Sincronización con ficha deportiva (si existe)
+    jugadorRepo.findByUsuario_IdUsuario(id).ifPresent(jugador -> {
+        if (payload.containsKey("dorsal")) {
+            Object d = payload.get("dorsal");
+            jugador.setDorsal(d != null ? Integer.valueOf(d.toString()) : null);
+        }
+        if (payload.containsKey("posicion")) jugador.setPosicion((String) payload.get("posicion"));
+        if (payload.containsKey("estado")) jugador.setEstado((String) payload.get("estado"));
+        if (payload.containsKey("equipoId")) {
+            Object eqId = payload.get("equipoId");
+            if (eqId != null) {
+                equipoRepo.findById(Integer.valueOf(eqId.toString()))
+                        .ifPresent(jugador::setEquipoPrincipal);
+            } else {
+                jugador.setEquipoPrincipal(null);
+            }
+        }
+        jugadorRepo.save(jugador);
+    });
 }
 ```
 
-### Siguientes Pasos (En Desarrollo 🔲)
-- **Categorización Frontend**: Implementación de `ion-segment` para dividir la lista de usuarios en Jugadores, Entrenadores y Staff.
-- **Buscador Reactivo**: Añadir búsqueda por nombre con operadores de `debounceTime` de RxJS.
-- **Modal de Edición Full**: Creación de un formulario reactivo profesional con estética *Night Stadium* para editar todos los campos desde una única interfaz.
+### Seguridad de Acceso
+- **Blindaje Administrativo**: El endpoint `PUT /api/admin/usuarios/{id}` ha sido securizado mediante `@PreAuthorize("hasRole('ADMIN')")` en el `AdminController`, delegando la validación del token JWT y el rol a la capa de seguridad de Spring.
 
+---
 
-Se ha transformado la landing page de una pantalla de bienvenida básica (solo botones de login/registro) a una página pública de presentación completa del club, con scroll fluido entre secciones y todos los enlaces del navbar y footer funcionales.
+## 23. Landing Page: Presentación Institucional y Navegación Pública 🏟️✅
+
+Se ha transformado la landing page de una pantalla de bienvenida básica a una página pública de presentación completa del club, con scroll fluido entre secciones y todos los enlaces del navbar y footer funcionales.
 
 ### Desafío Técnico
 
@@ -798,5 +826,120 @@ getEstadoColor(estado?: string): string   // Devuelve hex para usar en [style.co
 - `team-detail.page.ts` — `selectedPlayer`, `isPlayerSheetOpen`, `openPlayerSheet()`, `closePlayerSheet()`, `getAge()`, `getEstadoLabel()`, `getEstadoColor()`
 - `team-detail.page.html` — `(click)="openPlayerSheet(p)"` en tarjetas; stat ESTADO; `ion-modal` bottom sheet completo
 - `team-detail.page.scss` — cursor pointer + `:active` en tarjetas; `.card-chevron`; `.estado-dot`; sección completa `.player-sheet` con handle, header, stats y info-grid
+
+---
+
+## 24. Panel Administrativo: Enriquecimiento del Endpoint de Usuarios Activos 🗃️✅
+
+Se amplió la respuesta del endpoint `GET /api/admin/usuarios-activos` para que incluya todos los datos necesarios para pre-cargar formularios de edición sin requerir llamadas adicionales al servidor.
+
+### Desafío Técnico
+
+El método `getUsuariosActivos()` en `AdminService.java` devolvía un mapa mínimo (`id`, `nombre` concatenado, `fotoUrl`, `rol`, `equipoNombre`). Este diseño obligaría al frontend a hacer una segunda petición para obtener los campos individuales (`nombre`, `apellidos`, `email`, `teléfono`) y los datos deportivos (`dorsal`, `posición`, `estado`) cada vez que el administrador quisiera editar un usuario. Con listas grandes, esto generaría una cascada de llamadas N+1.
+
+### Solución e Implementación
+
+- **Separación de campos de identidad**: El campo `nombre` se devuelve ahora por separado de `apellidos`, y adicionalmente se incluye `nombreCompleto` para los usos de visualización directa. Esto permite que el formulario de edición pre-cargue cada campo en su `FormControl` correspondiente sin parsear strings.
+- **Datos deportivos en la misma pasada**: En el bloque `jugOpt.isPresent()`, se añaden `dorsal`, `posicion`, `estado` y `jugadorId` al mapa. La entidad `Jugador` ya estaba cargada para obtener el equipo, por lo que el coste de añadir estos campos es cero — no hay consultas adicionales a la base de datos.
+- **Datos de entrenador**: De forma análoga, para el bloque de `Entrenador` se añaden `especialidad`, `licencia` y `entrenadorId`.
+- **`equipoId` explícito**: Se garantiza que `equipoId` siempre tenga un valor en el mapa (puede ser `null`), evitando `NullPointerException` en el frontend al intentar leer una clave ausente.
+
+```java
+// Datos deportivos añadidos sin coste de consulta extra
+if (jugOpt.isPresent()) {
+    Jugador jug = jugOpt.get();
+    map.put("dorsal",    jug.getDorsal());
+    map.put("posicion",  jug.getPosicion());
+    map.put("estado",    jug.getEstado());
+    map.put("jugadorId", jug.getIdJugador());
+}
+```
+
+### Archivos modificados
+
+- `AdminService.java` — método `getUsuariosActivos()` enriquecido con campos de identidad separados y datos deportivos/staff
+
+---
+
+## 25. Panel Administrativo: Base de Datos con Segments, Búsqueda y Tarjetas Enriquecidas 🔍📋✅
+
+Se transformó la sección "Base de Datos" del panel de administrador en un panel de gestión profesional con categorización por rol, búsqueda en tiempo real, filtrado por equipo y tarjetas de usuario con información completa.
+
+### Desafío Técnico
+
+La vista previa mostraba una lista plana y sin filtros con todos los usuarios mezclados — jugadores, entrenadores y staff en el mismo scroll. No había forma de encontrar a un jugador específico en clubes con plantillas grandes, ni de distinguir visualmente su estado físico. Los botones de acción solo incluían eliminar, sin posibilidad de editar.
+
+### Solución e Implementación
+
+**Tipado extendido (`AdminUserDto`)**
+
+Se amplió la interfaz TypeScript `AdminUserDto` en `models.ts` para reflejar los nuevos campos devueltos por el backend:
+
+```typescript
+export interface AdminUserDto {
+  // Identidad
+  nombre: string; apellidos: string; nombreCompleto?: string;
+  email: string;  telefono?: string; fotoUrl?: string;
+  // Rol y equipo
+  rol: string; equipoNombre?: string; equipoId?: number;
+  // Jugador
+  jugadorId?: number; dorsal?: number; posicion?: string; estado?: string;
+  // Entrenador
+  entrenadorId?: number; especialidad?: string; licencia?: string;
+}
+```
+
+**Búsqueda reactiva con `debounceTime`**
+
+Se usó un `Subject<string>` privado como bus de eventos de búsqueda, enlazado al input mediante `(ionInput)`. El operador `debounceTime(300)` de RxJS evita que el filtro se recalcule en cada pulsación de tecla, reduciendo el trabajo de Angular a una sola ejecución por pausa del usuario.
+
+```typescript
+private searchSubject = new Subject<string>();
+
+ngOnInit() {
+  this.searchSubject.pipe(
+    debounceTime(300),
+    distinctUntilChanged(),
+    takeUntilDestroyed(this.destroyRef)
+  ).subscribe(term => this.searchTerm = term);
+}
+
+onSearch(event: any) {
+  this.searchSubject.next(event.detail.value ?? '');
+}
+```
+
+**Getter `filteredActiveUsers`**
+
+El filtrado se implementó como un getter puro de Angular (sin `pipe` personalizado) que combina tres criterios: rol activo en el sub-segment, término de búsqueda sobre nombre + apellidos + email, y equipo seleccionado. El resultado se recalcula solo cuando Angular detecta un cambio en las variables involucradas.
+
+```typescript
+get filteredActiveUsers(): AdminUserDto[] {
+  const rol  = this.activeRoleSegment;
+  const term = this.searchTerm.toLowerCase().trim();
+  return this.activeUsers.filter(u => {
+    const matchRol    = (u.rol || '').toUpperCase().includes(rol);
+    const fullName    = ((u.nombre || '') + ' ' + (u.apellidos || '')).toLowerCase();
+    const matchSearch = !term || fullName.includes(term) || (u.email || '').toLowerCase().includes(term);
+    const matchEquipo = !this.equipoFilter || u.equipoId === this.equipoFilter;
+    return matchRol && matchSearch && matchEquipo;
+  });
+}
+```
+
+**UI: Segments + Searchbar + Tarjetas**
+
+- `ion-segment` con dos opciones (Jugadores / Entrenadores) que resetea el filtro de equipo y el término de búsqueda al cambiar de pestaña.
+- `ion-searchbar` con el diseño Night Stadium y `debounce` nativo de Ionic como capa de seguridad adicional.
+- `ion-select` de equipo visible solo en la pestaña de Jugadores (condición `*ngIf`).
+- Tarjetas enriquecidas: foto real o avatar generado con `ui-avatars`, nombre completo, equipo + dorsal + posición en la segunda línea, badge de estado con colores semánticos (verde Activo / rojo Lesionado), botón de edición (lápiz) y botón de eliminación (papelera).
+- Estado vacío con ícono de búsqueda cuando no hay resultados para el filtro activo.
+
+### Archivos modificados
+
+- `models.ts` — `AdminUserDto` extendida con 10 campos nuevos opcionales
+- `admin-dashboard.page.ts` — `Subject`, `debounceTime`, getter `filteredActiveUsers`, `activeRoleSegment`, `equipoFilter`, métodos `onSearch()`, `onRoleSegmentChange()`, `openEditModal()` (placeholder para Punto 4)
+- `admin-dashboard.page.html` — bloque "Base de Datos" reemplazado por segment + searchbar + select de equipo + tarjetas enriquecidas
+- `admin-dashboard.page.scss` — estilos `.role-segment`, `.search-filter-row`, `.night-searchbar`, `.equipo-select`, `.card-actions`, `.estado-badge` (variantes `.activo` y `.lesionado`)
 
 

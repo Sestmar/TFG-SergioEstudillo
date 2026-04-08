@@ -335,9 +335,23 @@ export interface AdminUserDto {
   id: number;
   nombre: string;
   apellidos: string;
+  nombreCompleto?: string;
   email: string;
+  telefono?: string;
   rol: string;
+  fotoUrl?: string;
+  fechaAlta?: string;
   equipoNombre?: string;
+  equipoId?: number;
+  // Jugador
+  jugadorId?: number;
+  dorsal?: number;
+  posicion?: string;
+  estado?: string;
+  // Entrenador
+  entrenadorId?: number;
+  especialidad?: string;
+  licencia?: string;
 }
 
 export interface AdminEquipoDto {

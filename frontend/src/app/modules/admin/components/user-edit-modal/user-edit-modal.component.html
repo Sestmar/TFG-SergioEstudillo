@@ -1,0 +1,88 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="modal-toolbar">
+    <ion-title>Editar Perfil</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close()" class="close-btn">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="modal-content ion-padding">
+  <form [formGroup]="editForm" (ngSubmit)="onSave()" class="stadium-form">
+    
+    <!-- SECCIÓN 1: IDENTIDAD -->
+    <div class="form-section">
+      <h3 class="section-title"><ion-icon name="person-circle-outline"></ion-icon> Identidad</h3>
+      
+      <div class="input-group">
+        <label>Nombre</label>
+        <input type="text" formControlName="nombre" placeholder="Ej: Sergio">
+      </div>
+
+      <div class="input-group">
+        <label>Apellidos</label>
+        <input type="text" formControlName="apellidos" placeholder="Ej: Estudillo">
+      </div>
+
+      <div class="input-group">
+        <label>Email</label>
+        <input type="email" formControlName="email" placeholder="correo@ejemplo.com">
+      </div>
+
+      <div class="input-group">
+        <label>Teléfono</label>
+        <input type="tel" formControlName="telefono" placeholder="+34 600 000 000">
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: PERFIL DEPORTIVO (Solo si es Jugador) -->
+    <div class="form-section" *ngIf="user.rol?.toUpperCase().includes('JUGADOR')">
+      <h3 class="section-title"><ion-icon name="football-outline"></ion-icon> Perfil Deportivo</h3>
+      
+      <div class="row">
+        <div class="input-group col">
+          <label>Dorsal</label>
+          <input type="number" formControlName="dorsal" placeholder="0-99">
+        </div>
+        <div class="input-group col">
+          <label>Posición</label>
+          <select formControlName="posicion" class="stadium-select">
+            <option value="PORTERO">Portero</option>
+            <option value="DEFENSA">Defensa</option>
+            <option value="CENTROCAMPISTA">Centrocampista</option>
+            <option value="DELANTERO">Delantero</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Equipo Principal</label>
+        <select formControlName="equipoId" class="stadium-select">
+          <option [ngValue]="null">Sin equipo asignado</option>
+          <option *ngFor="let team of teams" [value]="team.idEquipo ?? team.id">{{ team.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Estado Físico</label>
+        <select formControlName="estado" class="stadium-select">
+          <option value="ACTIVO">Activo</option>
+          <option value="LESIONADO">Lesionado</option>
+          <option value="BAJA">Baja Temporal</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- BOTONES DE ACCIÓN -->
+    <div class="action-footer">
+      <button type="button" class="btn-cancel" (click)="close()">Cancelar</button>
+      <button type="submit" class="btn-save" [disabled]="editForm.invalid || isSaving">
+        <ion-spinner name="crescent" *ngIf="isSaving"></ion-spinner>
+        {{ isSaving ? 'Guardando...' : 'Guardar Cambios' }}
+      </button>
+    </div>
+
+  </form>
+</ion-content>
