@@ -39,6 +39,8 @@ export class TeamStatsPage implements OnInit {
     played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0
   };
 
+  lastMatches: Partido[] = [];
+
   topScorerMVP: PlayerSeasonStat | null = null;
   restScorers: PlayerSeasonStat[] = [];
   topMinutes: PlayerSeasonStat[] = [];
@@ -252,22 +254,13 @@ export class TeamStatsPage implements OnInit {
   }
 
   buildGoalsChart(finished: Partido[]) {
-    const last = finished.slice(-10);
-    this.goalsChartOptions = {
-      ...this.goalsChartOptions,
-      series: [
-        { name: 'A Favor',   data: last.map(m => m.golesFavor  || 0) },
-        { name: 'En Contra', data: last.map(m => m.golesContra || 0) }
-      ],
-      xaxis: {
-        ...this.goalsChartOptions.xaxis,
-        categories: last.map((m, i) => {
-          const r = m.rival;
-          if (!r) return `PJ ${i + 1}`;
-          return r.length > 8 ? r.substring(0, 7) + '.' : r;
-        })
-      }
-    };
+    this.lastMatches = finished.slice(-10);
+  }
+
+  getMatchResult(m: Partido): 'win' | 'draw' | 'loss' {
+    if (m.golesFavor > m.golesContra) return 'win';
+    if (m.golesFavor === m.golesContra) return 'draw';
+    return 'loss';
   }
 
   buildRadarChart(players: PlayerSeasonStat[]) {

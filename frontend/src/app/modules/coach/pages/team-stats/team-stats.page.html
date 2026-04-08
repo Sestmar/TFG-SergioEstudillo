@@ -67,24 +67,24 @@
       </div>
     </div>
 
-    <!-- ROW 3: Gráfico de goles por partido -->
-    <div class="panel-card chart-card">
+    <!-- ROW 3: Resultados por partido -->
+    <div class="panel-card">
       <div class="panel-header">
         <span class="panel-title">Goles por Partido</span>
-        <span class="panel-sub">Últimos {{ matches.length > 10 ? 10 : matches.length }} encuentros</span>
+        <span class="panel-sub">Últimos {{ lastMatches.length }} encuentros</span>
       </div>
-      <apx-chart
-        [series]="goalsChartOptions.series"
-        [chart]="goalsChartOptions.chart"
-        [xaxis]="goalsChartOptions.xaxis"
-        [yaxis]="goalsChartOptions.yaxis"
-        [colors]="goalsChartOptions.colors"
-        [plotOptions]="goalsChartOptions.plotOptions"
-        [dataLabels]="goalsChartOptions.dataLabels"
-        [grid]="goalsChartOptions.grid"
-        [legend]="goalsChartOptions.legend"
-        [tooltip]="goalsChartOptions.tooltip">
-      </apx-chart>
+      <div class="match-results-list">
+        <div class="match-row" *ngFor="let m of lastMatches">
+          <span class="result-badge" [class.win]="getMatchResult(m) === 'win'" [class.draw]="getMatchResult(m) === 'draw'" [class.loss]="getMatchResult(m) === 'loss'">
+            {{ getMatchResult(m) === 'win' ? 'V' : getMatchResult(m) === 'draw' ? 'E' : 'D' }}
+          </span>
+          <span class="match-rival">vs {{ m.rival || 'Rival' }}</span>
+          <span class="match-score" [class.win]="getMatchResult(m) === 'win'" [class.draw]="getMatchResult(m) === 'draw'" [class.loss]="getMatchResult(m) === 'loss'">
+            {{ m.golesFavor }} - {{ m.golesContra }}
+          </span>
+        </div>
+        <div *ngIf="lastMatches.length === 0" class="empty-state">Sin partidos finalizados.</div>
+      </div>
     </div>
 
     <!-- ROW 4: Grid 2 columnas — Radar + Goleadores -->

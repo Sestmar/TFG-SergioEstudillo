@@ -31,7 +31,12 @@
   }
 }
 
-.analytics-container { padding: 14px; }
+.analytics-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
 // ============================================================
 // BASE PANEL CARD
@@ -59,6 +64,10 @@
       background: rgba(251, 191, 36, 0.1); padding: 3px 8px; border-radius: 20px;
       border: 1px solid rgba(251, 191, 36, 0.2);
     }
+
+    .panel-sub {
+      font-size: 0.6rem; color: var(--text-muted);
+    }
   }
 }
 
@@ -67,7 +76,6 @@
 // ============================================================
 .kpi-row {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-  margin-bottom: 12px;
 }
 
 .kpi-card {
@@ -100,7 +108,6 @@
 // ROW 2: Racha de Temporada
 // ============================================================
 .streak-card {
-  margin-bottom: 12px;
   padding: 18px 20px;
 
   .streak-header {
@@ -157,7 +164,6 @@
 
 // ROW 3: Chart card
 .chart-card {
-  margin-bottom: 12px;
   padding-bottom: 4px;
 
   .panel-sub {
@@ -175,7 +181,7 @@
 .analytics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
   align-items: start;
 }
 
@@ -305,6 +311,61 @@
 // ============================================================
 // UTILS
 // ============================================================
+// ── Match Results List ──────────────────────────────────────
+.match-results-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px 16px;
+  max-height: 380px;
+  overflow-y: auto;
+
+  .match-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    &:last-child { border-bottom: none; }
+  }
+
+  .result-badge {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+    &.win  { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    &.draw { background: rgba(245, 158, 11, 0.15);  color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    &.loss { background: rgba(239, 68, 68, 0.15);   color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+  }
+
+  .match-rival {
+    flex: 1;
+    font-size: 0.88rem;
+    color: #cbd5e1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .match-score {
+    font-size: 0.92rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    min-width: 40px;
+    text-align: right;
+    flex-shrink: 0;
+    &.win  { color: #10b981; }
+    &.draw { color: #f59e0b; }
+    &.loss { color: #ef4444; }
+  }
+}
+
 .loading-center { height: 80vh; display: flex; align-items: center; justify-content: center; }
 .empty-state { text-align: center; color: var(--text-muted); font-size: 0.78rem; padding: 16px; }
 
