@@ -184,8 +184,9 @@
 
         .info {
             flex: 1;
-            h4 { margin: 0; font-size: 1.1rem; font-weight: 700; color: white; }
-            p { margin: 2px 0; font-size: 0.85rem; color: var(--text-gray); }
+            min-width: 0;
+            h4 { margin: 0; font-size: 1.1rem; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            p { margin: 2px 0; font-size: 0.85rem; color: var(--text-gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .role-text { color: var(--accent); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; }
             .tag-pending { 
               font-size: 0.65rem; 

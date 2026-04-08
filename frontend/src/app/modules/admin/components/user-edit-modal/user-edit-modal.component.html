@@ -48,30 +48,30 @@
         </div>
         <div class="input-group col">
           <label>Posición</label>
-          <select formControlName="posicion" class="stadium-select">
-            <option value="PORTERO">Portero</option>
-            <option value="DEFENSA">Defensa</option>
-            <option value="CENTROCAMPISTA">Centrocampista</option>
-            <option value="DELANTERO">Delantero</option>
-          </select>
+          <ion-select formControlName="posicion" interface="popover" [interfaceOptions]="{ cssClass: 'night-select-popover' }" class="modal-ion-select" placeholder="Seleccionar...">
+            <ion-select-option value="PORTERO">Portero</ion-select-option>
+            <ion-select-option value="DEFENSA">Defensa</ion-select-option>
+            <ion-select-option value="CENTROCAMPISTA">Centrocampista</ion-select-option>
+            <ion-select-option value="DELANTERO">Delantero</ion-select-option>
+          </ion-select>
         </div>
       </div>
 
       <div class="input-group">
         <label>Equipo Principal</label>
-        <select formControlName="equipoId" class="stadium-select">
-          <option [ngValue]="null">Sin equipo asignado</option>
-          <option *ngFor="let team of teams" [value]="team.idEquipo ?? team.id">{{ team.nombre }}</option>
-        </select>
+        <ion-select formControlName="equipoId" interface="popover" [interfaceOptions]="{ cssClass: 'night-select-popover' }" class="modal-ion-select" placeholder="Sin equipo asignado">
+          <ion-select-option [value]="null">Sin equipo asignado</ion-select-option>
+          <ion-select-option *ngFor="let team of teams" [value]="team.idEquipo ?? team.id">{{ team.nombre }}</ion-select-option>
+        </ion-select>
       </div>
 
       <div class="input-group">
         <label>Estado Físico</label>
-        <select formControlName="estado" class="stadium-select">
-          <option value="ACTIVO">Activo</option>
-          <option value="LESIONADO">Lesionado</option>
-          <option value="BAJA">Baja Temporal</option>
-        </select>
+        <ion-select formControlName="estado" interface="popover" [interfaceOptions]="{ cssClass: 'night-select-popover' }" class="modal-ion-select">
+          <ion-select-option value="ACTIVO">Activo</ion-select-option>
+          <ion-select-option value="LESIONADO">Lesionado</ion-select-option>
+          <ion-select-option value="BAJA">Baja Temporal</ion-select-option>
+        </ion-select>
       </div>
     </div>
 

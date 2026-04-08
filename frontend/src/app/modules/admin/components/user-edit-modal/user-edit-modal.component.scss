@@ -84,13 +84,17 @@
       &::placeholder { color: #475569; }
     }
     
-    .stadium-select {
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      background-size: 16px;
-      padding-right: 36px;
+    .modal-ion-select {
+      background: rgba(2, 6, 23, 0.8);
+      border: 1px solid rgba(108, 99, 255, 0.1);
+      border-radius: 8px;
+      width: 100%;
+      --color: #f1f5f9;
+      --placeholder-color: #475569;
+      --padding-start: 12px;
+      --padding-end: 12px;
+      --padding-top: 10px;
+      --padding-bottom: 10px;
     }
   }
   
