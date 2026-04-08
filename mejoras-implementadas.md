@@ -479,11 +479,31 @@ getCurrentUser(): Observable<User> {
 
 ---
 
-> **Estado de la Plataforma**: Fase 1 y 2 de seguridad completadas al 100%. Arquitectura profesional, blindada contra ataques comunes y optimizada para despliegue continuo (CI/CD) en Angular 18 y Spring Boot.
+## 22. Panel de Control Administrativo Profesional (En Proceso) 🛠️🚀
 
----
+Se ha iniciado la transformación de la sección de "Base de Datos" del administrador en una herramienta de gestión profesional, permitiendo la edición completa de perfiles y una visualización organizada por categorías.
 
-## 15. Landing Page Completa: Identidad Pública del Club 🌐✅
+### Fase 1: Backend y Endpoints de Gestión (Completado ✅)
+- **Centralización de CRUDs**: Se ha mantenido la arquitectura de *Thin Controllers* separando la gestión de identidad (`UsuarioController`) de la gestión de perfiles de rol (`UserController`, `JugadorController`).
+- **Endpoints de Actualización Atómica**:
+    - `UserController`: Implementación de `@PutMapping("/{id}")` que permite la actualización dinámica de datos de identidad (Email, Nombre, Teléfono) mediante el patrón de mapeo de actualizaciones parciales.
+    - `JugadorController`: Implementación de `@PutMapping("/{id}")` protegido con `@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")` para la edición de datos deportivos (Dorsal, Posición, Estado Físico).
+- **Seguridad Granular**: Refuerzo de la seguridad a nivel de método, asegurando que solo el Administrador pueda realizar bajas definitivas (`DELETE`) y que la edición esté restringida a roles de gestión.
+
+```java
+// Endpoint de actualización deportiva en JugadorController.java
+@PutMapping("/{id}")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR') or @jugadorService.isOwner(#id, authentication.name)")
+public Jugador actualizar(@PathVariable Integer id, @RequestBody JugadorDto dto) {
+    return jugadorService.actualizar(id, dto);
+}
+```
+
+### Siguientes Pasos (En Desarrollo 🔲)
+- **Categorización Frontend**: Implementación de `ion-segment` para dividir la lista de usuarios en Jugadores, Entrenadores y Staff.
+- **Buscador Reactivo**: Añadir búsqueda por nombre con operadores de `debounceTime` de RxJS.
+- **Modal de Edición Full**: Creación de un formulario reactivo profesional con estética *Night Stadium* para editar todos los campos desde una única interfaz.
+
 
 Se ha transformado la landing page de una pantalla de bienvenida básica (solo botones de login/registro) a una página pública de presentación completa del club, con scroll fluido entre secciones y todos los enlaces del navbar y footer funcionales.
 

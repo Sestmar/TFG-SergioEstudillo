@@ -39,6 +39,17 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getUsuariosActivos());
     }
 
+    @PutMapping("/usuarios/{id}")
+    public ResponseEntity<?> actualizarUsuario(@PathVariable Integer id, @RequestBody Map<String, Object> payload) {
+        try {
+            adminService.actualizarUsuario(id, payload);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Usuario actualizado correctamente"));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("no encontrado")) return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/usuario/{id}")
     public ResponseEntity<?> deleteUsuario(@PathVariable Integer id) {
         try {

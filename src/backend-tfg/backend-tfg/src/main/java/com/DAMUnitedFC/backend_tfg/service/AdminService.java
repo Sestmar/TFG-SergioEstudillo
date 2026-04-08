@@ -69,31 +69,79 @@ public class AdminService {
             if ("ADMIN".equals(u.getRol()) || "ROLE_ADMIN".equals(u.getRol())) continue;
             Map<String, Object> map = new HashMap<>();
             map.put("id", u.getIdUsuario());
-            map.put("nombre", u.getNombre() + " " + (u.getApellidos() != null ? u.getApellidos() : ""));
+            map.put("nombre", u.getNombre());
+            map.put("apellidos", u.getApellidos());
+            map.put("nombreCompleto", u.getNombre() + " " + (u.getApellidos() != null ? u.getApellidos() : ""));
+            map.put("email", u.getEmail());
+            map.put("telefono", u.getTelefono());
             map.put("fotoUrl", u.getFotoUrl());
             map.put("rol", u.getRol());
+            map.put("fechaAlta", u.getFechaAlta());
+
             Optional<Jugador> jugOpt = jugadorRepo.findByUsuario_IdUsuario(u.getIdUsuario());
             if (jugOpt.isPresent()) {
-                Equipo eq = jugOpt.get().getEquipoPrincipal();
+                Jugador jug = jugOpt.get();
+                Equipo eq = jug.getEquipoPrincipal();
                 map.put("equipoNombre", eq != null ? eq.getNombre() : "Sin Equipo");
                 map.put("equipoId", eq != null ? eq.getIdEquipo() : null);
+                map.put("dorsal", jug.getDorsal());
+                map.put("posicion", jug.getPosicion());
+                map.put("estado", jug.getEstado());
+                map.put("jugadorId", jug.getIdJugador());
             } else {
                 Optional<Entrenador> entOpt = entrenadorRepo.findByUsuario_IdUsuario(u.getIdUsuario());
                 if (entOpt.isPresent()) {
-                    List<EquipoEntrenador> vinculaciones = equipoEntrenadorRepo.findByEntrenador_IdEntrenador(entOpt.get().getIdEntrenador());
+                    Entrenador ent = entOpt.get();
+                    List<EquipoEntrenador> vinculaciones = equipoEntrenadorRepo.findByEntrenador_IdEntrenador(ent.getIdEntrenador());
                     if (!vinculaciones.isEmpty()) {
                         map.put("equipoNombre", vinculaciones.get(0).getEquipo().getNombre());
                         map.put("equipoId", vinculaciones.get(0).getEquipo().getIdEquipo());
                     } else {
                         map.put("equipoNombre", "Sin Equipo");
+                        map.put("equipoId", null);
                     }
+                    map.put("especialidad", ent.getEspecialidad());
+                    map.put("licencia", ent.getLicencia());
+                    map.put("entrenadorId", ent.getIdEntrenador());
                 } else {
                     map.put("equipoNombre", "Sin Equipo");
+                    map.put("equipoId", null);
                 }
             }
             activos.add(map);
         }
         return activos;
+    }
+
+    @Transactional
+    public void actualizarUsuario(Integer id, Map<String, Object> payload) {
+        Usuario u = usuarioRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (payload.containsKey("nombre")) u.setNombre((String) payload.get("nombre"));
+        if (payload.containsKey("apellidos")) u.setApellidos((String) payload.get("apellidos"));
+        if (payload.containsKey("email")) u.setEmail((String) payload.get("email"));
+        if (payload.containsKey("telefono")) u.setTelefono((String) payload.get("telefono"));
+        usuarioRepo.save(u);
+
+        jugadorRepo.findByUsuario_IdUsuario(id).ifPresent(jugador -> {
+            if (payload.containsKey("dorsal")) {
+                Object d = payload.get("dorsal");
+                jugador.setDorsal(d != null ? Integer.valueOf(d.toString()) : null);
+            }
+            if (payload.containsKey("posicion")) jugador.setPosicion((String) payload.get("posicion"));
+            if (payload.containsKey("estado")) jugador.setEstado((String) payload.get("estado"));
+            if (payload.containsKey("equipoId")) {
+                Object eqId = payload.get("equipoId");
+                if (eqId != null) {
+                    equipoRepo.findById(Integer.valueOf(eqId.toString()))
+                            .ifPresent(jugador::setEquipoPrincipal);
+                } else {
+                    jugador.setEquipoPrincipal(null);
+                }
+            }
+            jugadorRepo.save(jugador);
+        });
     }
 
     @Transactional

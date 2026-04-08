@@ -1,108 +1,213 @@
-# 🛡️ Hoja de Ruta: Blindaje de Seguridad 2.0 — DAM United FC
+Correcto. Ya veo que AdminController tiene @PreAuthorize("hasRole('ADMIN')")
+  a nivel de clase, así que cualquier endpoint que agregue ahí queda
+  automáticamente protegido. Bien.
 
-Este documento detalla el plan de acción técnico definitivo para resolver los hallazgos de la Auditoría de Seguridad. Integra el diagnóstico inicial de Claude y el análisis de arquitectura de Gemini.
+  Déjame ver el modelo Usuario y Jugador rápido para saber los campos
+  disponibles antes de escribir nada.
 
----
+  Searched for 2 patterns, read 2 files (ctrl+o to expand)
 
-## 🚨 FASE 1: INCENDIOS (Prioridad Crítica — Ejecutar YA)
+● Perfecto, tengo todo lo que necesito. Voy a agregar:
 
-*Objetivo: Detener la exposición de credenciales, blindar el acceso administrativo y parchar vulnerabilidades del core.*
+  1. El método actualizarUsuario() en AdminService — actualiza Usuario (nombre,
+   apellidos, email, teléfono) y si tiene Jugador asociado también actualiza
+  (dorsal, posición, estado, equipo)
+  2. El endpoint PUT /api/admin/usuarios/{id} en AdminController — protegido
+  por el @PreAuthorize de clase
 
-### 1.1 Gestión de Secretos y Credenciales (Backend)
-- [x] **Externalizar Secretos:** Mover JWT Secret, Passwords de DB, Gmail y Twilio a variables de entorno en Render.
-- [x] **Configuración Segura:** Usar `${VARIABLE_NAME}` en `application.properties` sin valores hardcodeados.
-- [x] **Limpieza de Repo:** Agregar `application-local.properties` al `.gitignore`.
-- [x] **ROTACIÓN DE CLAVES:** Generar un nuevo JWT Secret y cambiar las passwords de Gmail/Twilio (están comprometidas).
+● Update(src\backend-tfg\backend-tfg\src\main\java\com\DAMUnitedFC\backend_tfg\
+        service\AdminService.java)
+  ⎿  Added 31 lines
+       97      }
+       98
+       99      @Transactional
+      100 +    public void actualizarUsuario(Integer id, Map<String, Obj
+          +ect> payload) {
+      101 +        Usuario u = usuarioRepo.findById(id)
+      102 +                .orElseThrow(() -> new RuntimeException("Usua
+          +rio no encontrado"));
+      103 +
+      104 +        if (payload.containsKey("nombre")) u.setNombre((Strin
+          +g) payload.get("nombre"));
+      105 +        if (payload.containsKey("apellidos")) u.setApellidos(
+          +(String) payload.get("apellidos"));
+      106 +        if (payload.containsKey("email")) u.setEmail((String)
+          + payload.get("email"));
+      107 +        if (payload.containsKey("telefono")) u.setTelefono((S
+          +tring) payload.get("telefono"));
+      108 +        usuarioRepo.save(u);
+      109 +
+      110 +        jugadorRepo.findByUsuario_IdUsuario(id).ifPresent(jug
+          +ador -> {
+      111 +            if (payload.containsKey("dorsal")) {
+      112 +                Object d = payload.get("dorsal");
+      113 +                jugador.setDorsal(d != null ? Integer.valueOf
+          +(d.toString()) : null);
+      114 +            }
+      115 +            if (payload.containsKey("posicion")) jugador.setP
+          +osicion((String) payload.get("posicion"));
+      116 +            if (payload.containsKey("estado")) jugador.setEst
+          +ado((String) payload.get("estado"));
+      117 +            if (payload.containsKey("equipoId")) {
+      118 +                Object eqId = payload.get("equipoId");
+      119 +                if (eqId != null) {
+      120 +                    equipoRepo.findById(Integer.valueOf(eqId.
+          +toString()))
+      121 +                            .ifPresent(jugador::setEquipoPrin
+          +cipal);
+      122 +                } else {
+      123 +                    jugador.setEquipoPrincipal(null);
+      124 +                }
+      125 +            }
+      126 +            jugadorRepo.save(jugador);
+      127 +        });
+      128 +    }
+      129 +
+      130 +    @Transactional
+      131      public void deleteUsuario(Integer id) {
+      132          if (!usuarioRepo.existsById(id)) throw new RuntimeExc
+           eption("Usuario no encontrado");
+      133          jugadorRepo.findByUsuario_IdUsuario(id).ifPresent(jug
+           ador -> {
 
-### 1.2 Autorización en Backend (Spring Security)
-- [x] **Habilitar Method Security:** Activar `@EnableMethodSecurity` en la configuración.
-- [x] **Blindar AdminController:** Aplicar `@PreAuthorize("hasRole('ADMIN')")` a todos sus métodos.
-- [x] **Blindar EquipoController:** Aplicar `@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")` (Usar rol `ENTRENADOR`, no `COACH`).
-- [x] **Blindar JugadorController:** Asegurar que solo el admin o el propio jugador puedan editar su perfil.
+● Update(src\backend-tfg\backend-tfg\src\main\java\com\DAMUnitedFC\backend_tfg\
+        controller\AdminController.java)
+  ⎿  Added 11 lines
+      39          return ResponseEntity.ok(adminService.getUsuariosActiv
+          os());
+      40      }
+      41
+      42 +    @PutMapping("/usuarios/{id}")
+      43 +    public ResponseEntity<?> actualizarUsuario(@PathVariable I
+         +nteger id, @RequestBody Map<String, Object> payload) {
+      44 +        try {
+      45 +            adminService.actualizarUsuario(id, payload);
+      46 +            return ResponseEntity.ok(Collections.singletonMap(
+         +"message", "Usuario actualizado correctamente"));
+      47 +        } catch (RuntimeException e) {
+      48 +            if (e.getMessage().contains("no encontrado")) retu
+         +rn ResponseEntity.notFound().build();
+      49 +            return ResponseEntity.badRequest().body(Collection
+         +s.singletonMap("error", e.getMessage()));
+      50 +        }
+      51 +    }
+      52 +
+      53      @DeleteMapping("/usuario/{id}")
+      54      public ResponseEntity<?> deleteUsuario(@PathVariable Integ
+          er id) {
+      55          try {
 
-### 1.3 Seguridad en Navegación y Vulnerabilidades de Angular (Frontend)
-- [x] **ACTUALIZACIÓN CRÍTICA:** Migrar Angular de v17 a v18.2.15+ para cerrar múltiples CVEs de XSS (SVG, i18n).
-- [x] **Guardias de Ruta:** Implementar `canActivate: [AuthGuard]` y `RoleGuard` en todas las rutas privadas de `app-routing.module.ts`.
-- [x] **Bloqueo de UI:** Asegurar que los menús de Admin/Entrenador no se rendericen para usuarios sin el rol correspondiente.
+● Listo. Primer cambio hecho.
 
----
+  Lo que se agregó:
 
-## ⚔️ FASE 2: FORTALECIMIENTO (Prioridad Alta — Esta Semana)
+  - AdminService.actualizarUsuario() — actualiza Usuario (nombre, apellidos,
+  email, teléfono) y si el usuario tiene un Jugador asociado también actualiza
+  (dorsal, posición, estado, equipo). Todo en una sola transacción
+  @Transactional.
+  - PUT /api/admin/usuarios/{id} en AdminController — protegido automáticamente
+   por el @PreAuthorize("hasRole('ADMIN')") de la clase.
 
-*Objetivo: Mitigar vectores comunes de ataque y corregir bugs funcionales de seguridad.*
+  El payload es flexible: solo actualizás los campos que mandés, los que no
+  vienen no se tocan.
 
-### 2.1 Refactor de CORS y WebSockets
-- [x] **CORS:** Eliminar `CorsConfig.java` (duplicado) y centralizar en `SecurityConfig.java` con whitelist estricta.
-- [x] **WebSockets:** Restringir orígenes en `WebSocketConfig.java` (punto separado del CORS) para evitar ataques de Cross-Site WebSocket Hijacking.
+  ¿Seguimos con el punto 2 — mejorar getUsuariosActivos() para que devuelva los
+   datos de dorsal, posición y estado que va a necesitar el modal?
 
-### 2.2 Validación de Archivos (Path Traversal)
-- [x] **Sanitización en FileController:** Validar que el nombre del archivo no contenga `../` ni caracteres especiales.
-- [x] **Restricción de Directorio:** Forzar que las lecturas ocurran exclusivamente dentro de `target/uploads`.
 
-### 2.3 Seguridad y Lógica de Passwords
-- [x] **Mínimo de caracteres:** Subir el requerimiento a 8 caracteres (Frontend + Backend).
-- [x] **Fix Reset Password:** 
-  - El token debe tener expiración (1 hora).
-  - **Lógica Atómica:** No cambiar la contraseña en la DB si el envío del email falla. Informar al usuario del error.
-- [x] **Protección XSRF:** No aplica — la app usa JWT via header Authorization (no cookies), por lo que es inmune a CSRF por diseño. Documentado en SecurityConfig.
+   Punto 2: 
 
----
+   Voy a mejorar getUsuariosActivos(). Ya tengo el código en contexto —
+  actualmente devuelve id, nombre, fotoUrl, rol, equipoNombre, equipoId.
+  Necesito agregar dorsal, posicion, estado para jugadores, y también separar
+  los datos individuales (nombre, apellidos, email, telefono) para que el modal
+   pueda pre-cargar el formulario correctamente.
 
-## 💎 FASE 3: PULIDO PROFESIONAL (Prioridad Media/Baja — Antes de Junio)
+  Déjame ver rápido el modelo Entrenador para saber qué campos tiene:
 
-*Objetivo: Eliminar rastros de desarrollo y mejorar la observabilidad segura.*
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
 
-### 3.1 Limpieza de Entorno y Manejo de Errores
-- [ ] **URLs Hardcodeadas:** Eliminar referencias a `localhost:8080` en `MediaController.java` y otros.
-- [ ] **Global Exception Handler:** Dejar de exponer mensajes internos de excepciones al cliente. Devolver mensajes genéricos y loguear el detalle internamente.
-- [ ] **Eliminar e.printStackTrace():** Sustituir todas las trazas de error en consola por un logger profesional (`slf4j`).
-- [ ] **Limpiar Frontend:** Eliminar `console.log` y `console.error` que expongan objetos de usuario o tokens.
+● Perfecto. Ahora actualizo getUsuariosActivos() para que devuelva todos los
+  datos que el modal va a necesitar:
 
-### 3.2 Seguridad de Cabeceras y Cookies
-- [ ] **CSP Headers:** Agregar un `Content-Security-Policy` básico en el `index.html`.
-- [ ] **Migración JWT:** Mover el token de `localStorage` a una cookie `httpOnly` y `Secure` para mitigar ataques XSS residuales.
+● Update(src\backend-tfg\backend-tfg\src\main\java\com\DAMUnitedFC\backend_tfg\
+        service\AdminService.java)
+  ⎿  Added 20 lines, removed 3 lines
+       69              if ("ADMIN".equals(u.getRol()) || "ROLE_ADMIN".eq
+           uals(u.getRol())) continue;
+       70              Map<String, Object> map = new HashMap<>();
+       71              map.put("id", u.getIdUsuario());
+       72 -            map.put("nombre", u.getNombre() + " " + (u.getApe
+          -llidos() != null ? u.getApellidos() : ""));
+       72 +            map.put("nombre", u.getNombre());
+       73 +            map.put("apellidos", u.getApellidos());
+       74 +            map.put("nombreCompleto", u.getNombre() + " " + (
+          +u.getApellidos() != null ? u.getApellidos() : ""));
+       75 +            map.put("email", u.getEmail());
+       76 +            map.put("telefono", u.getTelefono());
+       77              map.put("fotoUrl", u.getFotoUrl());
+       78              map.put("rol", u.getRol());
+       79 +            map.put("fechaAlta", u.getFechaAlta());
+       80 +
+       81              Optional<Jugador> jugOpt = jugadorRepo.findByUsua
+           rio_IdUsuario(u.getIdUsuario());
+       82              if (jugOpt.isPresent()) {
+       77 -                Equipo eq = jugOpt.get().getEquipoPrincipal()
+          -;
+       83 +                Jugador jug = jugOpt.get();
+       84 +                Equipo eq = jug.getEquipoPrincipal();
+       85                  map.put("equipoNombre", eq != null ? eq.getNo
+           mbre() : "Sin Equipo");
+       86                  map.put("equipoId", eq != null ? eq.getIdEqui
+           po() : null);
+       87 +                map.put("dorsal", jug.getDorsal());
+       88 +                map.put("posicion", jug.getPosicion());
+       89 +                map.put("estado", jug.getEstado());
+       90 +                map.put("jugadorId", jug.getIdJugador());
+       91              } else {
+       92                  Optional<Entrenador> entOpt = entrenadorRepo.
+           findByUsuario_IdUsuario(u.getIdUsuario());
+       93                  if (entOpt.isPresent()) {
+       83 -                    List<EquipoEntrenador> vinculaciones = eq
+          -uipoEntrenadorRepo.findByEntrenador_IdEntrenador(entOpt.get()
+          -.getIdEntrenador());
+       94 +                    Entrenador ent = entOpt.get();
+       95 +                    List<EquipoEntrenador> vinculaciones = eq
+          +uipoEntrenadorRepo.findByEntrenador_IdEntrenador(ent.getIdEnt
+          +renador());
+       96                      if (!vinculaciones.isEmpty()) {
+       97                          map.put("equipoNombre", vinculaciones
+           .get(0).getEquipo().getNombre());
+       98                          map.put("equipoId", vinculaciones.get
+           (0).getEquipo().getIdEquipo());
+       99                      } else {
+      100                          map.put("equipoNombre", "Sin Equipo")
+           ;
+      101 +                        map.put("equipoId", null);
+      102                      }
+      103 +                    map.put("especialidad", ent.getEspecialid
+          +ad());
+      104 +                    map.put("licencia", ent.getLicencia());
+      105 +                    map.put("entrenadorId", ent.getIdEntrenad
+          +or());
+      106                  } else {
+      107                      map.put("equipoNombre", "Sin Equipo");
+      108 +                    map.put("equipoId", null);
+      109                  }
+      110              }
+      111              activos.add(map);
 
----
+● Listo, punto 2 hecho.
 
-## 🌐 FASE 4: LANDING PAGE COMPLETA (Prioridad Media — Antes de Junio)
+  Lo que cambió en getUsuariosActivos():
 
-*Objetivo: Convertir la landing en una página pública de presentación del club con scroll fluido, dando vida a los enlaces muertos del navbar y footer.*
+  - Antes devolvía nombre como string concatenado — ahora devuelve nombre,
+  apellidos y nombreCompleto por separado (el modal necesita los campos
+  individuales para pre-cargar el formulario)
+  - Agregados: email, telefono, fechaAlta
+  - Para Jugadores: dorsal, posicion, estado, jugadorId
+  - Para Entrenadores: especialidad, licencia, entrenadorId
+  - Todos los equipoId que antes podían no existir ahora siempre tienen un
+  valor (null explícito)
 
-### 4.1 Navegación por anclas (navbar)
-
-- [x] **Inicio:** Ancla `#hero` — ya existe, simplemente actualizar el `href="#"` a `href="#hero"`.
-- [x] **Noticias:** Ancla `#noticias` — nueva sección con las últimas novedades del club.
-- [x] **Equipos:** Ya funciona con `routerLink="/club"` — no tocar.
-
-### 4.2 Sección "Noticias" (`#noticias`)
-
-- [x] **Contenido:** 3 tarjetas de noticias/novedades hardcodeadas (título, fecha, imagen, extracto breve). No requiere backend nuevo.
-- [x] **Estética:** Misma paleta gold/leather de la landing. Tarjetas con borde dorado, fondo oscuro y efecto hover.
-- [x] **Posición en el HTML:** Entre la `fan-section` y el `footer`.
-
-### 4.3 Sección "Historia" (`#historia`)
-
-- [x] **Contenido:** Bloque de texto con la historia del club + imagen ilustrativa (puede ser el escudo grande). Hardcodeado.
-- [x] **Layout:** Dos columnas en desktop (texto izquierda, imagen derecha), columna única en mobile.
-- [x] **Posición en el HTML:** Antes de la `fan-section`.
-
-### 4.4 Sección "Estadio" (`#estadio`)
-
-- [x] **Contenido:** Nombre del estadio, aforo, dirección y una imagen. Hardcodeado.
-- [x] **Layout:** Imagen de fondo con overlay oscuro y datos superpuestos (estilo hero secundario).
-- [x] **Posición en el HTML:** Después de la sección "Historia".
-
-### 4.5 Footer — enlaces internos
-
-- [x] **Historia:** Cambiar `href="#"` a `href="#historia"` (scroll suave).
-- [x] **Estadio:** Cambiar `href="#"` a `href="#estadio"` (scroll suave).
-- [x] **Socios:** Redirigir a `routerLink="/auth/register"` — el registro ya cumple este rol.
-
-### 4.6 Scroll suave global
-
-- [x] Agregar `scroll-behavior: smooth` al `:host` o `ion-content` de la landing para que las anclas animen el scroll en lugar de saltar.
-
----
-
-## 📈 NOTA PARA EL TFG
-Este documento sirve como evidencia de un proceso de **Auditoría y Remediación**. Al finalizar cada tarea, se debe marcar aquí para mantener la trazabilidad de la mejora continua del sistema.
+  ¿Pasamos al punto 3 — frontend: segments + searchbar en el admin dashboard?
