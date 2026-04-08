@@ -153,7 +153,6 @@
               </div>
             </div>
             <div class="card-footer-actions">
-              <span class="more-info-link">More info →</span>
               <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
             </div>
           </div>
@@ -163,8 +162,7 @@
               <ion-icon name="medkit-outline"></ion-icon>
             </div>
             <span class="title">Enfermería</span>
-            <span class="desc">Todo OK</span>
-            <span class="more-info-link">More info →</span>
+            <span class="desc">Ver lesionados</span>
           </div>
 
           <div class="action-card small" (click)="setView('matches')">
@@ -173,7 +171,6 @@
             </div>
             <span class="title">Próx. Partidos</span>
             <span class="desc">Ver encuentros</span>
-            <span class="more-info-link">More info →</span>
           </div>
 
           <div class="action-card small" (click)="navigateToAction('/chat')" style="position: relative;">
@@ -182,7 +179,6 @@
             </div>
             <span class="title">Chat Equipo</span>
             <span class="desc">Mensajes del equipo</span>
-            <span class="more-info-link">More info →</span>
             <ion-badge *ngIf="((noLeidos$ | async) ?? 0) > 0" color="danger" class="chat-badge">
               {{ noLeidos$ | async }}
             </ion-badge>
