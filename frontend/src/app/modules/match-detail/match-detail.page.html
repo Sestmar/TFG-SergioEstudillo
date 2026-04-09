@@ -7,8 +7,8 @@
     </ion-buttons>
     <ion-title>Acta del Partido</ion-title>
     <ion-buttons slot="end">
-      <ion-button fill="clear" color="light" (click)="print()">
-        <ion-icon name="print-outline" slot="icon-only"></ion-icon>
+      <ion-button fill="clear" color="light" (click)="descargarActa()" [disabled]="!match || generandoPdf" title="Descargar Acta PDF">
+        <ion-icon [name]="generandoPdf ? 'hourglass-outline' : 'document-outline'" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
     </ion-toolbar>

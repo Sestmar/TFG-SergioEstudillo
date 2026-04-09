@@ -4,6 +4,7 @@ import { NavController } from '@ionic/angular';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
+import { PdfService } from 'src/app/core/services/pdf/pdf.service';
 import { filter, switchMap } from 'rxjs/operators';
 import { Partido, PlayerSeasonStat } from 'src/app/shared/models/models';
 
@@ -46,6 +47,8 @@ export class TeamStatsPage implements OnInit {
   topMinutes: PlayerSeasonStat[] = [];
   topAttendance: PlayerSeasonStat[] = [];
   maxMinutes: number = 1;
+  allPlayers: PlayerSeasonStat[] = [];
+  generandoPdf: boolean = false;
 
   // ── CHART: Goles por partido (Bar) ─────────────────────────
   goalsChartOptions: ChartOptions = {
@@ -149,7 +152,8 @@ export class TeamStatsPage implements OnInit {
     private navCtrl: NavController,
     private authSvc: AuthService,
     private coachSvc: CoachService,
-    private matchSvc: MatchService
+    private matchSvc: MatchService,
+    private pdfService: PdfService
   ) { }
 
   ngOnInit() {
@@ -158,6 +162,13 @@ export class TeamStatsPage implements OnInit {
 
   goBack() {
     this.navCtrl.back();
+  }
+
+  async descargarEstadisticas() {
+    if (!this.allPlayers.length) return;
+    this.generandoPdf = true;
+    await this.pdfService.generarEstadisticasPDF(this.allPlayers, this.teamName);
+    this.generandoPdf = false;
   }
 
   async loadData() {
@@ -205,6 +216,7 @@ export class TeamStatsPage implements OnInit {
       .subscribe({
         next: (res) => {
           const players: PlayerSeasonStat[] = res.jugadores || [];
+          this.allPlayers = players;
 
           const scorers = [...players]
             .sort((a, b) => (b.goles || 0) - (a.goles || 0))

@@ -192,3 +192,156 @@ Transformación de la sección "Base de Datos" en una herramienta profesional co
 ## 26. Modal de Edición con Reactive Forms 📝✅
 
 Creación de un modal de edición dedicado que utiliza formularios reactivos y lógica condicional según el rol del usuario para una gestión segura.
+
+---
+
+## 28. Motor de Reportes PDF: Generación Documental Profesional 📄✅
+
+Se ha implementado un motor de generación de documentos PDF de alto nivel que permite exportar Convocatorias, Actas de Partido y Estadísticas de Temporada directamente desde la aplicación, sin depender de servicios externos.
+
+### Desafío Técnico
+
+El Shadow DOM de Ionic impide el acceso directo de `html2canvas` a los componentes renderizados. Librería `window.print()` no permite control sobre el layout ni la paginación. Se necesitaba una solución que:
+1. Renderizara HTML limpio fuera del árbol de componentes de Ionic
+2. Capturara dicho HTML como imagen de alta resolución
+3. Lo exportara como PDF A4 con paginación automática para documentos largos
+
+### Solución: Patrón "Hidden Container"
+
+Se creó un `PdfService` (`src/app/core/services/pdf/pdf.service.ts`) con tres métodos públicos y un motor de exportación privado reutilizable.
+
+**Flujo del motor (`exportar`):**
+```typescript
+private async exportar(html: string, filename: string): Promise<void> {
+  // 1. Crear contenedor oculto fuera de la viewport
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;';
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  try {
+    // 2. Capturar con html2canvas (scale:2 = doble resolución)
+    const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
+      scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff'
+    });
+
+    const pdf  = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdfW = pdf.internal.pageSize.getWidth();   // 210mm
+    const pdfH = pdf.internal.pageSize.getHeight();  // 297mm
+    const imgH = (canvas.height * pdfW) / canvas.width;
+
+    if (imgH <= pdfH) {
+      // 3a. Documento corto: añadir en una sola página
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfW, imgH);
+    } else {
+      // 3b. Documento largo: paginar por slices del canvas
+      let yOffset = 0;
+      while (yOffset < canvas.height) {
+        const sliceH = Math.min(canvas.height - yOffset, (pdfH * canvas.width) / pdfW);
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width  = canvas.width;
+        sliceCanvas.height = sliceH;
+        sliceCanvas.getContext('2d')!.drawImage(canvas, 0, -yOffset);
+        pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 0, 0, pdfW, (sliceH * pdfW) / canvas.width);
+        yOffset += sliceH;
+        if (yOffset < canvas.height) pdf.addPage();
+      }
+    }
+    pdf.save(filename);
+  } finally {
+    // 4. Limpieza del DOM siempre, incluso si hay error
+    document.body.removeChild(container);
+  }
+}
+```
+
+**Por qué `scale: 2`**: html2canvas captura pixels de pantalla. Con `scale:1` el PDF quedaría borroso en impresión. Escala 2 produce una imagen de 2× la resolución del viewport, suficiente para impresión A4 a 150 dpi.
+
+**Por qué `left:-9999px`** y no `display:none`: html2canvas no puede renderizar elementos invisibles (los ignora). El contenedor debe estar en el DOM y tener dimensiones, pero fuera del área visible para el usuario.
+
+### Documentos Generados
+
+#### 1. Convocatoria (`generarConvocatoriaPDF`)
+Genera un documento formal con tabla de jugadores convocados y espacio para firmas del entrenador y delegado. Se invoca desde `ConvocationDetailsPage`:
+
+```typescript
+// convocation-details.page.ts
+async descargarPDF() {
+  if (!this.convocation) return;
+  this.generandoPdf = true;
+  await this.pdfService.generarConvocatoriaPDF(this.convocation);
+  this.generandoPdf = false;
+}
+```
+
+```html
+<!-- convocation-details.page.html -->
+<ion-button (click)="descargarPDF()" [disabled]="!convocation || generandoPdf">
+  <ion-icon [name]="generandoPdf ? 'hourglass-outline' : 'document-outline'"></ion-icon>
+</ion-button>
+```
+
+#### 2. Acta de Partido (`generarActaPDF`)
+Genera el acta oficial con resultado, titulares, suplentes, goles y tarjetas. Se invoca desde `MatchDetailPage`.
+
+El reto técnico aquí es que `MatchPlayerDisplay` sobrescribe `tarjetaAmarilla`/`tarjetaRoja` como `boolean`, mientras que `LineupSlotDto` los espera como `number` (0 o 1). Se resuelve con un mapeo explícito antes de llamar al servicio:
+
+```typescript
+// match-detail.page.ts
+async descargarActa() {
+  if (!this.match) return;
+  this.generandoPdf = true;
+  const lineup: LineupSlotDto[] = this.players.map(p => ({
+    ...p,
+    dorsal: typeof p.dorsal === 'string' ? undefined : p.dorsal,
+    tarjetaAmarilla: p.tarjetaAmarilla ? 1 : 0,  // boolean → number
+    tarjetaRoja:     p.tarjetaRoja     ? 1 : 0
+  }));
+  await this.pdfService.generarActaPDF(this.match, lineup);
+  this.generandoPdf = false;
+}
+```
+
+#### 3. Estadísticas de Temporada (`generarEstadisticasPDF`)
+Genera un informe tabular completo con dorsal, nombre, posición, goles, asistencias, minutos jugados y % asistencia a entrenamientos. Se invoca desde `TeamStatsPage`.
+
+Para tener acceso al array completo de jugadores (el componente solo almacenaba subconjuntos ordenados), se añadió la propiedad `allPlayers: PlayerSeasonStat[]` que se rellena en `loadFullStats()` antes de distribuir los datos entre los rankings:
+
+```typescript
+// team-stats.page.ts
+loadFullStats(coachId: number) {
+  this.coachSvc.getTeamStats(coachId).pipe(...).subscribe({
+    next: (res) => {
+      const players: PlayerSeasonStat[] = res.jugadores || [];
+      this.allPlayers = players; // ← guardado antes de cualquier sort/slice
+      // ... resto de la lógica de rankings y gráficas
+    }
+  });
+}
+
+async descargarEstadisticas() {
+  if (!this.allPlayers.length) return;
+  this.generandoPdf = true;
+  await this.pdfService.generarEstadisticasPDF(this.allPlayers, this.teamName);
+  this.generandoPdf = false;
+}
+```
+
+### Dependencias Instaladas
+
+```bash
+npm install jspdf html2canvas --legacy-peer-deps
+```
+
+| Librería | Versión | Rol |
+|---|---|---|
+| `jspdf` | `^2.5.1` | Creación y exportación del PDF A4 |
+| `html2canvas` | `^1.4.1` | Renderizado de HTML a canvas bitmap |
+
+### Identidad Visual del Documento
+
+Todos los PDFs comparten la misma cabecera corporativa via el helper privado `cabecera()`:
+- Fondo oscuro `#0a0e1a` (color Night Stadium de la app)
+- Acento púrpura `#7c3aed` para las líneas separadoras y destacados
+- Logo `⚽` en círculo púrpura (reemplazable por imagen cuando esté disponible)
+- Pie de página con fecha de generación automática

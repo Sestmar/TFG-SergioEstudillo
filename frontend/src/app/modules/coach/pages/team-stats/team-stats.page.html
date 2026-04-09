@@ -8,6 +8,9 @@
       <h1>Dashboard Analítico</h1>
       <span class="header-sub">{{ teamName }}</span>
     </div>
+    <ion-button fill="clear" color="light" (click)="descargarEstadisticas()" [disabled]="!allPlayers.length || generandoPdf" title="Descargar Estadísticas PDF">
+      <ion-icon [name]="generandoPdf ? 'hourglass-outline' : 'document-outline'" slot="icon-only"></ion-icon>
+    </ion-button>
   </div>
 
   <div *ngIf="loading" class="loading-center">

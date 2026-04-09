@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
+import { PdfService } from 'src/app/core/services/pdf/pdf.service';
 import { Partido, LineupSlotDto } from 'src/app/shared/models/models';
 
 interface MatchPlayerDisplay extends Omit<LineupSlotDto, 'tarjetaAmarilla' | 'tarjetaRoja' | 'dorsal'> {
@@ -32,10 +33,13 @@ export class MatchDetailPage implements OnInit {
   // ✅ Control de permisos para la vista
   canEdit: boolean = false; 
 
+  generandoPdf: boolean = false;
+
   constructor(
     private route: ActivatedRoute,
     private matchSvc: MatchService,
     private authSvc: AuthService,
+    private pdfService: PdfService,
     private location: Location
   ) { }
 
@@ -118,11 +122,20 @@ export class MatchDetailPage implements OnInit {
     }
   }
 
-  goBack() {
-    this.location.back();
+  async descargarActa() {
+    if (!this.match) return;
+    this.generandoPdf = true;
+    const lineup: LineupSlotDto[] = this.players.map(p => ({
+      ...p,
+      dorsal: typeof p.dorsal === 'string' ? undefined : p.dorsal,
+      tarjetaAmarilla: p.tarjetaAmarilla ? 1 : 0,
+      tarjetaRoja: p.tarjetaRoja ? 1 : 0
+    }));
+    await this.pdfService.generarActaPDF(this.match, lineup);
+    this.generandoPdf = false;
   }
 
-  print() {
-    window.print();
+  goBack() {
+    this.location.back();
   }
 }

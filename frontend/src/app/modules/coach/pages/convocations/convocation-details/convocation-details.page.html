@@ -6,6 +6,11 @@
       </ion-button>
     </ion-buttons>
     <ion-title>Detalles del Evento</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="descargarPDF()" [disabled]="!convocation || generandoPdf" title="Descargar PDF">
+        <ion-icon [name]="generandoPdf ? 'hourglass-outline' : 'document-outline'"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 

@@ -69,7 +69,7 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 
 ### 1.3 Funcionalidades de Impacto Deportivo
 - [ ] **Pasarela de Pagos (Stripe):** Implementación de pagos de cuotas.
-- [ ] **Motor de Reportes PDF:** Generación de fichas técnicas en formato PDF.
+- [x] **Motor de Reportes PDF:** Generación de fichas técnicas en formato PDF.
 
 ---
 

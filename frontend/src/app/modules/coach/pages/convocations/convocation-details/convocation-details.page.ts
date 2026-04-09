@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { NavController } from '@ionic/angular';
 import { ConvocationService } from 'src/app/core/services/convocation/convocation.service';
+import { PdfService } from 'src/app/core/services/pdf/pdf.service';
 import { Convocation } from 'src/app/shared/models/models';
 
 @Component({
@@ -16,9 +17,12 @@ export class ConvocationDetailsPage implements OnInit {
   convocation: Convocation | null = null;
   loading: boolean = true;
 
+  generandoPdf: boolean = false;
+
   constructor(
     private route: ActivatedRoute,
     private convocationService: ConvocationService,
+    private pdfService: PdfService,
     private navCtrl: NavController
   ) { }
 
@@ -48,6 +52,13 @@ export class ConvocationDetailsPage implements OnInit {
     if (!this.convocation?.lugar) return;
     const query = encodeURIComponent(this.convocation.lugar);
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_system');
+  }
+
+  async descargarPDF() {
+    if (!this.convocation) return;
+    this.generandoPdf = true;
+    await this.pdfService.generarConvocatoriaPDF(this.convocation);
+    this.generandoPdf = false;
   }
 
   goBack() {
