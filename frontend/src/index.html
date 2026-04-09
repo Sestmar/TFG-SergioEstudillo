@@ -10,7 +10,7 @@
     script-src 'self' 'unsafe-inline' 'unsafe-eval';
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com;
-    img-src 'self' data: https:;
+    img-src 'self' data: https: http://localhost:8080;
     connect-src 'self'
       https://tfg-dam-united-backend.onrender.com
       wss://tfg-dam-united-backend.onrender.com
@@ -34,22 +34,24 @@
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
   
   <!-- PWA Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Club Fútbol Pro">
-  <meta name="theme-color" content="#1e3a8a">
-  <meta name="msapplication-TileColor" content="#1e3a8a">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DAM United">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="msapplication-TileColor" content="#0a0e1a">
   
   <!-- Add to homescreen for Chrome on Android -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="application-name" content="Club Fútbol Pro">
   
   <!-- iOS Status Bar -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="light">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0a0e1a">
 </head>
 
 <body>
@@ -57,9 +59,10 @@
   
   <!-- Service Worker Registration (if enabled) -->
   <script>
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
       navigator.serviceWorker.register('ngsw-worker.js');
     }
   </script>
+  <noscript>Please enable JavaScript to continue using this application.</noscript>
 </body>
 </html>

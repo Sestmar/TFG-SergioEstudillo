@@ -111,11 +111,11 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 ### 1.1 Ingeniería de Calidad (Backend & Infra)
 - [x] **Global Exception Handler:** Implementar un `@ControllerAdvice` centralizado para sanitizar respuestas de error y evitar la exposición de trazas internas.
 - [x] **Testing Automatizado:** Cobertura de lógica crítica con JUnit 5 y Mockito para servicios, y Jasmine/Karma para componentes de Angular.
-- [ ] **CI/CD Pipelines:** Automatizar el ciclo de vida mediante GitHub Actions para ejecución de tests y despliegue continuo en Render.
+- [x] **CI/CD Pipelines:** Automatizar el ciclo de vida mediante GitHub Actions para ejecución de tests y despliegue continuo en Render.
 
 ### 1.2 Modernización del Frontend (Next-Gen)
 - [ ] **Migración a Angular Signals:** Optimizar la gestión de estado y el rendimiento del renderizado adoptando Signals en lugar de flujos puramente basados en observables de RxJS.
-- [ ] **PWA (Progressive Web App):** Configurar Service Workers para permitir la instalación de la app en dispositivos móviles y habilitar la persistencia de datos offline (ej. ver calendario sin conexión).
+- [x] **PWA (Progressive Web App):** Configurar Service Workers para permitir la instalación de la app en dispositivos móviles y habilitar la persistencia de datos offline (ej. ver calendario sin conexión).
 - [ ] **Notificaciones Push Nativa:** Integración con Firebase Cloud Messaging (FCM) para alertas de sistema directas al panel de notificaciones del SO.
 
 ### 1.3 Funcionalidades de Impacto Deportivo

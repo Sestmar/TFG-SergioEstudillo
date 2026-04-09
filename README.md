@@ -4,6 +4,9 @@
 
 ### Trabajo Final de Grado · Desarrollo de Aplicaciones Multiplataforma
 
+[![Backend CI](https://github.com/Sestmar/TFG-SergioEstudillo/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/Sestmar/TFG-SergioEstudillo/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://github.com/Sestmar/TFG-SergioEstudillo/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/Sestmar/TFG-SergioEstudillo/actions/workflows/frontend-ci.yml)
+
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.7-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Angular](https://img.shields.io/badge/Angular-18-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.dev/)
 [![Ionic](https://img.shields.io/badge/Ionic-7-3880FF?style=for-the-badge&logo=ionic&logoColor=white)](https://ionicframework.com/)
@@ -52,7 +55,7 @@ El proyecto ha evolucionado desde un prototipo funcional hacia una **plataforma 
 - ⚡ **Reactividad RxJS avanzada**: Operadores de transformación (`switchMap`, `forkJoin`), gestión automática de memoria con `TakeUntilDestroyed` y eliminación de Callback Hell.
 - 📊 **Analítica deportiva con ApexCharts**: Visualización de rendimiento mediante gráficos inmutables con patrones de refresco por Spread Operator.
 - ☁️ **Infraestructura Cloud**: PostgreSQL en **NeonDB**, Backend en **Render**, gestión de secretos por variables de entorno.
-- 📱 **Mobile First**: Interfaz híbrida construida con **Angular 18** + Ionic 7, con identidad visual **"Night Stadium"** (Glassmorphism, selector `:has`, Shadow Parts).
+- 📱 **Mobile First**: Interfaz híbrida construida con **Angular 18** + Ionic 7, con identidad visual personalizada (Glassmorphism, selector `:has`, Shadow Parts).
 - 💬 **Chat en Tiempo Real**: Arquitectura WebSockets + STOMP con **Doble Cliente STOMP** y sincronización de badges offline.
 - 📲 **Notificaciones WhatsApp**: Integración asíncrona (`@Async`) con **Twilio** para convocatorias y recordatorios.
 - 🏗️ **Backend SOLID**: Inyección por constructor (`private final` + `@RequiredArgsConstructor`), Thin Controllers y capa de servicio transaccional.
@@ -573,6 +576,7 @@ El scroll entre secciones utiliza `IonContent.scrollToPoint()` (scroll programá
 - Capacitor para despliegue en Android.
 - **Bottom Sheet** para fichas de jugador (drag-to-dismiss).
 - Calendario rediseñado con identidad **Dark Pro**.
+- **PWA instalable**: Service Worker (`@angular/pwa`) con caché de assets en modo `prefetch` y estrategia `performance` para imágenes. Permite "Añadir a pantalla de inicio" en Android, iOS y escritorio.
 
 ---
 

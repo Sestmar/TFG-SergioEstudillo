@@ -1,0 +1,49 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main, preprod, develop ]
+    paths:
+      - 'src/backend-tfg/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [ main, preprod ]
+    paths:
+      - 'src/backend-tfg/**'
+
+jobs:
+  test:
+    name: Tests Unitarios (JUnit 5)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: src/backend-tfg/backend-tfg
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Ejecutar tests unitarios
+        # Excluye BackendTfgApplicationTests: requiere PostgreSQL real (no disponible en CI).
+        # Solo corren los tests unitarios con Mockito (PublicServiceTest y futuros).
+        run: |
+          ./mvnw test \
+            --no-transfer-progress \
+            -Dtest='!BackendTfgApplicationTests' \
+            -Dsurefire.failIfNoSpecifiedTests=false
+
+      - name: Publicar resumen de resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: src/backend-tfg/backend-tfg/target/surefire-reports/
+          if-no-files-found: ignore
