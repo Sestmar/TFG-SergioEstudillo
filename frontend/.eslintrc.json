@@ -15,8 +15,8 @@
         "createDefaultProgram": true
       },
       "extends": [
-        "@angular-eslint/recommended",
-        "@angular-eslint/template/process-inline-templates"
+        "plugin:@angular-eslint/recommended",
+        "plugin:@angular-eslint/template/process-inline-templates"
       ],
       "rules": {
         "@angular-eslint/component-class-suffix": [
@@ -81,7 +81,7 @@
         "*.html"
       ],
       "extends": [
-        "@angular-eslint/template/recommended"
+        "plugin:@angular-eslint/template/recommended"
       ],
       "rules": {
         "@angular-eslint/template/accessibility-alt-text": "error",

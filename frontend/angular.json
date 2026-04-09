@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "club-futbol-ionic": {
+    "dam-united": {
       "projectType": "application",
       "schematics": {
         "@ionic/angular-toolkit:page": {
@@ -81,11 +81,11 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "club-futbol-ionic:build"
+            "browserTarget": "dam-united:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "club-futbol-ionic:build:production"
+              "browserTarget": "dam-united:build:production"
             },
             "ci": {
               "progress": false
@@ -95,7 +95,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "club-futbol-ionic:build"
+            "browserTarget": "dam-united:build"
           }
         },
         "test": {
@@ -134,10 +134,10 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "club-futbol-ionic:serve"
+            "devServerTarget": "dam-united:serve"
           },
           "ci": {
-            "devServerTarget": "club-futbol-ionic:serve:ci"
+            "devServerTarget": "dam-united:serve:ci"
           }
         }
       }
