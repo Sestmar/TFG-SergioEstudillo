@@ -4,7 +4,7 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 
 ---
 
-## 🚨 FASE 1: INCENDIOS (Prioridad Crítica — Ejecutar YA)
+## 🚨 FASE 1: INCENDIOS (Prioridad Crítica — COMPLETADA ✅)
 
 *Objetivo: Detener la exposición de credenciales, blindar el acceso administrativo y parchar vulnerabilidades del core.*
 
@@ -12,147 +12,68 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 - [x] **Externalizar Secretos:** Mover JWT Secret, Passwords de DB, Gmail y Twilio a variables de entorno en Render.
 - [x] **Configuración Segura:** Usar `${VARIABLE_NAME}` en `application.properties` sin valores hardcodeados.
 - [x] **Limpieza de Repo:** Agregar `application-local.properties` al `.gitignore`.
-- [x] **ROTACIÓN DE CLAVES:** Generar un nuevo JWT Secret y cambiar las passwords de Gmail/Twilio (están comprometidas).
+- [x] **ROTACIÓN DE CLAVES:** Generar un nuevo JWT Secret y cambiar las passwords de Gmail/Twilio.
 
 ### 1.2 Autorización en Backend (Spring Security)
 - [x] **Habilitar Method Security:** Activar `@EnableMethodSecurity` en la configuración.
 - [x] **Blindar AdminController:** Aplicar `@PreAuthorize("hasRole('ADMIN')")` a todos sus métodos.
-- [x] **Blindar EquipoController:** Aplicar `@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")` (Usar rol `ENTRENADOR`, no `COACH`).
+- [x] **Blindar EquipoController:** Aplicar `@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")`.
 - [x] **Blindar JugadorController:** Asegurar que solo el admin o el propio jugador puedan editar su perfil.
 
 ### 1.3 Seguridad en Navegación y Vulnerabilidades de Angular (Frontend)
-- [x] **ACTUALIZACIÓN CRÍTICA:** Migrar Angular de v17 a v18.2.15+ para cerrar múltiples CVEs de XSS (SVG, i18n).
-- [x] **Guardias de Ruta:** Implementar `canActivate: [AuthGuard]` y `RoleGuard` en todas las rutas privadas de `app-routing.module.ts`.
+- [x] **ACTUALIZACIÓN CRÍTICA:** Migrar Angular de v17 a v18.2.15+ (Completado: Angular 18).
+- [x] **Guardias de Ruta:** Implementar `canActivate: [AuthGuard]` y `RoleGuard` en todas las rutas privadas.
 - [x] **Bloqueo de UI:** Asegurar que los menús de Admin/Entrenador no se rendericen para usuarios sin el rol correspondiente.
 
 ---
 
-## ⚔️ FASE 2: FORTALECIMIENTO (Prioridad Alta — Esta Semana)
+## ⚔️ FASE 2: FORTALECIMIENTO (Prioridad Alta — COMPLETADA ✅)
 
 *Objetivo: Mitigar vectores comunes de ataque y corregir bugs funcionales de seguridad.*
 
 ### 2.1 Refactor de CORS y WebSockets
-- [x] **CORS:** Eliminar `CorsConfig.java` (duplicado) y centralizar en `SecurityConfig.java` con whitelist estricta.
-- [x] **WebSockets:** Restringir orígenes en `WebSocketConfig.java` (punto separado del CORS) para evitar ataques de Cross-Site WebSocket Hijacking.
+- [x] **CORS:** Centralizado en `SecurityConfig.java` con whitelist estricta.
+- [x] **WebSockets:** Restricción de orígenes en `WebSocketConfig.java`.
 
 ### 2.2 Validación de Archivos (Path Traversal)
-- [x] **Sanitización en FileController:** Validar que el nombre del archivo no contenga `../` ni caracteres especiales.
-- [x] **Restricción de Directorio:** Forzar que las lecturas ocurran exclusivamente dentro de `target/uploads`.
+- [x] **Sanitización en FileController:** Validar nombres de archivos y bloquear `../`.
+- [x] **Restricción de Directorio:** Forzar lecturas dentro de `target/uploads`.
 
 ### 2.3 Seguridad y Lógica de Passwords
-- [x] **Mínimo de caracteres:** Subir el requerimiento a 8 caracteres (Frontend + Backend).
-- [x] **Fix Reset Password:** 
-  - El token debe tener expiración (1 hora).
-  - **Lógica Atómica:** No cambiar la contraseña en la DB si el envío del email falla. Informar al usuario del error.
-- [x] **Protección XSRF:** No aplica — la app usa JWT via header Authorization (no cookies), por lo que es inmune a CSRF por diseño. Documentado en SecurityConfig.
+- [x] **Mínimo de caracteres:** 8 caracteres en registro/reset.
+- [x] **Fix Reset Password:** Token con expiración (1 hora) y lógica atómica.
 
 ---
 
-## 💎 FASE 3: PULIDO PROFESIONAL (Prioridad Media/Baja — Antes de Junio)
+## 💎 FASE 3: PULIDO PROFESIONAL (Prioridad Media/Baja — En Proceso 🚧)
 
 *Objetivo: Eliminar rastros de desarrollo y mejorar la observabilidad segura.*
 
 ### 3.1 Limpieza de Entorno y Manejo de Errores
-- [x] **URLs Hardcodeadas:** Eliminar referencias a `localhost:8080` en `MediaController.java` y otros.
-- [x] **Global Exception Handler:** Dejar de exponer mensajes internos de excepciones al cliente. Devolver mensajes genéricos y loguear el detalle internamente.
-- [x] **Eliminar e.printStackTrace():** Sustituir todas las trazas de error en consola por un logger profesional (`slf4j`).
-- [x] **Limpiar Frontend:** Eliminar `console.log` y `console.error` que expongan objetos de usuario o tokens.
+- [x] **URLs Hardcodeadas:** Eliminadas referencias a localhost.
+- [x] **Global Exception Handler:** Implementado `@ControllerAdvice`.
+- [ ] **Eliminar e.printStackTrace():** Sustituir todas las trazas de error por un logger (`slf4j`). **<-- PRÓXIMO PASO**
+- [x] **Limpiar Frontend:** Eliminación masiva de `console.log` innecesarios.
 
-### 3.2 Seguridad de Cabeceras y Cookies
-- [x] **CSP Headers:** Agregar un `Content-Security-Policy` básico en el `index.html`.
-- [~] **Migración JWT a Cookies HttpOnly:** ~~Mover el token de `localStorage` a una cookie `httpOnly` y `Secure`.~~ **DESCARTADA — ver ADR-001.**
-
----
-
-## 🌐 FASE 4: LANDING PAGE COMPLETA (Prioridad Media — Antes de Junio)
-
-*Objetivo: Convertir la landing en una página pública de presentación del club con scroll fluido, dando vida a los enlaces muertos del navbar y footer.*
-
-### 4.1 Navegación por anclas (navbar)
-
-- [x] **Inicio:** Ancla `#hero` — ya existe, simplemente actualizar el `href="#"` a `href="#hero"`.
-- [x] **Noticias:** Ancla `#noticias` — nueva sección con las últimas novedades del club.
-- [x] **Equipos:** Ya funciona con `routerLink="/club"` — no tocar.
-
-### 4.2 Sección "Noticias" (`#noticias`)
-
-- [x] **Contenido:** 3 tarjetas de noticias/novedades hardcodeadas (título, fecha, imagen, extracto breve). No requiere backend nuevo.
-- [x] **Estética:** Misma paleta gold/leather de la landing. Tarjetas con borde dorado, fondo oscuro y efecto hover.
-- [x] **Posición en el HTML:** Entre la `fan-section` y el `footer`.
-
-### 4.3 Sección "Historia" (`#historia`)
-
-- [x] **Contenido:** Bloque de texto con la historia del club + imagen ilustrativa (puede ser el escudo grande). Hardcodeado.
-- [x] **Layout:** Dos columnas en desktop (texto izquierda, imagen derecha), columna única en mobile.
-- [x] **Posición en el HTML:** Antes de la `fan-section`.
-
-### 4.4 Sección "Estadio" (`#estadio`)
-
-- [x] **Contenido:** Nombre del estadio, aforo, dirección y una imagen. Hardcodeado.
-- [x] **Layout:** Imagen de fondo con overlay oscuro y datos superpuestos (estilo hero secundario).
-- [x] **Posición en el HTML:** Después de la sección "Historia".
-
-### 4.5 Footer — enlaces internos
-
-- [x] **Historia:** Cambiar `href="#"` a `href="#historia"` (scroll suave).
-- [x] **Estadio:** Cambiar `href="#"` a `href="#estadio"` (scroll suave).
-- [x] **Socios:** Redirigir a `routerLink="/auth/register"` — el registro ya cumple este rol.
-
-### 4.6 Scroll suave global
-
-- [x] Agregar `scroll-behavior: smooth` al `:host` o `ion-content` de la landing para que las anclas animen el scroll en lugar de saltar.
+### 3.2 Seguridad de Cabeceras
+- [x] **CSP Headers:** Agregado Content-Security-Policy básico en `index.html`.
 
 ---
 
 ## 🚀 Evolución Estratégica y Calidad Técnica
 
-*Objetivo: Elevar la robustez del sistema y adoptar estándares de ingeniería de software de alto nivel.*
-
-### 1.1 Ingeniería de Calidad (Backend & Infra)
-- [x] **Global Exception Handler:** Implementar un `@ControllerAdvice` centralizado para sanitizar respuestas de error y evitar la exposición de trazas internas.
-- [x] **Testing Automatizado:** Cobertura de lógica crítica con JUnit 5 y Mockito para servicios, y Jasmine/Karma para componentes de Angular.
-- [x] **CI/CD Pipelines:** Automatizar el ciclo de vida mediante GitHub Actions para ejecución de tests y despliegue continuo en Render.
-
-### 1.2 Modernización del Frontend (Next-Gen)
-- [ ] **Migración a Angular Signals:** Optimizar la gestión de estado y el rendimiento del renderizado adoptando Signals en lugar de flujos puramente basados en observables de RxJS.
-- [x] **PWA (Progressive Web App):** Configurar Service Workers para permitir la instalación de la app en dispositivos móviles y habilitar la persistencia de datos offline (ej. ver calendario sin conexión).
-- [ ] **Notificaciones Push Nativa:** Integración con Firebase Cloud Messaging (FCM) para alertas de sistema directas al panel de notificaciones del SO.
+### 1.1 Ingeniería de Calidad (Evolución)
+- [x] **CI/CD Pipelines:** Automatización con GitHub Actions para Frontend y Backend.
+- [ ] **Migración a Angular Signals:** Optimizar gestión de estado.
+- [x] **PWA (Progressive Web App):** Service Workers configurados.
 
 ### 1.3 Funcionalidades de Impacto Deportivo
-- [ ] **Asistencia mediante QR:** Generación de códigos QR únicos por jugador para que el entrenador pueda registrar la asistencia a entrenamientos mediante escaneo con la cámara del dispositivo móvil.
-- [ ] **Pasarela de Pagos (Stripe):** Implementación del módulo de pago de cuotas de socios/jugadores mediante la API de Stripe en modo de pruebas.
-- [ ] **Motor de Reportes PDF:** Generación de fichas técnicas y actas oficiales en formato PDF descargable mediante el uso de `iText` (Backend) o `jsPDF` (Frontend).
+- [ ] **Pasarela de Pagos (Stripe):** Implementación de pagos de cuotas.
+- [ ] **Motor de Reportes PDF:** Generación de fichas técnicas en formato PDF.
 
 ---
 
 ---
 
 ## 📋 Registro de Decisiones Técnicas (ADR)
-
-*Un ADR (Architecture Decision Record) documenta decisiones que se tomaron, por qué, y qué alternativas se descartaron. Es evidencia de madurez técnica.*
-
-### ADR-001: Descarte de Migración JWT a Cookies HttpOnly
-
-**Estado:** Descartada conscientemente (no por ignorancia).
-
-**Contexto:**
-La Fase 3.2 planificaba mover el token JWT de `localStorage` a una cookie `HttpOnly + Secure` para mitigar ataques XSS residuales. Tras un análisis arquitectónico, se identificaron tres incompatibilidades bloqueantes:
-
-**Razones del descarte:**
-
-1. **Incompatibilidad con WebSockets (STOMP):** El cliente STOMP del módulo de Chat autentica el handshake inyectando el token en los `connectHeaders`. Las cookies `HttpOnly` no son accesibles desde JavaScript por diseño, por lo que esta estrategia requeriría refactorizar completamente el mecanismo de autenticación del WebSocket en backend y frontend — un riesgo desproporcionado al beneficio.
-
-2. **Inestabilidad en Capacitor (app móvil):** La aplicación usa Capacitor con origen `capacitor://localhost`. Las cookies `HttpOnly` con `SameSite=None` + `Secure=true` presentan comportamientos inconsistentes en WebViews de iOS y Android según la versión, pudiendo romper silenciosamente la autenticación en la app móvil.
-
-3. **Capa de CSRF obligatoria:** Al usar cookies, los navegadores las envían automáticamente en cualquier request cross-origin, lo que introduce vulnerabilidad CSRF. Mitigarlo requiere implementar `CookieCsrfTokenRepository` en Spring Security y los headers `X-XSRF-TOKEN` en el frontend — complejidad adicional que no aporta valor crítico en esta fase.
-
-**Decisión adoptada:**
-- Mantener JWT en `localStorage` con el patrón `Authorization: Bearer`.
-- Mitigar el riesgo XSS mediante **CSP Headers** (implementado en 3.2) que bloquean la ejecución de scripts externos maliciosos.
-- Documentar como deuda técnica para una futura versión que reemplace STOMP por una solución compatible con cookies.
-
----
-
-## 📈 NOTA PARA EL TFG
-Este documento sirve como evidencia de un proceso de **Auditoría y Remediación**, así como una **Hoja de Ruta de Evolución Técnica**. Al finalizar cada tarea, se debe marcar aquí para mantener la trazabilidad de la mejora continua del sistema.
-
+- [ADR-001: Descarte de Migración JWT a Cookies HttpOnly] (Ver archivo original para detalle).
