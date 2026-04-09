@@ -36,9 +36,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // CSRF deshabilitado: la app usa JWT via header Authorization (no cookies).
-                // Los browsers no envían headers custom automáticamente, por lo que CSRF no aplica.
-                // Si se migra JWT a httpOnly cookies (Fase 3.2), habilitar CSRF con CookieCsrfTokenRepository.
+                // CSRF deshabilitado intencionalmente (ADR-001):
+                // La app usa JWT via header "Authorization: Bearer", no cookies.
+                // Los browsers no envían headers custom en requests cross-origin automáticamente,
+                // por lo que CSRF no aplica en este esquema.
+                //
+                // DECISIÓN ARQUITECTÓNICA: La migración a cookies HttpOnly fue evaluada y descartada
+                // por incompatibilidad con el cliente STOMP (WebSocket/Chat) y con Capacitor (app móvil).
+                // Ver ADR-001 en futuras-mejoras.md para el análisis completo.
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // 1. Permitir OPTIONS (Preflight)

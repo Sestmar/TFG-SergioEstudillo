@@ -3,7 +3,21 @@
 <head>
   <meta charset="utf-8">
   <title>Club de Fútbol Pro - Gestión Deportiva</title>
-  
+
+  <!-- Content Security Policy: mitiga ataques XSS bloqueando scripts/recursos externos no autorizados -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: https:;
+    connect-src 'self'
+      https://tfg-dam-united-backend.onrender.com
+      wss://tfg-dam-united-backend.onrender.com
+      http://localhost:8080
+      ws://localhost:8080;
+  ">
+
   <base href="/">
   
   <meta name="color-scheme" content="light dark">
@@ -44,9 +58,7 @@
   <!-- Service Worker Registration (if enabled) -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('ngsw-worker.js')
-        .then(registration => console.log('SW registered'))
-        .catch(registrationError => console.log('SW registration failed'));
+      navigator.serviceWorker.register('ngsw-worker.js');
     }
   </script>
 </body>

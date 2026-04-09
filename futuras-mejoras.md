@@ -59,8 +59,8 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 - [x] **Limpiar Frontend:** Eliminar `console.log` y `console.error` que expongan objetos de usuario o tokens.
 
 ### 3.2 Seguridad de Cabeceras y Cookies
-- [ ] **CSP Headers:** Agregar un `Content-Security-Policy` básico en el `index.html`.
-- [ ] **Migración JWT:** Mover el token de `localStorage` a una cookie `httpOnly` y `Secure` para mitigar ataques XSS residuales.
+- [x] **CSP Headers:** Agregar un `Content-Security-Policy` básico en el `index.html`.
+- [~] **Migración JWT a Cookies HttpOnly:** ~~Mover el token de `localStorage` a una cookie `httpOnly` y `Secure`.~~ **DESCARTADA — ver ADR-001.**
 
 ---
 
@@ -110,7 +110,7 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 
 ### 1.1 Ingeniería de Calidad (Backend & Infra)
 - [x] **Global Exception Handler:** Implementar un `@ControllerAdvice` centralizado para sanitizar respuestas de error y evitar la exposición de trazas internas.
-- [ ] **Testing Automatizado:** Cobertura de lógica crítica con JUnit 5 y Mockito para servicios, y Jasmine/Karma para componentes de Angular.
+- [x] **Testing Automatizado:** Cobertura de lógica crítica con JUnit 5 y Mockito para servicios, y Jasmine/Karma para componentes de Angular.
 - [ ] **CI/CD Pipelines:** Automatizar el ciclo de vida mediante GitHub Actions para ejecución de tests y despliegue continuo en Render.
 
 ### 1.2 Modernización del Frontend (Next-Gen)
@@ -122,6 +122,34 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 - [ ] **Asistencia mediante QR:** Generación de códigos QR únicos por jugador para que el entrenador pueda registrar la asistencia a entrenamientos mediante escaneo con la cámara del dispositivo móvil.
 - [ ] **Pasarela de Pagos (Stripe):** Implementación del módulo de pago de cuotas de socios/jugadores mediante la API de Stripe en modo de pruebas.
 - [ ] **Motor de Reportes PDF:** Generación de fichas técnicas y actas oficiales en formato PDF descargable mediante el uso de `iText` (Backend) o `jsPDF` (Frontend).
+
+---
+
+---
+
+## 📋 Registro de Decisiones Técnicas (ADR)
+
+*Un ADR (Architecture Decision Record) documenta decisiones que se tomaron, por qué, y qué alternativas se descartaron. Es evidencia de madurez técnica.*
+
+### ADR-001: Descarte de Migración JWT a Cookies HttpOnly
+
+**Estado:** Descartada conscientemente (no por ignorancia).
+
+**Contexto:**
+La Fase 3.2 planificaba mover el token JWT de `localStorage` a una cookie `HttpOnly + Secure` para mitigar ataques XSS residuales. Tras un análisis arquitectónico, se identificaron tres incompatibilidades bloqueantes:
+
+**Razones del descarte:**
+
+1. **Incompatibilidad con WebSockets (STOMP):** El cliente STOMP del módulo de Chat autentica el handshake inyectando el token en los `connectHeaders`. Las cookies `HttpOnly` no son accesibles desde JavaScript por diseño, por lo que esta estrategia requeriría refactorizar completamente el mecanismo de autenticación del WebSocket en backend y frontend — un riesgo desproporcionado al beneficio.
+
+2. **Inestabilidad en Capacitor (app móvil):** La aplicación usa Capacitor con origen `capacitor://localhost`. Las cookies `HttpOnly` con `SameSite=None` + `Secure=true` presentan comportamientos inconsistentes en WebViews de iOS y Android según la versión, pudiendo romper silenciosamente la autenticación en la app móvil.
+
+3. **Capa de CSRF obligatoria:** Al usar cookies, los navegadores las envían automáticamente en cualquier request cross-origin, lo que introduce vulnerabilidad CSRF. Mitigarlo requiere implementar `CookieCsrfTokenRepository` en Spring Security y los headers `X-XSRF-TOKEN` en el frontend — complejidad adicional que no aporta valor crítico en esta fase.
+
+**Decisión adoptada:**
+- Mantener JWT en `localStorage` con el patrón `Authorization: Bearer`.
+- Mitigar el riesgo XSS mediante **CSP Headers** (implementado en 3.2) que bloquean la ejecución de scripts externos maliciosos.
+- Documentar como deuda técnica para una futura versión que reemplace STOMP por una solución compatible con cookies.
 
 ---
 
