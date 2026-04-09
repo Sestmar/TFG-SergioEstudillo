@@ -44,8 +44,7 @@ export class ClubPage implements OnInit {
             this.teams = data;
             this.loading = false;
         },
-        error: (err) => {
-            console.error('Error equipos:', err);
+        error: () => {
             this.loading = false;
         }
     });

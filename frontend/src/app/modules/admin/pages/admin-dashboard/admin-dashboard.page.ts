@@ -133,7 +133,6 @@ export class AdminDashboardPage implements OnInit {
     this.adminSvc.getTeams().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => { this.teams = res; },
       error: (err) => {
-        console.error('Error cargando equipos:', err);
         this.presentToast('Error cargando equipos (' + (err.status || 'sin conexión') + ')', 'danger');
         this.loading = false;
       }
@@ -177,8 +176,7 @@ export class AdminDashboardPage implements OnInit {
 
               this.loading = false;
           },
-          error: (err) => {
-              console.error("Error cargando usuarios", err);
+          error: () => {
               this.loading = false;
           }
       });
@@ -386,9 +384,8 @@ export class AdminDashboardPage implements OnInit {
             this.presentToast(successMsg, 'success');
             resolve();
           },
-          error: async (err: any) => {
+          error: async () => {
             await loading.dismiss();
-            console.error(err);
             this.presentToast('Error en la operación', 'danger');
             resolve();
           }

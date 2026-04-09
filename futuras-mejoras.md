@@ -53,10 +53,10 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 *Objetivo: Eliminar rastros de desarrollo y mejorar la observabilidad segura.*
 
 ### 3.1 Limpieza de Entorno y Manejo de Errores
-- [ ] **URLs Hardcodeadas:** Eliminar referencias a `localhost:8080` en `MediaController.java` y otros.
+- [x] **URLs Hardcodeadas:** Eliminar referencias a `localhost:8080` en `MediaController.java` y otros.
 - [x] **Global Exception Handler:** Dejar de exponer mensajes internos de excepciones al cliente. Devolver mensajes genéricos y loguear el detalle internamente.
 - [x] **Eliminar e.printStackTrace():** Sustituir todas las trazas de error en consola por un logger profesional (`slf4j`).
-- [ ] **Limpiar Frontend:** Eliminar `console.log` y `console.error` que expongan objetos de usuario o tokens.
+- [x] **Limpiar Frontend:** Eliminar `console.log` y `console.error` que expongan objetos de usuario o tokens.
 
 ### 3.2 Seguridad de Cabeceras y Cookies
 - [ ] **CSP Headers:** Agregar un `Content-Security-Policy` básico en el `index.html`.

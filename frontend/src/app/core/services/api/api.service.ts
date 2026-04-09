@@ -70,7 +70,6 @@ export class ApiService {
    * Manejo de errores
    */
   private handleError(error: HttpErrorResponse) {
-    console.error('ApiService Error:', error);
     return throwError(() => error);
   }
 }

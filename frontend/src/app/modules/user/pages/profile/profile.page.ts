@@ -59,8 +59,7 @@ export class ProfilePage implements OnInit {
             }
             this.loading = false;
           },
-          error: (err) => {
-            console.error(err);
+          error: () => {
             this.loading = false;
           }
         });
@@ -91,8 +90,7 @@ export class ProfilePage implements OnInit {
         // 2. Guardar la URL en la base de datos (Entidad Usuario)
         this.updateUserPhoto(nuevaUrl, loading);
       },
-      error: async (err) => {
-        console.error(err);
+      error: async () => {
         await loading.dismiss();
         this.showToast('Error al subir la imagen', 'danger');
       }
@@ -108,9 +106,8 @@ export class ProfilePage implements OnInit {
         await loading.dismiss();
         this.showToast('Foto de perfil actualizada 📸', 'success');
       },
-      error: async (err) => {
+      error: async () => {
         await loading.dismiss();
-        console.error("Error guardando URL en usuario", err);
         this.showToast('Error al guardar la foto en el perfil', 'warning');
       }
     });
@@ -166,15 +163,14 @@ export class ProfilePage implements OnInit {
           this.authSvc.updateUser(userId, { telefono: this.editForm.telefono })
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
-              error: (err) => console.error('Error sincronizando teléfono en usuario:', err)
+              error: () => {}
             });
         }
 
         this.loadProfile();
       },
-      error: async (err) => {
+      error: async () => {
         await loader.dismiss();
-        console.error('Error al guardar:', err);
         this.showToast('Error al guardar perfil', 'danger');
       }
     });

@@ -126,8 +126,7 @@ export class CoachDashboardPage implements OnInit {
           }
           this.loading = false;
         },
-        error: (err) => {
-          console.error("Error cargando dashboard:", err);
+        error: () => {
           this.loading = false;
         }
       });

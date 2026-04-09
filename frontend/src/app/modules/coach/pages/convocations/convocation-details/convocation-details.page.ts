@@ -37,8 +37,7 @@ export class ConvocationDetailsPage implements OnInit {
         this.convocation = data;
         this.loading = false;
       },
-      error: (err) => {
-        console.error('Error cargando detalle:', err);
+      error: () => {
         this.loading = false;
       }
     });

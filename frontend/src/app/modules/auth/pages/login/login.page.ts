@@ -68,11 +68,9 @@ export class LoginPage implements OnInit {
         // Redirigir según rol
         this.redirectByRole(rolesArray);
       },
-      error: async (error) => {
+      error: async () => {
         this.isLoading = false;
         await loading.dismiss();
-        console.error('Error login:', error);
-        // Aquí podrías mostrar un toast de error
       }
     });
   }

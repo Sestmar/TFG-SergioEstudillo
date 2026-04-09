@@ -156,8 +156,7 @@ export class PlayerDashboardPage implements OnInit {
           this.loadPlayerProfile(userId);
         }
       },
-      error: (error) => {
-        console.error('Error loading user data:', error);
+      error: () => {
         this.loading = false;
       }
     });
@@ -227,8 +226,7 @@ export class PlayerDashboardPage implements OnInit {
 
               this.loading = false;
           },
-          error: (err) => {
-              console.error("Error cargando partidos", err);
+          error: () => {
               this.loading = false;
           }
       });
@@ -242,7 +240,7 @@ export class PlayerDashboardPage implements OnInit {
             this.playerStats = stats;
             this.buildPlayerRadar();
         },
-        error: (err) => console.error('Error cargando stats', err)
+        error: () => {}
       });
   }
 

@@ -111,8 +111,7 @@ export class UserDashboardPage implements OnInit {
         
         this.isLoading = false;
       },
-      error: (err) => {
-        console.error('Error cargando partidos', err);
+      error: () => {
         this.isLoading = false;
       }
     });

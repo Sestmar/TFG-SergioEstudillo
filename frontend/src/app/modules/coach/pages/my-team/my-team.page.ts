@@ -88,8 +88,7 @@ export class MyTeamPage implements OnInit {
              this.loading = false;
           }
         },
-        error: (err) => {
-          console.error('Error cargando equipo:', err);
+        error: () => {
           this.loading = false;
         }
       });
@@ -109,8 +108,7 @@ export class MyTeamPage implements OnInit {
         this.organizeByPosition(myPlayers);
         this.loading = false;
       },
-      error: (err) => {
-        console.error(err);
+      error: () => {
         this.loading = false;
       }
     });

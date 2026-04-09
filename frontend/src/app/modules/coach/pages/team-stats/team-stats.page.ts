@@ -227,8 +227,7 @@ export class TeamStatsPage implements OnInit {
           this.buildAttendanceChart(players);
           this.loading = false;
         },
-        error: (err) => {
-          console.error(err);
+        error: () => {
           this.loading = false;
         }
       });

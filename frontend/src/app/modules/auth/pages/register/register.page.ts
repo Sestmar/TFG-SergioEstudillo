@@ -81,8 +81,7 @@ export class RegisterPage implements OnInit {
           userData.fotoUrl = response.url; // Añadimos la URL al usuario
           this.doRegister(userData);
         },
-        error: (err) => {
-          console.error('Fallo subida imagen', err);
+        error: () => {
           this.showToast('No se pudo subir la imagen, registrando sin ella...', 'warning');
           this.doRegister(userData);
         }
@@ -100,9 +99,8 @@ export class RegisterPage implements OnInit {
         await this.showToast('¡Fichaje completado! Inicia sesión.', 'success');
         this.router.navigate(['/auth/login']);
       },
-      error: async (error) => {
+      error: async () => {
         this.isLoading = false;
-        console.error('Error registro:', error);
         await this.showToast('Error al registrar usuario. Intenta con otro email.', 'danger');
       }
     });

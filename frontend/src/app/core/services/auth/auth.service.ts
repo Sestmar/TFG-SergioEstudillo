@@ -64,19 +64,13 @@ export class AuthService {
         this.setAuth(response.token, response.refreshToken);
       }),
       switchMap(() => this.getCurrentUser()),
-      catchError(error => {
-        console.error('Login error:', error);
-        return throwError(() => error);
-      })
+      catchError(error => throwError(() => error))
     );
   }
 
   register(userData: UserRegisterDto): Observable<User> {
     return this.apiService.post<User>('/auth/register', userData).pipe(
-      catchError(error => {
-        console.error('Registration error:', error);
-        return throwError(() => error);
-      })
+      catchError(error => throwError(() => error))
     );
   }
 
@@ -117,8 +111,7 @@ export class AuthService {
       
       this.isAuthenticatedSubject.next(true);
       this.scheduleTokenRefresh(token);
-    } catch (error) {
-      console.error('Error decoding token:', error);
+    } catch {
       this.logout();
     }
   }
@@ -131,7 +124,6 @@ export class AuthService {
     return this.apiService.post<AuthResponse>('/auth/refresh', { refreshToken }).pipe(
       tap(response => this.setAuth(response.token, response.refreshToken)),
       catchError(error => {
-        console.error('Token refresh error:', error);
         this.logout();
         return throwError(() => error);
       })
@@ -214,8 +206,6 @@ export class AuthService {
           });
         }, delay);
       }
-    } catch (error) {
-      console.error('Error scheduling token refresh:', error);
-    }
+    } catch {}
   }
 }

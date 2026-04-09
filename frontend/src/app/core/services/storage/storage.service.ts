@@ -41,9 +41,7 @@ export class StorageService {
     if (!this.isStorageAvailable) return;
     try {
       localStorage.setItem(this.TOKEN_KEY, token);
-    } catch (error) {
-      console.error('Error guardando token:', error);
-    }
+    } catch {}
   }
 
   /**
@@ -77,8 +75,7 @@ export class StorageService {
       const serializedValue = JSON.stringify(value);
       localStorage.setItem(key, serializedValue);
       return true;
-    } catch (error) {
-      console.error('Error guardando en localStorage:', error);
+    } catch {
       return false;
     }
   }
@@ -95,8 +92,7 @@ export class StorageService {
         return null;
       }
       return JSON.parse(value);
-    } catch (error) {
-      console.error('Error leyendo de localStorage:', error);
+    } catch {
       return null;
     }
   }
@@ -110,8 +106,7 @@ export class StorageService {
     try {
       localStorage.removeItem(key);
       return true;
-    } catch (error) {
-      console.error('Error eliminando de localStorage:', error);
+    } catch {
       return false;
     }
   }
@@ -125,8 +120,7 @@ export class StorageService {
     try {
       localStorage.clear();
       return true;
-    } catch (error) {
-      console.error('Error limpiando localStorage:', error);
+    } catch {
       return false;
     }
   }

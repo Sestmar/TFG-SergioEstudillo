@@ -71,9 +71,8 @@ export class UserEditModalComponent implements OnInit {
         this.notificationService.success('¡Perfil actualizado correctamente! ⚽');
         this.modalCtrl.dismiss(true);
       },
-      error: (err) => {
+      error: () => {
         this.isSaving = false;
-        console.error('Error actualizando usuario', err);
         this.notificationService.error('No se pudo actualizar el perfil');
       }
     });

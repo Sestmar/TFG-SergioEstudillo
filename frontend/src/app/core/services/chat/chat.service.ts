@@ -75,7 +75,6 @@ export class ChatService implements OnDestroy {
    * No llamar si el usuario es ADMIN u otros roles sin equipo (equipoId null).
    */
   conectarGlobal(equipoId: number, currentUserId?: number): void {
-    console.log(`[ChatService] Intentando conectar global -> Equipo ID: ${equipoId}, Usuario ID: ${currentUserId}`);
     const token = localStorage.getItem('auth_token');
     if (!token) return;
 
@@ -126,38 +125,31 @@ export class ChatService implements OnDestroy {
     this.resetearNoLeidos();
 
     this.client = this.crearClienteStomp(token, () => {
-      console.log('[ChatService] STOMP conectado. idEquipo:', idEquipo, '| idDestinatario:', idDestinatario);
       this.conectado$.next(true);
       this.limpiarSuscripciones();
 
       if (idEquipo) {
         const topicEquipo = `/topic/equipo/${idEquipo}`;
-        console.log('[ChatService] Suscribiendo a', topicEquipo);
         const sub = this.client!.subscribe(
           topicEquipo,
           (frame: IMessage) => {
-            console.log('[ChatService] Mensaje recibido en', topicEquipo, frame.body);
             const msg: MensajeDto = JSON.parse(frame.body);
             this.agregarMensaje(msg);
           }
         );
         this.subscriptions.push(sub);
-        console.log('[ChatService] Suscripción activa:', topicEquipo);
       }
 
       if (idDestinatario !== undefined) {
         const topicPrivado = '/user/queue/mensajes';
-        console.log('[ChatService] Suscribiendo a', topicPrivado);
         const sub = this.client!.subscribe(
           topicPrivado,
           (frame: IMessage) => {
-            console.log('[ChatService] Mensaje privado recibido', frame.body);
             const msg: MensajeDto = JSON.parse(frame.body);
             this.agregarMensaje(msg);
           }
         );
         this.subscriptions.push(sub);
-        console.log('[ChatService] Suscripción activa:', topicPrivado);
       }
     });
 
@@ -228,14 +220,10 @@ export class ChatService implements OnDestroy {
       webSocketFactory: () => new (SockJS as any)(this.wsUrl),
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
-      debug: (msg: string) => {
-        if (!environment.production) console.log('[STOMP]', msg);
-      },
+      debug: () => {},
       onConnect,
       onDisconnect: () => {},
-      onStompError: (frame) => {
-        console.error('[STOMP Error]', frame.headers['message']);
-      }
+      onStompError: () => {}
     });
   }
 
@@ -251,7 +239,6 @@ export class ChatService implements OnDestroy {
 
     const nuevo = this._noLeidosEquipo$.getValue() + 1;
     this._noLeidosEquipo$.next(nuevo);
-    console.log('[ChatService] noLeidosEquipo$ emitiendo:', nuevo);
     await this.dispararNotificacion(msg);
   }
 

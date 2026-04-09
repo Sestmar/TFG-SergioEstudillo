@@ -97,15 +97,13 @@ export class MatchDetailPage implements OnInit {
             }
             this.loading = false;
           },
-          error: (err) => {
-            console.error("❌ Error alineación", err);
+          error: () => {
             this.players = [];
             this.loading = false;
           }
         });
       },
-      error: (err) => {
-         console.error("❌ Error partido", err);
+      error: () => {
          this.loading = false;
       }
     });

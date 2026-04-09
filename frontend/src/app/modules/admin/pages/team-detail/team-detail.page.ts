@@ -69,8 +69,7 @@ export class TeamDetailPage implements OnInit {
         this.staff = res.staff || [];
         this.loading = false;
       },
-      error: (err) => {
-        console.error(err);
+      error: () => {
         this.loading = false;
       }
     });

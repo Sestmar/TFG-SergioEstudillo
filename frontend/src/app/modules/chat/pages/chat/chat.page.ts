@@ -96,7 +96,7 @@ export class ChatPage implements OnInit, OnDestroy {
         next: (users) => {
           this.usuariosDisponibles = users.filter(u => u.id !== this.currentUser?.idUsuario);
         },
-        error: (err) => console.error('Error cargando usuarios', err)
+        error: () => {}
       });
   }
 
@@ -107,7 +107,7 @@ export class ChatPage implements OnInit, OnDestroy {
     if (this.modoChat === 'equipo' && this.equipoId) {
       this.chatService.cargarHistorialEquipo(this.equipoId)
         .pipe(takeUntil(this.destroy$))
-        .subscribe({ error: (err) => console.error('Error historial equipo', err) });
+        .subscribe({ error: () => {} });
       this.chatService.conectar(this.equipoId);
       this.chatService.marcarLeidos().pipe(takeUntil(this.destroy$)).subscribe({
         next: () => this.chatService.resetearNoLeidos()
@@ -115,7 +115,7 @@ export class ChatPage implements OnInit, OnDestroy {
     } else if (this.modoChat === 'privado' && this.destinatarioSeleccionado) {
       this.chatService.cargarHistorialPrivado(this.destinatarioSeleccionado.id)
         .pipe(takeUntil(this.destroy$))
-        .subscribe({ error: (err) => console.error('Error historial privado', err) });
+        .subscribe({ error: () => {} });
       this.chatService.conectar(undefined, this.destinatarioSeleccionado.id);
     }
   }
@@ -134,7 +134,7 @@ export class ChatPage implements OnInit, OnDestroy {
     this.chatService.limpiarMensajes();
     this.chatService.cargarHistorialPrivado(usuario.id)
       .pipe(takeUntil(this.destroy$))
-      .subscribe({ error: (err) => console.error('Error cargando historial', err) });
+      .subscribe({ error: () => {} });
     this.chatService.conectar(undefined, usuario.id);
   }
 

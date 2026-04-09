@@ -73,8 +73,7 @@ export class CoachProfilePage implements OnInit {
         // 2. Guardar la URL en la base de datos (Entidad Usuario)
         this.updateUserPhoto(nuevaUrl, loading);
       },
-      error: async (err) => {
-        console.error(err);
+      error: async () => {
         await loading.dismiss();
         this.presentToast('Error al subir la imagen', 'danger');
       }
@@ -91,9 +90,8 @@ export class CoachProfilePage implements OnInit {
         await loading.dismiss();
         this.presentToast('Foto de perfil actualizada 📸', 'success');
       },
-      error: async (err) => {
+      error: async () => {
         await loading.dismiss();
-        console.error("Error guardando URL en usuario", err);
         this.presentToast('Error al guardar la foto en el perfil', 'warning');
       }
     });
@@ -123,14 +121,13 @@ export class CoachProfilePage implements OnInit {
           this.authSvc.updateUser(userId, { telefono: this.coachData.telefonoContacto })
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
-              error: (err) => console.error('Error sincronizando teléfono en usuario:', err)
+              error: () => {}
             });
         }
 
         this.goBack();
       },
-      error: async (err) => {
-        console.error(err);
+      error: async () => {
         await loading.dismiss();
         this.presentToast('Error al guardar cambios', 'danger');
       }

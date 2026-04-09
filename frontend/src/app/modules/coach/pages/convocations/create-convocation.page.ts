@@ -63,8 +63,7 @@ export class CreateConvocationPage implements OnInit {
           this.uploadingImage = false;
           this.presentToast('Escudo subido correctamente 🛡️', 'success');
         },
-        error: (err) => {
-          console.error(err);
+        error: () => {
           this.uploadingImage = false;
           this.presentToast('Error al subir el escudo', 'danger');
         }
@@ -121,16 +120,14 @@ export class CreateConvocationPage implements OnInit {
           this.presentToast('Convocatoria creada con éxito', 'success');
           this.modalCtrl.dismiss({ created: true });
         },
-        error: async (err) => {
+        error: async () => {
           await loading.dismiss();
-          console.error('Error creando partido:', err);
           this.presentToast('Error al guardar el evento.', 'danger');
         }
       });
 
     } catch (e) {
       await loading.dismiss();
-      console.error('Error procesando datos:', e);
       this.presentToast('Error inesperado.', 'danger');
     }
   }

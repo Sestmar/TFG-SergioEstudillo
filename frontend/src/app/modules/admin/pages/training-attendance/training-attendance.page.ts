@@ -42,7 +42,6 @@ export class TrainingAttendancePage implements OnInit {
         this.teamId = +teamIdParam;
         this.loadPlayers();
     } else {
-        console.error("Falta trainingId o teamId");
         this.presentToast('Error: Faltan datos del entrenamiento', 'danger');
     }
   }
@@ -79,8 +78,7 @@ export class TrainingAttendancePage implements OnInit {
              error: () => loading.dismiss()
           });
         },
-        error: (err) => {
-            console.error(err);
+        error: () => {
             loading.dismiss();
             this.presentToast('Error cargando jugadores', 'danger');
         }
@@ -113,9 +111,8 @@ export class TrainingAttendancePage implements OnInit {
               this.presentToast('Asistencia guardada correctamente ✅', 'success');
               // Opcional: this.goBack(); si quieres que vuelva al guardar
           },
-          error: (err) => {
+          error: () => {
               this.saving = false;
-              console.error(err);
               this.presentToast('Error al guardar asistencia', 'danger');
           }
       });

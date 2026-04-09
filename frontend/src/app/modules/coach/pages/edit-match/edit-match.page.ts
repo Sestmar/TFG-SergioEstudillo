@@ -162,8 +162,7 @@ export class EditMatchPage implements OnInit {
 
       loading.dismiss();
 
-    }).catch(err => {
-      console.error("Error cargando jugadores", err);
+    }).catch(() => {
       loading.dismiss();
     });
   }
@@ -240,9 +239,8 @@ export class EditMatchPage implements OnInit {
             this.presentToast('Acta cerrada y estadísticas actualizadas 🏆', 'success');
             this.loadData(); 
         },
-        error: (err) => {
+        error: () => {
             this.saving = false;
-            console.error(err);
             this.presentToast('Error al cerrar acta.', 'danger');
         }
     });
