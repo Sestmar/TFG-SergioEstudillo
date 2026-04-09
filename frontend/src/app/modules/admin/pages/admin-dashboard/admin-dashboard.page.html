@@ -240,7 +240,7 @@
                 <ion-item><ion-label position="stacked">Email</ion-label><ion-input type="email" [(ngModel)]="newUser.email"></ion-input></ion-item>
                 <ion-item>
                     <ion-label position="stacked">Rol</ion-label>
-                    <ion-select [(ngModel)]="newUser.rol" interface="popover">
+                    <ion-select [(ngModel)]="newUser.rol" interface="popover" class="dark-select" [interfaceOptions]="{ cssClass: 'night-select-popover' }">
                         <ion-select-option value="JUGADOR">Jugador</ion-select-option>
                         <ion-select-option value="ENTRENADOR">Entrenador / Staff</ion-select-option>
                     </ion-select>
@@ -288,7 +288,7 @@
                     
                     <ion-item>
                         <ion-label position="stacked">Equipo</ion-label>
-                        <ion-select [(ngModel)]="newMatch.idEquipo" placeholder="Seleccionar..." interface="popover">
+                        <ion-select [(ngModel)]="newMatch.idEquipo" placeholder="Seleccionar..." interface="popover" class="dark-select" [interfaceOptions]="{ cssClass: 'night-select-popover' }">
                             <ion-select-option *ngFor="let t of teams" [value]="t.idEquipo">{{ t.nombre }}</ion-select-option>
                         </ion-select>
                     </ion-item>

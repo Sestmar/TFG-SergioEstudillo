@@ -34,12 +34,13 @@
 7. [Mensajería en Tiempo Real](#-mensajería-en-tiempo-real)
 8. [Ingeniería de Notificaciones](#-ingeniería-de-notificaciones)
 9. [Visualización de Datos](#-visualización-de-datos)
-10. [Experiencia Night Stadium](#-experiencia-night-stadium)
-11. [Características Principales](#-características-principales)
-12. [Estructura del Repositorio](#-estructura-del-repositorio)
-13. [Guía de Ejecución Local](#-guía-de-ejecución-local)
-14. [Documentación Extendida](#-documentación-extendida)
-15. [Autor](#-autor)
+10. [Motor de Reportes PDF](#-motor-de-reportes-pdf)
+11. [Experiencia Night Stadium](#-experiencia-night-stadium)
+12. [Características Principales](#-características-principales)
+13. [Estructura del Repositorio](#-estructura-del-repositorio)
+14. [Guía de Ejecución Local](#-guía-de-ejecución-local)
+15. [Documentación Extendida](#-documentación-extendida)
+16. [Autor](#-autor)
 
 ---
 
@@ -60,6 +61,7 @@ El proyecto ha evolucionado desde un prototipo funcional hacia una **plataforma 
 - 📲 **Notificaciones WhatsApp**: Integración asíncrona (`@Async`) con **Twilio** para convocatorias y recordatorios.
 - 🏗️ **Backend SOLID**: Inyección por constructor (`private final` + `@RequiredArgsConstructor`), Thin Controllers y capa de servicio transaccional.
 - 🧩 **Arquitectura modular**: 10+ módulos Lazy-Loaded, 18+ servicios Singleton, Guards reactivos y HTTP Interceptors.
+- 📄 **Motor de Reportes PDF**: Generación de Convocatorias, Actas de Partido y Estadísticas en PDF con `jsPDF` + `html2canvas` (patrón Hidden Container para escapar del Shadow DOM de Ionic).
 
 ---
 
@@ -117,6 +119,7 @@ graph LR
 | **Mobile** | Ionic | 7 | UI Híbrida + Capacitor |
 | **Reactivo** | RxJS | 7.8+ | Programación reactiva (`switchMap`, `forkJoin`, `TakeUntilDestroyed`) |
 | **Gráficos** | ApexCharts + ng-apexcharts | 3.53+ / 1.12+ | Visualización de analítica deportiva |
+| **PDF** | jsPDF + html2canvas | 2.5+ / 1.4+ | Generación de documentos PDF en cliente |
 | **Infraestructura** | Render | - | PaaS Backend hosting |
 | **Build Backend** | Maven | - | Gestión de dependencias |
 | **Build Frontend** | Angular CLI + npm | - | Build y dev server |
@@ -500,6 +503,31 @@ actualizarGrafico(goles: number[]) {
 
 ---
 
+## 📄 Motor de Reportes PDF
+
+Generación de documentos oficiales directamente en el cliente, sin dependencias de servidor.
+
+### Arquitectura — Patrón Hidden Container
+
+El Shadow DOM de Ionic impide que `html2canvas` capture componentes Ionic directamente.
+La solución es el patrón **Hidden Container**: construir HTML limpio en un `div` oculto
+fuera del viewport (`position:fixed; left:-9999px`), capturarlo con `html2canvas` (scale:2)
+e incrustarlo en un PDF A4 con `jsPDF`.
+
+| Documento | Página de origen | Contenido |
+|---|---|---|
+| Convocatoria | `ConvocationDetailsPage` | Tabla de jugadores convocados + espacio de firmas |
+| Acta de Partido | `MatchDetailPage` | Resultado, titulares, suplentes, goles, tarjetas |
+| Estadísticas de Temporada | `TeamStatsPage` | Tabla completa con goles, asistencias, minutos, % asistencia |
+
+### Fix técnico destacado
+
+El tema dark de Ionic establece el color de texto global en blanco (`--ion-text-color`).
+Sin `color:#111` explícito en el div raíz del HTML generado, el texto hereda el color blanco
+y queda invisible sobre el fondo blanco del PDF. Solución aplicada en `PdfService.exportar()`.
+
+---
+
 ## 🌌 Experiencia Night Stadium
 
 Identidad visual inmersiva y coherente aplicada a toda la plataforma, basada en **Dark Mode**, **Glassmorphism** y CSS moderno de cuarta generación.
@@ -554,7 +582,8 @@ El scroll entre secciones utiliza `IonContent.scrollToPoint()` (scroll programá
 - Estadísticas de jugador calculadas dinámicamente desde `Alineacion`.
 - **Gráficos interactivos** (ApexCharts) con mapeo táctico por posición.
 - Vista pública de plantilla y equipos sin autenticación (`/api/public/**`).
-- Detalle de partidos con acta completa e **impresión oficial** (motor CSS `@media print` con `print-color-adjust: exact`).
+- Detalle de partidos con acta completa y descarga en **PDF oficial** (motor `jsPDF` + `html2canvas`).
+- **Motor de Reportes PDF** unificado: Convocatoria, Acta de Partido y Estadísticas de Temporada con identidad visual del club.
 
 ### 💬 Comunicación
 
@@ -599,7 +628,7 @@ TFG-SergioEstudillo/
 │
 ├── frontend/                        # Angular 18 + Ionic 7
 │   ├── src/app/
-│   │   ├── core/                    # Guards, Interceptors, 18+ Services, NotificationService
+│   │   ├── core/                    # Guards, Interceptors, 18+ Services, NotificationService, PdfService
 │   │   ├── modules/                 # 10+ Feature Modules (Lazy Loaded)
 │   │   │   ├── admin/               # Panel Director Deportivo (tarjetas competición)
 │   │   │   ├── auth/                # Login / Registro / Reset Password
@@ -609,7 +638,7 @@ TFG-SergioEstudillo/
 │   │   │   ├── club/                # Zona del Aficionado (estado físico del jugador)
 │   │   │   ├── calendar/            # Calendario de eventos (Dark Pro)
 │   │   │   ├── chat/                # Chat en tiempo real (WebSockets + STOMP)
-│   │   │   ├── match-detail/        # Detalle de partido + Acta oficial de impresión
+│   │   │   ├── match-detail/        # Detalle de partido + Acta PDF oficial
 │   │   │   ├── dashboard/           # Dashboard genérico
 │   │   │   └── user/                # Perfil de usuario
 │   │   └── shared/                  # Componentes y modelos compartidos
@@ -727,8 +756,8 @@ Este proyecto es un **Trabajo Final de Grado (TFG)** desarrollado con fines educ
 
 <div align="center">
 
-*Documentación actualizada: Abril 2026*
+*Documentación actualizada: 9 de Abril 2026*
 
-*Versión: 5.0 — Platform SaaS · Auditoría de Seguridad · Mensajería en Tiempo Real*
+*Versión: 6.0 — Motor PDF · PWA · CI/CD Estabilizado · Logging Profesional*
 
 </div>
