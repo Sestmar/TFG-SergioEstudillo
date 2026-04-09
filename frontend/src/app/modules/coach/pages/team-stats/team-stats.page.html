@@ -70,8 +70,8 @@
     <!-- ROW 3: Resultados por partido -->
     <div class="panel-card">
       <div class="panel-header">
-        <span class="panel-title">Goles por Partido</span>
-        <span class="panel-sub">Últimos {{ lastMatches.length }} encuentros</span>
+        <span class="panel-title">Resultados</span>
+        <span class="panel-sub">Últimos {{ lastMatches.length }} partidos</span>
       </div>
       <div class="match-results-list">
         <div class="match-row" *ngFor="let m of lastMatches">
@@ -165,10 +165,10 @@
       </apx-chart>
     </div>
 
-    <!-- ROW 6: Compromiso -->
+    <!-- ROW 6: Asistencia Entrenos -->
     <div class="panel-card chart-card">
       <div class="panel-header">
-        <span class="panel-title">Compromiso</span>
+        <span class="panel-title">Asistencia entrenos</span>
         <span class="panel-sub">% asistencia · 🟢≥85 🔵≥60 🟡≥40 🔴&lt;40</span>
       </div>
       <apx-chart

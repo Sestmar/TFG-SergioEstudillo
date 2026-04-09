@@ -93,7 +93,7 @@ export class TeamStatsPage implements OnInit {
     tooltip: { theme: 'dark' }
   };
 
-  // ── CHART: Compromiso (Horizontal Bar distribuido) ─────────
+  // ── CHART: Asistencia entreno (Horizontal Bar distribuido) ─────────
   attendanceChartOptions: ChartOptions = {
     series: [{ name: 'Asistencia %', data: [] }],
     chart: {

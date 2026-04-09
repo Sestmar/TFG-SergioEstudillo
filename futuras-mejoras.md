@@ -54,8 +54,8 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 
 ### 3.1 Limpieza de Entorno y Manejo de Errores
 - [ ] **URLs Hardcodeadas:** Eliminar referencias a `localhost:8080` en `MediaController.java` y otros.
-- [ ] **Global Exception Handler:** Dejar de exponer mensajes internos de excepciones al cliente. Devolver mensajes genéricos y loguear el detalle internamente.
-- [ ] **Eliminar e.printStackTrace():** Sustituir todas las trazas de error en consola por un logger profesional (`slf4j`).
+- [x] **Global Exception Handler:** Dejar de exponer mensajes internos de excepciones al cliente. Devolver mensajes genéricos y loguear el detalle internamente.
+- [x] **Eliminar e.printStackTrace():** Sustituir todas las trazas de error en consola por un logger profesional (`slf4j`).
 - [ ] **Limpiar Frontend:** Eliminar `console.log` y `console.error` que expongan objetos de usuario o tokens.
 
 ### 3.2 Seguridad de Cabeceras y Cookies
@@ -104,5 +104,27 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 
 ---
 
+## 🚀 Evolución Estratégica y Calidad Técnica
+
+*Objetivo: Elevar la robustez del sistema y adoptar estándares de ingeniería de software de alto nivel.*
+
+### 1.1 Ingeniería de Calidad (Backend & Infra)
+- [x] **Global Exception Handler:** Implementar un `@ControllerAdvice` centralizado para sanitizar respuestas de error y evitar la exposición de trazas internas.
+- [ ] **Testing Automatizado:** Cobertura de lógica crítica con JUnit 5 y Mockito para servicios, y Jasmine/Karma para componentes de Angular.
+- [ ] **CI/CD Pipelines:** Automatizar el ciclo de vida mediante GitHub Actions para ejecución de tests y despliegue continuo en Render.
+
+### 1.2 Modernización del Frontend (Next-Gen)
+- [ ] **Migración a Angular Signals:** Optimizar la gestión de estado y el rendimiento del renderizado adoptando Signals en lugar de flujos puramente basados en observables de RxJS.
+- [ ] **PWA (Progressive Web App):** Configurar Service Workers para permitir la instalación de la app en dispositivos móviles y habilitar la persistencia de datos offline (ej. ver calendario sin conexión).
+- [ ] **Notificaciones Push Nativa:** Integración con Firebase Cloud Messaging (FCM) para alertas de sistema directas al panel de notificaciones del SO.
+
+### 1.3 Funcionalidades de Impacto Deportivo
+- [ ] **Asistencia mediante QR:** Generación de códigos QR únicos por jugador para que el entrenador pueda registrar la asistencia a entrenamientos mediante escaneo con la cámara del dispositivo móvil.
+- [ ] **Pasarela de Pagos (Stripe):** Implementación del módulo de pago de cuotas de socios/jugadores mediante la API de Stripe en modo de pruebas.
+- [ ] **Motor de Reportes PDF:** Generación de fichas técnicas y actas oficiales en formato PDF descargable mediante el uso de `iText` (Backend) o `jsPDF` (Frontend).
+
+---
+
 ## 📈 NOTA PARA EL TFG
-Este documento sirve como evidencia de un proceso de **Auditoría y Remediación**. Al finalizar cada tarea, se debe marcar aquí para mantener la trazabilidad de la mejora continua del sistema.
+Este documento sirve como evidencia de un proceso de **Auditoría y Remediación**, así como una **Hoja de Ruta de Evolución Técnica**. Al finalizar cada tarea, se debe marcar aquí para mantener la trazabilidad de la mejora continua del sistema.
+
