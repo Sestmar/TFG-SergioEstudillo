@@ -195,6 +195,61 @@ Creación de un modal de edición dedicado que utiliza formularios reactivos y l
 
 ---
 
+## 29. Logging Profesional: Migración de printStackTrace a SLF4J 🪵✅
+
+Se eliminó el único `e.printStackTrace()` restante en el backend, sustituyéndolo por un logger estructurado con SLF4J via la anotación de Lombok `@Slf4j`.
+
+### Archivo afectado
+
+`PartidoController.java` — método `cerrarActa()`:
+
+```java
+// ANTES
+} catch (Exception e) {
+    e.printStackTrace();
+    return ResponseEntity.internalServerError()...
+}
+
+// DESPUÉS
+@Slf4j
+@RestController
+public class PartidoController {
+    ...
+    } catch (Exception e) {
+        log.error("Error al cerrar acta del partido: {}", e.getMessage(), e);
+        return ResponseEntity.internalServerError()...
+    }
+```
+
+### Por qué importa
+
+| `printStackTrace()` | `log.error(...)` |
+|---|---|
+| Escribe a stderr sin formato | Escribe al sistema de logging configurado |
+| Sin nivel ni contexto | Nivel `ERROR`, mensaje descriptivo |
+| No filtreable en producción | Gestionable con Logback / Render logs |
+| Mala práctica en producción | Estándar en aplicaciones Spring Boot |
+
+`@Slf4j` es una anotación de Lombok ya presente en el proyecto. No requiere dependencia adicional — genera el campo `private static final Logger log` en tiempo de compilación.
+
+---
+
+## 30. Unificación del Motor de Impresión: Eliminación de window.print() 🧹✅
+
+Se eliminó el sistema de impresión CSS (`window.print()`) para unificar toda la generación documental bajo el motor PDF con `jsPDF` + `html2canvas`. Tener dos sistemas de impresión en paralelo era inconsistente y poco profesional.
+
+### Cambios realizados
+
+- `global.scss` → Eliminado el bloque `@media print` completo (~130 líneas) y la clase `.print-only-report`
+- `match-detail.page.ts` → Eliminado el método `print()`
+- `match-detail.page.html` → Eliminado el botón con ícono `print-outline`
+
+### Resultado
+
+Un único flujo de generación documental en toda la aplicación: botón `document-outline` → `PdfService` → PDF descargado. Sin bifurcaciones, sin deuda técnica.
+
+---
+
 ## 28. Motor de Reportes PDF: Generación Documental Profesional 📄✅
 
 Se ha implementado un motor de generación de documentos PDF de alto nivel que permite exportar Convocatorias, Actas de Partido y Estadísticas de Temporada directamente desde la aplicación, sin depender de servicios externos.
@@ -343,5 +398,29 @@ npm install jspdf html2canvas --legacy-peer-deps
 Todos los PDFs comparten la misma cabecera corporativa via el helper privado `cabecera()`:
 - Fondo oscuro `#0a0e1a` (color Night Stadium de la app)
 - Acento púrpura `#7c3aed` para las líneas separadoras y destacados
-- Logo `⚽` en círculo púrpura (reemplazable por imagen cuando esté disponible)
+- Logo del club (`assets/img/mi-club-logo.png`) en la cabecera, con URL dinámica via `window.location.origin`
 - Pie de página con fecha de generación automática
+
+### Bugs corregidos durante pruebas
+
+**1. Nombres en blanco en el PDF**
+
+html2canvas renderiza el div oculto dentro del contexto del DOM de la app. El tema dark de Ionic/Angular establece el color de texto global en blanco (`--ion-text-color`). Al generar el div con `background:#fff` pero sin `color` explícito, el texto heredaba el color blanco del tema — texto blanco sobre fondo blanco, invisible. La columna Posición se veía porque tenía `color:#6b7280` hardcodeado. El resto (nombre, dorsal, minutos) no tenía color explícito.
+
+**Fix**: añadir `color:#111` al div raíz de cada template HTML:
+```typescript
+`<div style="font-family:Arial,sans-serif;width:700px;background:#fff;padding:0;color:#111;">`
+```
+
+**2. Nombre del jugador en convocatoria**
+
+El campo `nombre` de `jugador` en la entidad `Convocation` no está en `Player` directamente sino en `Player.usuario.nombre`. Error de tipo TypeScript: `Property 'nombre' does not exist on type 'Player'`.
+
+**Fix**: acceder via la cadena correcta:
+```typescript
+// ANTES (incorrecto)
+jc.jugador?.nombre
+
+// DESPUÉS (correcto)
+jc.jugador?.usuario?.nombre
+```

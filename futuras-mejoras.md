@@ -52,7 +52,7 @@ Este documento detalla el plan de acción técnico definitivo para resolver los 
 ### 3.1 Limpieza de Entorno y Manejo de Errores
 - [x] **URLs Hardcodeadas:** Eliminadas referencias a localhost.
 - [x] **Global Exception Handler:** Implementado `@ControllerAdvice`.
-- [ ] **Eliminar e.printStackTrace():** Sustituir todas las trazas de error por un logger (`slf4j`). **<-- PRÓXIMO PASO**
+- [x] **Eliminar e.printStackTrace():** Sustituir todas las trazas de error por un logger (`slf4j`).
 - [x] **Limpiar Frontend:** Eliminación masiva de `console.log` innecesarios.
 
 ### 3.2 Seguridad de Cabeceras
