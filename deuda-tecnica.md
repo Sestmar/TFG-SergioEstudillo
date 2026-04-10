@@ -7,14 +7,14 @@
 
 ## 🚨 ALTA — URLs de producción hardcodeadas (Backend)
 
-Estas URLs están embebidas directamente en el código Java, lo que las hace imposibles de cambiar sin recompilar.
+Estas URLs estaban embebidas directamente en el código Java. **Saneado y verificado.**
 
-| Archivo | Línea | URL hardcodeada |
-|---------|-------|-----------------|
-| `AdminService.java` | 277 | `https://backend-tfg-sergio.onrender.com/api/uploads/` |
-| `UsuarioController.java` | 90 | `https://tfg-dam-united-web.onrender.com/auth/reset-password?token=` |
+| Archivo | Línea | Estado |
+|---------|-------|--------|
+| `AdminService.java` | 277 | ✅ Resuelto (inyectado desde properties) |
+| `UsuarioController.java` | 90 | ✅ Resuelto (inyectado desde properties) |
 
-**Fix aplicado:** Mover a `application.properties` como `app.backend.url` y `app.frontend.url`, inyectar con `@Value`.
+**Fix aplicado:** Movidas a `application.properties` con soporte para variables de entorno (`APP_BACKEND_URL` / `APP_FRONTEND_URL`) e inyectadas mediante `@Value` en los servicios/controladores correspondientes.
 
 ---
 

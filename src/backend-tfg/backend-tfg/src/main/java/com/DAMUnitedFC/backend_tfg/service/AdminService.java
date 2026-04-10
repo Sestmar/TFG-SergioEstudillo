@@ -2,6 +2,7 @@ package com.DAMUnitedFC.backend_tfg.service;
 
 import com.DAMUnitedFC.backend_tfg.model.*;
 import com.DAMUnitedFC.backend_tfg.repository.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ public class AdminService {
     private final AsistenciaRepository asistenciaRepo;
     private final PasswordEncoder passwordEncoder;
     private final PartidoService partidoService;
+    private final String backendUrl;
 
     public AdminService(UsuarioRepository usuarioRepo,
                         JugadorRepository jugadorRepo,
@@ -38,7 +40,8 @@ public class AdminService {
                         AlineacionRepository alineacionRepo,
                         AsistenciaRepository asistenciaRepo,
                         PasswordEncoder passwordEncoder,
-                        PartidoService partidoService) {
+                        PartidoService partidoService,
+                        @Value("${app.backend.url}") String backendUrl) {
         this.usuarioRepo = usuarioRepo;
         this.jugadorRepo = jugadorRepo;
         this.equipoRepo = equipoRepo;
@@ -50,6 +53,7 @@ public class AdminService {
         this.asistenciaRepo = asistenciaRepo;
         this.passwordEncoder = passwordEncoder;
         this.partidoService = partidoService;
+        this.backendUrl = backendUrl;
     }
 
     @Transactional(readOnly = true)
@@ -274,7 +278,7 @@ public class AdminService {
             Path path = Paths.get("target/uploads");
             if (!Files.exists(path)) Files.createDirectories(path);
             Files.copy(file.getInputStream(), path.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-            partido.setEscudoRivalUrl("https://backend-tfg-sergio.onrender.com/api/uploads/" + fileName);
+            partido.setEscudoRivalUrl(backendUrl + "/api/uploads/" + fileName);
         }
         if (fechaStr != null) {
             partido.setFechaHora(java.time.LocalDateTime.parse(fechaStr.replace("Z", "")));

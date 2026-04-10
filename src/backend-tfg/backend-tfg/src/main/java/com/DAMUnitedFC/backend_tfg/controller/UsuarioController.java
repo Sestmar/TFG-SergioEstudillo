@@ -10,6 +10,7 @@ import com.DAMUnitedFC.backend_tfg.service.AuthService;
 import com.DAMUnitedFC.backend_tfg.service.EmailService;
 import com.DAMUnitedFC.backend_tfg.service.JwtService;
 import com.DAMUnitedFC.backend_tfg.service.UsuarioService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -38,19 +39,22 @@ public class UsuarioController {
     private final EmailService emailService;
     private final UsuarioService usuarioService;
     private final PasswordResetTokenRepository tokenRepository;
+    private final String frontendUrl;
 
     public UsuarioController(AuthService authService,
                              JwtService jwtService,
                              AuthenticationManager authenticationManager,
                              EmailService emailService,
                              UsuarioService usuarioService,
-                             PasswordResetTokenRepository tokenRepository) {
+                             PasswordResetTokenRepository tokenRepository,
+                             @Value("${app.frontend.url}") String frontendUrl) {
         this.authService = authService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.emailService = emailService;
         this.usuarioService = usuarioService;
         this.tokenRepository = tokenRepository;
+        this.frontendUrl = frontendUrl;
     }
 
     @PostMapping("/register")
@@ -87,7 +91,7 @@ public class UsuarioController {
         tokenRepository.save(new PasswordResetToken(resetToken, usuario));
 
         // Enviar email — si falla, @Transactional revierte el token guardado
-        String resetLink = "https://tfg-dam-united-web.onrender.com/auth/reset-password?token=" + resetToken;
+        String resetLink = frontendUrl + "/auth/reset-password?token=" + resetToken;
         emailService.sendEmail(
                 email,
                 "Recuperación de Contraseña - DAM United FC",
