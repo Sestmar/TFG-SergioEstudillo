@@ -33,8 +33,6 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
           // Si el token es inválido o expiró:
-          console.warn('Sesión expirada o no autorizada. Redirigiendo al login...');
-          
           // Limpiamos el token manualmente
           localStorage.removeItem('auth_token');
           

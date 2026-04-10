@@ -78,8 +78,7 @@ export class UserDashboardPage implements OnInit {
             // Una vez tenemos el ID correcto, cargamos los partidos
             this.loadDashboardData();
         },
-        error: (err) => {
-            console.warn("No se encontró equipo para este jugador (o no es jugador)", err);
+        error: () => {
             // Cargamos solo noticias si no tiene equipo
             this.loadRecentNews();
             this.isLoading = false;

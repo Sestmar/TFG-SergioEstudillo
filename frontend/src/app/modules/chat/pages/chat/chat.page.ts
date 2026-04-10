@@ -77,13 +77,11 @@ export class ChatPage implements OnInit, OnDestroy {
           // por lo que hay que extraer idEquipo desde respuesta.equipo.idEquipo.
           this.equipoId = respuesta?.idEquipo ?? respuesta?.equipo?.idEquipo;
           if (!this.equipoId) {
-            console.warn('[Chat] El endpoint devolvió respuesta sin idEquipo — no se conectará al chat');
             return;
           }
           this.iniciarChat();
         },
-        error: (err) => {
-          console.warn('[Chat] Sin equipo asignado (error', err?.status, ') — no se conectará al chat de equipo');
+        error: () => {
           // No llamar iniciarChat() si no hay equipoId: no tiene sentido conectar sin equipo
         }
       });

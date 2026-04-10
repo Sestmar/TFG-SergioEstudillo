@@ -175,7 +175,6 @@ export class ChatService implements OnDestroy {
 
   enviarMensaje(dto: EnviarMensajeDto): void {
     if (!this.client?.active) {
-      console.warn('STOMP no conectado');
       return;
     }
     this.client.publish({
@@ -257,8 +256,7 @@ export class ChatService implements OnDestroy {
           extra: { route: '/chat' }
         }]
       });
-    } catch (err) {
-      console.warn('[ChatService] No se pudo disparar notificación local:', err);
+    } catch {
     }
   }
 
@@ -266,9 +264,8 @@ export class ChatService implements OnDestroy {
   private registrarListenerNotificaciones(): void {
     LocalNotifications.addListener('localNotificationActionPerformed', () => {
       this.router.navigate(['/chat']);
-    }).catch(err => {
+    }).catch(() => {
       // En web/browser LocalNotifications no está disponible — silenciar el error
-      console.warn('[ChatService] LocalNotifications no disponible en esta plataforma:', err);
     });
   }
 

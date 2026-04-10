@@ -43,14 +43,13 @@ Estas URLs estaban embebidas directamente en el código Java. **Saneado y verifi
 
 ## ⚠️ MEDIA — @Autowired (inyección de campo) en Backend
 
-Spring recomienda constructor injection. `@Autowired` en campos dificulta los tests y viola inmutabilidad.
+Spring recomienda constructor injection. **Saneado y verificado.**
 
-| Archivo | Línea |
-|---------|-------|
-| `WebSocketConfig.java` | 25 |
-| `WebSocketConfig.java` | 28 |
+| Archivo | Línea | Estado |
+|---------|-------|--------|
+| `WebSocketConfig.java` | 25, 28 | ✅ Resuelto (Constructor Injection con Lombok) |
 
-**Fix aplicado:** Migrado a constructor injection con `final` + `@RequiredArgsConstructor`.
+**Fix aplicado:** Migrado a inyección por constructor utilizando la anotación `@RequiredArgsConstructor` de Lombok y campos `private final`.
 
 ---
 

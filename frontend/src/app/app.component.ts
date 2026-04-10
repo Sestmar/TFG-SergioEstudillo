@@ -88,8 +88,7 @@ export class AppComponent implements OnInit {
             this.chatService.conectarGlobal(equipoId, capturedUserId ?? undefined);
           }
         },
-        error: (err) => {
-          console.warn('[AppComponent] No se pudo obtener el equipo para chat global:', err);
+        error: () => {
         }
       });
   }

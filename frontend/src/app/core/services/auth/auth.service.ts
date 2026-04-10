@@ -48,8 +48,7 @@ export class AuthService {
       this.setAuth(token);
       this.getCurrentUser().subscribe({
         error: () => {
-           console.warn('Sesión inválida al inicio, cerrando sesión.');
-           this.logout(); 
+           this.logout();
         }
       });
     } else {
@@ -202,7 +201,7 @@ export class AuthService {
         if (this.tokenRefreshTimer) clearTimeout(this.tokenRefreshTimer);
         this.tokenRefreshTimer = setTimeout(() => {
           this.refreshToken().subscribe({
-            error: () => console.warn('Auto-refresh token failed')
+            error: () => {}
           });
         }, delay);
       }

@@ -199,7 +199,6 @@ export class TeamStatsPage implements OnInit {
             if (coachId) {
               this.loadFullStats(coachId);
             } else {
-              console.warn('No se encontró ID de entrenador en dashboard');
               this.loading = false;
             }
           } else {

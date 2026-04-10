@@ -301,8 +301,6 @@ export class PlayerDashboardPage implements OnInit {
   private goToProfile() {
     if (this.currentPlayer && this.currentPlayer.usuario) {
         this.router.navigate(['/profile']);
-    } else {
-        console.warn("⚠️ Aún no se ha cargado el jugador.");
     }
   }
 

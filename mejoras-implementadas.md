@@ -234,19 +234,44 @@ public class PartidoController {
 
 ---
 
-## 30. Unificación del Motor de Impresión: Eliminación de window.print() 🧹✅
+## 31. Saneamiento Final y Profesionalización: Resolución de Deuda Técnica 🧹✅
 
-Se eliminó el sistema de impresión CSS (`window.print()`) para unificar toda la generación documental bajo el motor PDF con `jsPDF` + `html2canvas`. Tener dos sistemas de impresión en paralelo era inconsistente y poco profesional.
+Se ha realizado una auditoría profunda del código fuente para eliminar malas prácticas y alinear el proyecto con los estándares de producción de nivel Senior. Esta intervención garantiza la mantenibilidad a largo plazo y la seguridad de la información.
 
-### Cambios realizados
+### 1. Centralización de Infraestructura (Backend)
+Se han extraído todas las URLs de producción que estaban "hardcodeadas" en los servicios y controladores, moviéndolas al sistema de configuración de Spring Boot.
 
-- `global.scss` → Eliminado el bloque `@media print` completo (~130 líneas) y la clase `.print-only-report`
-- `match-detail.page.ts` → Eliminado el método `print()`
-- `match-detail.page.html` → Eliminado el botón con ícono `print-outline`
+- **Ficheros afectados**: `AdminService.java`, `UsuarioController.java`, `application.properties`.
+- **Implementación**: Uso de la anotación `@Value("${propiedad}")` con soporte para variables de entorno de sistema.
+- **Impacto**: Permite cambiar el dominio del Backend o Frontend sin necesidad de recompilar el código. El sistema ahora soporta fallbacks automáticos para despliegues en local y producción (Render).
 
-### Resultado
+### 2. Refactorización de Inyección de Dependencias (Spring Boot)
+Se ha migrado la inyección de campos (`@Autowired`) a **Inyección por Constructor**, siguiendo las recomendaciones oficiales de Spring y las reglas de *Clean Code*.
 
-Un único flujo de generación documental en toda la aplicación: botón `document-outline` → `PdfService` → PDF descargado. Sin bifurcaciones, sin deuda técnica.
+- **Fichero afectado**: `WebSocketConfig.java`.
+- **Implementación**: Uso de la anotación `@RequiredArgsConstructor` de Lombok combinada con campos `private final`.
+- **Ventajas Técnicas**:
+    - **Inmutabilidad**: Los servicios inyectados no pueden ser modificados después de la creación del objeto.
+    - **Testabilidad**: Facilita la creación de pruebas unitarias al permitir pasar mocks directamente por el constructor sin necesidad de reflexión o contextos de Spring pesados.
+    - **Detección de dependencias circulares**: Spring detecta fallos de diseño en tiempo de compilación/arranque en lugar de tiempo de ejecución.
+
+### 3. Limpieza de Trazas y Seguridad (Frontend)
+Se han eliminado **12 llamadas a `console.warn()`** distribuidas en 8 archivos críticos del Frontend (Auth, Chat, Dashboards, Stats).
+
+- **Motivo**: Los logs de advertencia en producción pueden exponer lógica de negocio, estructuras de datos internas o detalles de la infraestructura a usuarios malintencionados a través de la consola del navegador.
+- **Estrategia**: 
+    - En bloques `catch`, se reemplazaron los logs por manejos silenciosos o flujos de fallback coherentes.
+    - En interceptores de seguridad, se eliminaron mensajes que daban pistas sobre el estado de la sesión, manteniendo únicamente la lógica de redirección y limpieza de tokens.
+
+### Resumen de Archivos Saneados (Frontend)
+- `app.component.ts`
+- `auth.interceptor.ts`
+- `auth.service.ts`
+- `chat.service.ts`
+- `user-dashboard.page.ts`
+- `chat.page.ts`
+- `team-stats.page.ts`
+- `player-dashboard.page.ts`
 
 ---
 
