@@ -234,44 +234,37 @@ public class PartidoController {
 
 ---
 
-## 31. Saneamiento Final y Profesionalización: Resolución de Deuda Técnica 🧹✅
+## 32. Laboratorio Táctico 2.0: Estrategia Inmersiva "Full-View" ⚽🧪✅
 
-Se ha realizado una auditoría profunda del código fuente para eliminar malas prácticas y alinear el proyecto con los estándares de producción de nivel Senior. Esta intervención garantiza la mantenibilidad a largo plazo y la seguridad de la información.
+Se ha desarrollado un módulo de estrategia avanzada (`TacticsProPage`) que trasciende la simple alineación para convertirse en una herramienta de análisis táctico profesional. Este módulo es independiente del acta oficial, permitiendo al entrenador experimentar sin alterar los datos del partido.
 
-### 1. Centralización de Infraestructura (Backend)
-Se han extraído todas las URLs de producción que estaban "hardcodeadas" en los servicios y controladores, moviéndolas al sistema de configuración de Spring Boot.
+### Desafíos Técnicos y Soluciones de Ingeniería
 
-- **Ficheros afectados**: `AdminService.java`, `UsuarioController.java`, `application.properties`.
-- **Implementación**: Uso de la anotación `@Value("${propiedad}")` con soporte para variables de entorno de sistema.
-- **Impacto**: Permite cambiar el dominio del Backend o Frontend sin necesidad de recompilar el código. El sistema ahora soporta fallbacks automáticos para despliegues en local y producción (Render).
+1. **Posicionamiento Libre (Free-Drag)**:
+   - **Problema**: El sistema original de slots limitaba la creatividad táctica.
+   - **Solución**: Se eliminó la estructura de rejilla (`Flexbox`) en favor de un contenedor con `position: relative`. Los jugadores se posicionan mediante coordenadas porcentuales (`top%`, `left%`) calculadas dinámicamente.
+   - **Cálculo de Precisión**: Se implementó una corrección de *offset* en el evento `cdkDragEnded`. Al usar `transform: translate(-50%, -50%)` para centrar visualmente el token, el cálculo de la posición final se ajustó al punto de anclaje real del puntero, logrando una sensación de "soltado" milimétrica.
 
-### 2. Refactorización de Inyección de Dependencias (Spring Boot)
-Se ha migrado la inyección de campos (`@Autowired`) a **Inyección por Constructor**, siguiendo las recomendaciones oficiales de Spring y las reglas de *Clean Code*.
+2. **Interfaz Inmersiva y UX Fluida**:
+   - **Ajuste de Pantalla**: El campo se ajusta automáticamente al 100% de la altura del dispositivo (`ion-content [scrollY]="false"`), eliminando el scroll y permitiendo ver los 22 jugadores simultáneamente.
+   - **Menú Flotante (Glassmorphism Sidebar)**: Se sustituyó el header fijo por un botón FAB (`≡`) que despliega un sidebar lateral translúcido. Esto maximiza el área de trabajo táctico.
+   - **Banquillo "Bottom Sheet"**: Los jugadores disponibles se gestionan desde un panel que desliza desde la parte inferior, siguiendo patrones de diseño nativos de iOS/Android.
 
-- **Fichero afectado**: `WebSocketConfig.java`.
-- **Implementación**: Uso de la anotación `@RequiredArgsConstructor` de Lombok combinada con campos `private final`.
-- **Ventajas Técnicas**:
-    - **Inmutabilidad**: Los servicios inyectados no pueden ser modificados después de la creación del objeto.
-    - **Testabilidad**: Facilita la creación de pruebas unitarias al permitir pasar mocks directamente por el constructor sin necesidad de reflexión o contextos de Spring pesados.
-    - **Detección de dependencias circulares**: Spring detecta fallos de diseño en tiempo de compilación/arranque en lugar de tiempo de ejecución.
+3. **Fases Transicionales con Animación**:
+   - Implementación de estados de **Ataque (ATQ)** y **Defensa (DEF)** con memorias de posición independientes.
+   - El cambio entre fases dispara una animación suave vía `CSS Transition` y `transform: scale()`, permitiendo visualizar cómo se desplaza el equipo en bloque.
 
-### 3. Limpieza de Trazas y Seguridad (Frontend)
-Se han eliminado **12 llamadas a `console.warn()`** distribuidas en 8 archivos críticos del Frontend (Auth, Chat, Dashboards, Stats).
+4. **Shadow Players (Simulación del Rival)**:
+   - Se añadió la capacidad de renderizar 11 "fantasmas" rojos numerados e independientes.
+   - Estos tokens permiten al entrenador ensayar movimientos contra un bloque rival específico (ej. presionar un 4-4-2).
 
-- **Motivo**: Los logs de advertencia en producción pueden exponer lógica de negocio, estructuras de datos internas o detalles de la infraestructura a usuarios malintencionados a través de la consola del navegador.
-- **Estrategia**: 
-    - En bloques `catch`, se reemplazaron los logs por manejos silenciosos o flujos de fallback coherentes.
-    - En interceptores de seguridad, se eliminaron mensajes que daban pistas sobre el estado de la sesión, manteniendo únicamente la lógica de redirección y limpieza de tokens.
+5. **Sistema de Dibujo Pro y Persistencia**:
+   - **Canvas Persistente**: A diferencia de pizarras efímeras, el sistema guarda cada trazo (puntos y colores) en el `LocalStorage` del navegador.
+   - **Arquitectura de Redibujado**: Al cargar la página, un algoritmo recorre el historial de trazos y reconstruye el lienzo de forma transparente para el usuario.
+   - **Paleta de Colores**: Inclusión de 4 colores tácticos (Blanco, Púrpura Neón, Rojo Alerta, Amarillo Táctico).
 
-### Resumen de Archivos Saneados (Frontend)
-- `app.component.ts`
-- `auth.interceptor.ts`
-- `auth.service.ts`
-- `chat.service.ts`
-- `user-dashboard.page.ts`
-- `chat.page.ts`
-- `team-stats.page.ts`
-- `player-dashboard.page.ts`
+### Impacto en el Proyecto
+Esta mejora posiciona la aplicación como una herramienta de alto nivel para directores deportivos, demostrando un dominio avanzado de **Angular CDK**, **Canvas API**, y **Gestión de Estados Complejos** en el Frontend.
 
 ---
 

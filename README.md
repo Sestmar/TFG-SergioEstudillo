@@ -59,9 +59,12 @@ El proyecto ha evolucionado desde un prototipo funcional hacia una **plataforma 
 - 📱 **Mobile First**: Interfaz híbrida construida con **Angular 18** + Ionic 7, con identidad visual personalizada (Glassmorphism, selector `:has`, Shadow Parts).
 - 💬 **Chat en Tiempo Real**: Arquitectura WebSockets + STOMP con **Doble Cliente STOMP** y sincronización de badges offline.
 - 📲 **Notificaciones WhatsApp**: Integración asíncrona (`@Async`) con **Twilio** para convocatorias y recordatorios.
-- 🏗️ **Backend SOLID**: Inyección por constructor (`private final` + `@RequiredArgsConstructor`), Thin Controllers y capa de servicio transaccional.
+- 🏗️ **Backend SOLID**: Inyección por constructor (`private final` + `@RequiredArgsConstructor`), Thin Controllers, capa de servicio transaccional y configuración de red externalizada vía variables de entorno.
 - 🧩 **Arquitectura modular**: 10+ módulos Lazy-Loaded, 18+ servicios Singleton, Guards reactivos y HTTP Interceptors.
 - 📄 **Motor de Reportes PDF**: Generación de Convocatorias, Actas de Partido y Estadísticas en PDF con `jsPDF` + `html2canvas` (patrón Hidden Container para escapar del Shadow DOM de Ionic).
+- 🧪 **Laboratorio Táctico Pro**: Pizarra Full-View con posicionamiento libre (coordenadas relativas `%` vía Angular CDK), fases de Ataque/Defensa con transiciones animadas, simulación de equipo rival (Shadow Players) y herramientas de dibujo táctico (Canvas API) con persistencia en `LocalStorage`.
+- 🔧 **Saneamiento de Deuda Técnica**: Eliminación de `@Autowired` en favor de inyección por constructor, externalización de URLs de producción a `application.properties` con variables de entorno (`APP_BACKEND_URL`, `APP_FRONTEND_URL`) y limpieza de logs de desarrollo en Frontend.
+- 🛡️ **Observabilidad y Resiliencia**: Manejo centralizado de errores con `@ControllerAdvice` (Global Exception Handler), migración completa de `e.printStackTrace()` a **SLF4J** y cabeceras `Content-Security-Policy` en producción.
 
 ---
 
@@ -347,6 +350,8 @@ sequenceDiagram
 | `AuthGuard` | Frontend | Protege rutas que requieren autenticación |
 | `RoleGuard` | Frontend | Protege rutas por rol, insensible a mayúsculas y prefijo `ROLE_` |
 | `ErrorInterceptor` | Frontend | Captura 401: logout automático + redirect |
+| `@ControllerAdvice` | Backend | Global Exception Handler — respuestas de error homogéneas y trazabilidad con SLF4J |
+| `Content-Security-Policy` | Frontend | Cabecera CSP en `index.html` — mitigación de XSS e inyección de scripts de terceros |
 
 ### Blindaje de Seguridad (Resumen de Fases)
 
@@ -358,6 +363,9 @@ sequenceDiagram
 | **Fase 2** | CORS restrictivo | Whitelist de orígenes, centralización en `SecurityConfig.java`, protección de WebSocket origins |
 | **Fase 2** | Path Traversal | Sanitización de rutas en `FileController.java`, bloqueo de `..` |
 | **Fase 2** | Tokens Atómicos | `PasswordResetToken` con UUID, expiración 60min, `@Transactional` rollback |
+| **Fase 3** | Global Exception Handler | `@ControllerAdvice` centralizado — respuestas de error consistentes sin filtrar trazas internas |
+| **Fase 3** | Logging Profesional | Sustitución total de `e.printStackTrace()` y `console.log` por **SLF4J** (Backend) y limpieza de consola (Frontend) |
+| **Fase 3** | CSP Headers | `Content-Security-Policy` en `index.html` para mitigación de XSS y control de orígenes de scripts |
 
 ---
 
@@ -595,7 +603,7 @@ El scroll entre secciones utiliza `IonContent.scrollToPoint()` (scroll programá
 ### 👥 Multi-Rol
 
 - **Admin (Director Deportivo):** Panel completo de gestión con tarjetas estilo competición.
-- **Entrenador:** Dashboard, pizarra táctica, convocatorias, estadísticas, chat de equipo.
+- **Entrenador:** Dashboard, **Laboratorio Táctico Pro** (pizarra Full-View con simulación de rival, fases de juego animadas y herramientas de dibujo técnico), convocatorias, estadísticas, chat de equipo.
 - **Jugador:** Dashboard personal, partidos, perfil, chat de equipo.
 
 ### 📱 Mobile First
@@ -756,8 +764,8 @@ Este proyecto es un **Trabajo Final de Grado (TFG)** desarrollado con fines educ
 
 <div align="center">
 
-*Documentación actualizada: 9 de Abril 2026*
+*Documentación actualizada: 10 de Abril 2026*
 
-*Versión: 6.0 — Motor PDF · PWA · CI/CD Estabilizado · Logging Profesional*
+*Versión: 7.0 — Tactical Laboratory Pro · Backend Sanitization · Inmersive UX*
 
 </div>
