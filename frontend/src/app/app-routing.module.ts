@@ -91,6 +91,14 @@ const routes: Routes = [
     data: { roles: ['ADMIN', 'ENTRENADOR'] }
   },
 
+  // PIZARRA TÁCTICA PRO (sandbox de fases, sin modificar alineación oficial)
+  {
+    path: 'tactics-pro/:matchId',
+    loadChildren: () => import('./modules/coach/pages/tactics-pro/tactics-pro.module').then( m => m.TacticsProPageModule),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'ENTRENADOR'] }
+  },
+
   // EDITAR PARTIDO (ALINEACIÓN)
   {
     path: 'edit-match/:id',

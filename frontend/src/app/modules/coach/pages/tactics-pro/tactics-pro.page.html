@@ -1,0 +1,205 @@
+<ion-content [scrollY]="false" class="tactics-content">
+
+  <!-- HEADER -->
+  <div class="manager-header">
+    <div class="header-left">
+      <ion-button fill="clear" class="back-btn" routerLink="/coach-dashboard">
+        <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+      </ion-button>
+
+      <div class="formation-pill">
+        <span class="label">ESQUEMA</span>
+        <ion-select [value]="selectedFormation" (ionChange)="onFormationChange($event)" interface="popover"
+          class="formation-select" [interfaceOptions]="{ cssClass: 'night-select-popover' }">
+          <ion-select-option *ngFor="let f of formations" [value]="f">{{ f }}</ion-select-option>
+        </ion-select>
+        <ion-icon name="caret-down-outline" class="select-arrow"></ion-icon>
+      </div>
+
+      <span class="pro-badge">PRO</span>
+    </div>
+
+    <div class="header-center" *ngIf="matchInfo">
+      <div class="match-context">
+        <span class="context-label">PRÓXIMO RIVAL</span>
+        <span class="rival-name">{{ matchInfo.rival }}</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="phase-toggle">
+        <button class="phase-btn"
+          [class.active-attack]="currentPhase === 'attack'"
+          (click)="setPhase('attack')">
+          ATQ
+        </button>
+        <button class="phase-btn"
+          [class.active-defense]="currentPhase === 'defense'"
+          (click)="setPhase('defense')">
+          DEF
+        </button>
+      </div>
+
+      <ion-button (click)="toggleDrawMode()" class="action-btn" [class.active-draw]="isDrawingMode">
+        <ion-icon name="pencil-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-button (click)="clearCanvas()" class="action-btn">
+        <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-button (click)="savePhases()" class="action-btn green">
+        <ion-icon name="save-outline" slot="start"></ion-icon>
+        <span class="btn-text">GUARDAR</span>
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="spinner-fm"></div>
+    <p>Cargando estrategia...</p>
+  </div>
+
+  <!-- CAMPO -->
+  <div class="main-stage" *ngIf="!loading">
+    <div class="pitch-board">
+      <div class="pitch-texture"></div>
+      <div class="pitch-markings">
+        <div class="box top-box"></div>
+        <div class="box bottom-box"></div>
+        <div class="small-box top-small-box"></div>
+        <div class="small-box bottom-small-box"></div>
+        <div class="goal top-goal"></div>
+        <div class="goal bottom-goal"></div>
+        <div class="half-line"></div>
+        <div class="center-circle"><div class="center-dot"></div></div>
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+      </div>
+
+      <!-- Indicador de fase sobre el campo -->
+      <div class="phase-indicator" [class.attack]="currentPhase === 'attack'" [class.defense]="currentPhase === 'defense'">
+        {{ currentPhase === 'attack' ? '⚔ FASE ATAQUE' : '🛡 FASE DEFENSA' }}
+      </div>
+
+      <canvas #tacticCanvas
+        class="tactic-canvas"
+        [class.drawing-active]="isDrawingMode"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp()"
+        (pointerleave)="onPointerUp()">
+      </canvas>
+
+      <div class="tactical-layer" [class.transitioning]="isTransitioning">
+
+        <!-- DELANTEROS -->
+        <div class="line-row forward-line">
+          <div class="slot-container" *ngFor="let slot of forwards">
+            <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player ? [slot.player] : []"
+              [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="pos-anchor">
+              <div class="player-token" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player" [cdkDragDisabled]="isDrawingMode">
+                <div class="player-circle" [style.--card-accent]="getBorderColor(slot.player.posicion)">
+                  <img [src]="getProfileImage(slot.player)" alt="player">
+                </div>
+                <span class="player-name">{{ getShortName(slot.player.usuario.nombre) }}</span>
+                <div *cdkDragPlaceholder class="token-ghost"></div>
+              </div>
+              <div class="empty-pos-indicator" *ngIf="!slot.player">
+                <div class="empty-slot">
+                  <span class="empty-pos-label">{{ getSlotLabel(slot.id) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MEDIOCAMPISTAS -->
+        <div class="line-row mid-line">
+          <div class="slot-container" *ngFor="let slot of midfielders">
+            <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player ? [slot.player] : []"
+              [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="pos-anchor">
+              <div class="player-token" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player" [cdkDragDisabled]="isDrawingMode">
+                <div class="player-circle" [style.--card-accent]="getBorderColor(slot.player.posicion)">
+                  <img [src]="getProfileImage(slot.player)" alt="player">
+                </div>
+                <span class="player-name">{{ getShortName(slot.player.usuario.nombre) }}</span>
+                <div *cdkDragPlaceholder class="token-ghost"></div>
+              </div>
+              <div class="empty-pos-indicator" *ngIf="!slot.player">
+                <div class="empty-slot">
+                  <span class="empty-pos-label">{{ getSlotLabel(slot.id) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DEFENSAS -->
+        <div class="line-row def-line">
+          <div class="slot-container" *ngFor="let slot of defenders">
+            <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player ? [slot.player] : []"
+              [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="pos-anchor">
+              <div class="player-token" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player" [cdkDragDisabled]="isDrawingMode">
+                <div class="player-circle" [style.--card-accent]="getBorderColor(slot.player.posicion)">
+                  <img [src]="getProfileImage(slot.player)" alt="player">
+                </div>
+                <span class="player-name">{{ getShortName(slot.player.usuario.nombre) }}</span>
+                <div *cdkDragPlaceholder class="token-ghost"></div>
+              </div>
+              <div class="empty-pos-indicator" *ngIf="!slot.player">
+                <div class="empty-slot">
+                  <span class="empty-pos-label">{{ getSlotLabel(slot.id) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PORTERO -->
+        <div class="line-row gk-line">
+          <div class="slot-container" *ngFor="let slot of goalkeeper">
+            <div cdkDropList [id]="slot.id" [cdkDropListData]="slot.player ? [slot.player] : []"
+              [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="pos-anchor">
+              <div class="player-token" *ngIf="slot.player" cdkDrag [cdkDragData]="slot.player" [cdkDragDisabled]="isDrawingMode">
+                <div class="player-circle" [style.--card-accent]="getBorderColor(slot.player.posicion)">
+                  <img [src]="getProfileImage(slot.player)" alt="player">
+                </div>
+                <span class="player-name">{{ getShortName(slot.player.usuario.nombre) }}</span>
+                <div *cdkDragPlaceholder class="token-ghost"></div>
+              </div>
+              <div class="empty-pos-indicator" *ngIf="!slot.player">
+                <div class="empty-slot">
+                  <span class="empty-pos-label">{{ getSlotLabel(slot.id) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- BANQUILLO -->
+  <div class="manager-footer" *ngIf="!loading">
+    <div class="footer-header">
+      <span class="footer-title">JUGADORES DISPONIBLES</span>
+      <span class="footer-count">{{ bench.length }} jugadores</span>
+    </div>
+
+    <div cdkDropList id="benchList" [cdkDropListData]="bench"
+      [cdkDropListConnectedTo]="allSlotIds" (cdkDropListDropped)="drop($event)" class="bench-strip">
+      <div class="bench-slot" *ngFor="let p of bench">
+        <div class="bench-token" cdkDrag [cdkDragData]="p" [cdkDragDisabled]="isDrawingMode">
+          <div class="bench-circle" [style.--card-accent]="getBorderColor(p.posicion)">
+            <img [src]="getProfileImage(p)" alt="player">
+          </div>
+          <span class="bench-name">{{ getShortName(p.usuario.nombre) }}</span>
+          <div *cdkDragPlaceholder class="token-ghost bench-ghost"></div>
+        </div>
+      </div>
+      <div *ngIf="bench.length === 0" class="bench-empty"><span>Todos en el campo</span></div>
+    </div>
+  </div>
+
+</ion-content>

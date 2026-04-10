@@ -1,286 +1,327 @@
-gemini en instruccion.md te ha dejado la tarea a realizar. Comprueba si
- es lo que falta realmente y no está hecho ya, para ponerte a ello
+Clara la tarea. Son 3 archivos: .ts, .html y .scss de la TacticsProPage.
+   Arranco.
 
-  Searched for 2 patterns, read 1 file (ctrl+o to expand)
-
-● Bien, déjame verificar el estado actual del archivo antes de asumir que
-  no está hecho.
-
-  Searched for 1 pattern, read 1 file (ctrl+o to expand)
-
-● Confirmado — la tarea de Gemini es válida y no está hecha. El archivo
-  sigue con @Autowired en campos (líneas 25 y 28).
-
-  Lo que voy a cambiar exactamente:
-
-  - Eliminar import org.springframework.beans.factory.annotation.Autowired
-  - Agregar import lombok.RequiredArgsConstructor
-  - Añadir @RequiredArgsConstructor a la clase
-  - @Autowired private JwtService jwtService → private final JwtService
-  jwtService
-  - @Autowired private UserDetailsService userDetailsService → private
-  final UserDetailsService userDetailsService
-
-  ¿Arranco?
-
-> dale si
-
-● Update(src\backend-tfg\backend-tfg\src\main\java\com\DAMUnitedFC\backend
-        _tfg\config\WebSocketConfig.java)
+● Update(frontend\src\app\modules\coach\pages\tactics-pro\tactics-pro.page
+        .ts)
   ⎿  Added 1 line, removed 1 line
-      1  package com.DAMUnitedFC.backend_tfg.config;
-      2
-      3  import com.DAMUnitedFC.backend_tfg.service.JwtService;
-      4 -import org.springframework.beans.factory.annotation.Autowi
-        -red;
-      4 +import lombok.RequiredArgsConstructor;
-      5  import org.springframework.context.annotation.Configuratio
-         n;
-      6  import org.springframework.messaging.Message;
-      7  import org.springframework.messaging.MessageChannel;
+      1 -import { Component, OnInit, DestroyRef, inject } from '@an
+        -gular/core';
+      1 +import { Component, OnInit, DestroyRef, inject, ViewChild,
+        + ElementRef } from '@angular/core';
+      2  import { takeUntilDestroyed } from '@angular/core/rxjs-int
+         erop';
+      3  import { ActivatedRoute } from '@angular/router';
+      4  import { CdkDragDrop } from '@angular/cdk/drag-drop';
 
-● Update(src\backend-tfg\backend-tfg\src\main\java\com\DAMUnitedFC\backend
-        _tfg\config\WebSocketConfig.java)
-  ⎿  Added 3 lines, removed 5 lines
-      20
-      21  @Configuration
-      22  @EnableWebSocketMessageBroker
-      23 +@RequiredArgsConstructor
-      24  public class WebSocketConfig implements WebSocketMessageB
-          rokerConfigurer {
-      25
-      25 -    @Autowired
-      26 -    private JwtService jwtService;
-      26 +    private final JwtService jwtService;
-      27 +    private final UserDetailsService userDetailsService;
-      28
-      28 -    @Autowired
-      29 -    private UserDetailsService userDetailsService;
-      30 -
-      29      @Override
-      30      public void registerStompEndpoints(StompEndpointRegis
-          try registry) {
-      31          registry.addEndpoint("/ws")
+● Update(frontend\src\app\modules\coach\pages\tactics-pro\tactics-pro.page
+        .ts)
+  ⎿  Added 5 lines
+      52
+      53    currentPhase: Phase = 'attack';
+      54    isTransitioning = false;
+      55 +  isDrawingMode = false;
+      56
+      57 +  @ViewChild('tacticCanvas') canvasRef!: ElementRef<HTMLC
+         +anvasElement>;
+      58 +  private ctx: CanvasRenderingContext2D | null = null;
+      59 +  private isDrawing = false;
+      60 +
+      61    private phaseCache: Record<Phase, PhaseSnapshot | null>
+           = { attack: null, defense: null };
+      62
+      63    constructor(
 
-● Listo. Probalo con ./mvnw spring-boot:run y confirmame que arranca. Si
-  anda bien, el siguiente y último ítem pendiente son los console.warn del
-   frontend.
+● Update(frontend\src\app\modules\coach\pages\tactics-pro\tactics-pro.page
+        .ts)
+  ⎿  Added 1 line
+      116          this.applyOfficialLineup(savedSlots);
+      117          this.restorePhases();
+      118          this.loading = false;
+      119 +        setTimeout(() => this.initCanvas(), 50);
+      120        },
+      121        error: () => { this.loading = false; }
+      122      });
 
-> arrancó bien. Gemini actualizó la tarea en instruccion.md con la parte
-que queda. Comprueba y lleva a cabo la tarea
+● Update(frontend\src\app\modules\coach\pages\tactics-pro\tactics-pro.page
+        .ts)
+  ⎿  Added 56 lines
+      227      return `tactics-pro-${this.matchId}`;
+      228    }
+      229
+      230 +  // ─── CANVAS ────────────────────────────────────────
+          +───────
+      231 +
+      232 +  private initCanvas() {
+      233 +    if (!this.canvasRef?.nativeElement) return;
+      234 +    const canvas = this.canvasRef.nativeElement;
+      235 +    const parent = canvas.parentElement;
+      236 +    if (parent) {
+      237 +      canvas.width = parent.offsetWidth;
+      238 +      canvas.height = parent.offsetHeight;
+      239 +    }
+      240 +    this.ctx = canvas.getContext('2d');
+      241 +    if (this.ctx) {
+      242 +      this.ctx.strokeStyle = '#7c3aed';
+      243 +      this.ctx.lineWidth = 3;
+      244 +      this.ctx.lineCap = 'round';
+      245 +      this.ctx.lineJoin = 'round';
+      246 +    }
+      247 +  }
+      248 +
+      249 +  toggleDrawMode() {
+      250 +    this.isDrawingMode = !this.isDrawingMode;
+      251 +    this.isDrawing = false;
+      252 +  }
+      253 +
+      254 +  clearCanvas() {
+      255 +    if (!this.ctx || !this.canvasRef?.nativeElement) ret
+          +urn;
+      256 +    const canvas = this.canvasRef.nativeElement;
+      257 +    this.ctx.clearRect(0, 0, canvas.width, canvas.height
+          +);
+      258 +  }
+      259 +
+      260 +  onPointerDown(event: PointerEvent) {
+      261 +    if (!this.isDrawingMode || !this.ctx) return;
+      262 +    this.isDrawing = true;
+      263 +    const { x, y } = this.getCanvasPos(event);
+      264 +    this.ctx.beginPath();
+      265 +    this.ctx.moveTo(x, y);
+      266 +    event.preventDefault();
+      267 +  }
+      268 +
+      269 +  onPointerMove(event: PointerEvent) {
+      270 +    if (!this.isDrawing || !this.ctx) return;
+      271 +    const { x, y } = this.getCanvasPos(event);
+      272 +    this.ctx.lineTo(x, y);
+      273 +    this.ctx.stroke();
+      274 +    event.preventDefault();
+      275 +  }
+      276 +
+      277 +  onPointerUp() {
+      278 +    this.isDrawing = false;
+      279 +  }
+      280 +
+      281 +  private getCanvasPos(event: PointerEvent): { x: number
+          +; y: number } {
+      282 +    const rect = this.canvasRef.nativeElement.getBoundin
+          +gClientRect();
+      283 +    return { x: event.clientX - rect.left, y: event.clie
+          +ntY - rect.top };
+      284 +  }
+      285 +
+      286    // ─── FORMACIÓN ─────────────────────────────────────
+           ───────
+      287
+      288    onFormationChange(event: IonSelectChangeEvent) {
 
-  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+● Ahora el HTML — canvas + botones + [cdkDragDisabled]:
 
-● Antes de tocar nada, verifico el contexto de cada console.warn para no
-  romper flujos. Los leo todos en paralelo.
+● Update(frontend\src\app\modules\coach\pages\tactics-pro\tactics-pro.page
+        .html)
+  ⎿  Added 6 lines
+      40          </button>
+      41        </div>
+      42
+      43 +      <ion-button (click)="toggleDrawMode()" class="actio
+         +n-btn" [class.active-draw]="isDrawingMode">
+      44 +        <ion-icon name="pencil-outline" slot="icon-only">
+         +</ion-icon>
+      45 +      </ion-button>
+      46 +      <ion-button (click)="clearCanvas()" class="action-b
+         +tn">
+      47 +        <ion-icon name="trash-outline" slot="icon-only"><
+         +/ion-icon>
+      48 +      </ion-button>
+      49        <ion-button (click)="savePhases()" class="action-bt
+          n green">
+      50          <ion-icon name="save-outline" slot="start"></ion-
+          icon>
+      51          <span class="btn-text">GUARDAR</span>
 
-  Searched for 8 patterns, read 8 files (ctrl+o to expand)
+● Update(frontend\src\app\modules\coach\pages\tactics-pro\tactics-pro.page
+        .html)
+  ⎿  Added 9 lines
+      81          {{ currentPhase === 'attack' ? '⚔ FASE ATAQUE' :
+          '🛡 FASE DEFENSA' }}
+      82        </div>
+      83
+      84 +      <canvas #tacticCanvas
+      85 +        class="tactic-canvas"
+      86 +        [class.drawing-active]="isDrawingMode"
+      87 +        (pointerdown)="onPointerDown($event)"
+      88 +        (pointermove)="onPointerMove($event)"
+      89 +        (pointerup)="onPointerUp()"
+      90 +        (pointerleave)="onPointerUp()">
+      91 +      </canvas>
+      92 +
+      93        <div class="tactical-layer" [class.transitioning]="
+          isTransitioning">
+      94
+      95          <!-- DELANTEROS -->
 
-● Tengo todo el contexto. Todos son logs puros — ninguno altera el flujo
-  de control. Arranco con todos en paralelo.
+● Ahora el [cdkDragDisabled] en todos los tokens del campo y el banquillo:
 
-● Update(frontend\src\app\app.component.ts)
-  ⎿  Added 1 line, removed 2 lines
-      88              this.chatService.conectarGlobal(equipoId, cap
-          turedUserId ?? undefined);
-      89            }
-      90          },
-      91 -        error: (err) => {
-      92 -          console.warn('[AppComponent] No se pudo obtener
-         - el equipo para chat global:', err);
-      91 +        error: () => {
-      92          }
-      93        });
-      94    }
+● Update(frontend\src\app\modules\coach\pages\tactics-pro\tactics-pro.page
+        .html)
+  ⎿  Added 4 lines, removed 4 lines
+       97            <div class="slot-container" *ngFor="let slot o
+           f forwards">
+       98              <div cdkDropList [id]="slot.id" [cdkDropList
+           Data]="slot.player ? [slot.player] : []"
+       99                [cdkDropListConnectedTo]="allSlotIds" (cdk
+           DropListDropped)="drop($event)" class="pos-anchor">
+      100 -              <div class="player-token" *ngIf="slot.play
+          -er" cdkDrag [cdkDragData]="slot.player">
+      100 +              <div class="player-token" *ngIf="slot.play
+          +er" cdkDrag [cdkDragData]="slot.player" [cdkDragDisabled
+          +]="isDrawingMode">
+      101                  <div class="player-circle" [style.--card
+           -accent]="getBorderColor(slot.player.posicion)">
+      102                    <img [src]="getProfileImage(slot.playe
+           r)" alt="player">
+      103                  </div>
+     ...
+      118            <div class="slot-container" *ngFor="let slot o
+           f midfielders">
+      119              <div cdkDropList [id]="slot.id" [cdkDropList
+           Data]="slot.player ? [slot.player] : []"
+      120                [cdkDropListConnectedTo]="allSlotIds" (cdk
+           DropListDropped)="drop($event)" class="pos-anchor">
+      121 -              <div class="player-token" *ngIf="slot.play
+          -er" cdkDrag [cdkDragData]="slot.player">
+      121 +              <div class="player-token" *ngIf="slot.play
+          +er" cdkDrag [cdkDragData]="slot.player" [cdkDragDisabled
+          +]="isDrawingMode">
+      122                  <div class="player-circle" [style.--card
+           -accent]="getBorderColor(slot.player.posicion)">
+      123                    <img [src]="getProfileImage(slot.playe
+           r)" alt="player">
+      124                  </div>
+     ...
+      139            <div class="slot-container" *ngFor="let slot o
+           f defenders">
+      140              <div cdkDropList [id]="slot.id" [cdkDropList
+           Data]="slot.player ? [slot.player] : []"
+      141                [cdkDropListConnectedTo]="allSlotIds" (cdk
+           DropListDropped)="drop($event)" class="pos-anchor">
+      142 -              <div class="player-token" *ngIf="slot.play
+          -er" cdkDrag [cdkDragData]="slot.player">
+      142 +              <div class="player-token" *ngIf="slot.play
+          +er" cdkDrag [cdkDragData]="slot.player" [cdkDragDisabled
+          +]="isDrawingMode">
+      143                  <div class="player-circle" [style.--card
+           -accent]="getBorderColor(slot.player.posicion)">
+      144                    <img [src]="getProfileImage(slot.playe
+           r)" alt="player">
+      145                  </div>
+     ...
+      160            <div class="slot-container" *ngFor="let slot o
+           f goalkeeper">
+      161              <div cdkDropList [id]="slot.id" [cdkDropList
+           Data]="slot.player ? [slot.player] : []"
+      162                [cdkDropListConnectedTo]="allSlotIds" (cdk
+           DropListDropped)="drop($event)" class="pos-anchor">
+      163 -              <div class="player-token" *ngIf="slot.play
+          -er" cdkDrag [cdkDragData]="slot.player">
+      163 +              <div class="player-token" *ngIf="slot.play
+          +er" cdkDrag [cdkDragData]="slot.player" [cdkDragDisabled
+          +]="isDrawingMode">
+      164                  <div class="player-circle" [style.--card
+           -accent]="getBorderColor(slot.player.posicion)">
+      165                    <img [src]="getProfileImage(slot.playe
+           r)" alt="player">
+      166                  </div>
 
-● Update(frontend\src\app\core\interceptors\auth.interceptor.ts)
-  ⎿  Removed 2 lines
-      33        catchError((error: HttpErrorResponse) => {
-      34          if (error.status === 401) {
-      35            // Si el token es inválido o expiró:
-      36 -          console.warn('Sesión expirada o no autorizada.
-         -Redirigiendo al login...');
-      37 -
-      36            // Limpiamos el token manualmente
-      37            localStorage.removeItem('auth_token');
-      38
-
-● Update(frontend\src\app\core\services\auth\auth.service.ts)
-  ⎿  Added 1 line, removed 2 lines
-      48        this.setAuth(token);
-      49        this.getCurrentUser().subscribe({
-      50          error: () => {
-      51 -           console.warn('Sesión inválida al inicio, cerra
-         -ndo sesión.');
-      52 -           this.logout();
-      51 +           this.logout();
-      52          }
-      53        });
-      54      } else {
-
-● Update(frontend\src\app\core\services\auth\auth.service.ts)
+● Update(frontend\src\app\modules\coach\pages\tactics-pro\tactics-pro.page
+        .html)
   ⎿  Added 1 line, removed 1 line
-      201          if (this.tokenRefreshTimer) clearTimeout(this.to
-           kenRefreshTimer);
-      202          this.tokenRefreshTimer = setTimeout(() => {
-      203            this.refreshToken().subscribe({
-      204 -            error: () => console.warn('Auto-refresh toke
-          -n failed')
-      204 +            error: () => {}
-      205            });
-      206          }, delay);
-      207        }
+      190      <div cdkDropList id="benchList" [cdkDropListData]="b
+           ench"
+      191        [cdkDropListConnectedTo]="allSlotIds" (cdkDropList
+           Dropped)="drop($event)" class="bench-strip">
+      192        <div class="bench-slot" *ngFor="let p of bench">
+      193 -        <div class="bench-token" cdkDrag [cdkDragData]="
+          -p">
+      193 +        <div class="bench-token" cdkDrag [cdkDragData]="
+          +p" [cdkDragDisabled]="isDrawingMode">
+      194            <div class="bench-circle" [style.--card-accent
+           ]="getBorderColor(p.posicion)">
+      195              <img [src]="getProfileImage(p)" alt="player"
+           >
+      196            </div>
 
-● Update(frontend\src\app\core\services\chat\chat.service.ts)
-  ⎿  Removed 1 line
-      175
-      176    enviarMensaje(dto: EnviarMensajeDto): void {
-      177      if (!this.client?.active) {
-      178 -      console.warn('STOMP no conectado');
-      178        return;
-      179      }
-      180      this.client.publish({
+● Ahora el SCSS — canvas + botón activo:
 
-● Update(frontend\src\app\core\services\chat\chat.service.ts)
-  ⎿  Added 1 line, removed 2 lines
-      256            extra: { route: '/chat' }
-      257          }]
-      258        });
-      259 -    } catch (err) {
-      260 -      console.warn('[ChatService] No se pudo disparar no
-          -tificación local:', err);
-      259 +    } catch {
-      260      }
-      261    }
-      262
+● Update(frontend\src\app\modules\coach\pages\tactics-pro\tactics-pro.page
+        .scss)
+  ⎿  Added 17 lines
+      251  }
+      252
+      253  // =====================================================
+           =======
+      254 +// CANVAS DE DIBUJO
+      255 +// =====================================================
+          +=======
+      256 +.tactic-canvas {
+      257 +  position: absolute;
+      258 +  inset: 0;
+      259 +  pointer-events: none;
+      260 +  z-index: 15;
+      261 +  touch-action: none;
+      262 +
+      263 +  &.drawing-active {
+      264 +    pointer-events: auto;
+      265 +    z-index: 25;
+      266 +    cursor: crosshair;
+      267 +  }
+      268 +}
+      269 +
+      270 +// =====================================================
+          +=======
+      271  // TACTICAL LAYER — con transición de fase
+      272  // =====================================================
+           =======
+      273  .tactical-layer {
 
-● Update(frontend\src\app\core\services\chat\chat.service.ts)
-  ⎿  Added 1 line, removed 2 lines
-      264    private registrarListenerNotificaciones(): void {
-      265      LocalNotifications.addListener('localNotificationAct
-           ionPerformed', () => {
-      266        this.router.navigate(['/chat']);
-      267 -    }).catch(err => {
-      267 +    }).catch(() => {
-      268        // En web/browser LocalNotifications no está dispo
-           nible — silenciar el error
-      269 -      console.warn('[ChatService] LocalNotifications no
-          -disponible en esta plataforma:', err);
-      269      });
-      270    }
-      271
+● Update(frontend\src\app\modules\coach\pages\tactics-pro\tactics-pro.page
+        .scss)
+  ⎿  Added 5 lines
+       96
+       97        &.green { --background: #{$accent-green}; }
+       98
+       99 +      &.active-draw {
+      100 +        --background: #7c3aed;
+      101 +        --box-shadow: 0 0 14px rgba(124, 58, 237, 0.6);
+      102 +      }
+      103 +
+      104        .btn-text {
+      105          display: none;
+      106          @media (min-width: 500px) { display: inline-bloc
+           k; margin-left: 6px; }
 
-● Update(frontend\src\app\modules\user\pages\user-dashboard\user-dashboard
-        .page.ts)
-  ⎿  Added 1 line, removed 2 lines
-      78              // Una vez tenemos el ID correcto, cargamos l
-          os partidos
-      79              this.loadDashboardData();
-      80          },
-      81 -        error: (err) => {
-      82 -            console.warn("No se encontró equipo para este
-         - jugador (o no es jugador)", err);
-      81 +        error: () => {
-      82              // Cargamos solo noticias si no tiene equipo
-      83              this.loadRecentNews();
-      84              this.isLoading = false;
+● Listo. Lo que cambió:
 
-● Update(frontend\src\app\modules\chat\pages\chat\chat.page.ts)
-  ⎿  Removed 1 line
-      77            // por lo que hay que extraer idEquipo desde re
-          spuesta.equipo.idEquipo.
-      78            this.equipoId = respuesta?.idEquipo ?? respuest
-          a?.equipo?.idEquipo;
-      79            if (!this.equipoId) {
-      80 -            console.warn('[Chat] El endpoint devolvió res
-         -puesta sin idEquipo — no se conectará al chat');
-      80              return;
-      81            }
-      82            this.iniciarChat();
+  .ts — 3 cosas añadidas:
+  - @ViewChild('tacticCanvas') + contexto 2D + flag isDrawingMode
+  - initCanvas() llamado con setTimeout tras cargar (porque el canvas está
+   dentro del *ngIf="!loading")
+  - Métodos: toggleDrawMode(), clearCanvas(), onPointerDown/Move/Up(),
+  getCanvasPos()
 
-● Update(frontend\src\app\modules\chat\pages\chat\chat.page.ts)
-  ⎿  Added 1 line, removed 2 lines
-      81            }
-      82            this.iniciarChat();
-      83          },
-      84 -        error: (err) => {
-      85 -          console.warn('[Chat] Sin equipo asignado (error
-         -', err?.status, ') — no se conectará al chat de equipo');
-      84 +        error: () => {
-      85            // No llamar iniciarChat() si no hay equipoId:
-          no tiene sentido conectar sin equipo
-      86          }
-      87        });
+  .html — 3 cosas:
+  - <canvas #tacticCanvas> con los 4 eventos pointer, dentro del
+  .pitch-board
+  - Botones pencil-outline y trash-outline en el header
+  - [cdkDragDisabled]="isDrawingMode" en todos los tokens del campo y
+  banquillo
 
-● Update(frontend\src\app\modules\coach\pages\team-stats\team-stats.page.t
-        s)
-  ⎿  Removed 1 line
-      199              if (coachId) {
-      200                this.loadFullStats(coachId);
-      201              } else {
-      202 -              console.warn('No se encontró ID de entrena
-          -dor en dashboard');
-      202                this.loading = false;
-      203              }
-      204            } else {
+  .scss — 2 cosas:
+  - .tactic-canvas con pointer-events: none por defecto → auto + cursor:
+  crosshair cuando .drawing-active
+  - .active-draw para el botón del lápiz cuando está activo (púrpura con
+  glow)
 
-● Update(frontend\src\app\modules\players\pages\player-dashboard\player-da
-        shboard.page.ts)
-  ⎿  Removed 2 lines
-      301    private goToProfile() {
-      302      if (this.currentPlayer && this.currentPlayer.usuario
-           ) {
-      303          this.router.navigate(['/profile']);
-      304 -    } else {
-      305 -        console.warn("⚠️ Aún no se ha cargado el jugador.
-          -");
-      304      }
-      305    }
-      306
-
-● 12 console.warn eliminados en 8 archivos, flujo de control intacto en
-  todos. Resumen de lo que hice en cada caso:
-
-  ┌──────────────────────────┬─────────────────────────────────────────┐
-  │         Archivo          │                 Cambio                  │
-  ├──────────────────────────┼─────────────────────────────────────────┤
-  │ app.component.ts         │ Eliminado warn del error:, parámetro    │
-  │                          │ err también quitado                     │
-  ├──────────────────────────┼─────────────────────────────────────────┤
-  │ auth.interceptor.ts      │ Eliminado warn, el resto del bloque 401 │
-  │                          │  intacto                                │
-  ├──────────────────────────┼─────────────────────────────────────────┤
-  │ auth.service.ts          │ Eliminado warn del error:, logout() se  │
-  │                          │ mantiene                                │
-  ├──────────────────────────┼─────────────────────────────────────────┤
-  │ auth.service.ts          │ error: () => console.warn(...) → error: │
-  │                          │  () => {}                               │
-  ├──────────────────────────┼─────────────────────────────────────────┤
-  │ chat.service.ts          │ Eliminado warn del guard if             │
-  │                          │ (!this.client?.active), return intacto  │
-  ├──────────────────────────┼─────────────────────────────────────────┤
-  │ chat.service.ts          │ catch (err) con solo warn → catch {}    │
-  │                          │ vacío                                   │
-  ├──────────────────────────┼─────────────────────────────────────────┤
-  │ chat.service.ts          │ .catch(err => { warn }) → .catch(() =>  │
-  │                          │ {}) con comentario explicativo          │
-  ├──────────────────────────┼─────────────────────────────────────────┤
-  │ user-dashboard.page.ts   │ Eliminado warn del error:, lógica de    │
-  │                          │ fallback intacta                        │
-  ├──────────────────────────┼─────────────────────────────────────────┤
-  │ chat.page.ts             │ Eliminado warn del guard if             │
-  │                          │ (!this.equipoId), return intacto        │
-  ├──────────────────────────┼─────────────────────────────────────────┤
-  │ chat.page.ts             │ Eliminado warn del error:, comentario   │
-  │                          │ intacto                                 │
-  ├──────────────────────────┼─────────────────────────────────────────┤
-  │ team-stats.page.ts       │ Eliminado warn del else, this.loading = │
-  │                          │  false intacto                          │
-  ├──────────────────────────┼─────────────────────────────────────────┤
-  │ player-dashboard.page.ts │ Eliminado warn del else vacío — bloque  │
-  │                          │ colapsado                               │
-  └──────────────────────────┴─────────────────────────────────────────┘
-
-  La deuda técnica del deuda-tecnica.md está completamente resuelta (salvo
-   los métodos largos que dejamos fuera de alcance). ¿Hacemos commit de
-  todo esto?
+  Probalo — al pulsar el lápiz debería poder dibujar sobre el campo con el
+   dedo o el ratón, y los jugadores no se moverán mientras dibujas. Al
+  pulsar la papelera se limpia todo.
