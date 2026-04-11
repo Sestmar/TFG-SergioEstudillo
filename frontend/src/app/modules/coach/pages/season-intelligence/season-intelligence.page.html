@@ -60,22 +60,37 @@
 
     </div>
 
-    <!-- SPARKLINE (placeholder para Tarea 2) -->
-    <div class="chart-card glass" id="sparkline-section">
+    <!-- SPARKLINE -->
+    <div class="chart-card glass" *ngIf="stats.historialCompleto?.length">
       <div class="chart-header">
         <span class="chart-title">RENDIMIENTO · ÚLTIMOS PARTIDOS</span>
-        <span class="chart-sub">Evolución de puntos por jornada</span>
+        <span class="chart-sub">Evolución de puntos acumulados y por jornada</span>
       </div>
-      <!-- apexchart se añade en Tarea 2 -->
+      <apexchart
+        [options]="sparklineOptions"
+        [series]="sparklineOptions.series"
+        height="160">
+      </apexchart>
     </div>
 
-    <!-- RADAR (placeholder para Tarea 2) -->
-    <div class="chart-card glass" id="radar-section">
+    <!-- RADAR -->
+    <div class="chart-card glass">
       <div class="chart-header">
         <span class="chart-title">RADAR DE EXCELENCIA</span>
-        <span class="chart-sub">Comparativa multidimensional</span>
+        <span class="chart-sub">Índice multidimensional · escala 0–100</span>
       </div>
-      <!-- apexchart se añade en Tarea 2 -->
+      <apexchart
+        [options]="radarOptions"
+        [series]="radarOptions.series"
+        height="280">
+      </apexchart>
+      <div class="radar-legend">
+        <div class="rl-item"><span class="rl-dot"></span> Ataque: prom. goles/partido × 25</div>
+        <div class="rl-item"><span class="rl-dot"></span> Defensa: % partidos sin encajar</div>
+        <div class="rl-item"><span class="rl-dot"></span> Disciplina: invertido según tarjetas</div>
+        <div class="rl-item"><span class="rl-dot"></span> Asistencias: prom. asist./partido × 25</div>
+        <div class="rl-item"><span class="rl-dot"></span> Eficacia: % victorias</div>
+      </div>
     </div>
 
     <!-- PACE ANALYTICS -->

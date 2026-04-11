@@ -238,6 +238,32 @@ $red:         #ef4444;
   strong { color: $text-hi; }
 }
 
+// ─── RADAR LEGEND ────────────────────────────────────────────────────────────
+.radar-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid $glass-border;
+}
+
+.rl-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  color: $text-lo;
+}
+
+.rl-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $neon;
+  flex-shrink: 0;
+}
+
 // ─── EMPTY STATE ─────────────────────────────────────────────────────────────
 .empty-state {
   display: flex;

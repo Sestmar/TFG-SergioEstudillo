@@ -476,6 +476,20 @@ export interface PlayerHistory {
   incidencias: PlayerHistoryIncidencia[];
 }
 
+export interface MatchSummary {
+  idPartido: number;
+  rival: string;
+  escudoRivalUrl: string | null;
+  fechaHora: string;
+  golesFavor: number;
+  golesContra: number;
+  resultado: string;       // "V" | "E" | "D"
+  puntos: number;          // 3 | 1 | 0
+  tarjetasAmarillas: number;
+  tarjetasRojas: number;
+  asistenciasTotales: number;
+}
+
 export interface SeasonStats {
   pj: number;
   g: number;
@@ -487,4 +501,13 @@ export interface SeasonStats {
   puntosObjetivo: number | null;
   categoriaNombre: string | null;
   racha: string[];
+  // Season Intelligence
+  historialCompleto: MatchSummary[];
+  cleanSheets: number;
+  promedioGolesFavor: number;
+  promedioGolesContra: number;
+  mayorRachaVictorias: number;
+  tarjetasAmarillasTotal: number;
+  tarjetasRojasTotal: number;
+  asistenciasTotal: number;
 }
