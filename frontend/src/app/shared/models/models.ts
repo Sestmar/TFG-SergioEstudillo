@@ -501,13 +501,13 @@ export interface SeasonStats {
   puntosObjetivo: number | null;
   categoriaNombre: string | null;
   racha: string[];
-  // Season Intelligence
-  historialCompleto: MatchSummary[];
-  cleanSheets: number;
-  promedioGolesFavor: number;
-  promedioGolesContra: number;
-  mayorRachaVictorias: number;
-  tarjetasAmarillasTotal: number;
-  tarjetasRojasTotal: number;
-  asistenciasTotal: number;
+  // Season Intelligence (opcionales: ausentes en contextos legacy)
+  historialCompleto?: MatchSummary[];
+  cleanSheets?: number;
+  promedioGolesFavor?: number;
+  promedioGolesContra?: number;
+  mayorRachaVictorias?: number;
+  tarjetasAmarillasTotal?: number;
+  tarjetasRojasTotal?: number;
+  asistenciasTotal?: number;
 }

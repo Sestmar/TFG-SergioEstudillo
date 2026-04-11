@@ -129,11 +129,12 @@ export class SeasonIntelligencePage {
     const s = this.stats!;
     const pj = s.pj || 1;
 
-    const poderOfensivo  = Math.min(100, Math.round((s.promedioGolesFavor ?? 0) * 25));
-    const solidezDefens  = Math.min(100, Math.round(((s.cleanSheets ?? 0) / pj) * 100));
-    const disciplina     = Math.max(0, Math.round(100 - ((s.tarjetasAmarillasTotal ?? 0) / pj) * 20 - ((s.tarjetasRojasTotal ?? 0) / pj) * 40));
-    const generacion     = Math.min(100, Math.round(((s.asistenciasTotal ?? 0) / pj) * 25));
-    const eficacia       = Math.min(100, Math.round((s.g / pj) * 100));
+    const poderOfensivo = Math.min(100, Math.round((s.promedioGolesFavor    ?? 0) * 25));
+    const solidezDefens = Math.min(100, Math.round(((s.cleanSheets          ?? 0) / pj) * 100));
+    const disciplina    = Math.max(0,   Math.round(100 - ((s.tarjetasAmarillasTotal ?? 0) / pj) * 20
+                                                       - ((s.tarjetasRojasTotal     ?? 0) / pj) * 40));
+    const generacion    = Math.min(100, Math.round(((s.asistenciasTotal     ?? 0) / pj) * 25));
+    const eficacia      = Math.min(100, Math.round((s.g / pj) * 100));
 
     this.radarOptions = {
       series: [{ name: 'Índice', data: [poderOfensivo, solidezDefens, disciplina, generacion, eficacia] }],
