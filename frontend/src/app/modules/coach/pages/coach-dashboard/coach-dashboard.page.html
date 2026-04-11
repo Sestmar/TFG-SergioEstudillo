@@ -150,13 +150,12 @@
         </div>
 
         <!-- SEASON ANALYTICS WIDGET -->
-        <div style="position: relative;" *ngIf="managedTeamId && seasonStats">
-          <app-season-stats-widget [stats]="seasonStats"></app-season-stats-widget>
-          <ion-button fill="clear" size="small" (click)="editarObjetivo()"
-            style="position:absolute;top:8px;right:8px;--color:#a78bfa;">
-            <ion-icon name="settings-outline" slot="icon-only"></ion-icon>
-          </ion-button>
-        </div>
+        <app-season-stats-widget
+          *ngIf="managedTeamId && seasonStats"
+          [stats]="seasonStats"
+          [mostrarEdicion]="true"
+          (editarClicked)="editarObjetivo()">
+        </app-season-stats-widget>
 
         <div class="status-grid animate-fade-in-up delay-1" *ngIf="managedTeamId">
 

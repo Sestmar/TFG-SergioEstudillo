@@ -13,6 +13,20 @@
     align-items: center;
     margin-bottom: 14px;
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .edit-btn {
+      --color: #a78bfa;
+      --padding-start: 4px;
+      --padding-end: 4px;
+      height: 28px;
+      margin: 0;
+    }
+
     .category-badge {
       display: flex;
       align-items: center;

@@ -29,6 +29,8 @@ public interface AlineacionRepository extends JpaRepository<Alineacion, Long> {
     // Este otro ya lo tenías, puedes dejarlo si lo usas en otro sitio
     void deleteByPartidoIdPartido(Long idPartido);
 
+    List<Alineacion> findByPartido_IdPartidoAndEquipo_IdEquipo(Long idPartido, Integer idEquipo);
+
     // --- ESTADÍSTICAS ---
     @Query("SELECT COUNT(a) FROM Alineacion a WHERE a.jugador.idJugador = :idJugador AND a.minutosJugados > 0")
     Integer countPartidosJugados(@Param("idJugador") Integer idJugador);

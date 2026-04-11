@@ -16,4 +16,14 @@ public class SeasonStatsDto {
     private Integer puntosObjetivo;   // Objetivo de temporada (null = sin definir)
     private String  categoriaNombre;  // "Primera Andaluza", "Segunda Regional", etc.
     private List<String> racha;       // Últimos 5: ["V","V","E","D","V"]
+
+    // --- SEASON INTELLIGENCE ---
+    private List<MatchSummaryDto> historialCompleto; // Últimos 15 partidos con detalle
+    private Integer cleanSheets;                     // Porterías a cero
+    private Double promedioGolesFavor;               // GF / PJ
+    private Double promedioGolesContra;              // GC / PJ
+    private Integer mayorRachaVictorias;             // Máx victorias consecutivas
+    private Integer tarjetasAmarillasTotal;          // Suma de la temporada
+    private Integer tarjetasRojasTotal;              // Suma de la temporada
+    private Integer asistenciasTotal;                // Suma de la temporada
 }

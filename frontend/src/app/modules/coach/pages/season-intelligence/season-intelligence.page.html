@@ -1,0 +1,131 @@
+<ion-content class="intelligence-bg">
+
+  <!-- SKELETON -->
+  <div *ngIf="loading" class="si-layout">
+    <div class="si-header">
+      <ion-skeleton-text animated style="width:40px;height:40px;border-radius:50%;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width:180px;height:24px;border-radius:6px;"></ion-skeleton-text>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card glass" *ngFor="let i of [1,2,3]">
+        <ion-skeleton-text animated style="width:50px;height:32px;border-radius:6px;margin-bottom:8px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width:80%;height:12px;border-radius:4px;"></ion-skeleton-text>
+      </div>
+    </div>
+    <div class="chart-card glass">
+      <ion-skeleton-text animated style="width:140px;height:16px;border-radius:4px;margin-bottom:16px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width:100%;height:120px;border-radius:8px;"></ion-skeleton-text>
+    </div>
+    <div class="chart-card glass">
+      <ion-skeleton-text animated style="width:160px;height:16px;border-radius:4px;margin-bottom:16px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width:100%;height:240px;border-radius:8px;"></ion-skeleton-text>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div *ngIf="!loading && stats" class="si-layout">
+
+    <!-- HEADER -->
+    <div class="si-header">
+      <button class="back-btn" (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+      <div class="header-title">
+        <span class="title-label">SEASON INTELLIGENCE</span>
+        <span class="title-sub">{{ stats.categoriaNombre || 'Temporada Actual' }}</span>
+      </div>
+      <div class="header-badge">PRO</div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+
+      <div class="kpi-card glass">
+        <span class="kpi-value">{{ stats.cleanSheets ?? 0 }}</span>
+        <span class="kpi-label">Vallas Invictas</span>
+        <ion-icon name="shield-checkmark-outline" class="kpi-icon"></ion-icon>
+      </div>
+
+      <div class="kpi-card glass">
+        <span class="kpi-value">{{ stats.mayorRachaVictorias ?? 0 }}</span>
+        <span class="kpi-label">Máx. Racha</span>
+        <ion-icon name="trending-up-outline" class="kpi-icon"></ion-icon>
+      </div>
+
+      <div class="kpi-card glass">
+        <span class="kpi-value">{{ winRate }}<small>%</small></span>
+        <span class="kpi-label">Win Rate</span>
+        <ion-icon name="trophy-outline" class="kpi-icon"></ion-icon>
+      </div>
+
+    </div>
+
+    <!-- SPARKLINE (placeholder para Tarea 2) -->
+    <div class="chart-card glass" id="sparkline-section">
+      <div class="chart-header">
+        <span class="chart-title">RENDIMIENTO · ÚLTIMOS PARTIDOS</span>
+        <span class="chart-sub">Evolución de puntos por jornada</span>
+      </div>
+      <!-- apexchart se añade en Tarea 2 -->
+    </div>
+
+    <!-- RADAR (placeholder para Tarea 2) -->
+    <div class="chart-card glass" id="radar-section">
+      <div class="chart-header">
+        <span class="chart-title">RADAR DE EXCELENCIA</span>
+        <span class="chart-sub">Comparativa multidimensional</span>
+      </div>
+      <!-- apexchart se añade en Tarea 2 -->
+    </div>
+
+    <!-- PACE ANALYTICS -->
+    <div class="pace-card glass">
+      <div class="chart-header">
+        <span class="chart-title">ANÁLISIS PREDICTIVO · PACE</span>
+        <span class="chart-sub">Proyección al ritmo actual</span>
+      </div>
+
+      <div class="pace-grid">
+        <div class="pace-item">
+          <span class="pace-val">{{ eficienciaPuntos }}</span>
+          <span class="pace-lbl">Pts / Partido</span>
+        </div>
+        <div class="pace-item">
+          <span class="pace-val">{{ proyeccionFinal ?? '—' }}</span>
+          <span class="pace-lbl">Proyección Final</span>
+        </div>
+        <div class="pace-item" *ngIf="stats.puntosObjetivo">
+          <span class="pace-val"
+            [class.positive]="(distanciaObjetivo ?? 0) >= 0"
+            [class.negative]="(distanciaObjetivo ?? 0) < 0">
+            {{ (distanciaObjetivo ?? 0) >= 0 ? '+' : '' }}{{ distanciaObjetivo ?? '—' }}
+          </span>
+          <span class="pace-lbl">vs Objetivo</span>
+        </div>
+      </div>
+
+      <div class="pace-context" *ngIf="proyeccionFinal !== null">
+        <ion-icon name="analytics-outline"></ion-icon>
+        <span *ngIf="(distanciaObjetivo ?? 0) >= 0 && stats.puntosObjetivo">
+          Al ritmo actual alcanzarás el objetivo con <strong>{{ distanciaObjetivo }}</strong> puntos de margen.
+        </span>
+        <span *ngIf="(distanciaObjetivo ?? 0) < 0 && stats.puntosObjetivo">
+          Necesitás subir el rendimiento para alcanzar el objetivo. Déficit de <strong>{{ (distanciaObjetivo ?? 0) * -1 }}</strong> pts.
+        </span>
+        <span *ngIf="!stats.puntosObjetivo">
+          Proyección de cierre de temporada: <strong>{{ proyeccionFinal }} puntos</strong>.
+        </span>
+      </div>
+    </div>
+
+    <div style="height: 40px;"></div>
+
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div *ngIf="!loading && !stats" class="empty-state">
+    <ion-icon name="analytics-outline"></ion-icon>
+    <p>Sin datos de temporada disponibles.</p>
+  </div>
+
+</ion-content>

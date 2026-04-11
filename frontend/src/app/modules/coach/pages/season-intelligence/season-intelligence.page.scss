@@ -1,0 +1,253 @@
+// ─── TOKENS ──────────────────────────────────────────────────────────────────
+$bg-deep:     #0a0e1a;
+$glass-bg:    rgba(255, 255, 255, 0.04);
+$glass-border: rgba(255, 255, 255, 0.08);
+$neon:        #a855f7;
+$neon-dim:    rgba(168, 85, 247, 0.15);
+$text-hi:     #f1f5f9;
+$text-mid:    #94a3b8;
+$text-lo:     #475569;
+$green:       #22c55e;
+$red:         #ef4444;
+
+// ─── BASE ─────────────────────────────────────────────────────────────────────
+.intelligence-bg {
+  --background: #{$bg-deep};
+}
+
+.si-layout {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+// ─── GLASS MIXIN ─────────────────────────────────────────────────────────────
+.glass {
+  background: $glass-bg;
+  border: 1px solid $glass-border;
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+// ─── HEADER ──────────────────────────────────────────────────────────────────
+.si-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 4px;
+
+  .back-btn {
+    background: $glass-bg;
+    border: 1px solid $glass-border;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $text-hi;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .header-title {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .title-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: $neon;
+    }
+
+    .title-sub {
+      font-size: 0.85rem;
+      color: $text-mid;
+      margin-top: 1px;
+    }
+  }
+
+  .header-badge {
+    background: $neon;
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+}
+
+// ─── KPI GRID ────────────────────────────────────────────────────────────────
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.kpi-card {
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  overflow: hidden;
+
+  .kpi-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: $text-hi;
+    line-height: 1;
+
+    small {
+      font-size: 1rem;
+      font-weight: 600;
+      color: $text-mid;
+    }
+  }
+
+  .kpi-label {
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: $text-mid;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .kpi-icon {
+    position: absolute;
+    bottom: 8px;
+    right: 10px;
+    font-size: 1.4rem;
+    color: $neon-dim;
+    opacity: 0.6;
+  }
+}
+
+// ─── CHART CARD ──────────────────────────────────────────────────────────────
+.chart-card {
+  padding: 16px;
+
+  .chart-header {
+    margin-bottom: 12px;
+
+    .chart-title {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: $neon;
+      text-transform: uppercase;
+    }
+
+    .chart-sub {
+      display: block;
+      font-size: 0.75rem;
+      color: $text-lo;
+      margin-top: 2px;
+    }
+  }
+}
+
+// ─── PACE ANALYTICS ──────────────────────────────────────────────────────────
+.pace-card {
+  padding: 16px;
+
+  .chart-header {
+    margin-bottom: 16px;
+
+    .chart-title {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: $neon;
+      text-transform: uppercase;
+    }
+
+    .chart-sub {
+      display: block;
+      font-size: 0.75rem;
+      color: $text-lo;
+      margin-top: 2px;
+    }
+  }
+}
+
+.pace-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.pace-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  .pace-val {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: $text-hi;
+    line-height: 1;
+
+    &.positive { color: $green; }
+    &.negative { color: $red; }
+  }
+
+  .pace-lbl {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: $text-mid;
+    text-transform: uppercase;
+    text-align: center;
+  }
+}
+
+.pace-context {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(168, 85, 247, 0.06);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+  border-radius: 10px;
+  font-size: 0.78rem;
+  color: $text-mid;
+  line-height: 1.4;
+
+  ion-icon {
+    color: $neon;
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  strong { color: $text-hi; }
+}
+
+// ─── EMPTY STATE ─────────────────────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  gap: 12px;
+  color: $text-lo;
+
+  ion-icon { font-size: 3rem; }
+  p { font-size: 0.9rem; }
+}

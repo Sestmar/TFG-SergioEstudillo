@@ -43,6 +43,14 @@ const routes: Routes = [
 
   // --- OTRAS RUTAS DE COACH ---
 
+  // SEASON INTELLIGENCE
+  {
+    path: 'coach/season-intelligence',
+    loadChildren: () => import('./modules/coach/pages/season-intelligence/season-intelligence.module').then(m => m.SeasonIntelligencePageModule),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'ENTRENADOR'] }
+  },
+
   // ESTADÍSTICAS DE EQUIPO
   {
     path: 'coach/stats',

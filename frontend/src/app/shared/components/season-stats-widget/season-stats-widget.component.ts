@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { SeasonStats } from 'src/app/shared/models/models';
@@ -12,6 +12,8 @@ import { SeasonStats } from 'src/app/shared/models/models';
 })
 export class SeasonStatsWidgetComponent {
   @Input() stats: SeasonStats | null = null;
+  @Input() mostrarEdicion: boolean = false;
+  @Output() editarClicked = new EventEmitter<void>();
 
   get progreso(): number {
     if (!this.stats?.puntosObjetivo || this.stats.puntosObjetivo <= 0) return 0;
