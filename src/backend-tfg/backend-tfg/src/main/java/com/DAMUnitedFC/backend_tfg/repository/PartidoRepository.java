@@ -13,4 +13,7 @@ public interface PartidoRepository extends JpaRepository<Partido, Long> {
 
     // Para el scheduler de recordatorios: partidos cuya fecha cae en una ventana de tiempo
     List<Partido> findByFechaHoraBetween(LocalDateTime desde, LocalDateTime hasta);
+
+    // Para Season Analytics: partidos competitivos finalizados, más reciente primero
+    List<Partido> findByEquipo_IdEquipoAndEstadoAndTipoOrderByFechaHoraDesc(Integer idEquipo, String estado, String tipo);
 }

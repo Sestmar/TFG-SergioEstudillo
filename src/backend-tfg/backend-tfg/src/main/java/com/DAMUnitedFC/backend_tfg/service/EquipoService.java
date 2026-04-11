@@ -1,15 +1,20 @@
 package com.DAMUnitedFC.backend_tfg.service;
 
 import com.DAMUnitedFC.backend_tfg.dto.EquipoDto;
+import com.DAMUnitedFC.backend_tfg.dto.SeasonStatsDto;
 import com.DAMUnitedFC.backend_tfg.model.Categoria;
 import com.DAMUnitedFC.backend_tfg.model.Equipo;
 import com.DAMUnitedFC.backend_tfg.model.Liga;
+import com.DAMUnitedFC.backend_tfg.model.Partido;
 import com.DAMUnitedFC.backend_tfg.repository.CategoriaRepository;
 import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
 import com.DAMUnitedFC.backend_tfg.repository.LigaRepository;
+import com.DAMUnitedFC.backend_tfg.repository.PartidoRepository;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -18,11 +23,14 @@ public class EquipoService {
     private final EquipoRepository equipoRepository;
     private final LigaRepository ligaRepository;
     private final CategoriaRepository categoriaRepository;
+    private final PartidoRepository partidoRepository;
 
-    public EquipoService(EquipoRepository equipoRepository, LigaRepository ligaRepository, CategoriaRepository categoriaRepository) {
+    public EquipoService(EquipoRepository equipoRepository, LigaRepository ligaRepository,
+                         CategoriaRepository categoriaRepository, PartidoRepository partidoRepository) {
         this.equipoRepository = equipoRepository;
         this.ligaRepository = ligaRepository;
         this.categoriaRepository = categoriaRepository;
+        this.partidoRepository = partidoRepository;
     }
 
     public List<Equipo> listar() {
@@ -67,10 +75,63 @@ public class EquipoService {
         }
         equipo.setLiga(liga);
         equipo.setCategoria(categoria);
+        equipo.setPuntosObjetivo(equipoDto.getPuntosObjetivo());
         return equipoRepository.save(equipo);
     }
 
     public void borrar(Integer id) {
         equipoRepository.deleteById(id);
+    }
+
+    // ─── SEASON ANALYTICS ────────────────────────────────────────────────────────
+
+    public SeasonStatsDto getSeasonStats(Integer idEquipo) {
+        Equipo equipo = equipoRepository.findById(idEquipo)
+                .orElseThrow(() -> new RuntimeException("Equipo no encontrado"));
+
+        // Solo partidos competitivos finalizados, ordenados más reciente primero
+        List<Partido> partidos = partidoRepository
+                .findByEquipo_IdEquipoAndEstadoAndTipoOrderByFechaHoraDesc(idEquipo, "FINALIZADO", "PARTIDO");
+
+        int pj = 0, g = 0, e = 0, p = 0, gf = 0, gc = 0, puntos = 0;
+        List<String> rachaDesc = new ArrayList<>();
+
+        for (Partido partido : partidos) {
+            int favor  = partido.getGolesFavor()  != null ? partido.getGolesFavor()  : 0;
+            int contra = partido.getGolesContra() != null ? partido.getGolesContra() : 0;
+
+            pj++;
+            gf += favor;
+            gc += contra;
+
+            if (favor > contra) {
+                g++;
+                puntos += 3;
+                if (rachaDesc.size() < 5) rachaDesc.add("V");
+            } else if (favor == contra) {
+                e++;
+                puntos += 1;
+                if (rachaDesc.size() < 5) rachaDesc.add("E");
+            } else {
+                p++;
+                if (rachaDesc.size() < 5) rachaDesc.add("D");
+            }
+        }
+
+        // La racha viene en orden DESC (reciente primero); la invertimos → cronológico
+        Collections.reverse(rachaDesc);
+
+        SeasonStatsDto dto = new SeasonStatsDto();
+        dto.setPj(pj);
+        dto.setG(g);
+        dto.setE(e);
+        dto.setP(p);
+        dto.setGf(gf);
+        dto.setGc(gc);
+        dto.setPuntos(puntos);
+        dto.setPuntosObjetivo(equipo.getPuntosObjetivo());
+        dto.setCategoriaNombre(equipo.getCategoria() != null ? equipo.getCategoria().getNombre() : null);
+        dto.setRacha(rachaDesc);
+        return dto;
     }
 }
