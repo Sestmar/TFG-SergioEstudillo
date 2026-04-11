@@ -7,6 +7,7 @@ import { forkJoin, of } from 'rxjs';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { MatchService } from 'src/app/core/services/match/match.service';
 import { NotificationService } from 'src/app/core/services/notification/notification.service';
+import { PdfService } from 'src/app/core/services/pdf/pdf.service';
 import { Jugador, Partido, LineupSlotDto, EquipoResumen } from 'src/app/shared/models/models';
 
 interface FieldPlayer {
@@ -54,6 +55,7 @@ export class TacticsProPage implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   loading = true;
+  exportando = false;
   matchId = 0;
   matchInfo: Partido | null = null;
   currentTeamId: number | null = null;
@@ -89,7 +91,8 @@ export class TacticsProPage implements OnInit {
     private route: ActivatedRoute,
     private playerSvc: PlayerService,
     private matchSvc: MatchService,
-    private notificationSvc: NotificationService
+    private notificationSvc: NotificationService,
+    private pdfSvc: PdfService
   ) {}
 
   ngOnInit() {
@@ -259,6 +262,21 @@ export class TacticsProPage implements OnInit {
     };
     localStorage.setItem(this.storageKey(), JSON.stringify(data));
     this.notificationSvc.success('Estrategia guardada 💾');
+  }
+
+  async exportarTactica(): Promise<void> {
+    const pitch = document.querySelector('[data-test="pitch-board"]') as HTMLElement;
+    if (!pitch || this.exportando) return;
+    this.exportando = true;
+    try {
+      await this.pdfSvc.generarEstrategiaPDF(pitch, {
+        teamName: (this.matchInfo as any)?.equipo?.nombre ?? 'DAM United FC',
+        phase: this.currentPhase,
+        rival: this.matchInfo?.rival ?? ''
+      });
+    } finally {
+      this.exportando = false;
+    }
   }
 
   private storageKey(): string {

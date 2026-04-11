@@ -241,6 +241,83 @@ export class PdfService {
     await this.exportar(html, `estadisticas_${equipoNombre.replace(/ /g, '_')}_${hoy.replace(/\//g, '-')}.pdf`);
   }
 
+  // ─── ESTRATEGIA TÁCTICA ──────────────────────────────────────────────────────
+
+  public async generarEstrategiaPDF(
+    pitchElement: HTMLElement,
+    metadata: { teamName: string; phase: string; rival: string }
+  ): Promise<void> {
+    const pitchCanvas = await html2canvas(pitchElement, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      backgroundColor: '#1a5c2e'
+    });
+
+    const pdf  = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = pdf.internal.pageSize.getHeight();
+
+    // ── Cabecera ────────────────────────────────────────────────────────────────
+    const headerH = 28;
+    pdf.setFillColor(10, 14, 26);
+    pdf.rect(0, 0, pdfW, headerH, 'F');
+
+    pdf.setFontSize(16);
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('INFORME TÁCTICO PROFESIONAL', 12, 13);
+
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(167, 139, 250);
+    pdf.text('DAM United FC', 12, 20);
+
+    pdf.setTextColor(209, 213, 219);
+    const vsText = metadata.rival ? `${metadata.teamName}  vs  ${metadata.rival}` : metadata.teamName;
+    pdf.text(vsText, 12, 26);
+
+    // Línea separadora ACCENT
+    pdf.setDrawColor(124, 58, 237);
+    pdf.setLineWidth(0.8);
+    pdf.line(0, headerH, pdfW, headerH);
+
+    // ── Pie ─────────────────────────────────────────────────────────────────────
+    const footerH = 12;
+    const footerY = pdfH - footerH;
+    pdf.setFillColor(243, 244, 246);
+    pdf.rect(0, footerY, pdfW, footerH, 'F');
+
+    const hoy       = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const phaseName = metadata.phase === 'attack' ? 'FASE ATAQUE' : 'FASE DEFENSA';
+
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(156, 163, 175);
+    pdf.text('DAM United FC', 10, footerY + 7);
+    pdf.text(phaseName, pdfW / 2, footerY + 7, { align: 'center' });
+    pdf.text(`Exportado el ${hoy}`, pdfW - 10, footerY + 7, { align: 'right' });
+
+    // ── Imagen del campo ─────────────────────────────────────────────────────────
+    const contentY   = headerH + 6;
+    const contentH   = footerY - contentY - 6;
+    const pitchRatio = pitchCanvas.width / pitchCanvas.height;
+    const availW     = pdfW - 20;
+
+    let imgW = availW;
+    let imgH = imgW / pitchRatio;
+    if (imgH > contentH) { imgH = contentH; imgW = imgH * pitchRatio; }
+
+    const imgX = (pdfW - imgW) / 2;
+    const imgY = contentY + (contentH - imgH) / 2;
+
+    pdf.addImage(pitchCanvas.toDataURL('image/png'), 'PNG', imgX, imgY, imgW, imgH);
+
+    const fecha = hoy.replace(/\//g, '-');
+    pdf.save(`tactica_${phaseName.toLowerCase().replace(' ', '_')}_${fecha}.pdf`);
+  }
+
   // ─── HELPERS PRIVADOS ────────────────────────────────────────────────────────
 
   private cabecera(titulo: string, subtitulo: string): string {

@@ -147,6 +147,10 @@
         <ion-icon name="save-outline"></ion-icon>
         <span>Guardar</span>
       </button>
+      <button class="side-btn" (click)="exportarTactica()" [disabled]="exportando">
+        <ion-icon [name]="exportando ? 'hourglass-outline' : 'document-outline'"></ion-icon>
+        <span>{{ exportando ? '...' : 'PDF' }}</span>
+      </button>
     </div>
 
   </div>

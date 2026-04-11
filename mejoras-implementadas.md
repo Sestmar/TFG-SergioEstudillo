@@ -270,7 +270,7 @@ Esta mejora posiciona la aplicación como una herramienta de alto nivel para dir
 
 ## 28. Motor de Reportes PDF: Generación Documental Profesional 📄✅
 
-Se ha implementado un motor de generación de documentos PDF de alto nivel que permite exportar Convocatorias, Actas de Partido y Estadísticas de Temporada directamente desde la aplicación, sin depender de servicios externos.
+Se ha implementado un motor de generación de documentos PDF de alto nivel que permite exportar Convocatorias, Actas de Partido, Estadísticas de Temporada e Informes Tácticos directamente desde la aplicación, sin depender de servicios externos.
 
 ### Desafío Técnico
 
@@ -442,6 +442,56 @@ jc.jugador?.nombre
 // DESPUÉS (correcto)
 jc.jugador?.usuario?.nombre
 ```
+
+#### 4. Exportación de Estrategia Táctica (`generarEstrategiaPDF`)
+
+Genera un informe táctico profesional capturando la pizarra en tiempo real desde `TacticsProPage`. Accesible desde el botón "PDF" en el sidebar de la pizarra.
+
+**Diferencia clave con los otros documentos**: los tres métodos anteriores generan HTML desde cero y lo renderizan en un contenedor oculto. Este método captura un **elemento DOM live** — la pizarra tal y como está en pantalla, incluyendo posiciones de jugadores arrastrados, shadow players del rival y trazos del canvas de dibujo.
+
+```typescript
+// tactics-pro.page.ts
+async exportarTactica(): Promise<void> {
+  const pitch = document.querySelector('[data-test="pitch-board"]') as HTMLElement;
+  if (!pitch || this.exportando) return;
+  this.exportando = true;
+  try {
+    await this.pdfSvc.generarEstrategiaPDF(pitch, {
+      teamName: this.matchInfo?.equipo?.nombre ?? 'DAM United FC',
+      phase: this.currentPhase,
+      rival: this.matchInfo?.rival ?? ''
+    });
+  } finally {
+    this.exportando = false;
+  }
+}
+```
+
+**Estructura del PDF generado:**
+- **Cabecera** (28mm): fondo `#0a0e1a` + título "INFORME TÁCTICO PROFESIONAL" + `equipo vs rival` + línea separadora `#7c3aed`
+- **Cuerpo**: imagen del `pitch-board` centrada y escalada con aspect ratio preservado, `scale: 2` para resolución de impresión
+- **Pie** (12mm): fondo gris claro + fase estratégica (ATAQUE/DEFENSA) centrada + fecha de exportación
+
+**Parámetros de `html2canvas`:**
+```typescript
+html2canvas(pitchElement, {
+  scale: 2,
+  useCORS: true,
+  allowTaint: true,  // necesario para imágenes de avatares cross-origin
+  logging: false,
+  backgroundColor: '#1a5c2e'
+})
+```
+
+`allowTaint: true` es crítico aquí porque los avatares de los jugadores provienen de URLs externas (backend). Sin este flag, html2canvas los omite silenciosamente del canvas final.
+
+**Archivos modificados:**
+
+| Archivo | Cambio |
+|---|---|
+| `pdf.service.ts` | Nuevo método público `generarEstrategiaPDF()` |
+| `tactics-pro.page.ts` | Import + inyección de `PdfService`, propiedad `exportando`, método `exportarTactica()` |
+| `tactics-pro.page.html` | Botón "PDF" en sidebar con estado de carga (`hourglass` + `disabled`) |
 
 ---
 
