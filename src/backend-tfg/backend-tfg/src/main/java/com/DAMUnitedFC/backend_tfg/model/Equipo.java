@@ -41,6 +41,9 @@ public class Equipo {
     @JsonIgnoreProperties({"equipos", "hibernateLazyInitializer", "handler"})
     private Liga liga;
 
+    @Column(name = "puntos_objetivo")
+    private Integer puntosObjetivo;
+
     @OneToOne
     @JoinColumn(name = "id_entrenador")
     @ToString.Exclude

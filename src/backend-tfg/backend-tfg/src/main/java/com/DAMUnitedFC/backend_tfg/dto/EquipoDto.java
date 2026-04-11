@@ -10,4 +10,5 @@ public class EquipoDto {
     private Integer idCategoria;
     private Integer idLiga;
     private String escudoUrl;
+    private Integer puntosObjetivo;
 }
