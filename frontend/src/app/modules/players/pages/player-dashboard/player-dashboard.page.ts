@@ -11,7 +11,7 @@ import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AlertController, ToastController } from '@ionic/angular'; // Añadido ToastController
-import { User, Jugador, EquipoResumen, Partido, PlayerStats } from 'src/app/shared/models/models';
+import { User, Jugador, EquipoResumen, Partido, PlayerStats, SeasonStats } from 'src/app/shared/models/models';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { UserService } from 'src/app/core/services/user/user.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
@@ -48,6 +48,7 @@ export class PlayerDashboardPage implements OnInit {
 
   upcomingConvocations: Partido[] = [];
   playerStats: PlayerStats | null = null;
+  seasonStats: SeasonStats | null = null;
 
   // ── CHART: Evolución del equipo (Area) ─────────────────────
   evolutionChartOptions: ChartOptions = {
@@ -177,6 +178,9 @@ export class PlayerDashboardPage implements OnInit {
 
           const teamId = equipo.id || equipo.idEquipo;
           this.loadTeamMatches(teamId);
+          this.teamService.getSeasonStats(teamId)
+            .pipe(takeUntilDestroyed(this.destroyRef), catchError(() => of(null)))
+            .subscribe(stats => (this.seasonStats = stats));
       } else {
           this.loading = false;
       }

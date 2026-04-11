@@ -6,6 +6,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { NgApexchartsModule } from 'ng-apexcharts';
 
 import { PlayerDashboardPage } from './player-dashboard.page';
+import { SeasonStatsWidgetComponent } from 'src/app/shared/components/season-stats-widget/season-stats-widget.component';
 
 const routes: Routes = [
   {
@@ -20,7 +21,8 @@ const routes: Routes = [
     FormsModule,
     IonicModule,
     NgApexchartsModule,
-    RouterModule.forChild(routes)
+    RouterModule.forChild(routes),
+    SeasonStatsWidgetComponent
   ],
   declarations: [PlayerDashboardPage]
 })

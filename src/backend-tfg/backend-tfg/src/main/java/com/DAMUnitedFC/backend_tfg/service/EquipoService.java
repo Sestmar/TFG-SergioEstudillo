@@ -83,6 +83,13 @@ public class EquipoService {
         equipoRepository.deleteById(id);
     }
 
+    public Equipo setObjetivo(Integer id, Integer puntosObjetivo) {
+        Equipo equipo = equipoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Equipo no encontrado"));
+        equipo.setPuntosObjetivo(puntosObjetivo);
+        return equipoRepository.save(equipo);
+    }
+
     // ─── SEASON ANALYTICS ────────────────────────────────────────────────────────
 
     public SeasonStatsDto getSeasonStats(Integer idEquipo) {

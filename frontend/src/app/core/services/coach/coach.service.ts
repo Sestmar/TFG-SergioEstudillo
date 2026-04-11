@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../api/api.service';
-import { CoachDashboardResponse, TeamStatsResponse, CoachProfileDto, CoachProfileUpdateDto } from 'src/app/shared/models/models';
+import { CoachDashboardResponse, TeamStatsResponse, CoachProfileDto, CoachProfileUpdateDto, SeasonStats } from 'src/app/shared/models/models';
 
 @Injectable({
   providedIn: 'root'
@@ -24,5 +24,13 @@ export class CoachService {
 
   getTeamStats(coachId: number): Observable<TeamStatsResponse> {
     return this.apiService.get<TeamStatsResponse>(`/entrenadores/${coachId}/estadisticas-equipo`);
+  }
+
+  getSeasonStats(equipoId: number): Observable<SeasonStats> {
+    return this.apiService.get<SeasonStats>(`/equipos/${equipoId}/stats-temporada`);
+  }
+
+  setObjetivo(equipoId: number, puntosObjetivo: number): Observable<any> {
+    return this.apiService.patch<any>(`/equipos/${equipoId}/objetivo`, { puntosObjetivo });
   }
 }

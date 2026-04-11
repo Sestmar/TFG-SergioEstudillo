@@ -10,7 +10,7 @@ import { MatchService } from 'src/app/core/services/match/match.service';
 import { PlayerService } from 'src/app/core/services/player/player.service';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
 import { ChatService } from '@core/services/chat/chat.service';
-import { User, Partido, Jugador, PlayerSeasonStat } from 'src/app/shared/models/models';
+import { User, Partido, Jugador, PlayerSeasonStat, SeasonStats } from 'src/app/shared/models/models';
 
 interface CoachStats {
   matches: number;
@@ -41,6 +41,7 @@ export class CoachDashboardPage implements OnInit {
   currentRole: string = ''; 
   topScorer: PlayerSeasonStat | null = null;
   coachId: number | null = null;
+  seasonStats: SeasonStats | null = null;
 
   stats: CoachStats = { matches: 0, trainings: 0, squadSize: 0, injured: 0 };
 
@@ -120,6 +121,7 @@ export class CoachDashboardPage implements OnInit {
             if (this.managedTeamId) {
               this.loadTeamStats(this.managedTeamId);
               this.loadMatches(this.managedTeamId);
+              this.loadSeasonStats(this.managedTeamId);
             }
           } else {
              this.managedTeamId = null;
@@ -144,6 +146,48 @@ export class CoachDashboardPage implements OnInit {
         this.futureMatchesCount = this.upcomingEvents.filter(m => m.tipo === 'PARTIDO' && new Date(m.fechaHora) > now).length;
       }
     });
+  }
+
+  private loadSeasonStats(teamId: number) {
+    this.coachService.getSeasonStats(teamId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (stats) => (this.seasonStats = stats) });
+  }
+
+  async editarObjetivo() {
+    const alert = await this.alertCtrl.create({
+      header: 'Objetivo de Temporada',
+      message: 'Define los puntos que quieres alcanzar esta temporada.',
+      cssClass: 'night-alert',
+      inputs: [
+        {
+          name: 'puntos',
+          type: 'number',
+          placeholder: 'Ej: 60',
+          min: 0,
+          value: this.seasonStats?.puntosObjetivo ?? ''
+        }
+      ],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Guardar',
+          handler: (data) => {
+            const valor = parseInt(data.puntos, 10);
+            if (!this.managedTeamId || isNaN(valor) || valor < 0) return;
+            this.coachService.setObjetivo(this.managedTeamId, valor)
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe({
+                next: () => {
+                  if (this.seasonStats) this.seasonStats = { ...this.seasonStats, puntosObjetivo: valor };
+                  this.loadSeasonStats(this.managedTeamId!);
+                }
+              });
+          }
+        }
+      ]
+    });
+    await alert.present();
   }
 
   private loadTeamStats(teamId: number) {

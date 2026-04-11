@@ -58,6 +58,15 @@ export class ApiService {
   }
 
   /**
+   * PATCH request
+   */
+  patch<T>(endpoint: string, data: unknown): Observable<T> {
+    return this.http.patch<T>(`${this.apiUrl}${endpoint}`, data).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * DELETE request
    */
   delete<T>(endpoint: string): Observable<T> {

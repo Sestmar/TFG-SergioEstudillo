@@ -558,3 +558,98 @@ La propiedad `animated="true"` activa el efecto shimmer (brillo deslizante) de f
 | `coach/pages/my-team/my-team.page.html` | Reemplazado `ion-spinner` por skeleton de secciones + player-cards |
 | `match-detail/match-detail.page.html` | Reemplazado `ion-spinner` por skeleton de scoreboard + player-list |
 
+---
+
+## 34. Centro de Inteligencia: Season Analytics & Goals 📊✅
+
+Implementación fullstack de un sistema de analítica de temporada en tiempo real, exponiendo estadísticas competitivas del equipo con contexto de categoría y seguimiento de objetivo de puntos. Visible por entrenador (con edición de objetivo) y jugador (solo lectura), cerrando el círculo de motivación.
+
+### Problema técnico resuelto
+
+El campo `Equipo.categoria` existía en el modelo pero **nunca se había expuesto en ninguna UI**. El equipo podía estar categorizado internamente sin que entrenadores ni jugadores lo vieran. Esta mejora lo convierte en el elemento central del widget de temporada.
+
+Adicionalmente, la tabla `partido` almacena tanto partidos competitivos como entrenamientos (`tipo = 'PARTIDO' | 'ENTRENAMIENTO'`). Sin filtrar por `tipo`, las estadísticas de victorias/empates/derrotas se contaminarían con sesiones de entrenamiento.
+
+### Arquitectura de la solución
+
+#### Backend (Spring Boot)
+
+**Modelo:** Se añadió `puntosObjetivo` a `Equipo` como campo nullable:
+```java
+@Column(name = "puntos_objetivo")
+private Integer puntosObjetivo;
+```
+
+**DTO de respuesta:** `SeasonStatsDto` — contrato de salida con todos los datos calculados:
+```java
+// pj, g, e, p, gf, gc, puntos, puntosObjetivo, categoriaNombre, racha (List<String>)
+```
+
+**Repository:** Query derivada con triple filtro — equipo + estado + tipo, ordenada DESC por fecha:
+```java
+findByEquipo_IdEquipoAndEstadoAndTipoOrderByFechaHoraDesc(idEquipo, "FINALIZADO", "PARTIDO")
+```
+
+**Service (`getSeasonStats`):** Iteración única sobre los partidos filtrados. Los primeros 5 resultados (más recientes, orden DESC) se acumulan en `rachaDesc`, que luego se invierte para quedar en orden cronológico (último partido a la derecha, como toda tabla de forma en el fútbol real).
+
+**Endpoints nuevos:**
+- `GET /api/equipos/{id}/stats-temporada` — público, hereda `permitAll()` de `GET /api/equipos/**`
+- `PATCH /api/equipos/{id}/objetivo` — protegido `ADMIN | ENTRENADOR`, body: `{ puntosObjetivo: number }`
+
+#### Frontend (Angular + Ionic)
+
+**`SeasonStats` interface** — modelo tipado en `models.ts` con 10 campos.
+
+**`SeasonStatsWidgetComponent`** — componente standalone con diseño Glassmorphism Night Stadium:
+- **Cabecera**: badge de categoría (trofeo + nombre) + puntos totales destacados
+- **Tabla stats**: 7 celdas — PJ / G (verde) / E (amarillo) / P (rojo) / GF / GC / DIF (con signo + color dinámico)
+- **Racha de forma**: hasta 5 círculos coloreados — verde `V`, amarillo `E`, rojo `D`
+- **Barra de objetivo**: `ion-progress-bar` solo visible cuando `puntosObjetivo` está definido, con clamping `Math.min(puntos/objetivo, 1)`
+
+**Integración Coach Dashboard:**
+- Widget insertado sobre el `status-grid`
+- Botón engranaje en esquina superior derecha abre `ion-alert` con input numérico para editar `puntosObjetivo`
+- Guardado optimista: actualiza `seasonStats` en memoria y refresca desde backend
+- `CoachService.setObjetivo()` llama al nuevo `PATCH /api/equipos/{id}/objetivo`
+- `ApiService.patch<T>()` añadido al servicio centralizado HTTP
+
+**Integración Player Dashboard:**
+- Widget insertado entre la identity card y las acciones rápidas
+- Sin botón de edición — estrictamente read-only
+- `TeamService.getSeasonStats()` llamado al resolver el equipo del jugador
+- `catchError(() => of(null))` garantiza que un error en las stats no bloquea el resto del dashboard
+
+### Diseño — Glassmorphism Night Stadium
+
+```scss
+.season-widget {
+  background: rgba(15, 22, 45, 0.75);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+}
+```
+
+Paleta de resultados: victoria `#4ade80`, empate `#fbbf24`, derrota `#f87171`. Barra de progreso con gradiente `#7c3aed → #a78bfa`.
+
+### Archivos modificados
+
+| Archivo | Cambio |
+|---|---|
+| `Equipo.java` | Campo `puntosObjetivo` (nullable) |
+| `EquipoDto.java` | Campo `puntosObjetivo` para actualización |
+| `SeasonStatsDto.java` | Nuevo DTO de respuesta (10 campos) |
+| `PartidoRepository.java` | Query derivada con triple filtro + orden DESC |
+| `EquipoService.java` | Métodos `getSeasonStats()` y `setObjetivo()` |
+| `EquipoController.java` | Endpoints `GET /{id}/stats-temporada` y `PATCH /{id}/objetivo` |
+| `models.ts` | Interface `SeasonStats` |
+| `api.service.ts` | Método `patch<T>()` añadido |
+| `coach.service.ts` | Métodos `getSeasonStats()` y `setObjetivo()` |
+| `team.service.ts` | Método `getSeasonStats()` |
+| `season-stats-widget/` | Componente standalone nuevo (ts + html + scss) |
+| `coach-dashboard.module.ts` | Import del widget standalone |
+| `coach-dashboard.page.ts` | Propiedad `seasonStats`, `loadSeasonStats()`, `editarObjetivo()` con alert |
+| `coach-dashboard.page.html` | Widget + botón engranaje sobre el status-grid |
+| `player-dashboard.module.ts` | Import del widget standalone |
+| `player-dashboard.page.ts` | Propiedad `seasonStats`, carga en `loadPlayerProfile()` |
+| `player-dashboard.page.html` | Widget read-only entre identity card y acciones |

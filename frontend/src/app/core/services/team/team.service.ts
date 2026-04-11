@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { ApiService } from '../api/api.service';
-import { Team, EquipoResumen } from 'src/app/shared/models/models';
+import { Team, EquipoResumen, SeasonStats } from 'src/app/shared/models/models';
 
 @Injectable({
   providedIn: 'root'
@@ -53,8 +53,12 @@ export class TeamService {
 
   // --- MÉTODOS DE ESTADÍSTICAS ---
 
+  getSeasonStats(equipoId: number): Observable<SeasonStats> {
+    return this.apiService.get<SeasonStats>(`/equipos/${equipoId}/stats-temporada`);
+  }
+
   // Mock para clasificación (se implementará más adelante)
   getTeamStandings(): Observable<any[]> {
-    return of([]); 
+    return of([]);
   }
 }

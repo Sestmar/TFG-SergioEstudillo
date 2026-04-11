@@ -8,6 +8,7 @@ import { CoachDashboardPage } from './coach-dashboard.page';
 
 // Importamos el módulo del modal para que Angular lo reconozca al abrirlo
 import { CreateConvocationPageModule } from '../convocations/create-convocation.module';
+import { SeasonStatsWidgetComponent } from 'src/app/shared/components/season-stats-widget/season-stats-widget.component';
 
 const routes: Routes = [
   {
@@ -23,7 +24,8 @@ const routes: Routes = [
     IonicModule,
     RouterModule.forChild(routes),
     // Mantenemos esto para que el Modal de "Nueva Convocatoria" funcione
-    CreateConvocationPageModule 
+    CreateConvocationPageModule,
+    SeasonStatsWidgetComponent
   ],
   declarations: [CoachDashboardPage]
 })

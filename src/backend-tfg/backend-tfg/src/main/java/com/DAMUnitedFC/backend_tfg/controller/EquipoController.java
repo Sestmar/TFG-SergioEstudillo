@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/equipos")
@@ -33,6 +34,12 @@ public class EquipoController {
     @GetMapping("/{id}/stats-temporada")
     public ResponseEntity<SeasonStatsDto> getSeasonStats(@PathVariable Integer id) {
         return ResponseEntity.ok(equipoService.getSeasonStats(id));
+    }
+
+    @PatchMapping("/{id}/objetivo")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")
+    public ResponseEntity<Equipo> setObjetivo(@PathVariable Integer id, @RequestBody Map<String, Integer> body) {
+        return ResponseEntity.ok(equipoService.setObjetivo(id, body.get("puntosObjetivo")));
     }
 
     @PostMapping
