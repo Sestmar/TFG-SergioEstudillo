@@ -38,15 +38,5 @@ Evolucionar más allá del sistema actual de WhatsApp para ofrecer una experienc
     - Avisos de nuevos mensajes en el chat de equipo.  
 - **Ventaja**: Mejora drásticamente el *engagement* de los jugadores y centraliza la comunicación sin depender de servicios externos de mensajería.
 
-## ✅ 4. Pulido de UX: Skeleton Screens (Estado: COMPLETADO)
-
-Se ha mejorado la percepción de velocidad y la calidad visual mediante la implementación de pantallas de carga inteligentes.
-
-- **Skeleton Screens ✅**: Los spinners de carga genéricos han sido reemplazados por esqueletos nativos de Ionic 7 (`ion-skeleton-text animated="true"`) en las tres vistas de mayor tráfico del entrenador:
-    - `coach-dashboard`: Skeleton completo del layout (sidebar, header, club card, status grid, y botones de acción).
-    - `my-team`: Skeleton de las secciones de posición con sus correspondientes tarjetas de jugador (avatar, dorsal, nombre y posición).
-    - `match-detail`: Skeleton del marcador (logos, marcador central y meta-info) y la lista de participantes.
-- **Resultado**: Eliminación total del *Cumulative Layout Shift* (CLS) durante las peticiones de datos, ofreciendo una transición fluida y profesional entre el estado de carga y el contenido real.
-
 ---
 *Documento actualizado: 11 de Abril 2026*
