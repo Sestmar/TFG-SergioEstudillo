@@ -1,18 +1,20 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
+import { RouterModule } from '@angular/router';
 import { SeasonStats } from 'src/app/shared/models/models';
 
 @Component({
   selector: 'app-season-stats-widget',
   standalone: true,
-  imports: [CommonModule, IonicModule],
+  imports: [CommonModule, IonicModule, RouterModule],
   templateUrl: './season-stats-widget.component.html',
   styleUrls: ['./season-stats-widget.component.scss']
 })
 export class SeasonStatsWidgetComponent {
   @Input() stats: SeasonStats | null = null;
   @Input() mostrarEdicion: boolean = false;
+  @Input() mostrarIntelligence: boolean = false;
   @Output() editarClicked = new EventEmitter<void>();
 
   get progreso(): number {
