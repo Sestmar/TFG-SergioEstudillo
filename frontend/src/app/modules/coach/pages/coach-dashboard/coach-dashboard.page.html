@@ -165,7 +165,7 @@
             <span class="desc">Ver lesionados</span>
           </div>
 
-          <div class="action-card small" (click)="setView('matches')">
+          <div class="action-card small" (click)="setView('matches')" data-test="card-proximos-partidos">
             <div class="icon-circle tertiary">
               <ion-icon name="football-outline"></ion-icon>
             </div>
@@ -200,7 +200,8 @@
         <div class="events-list-pro">
           <div class="event-card"
                *ngFor="let event of upcomingEvents"
-               [class.match-card]="event.tipo === 'PARTIDO'">
+               [class.match-card]="event.tipo === 'PARTIDO'"
+               data-test="event-card">
 
             <div class="date-col">
               <span class="day">{{ event.fechaHora | date:'dd' }}</span>
@@ -237,13 +238,13 @@
             </div>
 
             <div class="actions-col" *ngIf="event.tipo === 'PARTIDO'">
-              <ion-button fill="clear" class="action-btn" [routerLink]="['/tactics', event.idPartido || event.id]">
+              <ion-button fill="clear" class="action-btn" [routerLink]="['/tactics', event.idPartido || event.id]" data-test="btn-pizarra">
                 <ion-icon name="easel" slot="icon-only"></ion-icon>
               </ion-button>
-              <ion-button fill="clear" class="action-btn gold" [routerLink]="['/match-detail', event.idPartido || event.id]">
+              <ion-button fill="clear" class="action-btn gold" [routerLink]="['/match-detail', event.idPartido || event.id]" data-test="btn-ver-acta">
                 <ion-icon name="document-text-outline" slot="icon-only"></ion-icon>
               </ion-button>
-              <ion-button fill="clear" class="action-btn purple" [routerLink]="['/tactics-pro', event.idPartido || event.id]">
+              <ion-button fill="clear" class="action-btn purple" [routerLink]="['/tactics-pro', event.idPartido || event.id]" data-test="btn-laboratorio">
                 <ion-icon name="flask-outline" slot="icon-only"></ion-icon>
               </ion-button>
             </div>

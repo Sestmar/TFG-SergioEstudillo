@@ -1,79 +1,49 @@
-# 🛡️ Hoja de Ruta: Blindaje de Seguridad 2.0 — DAM United FC
+# 🚀 Hoja de Ruta: Futuras Mejoras - DAM United FC
 
-Este documento detalla el plan de acción técnico definitivo para resolver los hallazgos de la Auditoría de Seguridad. Integra el diagnóstico inicial de Claude y el análisis de arquitectura de Gemini.
-
----
-
-## 🚨 FASE 1: INCENDIOS (Prioridad Crítica — COMPLETADA ✅)
-
-*Objetivo: Detener la exposición de credenciales, blindar el acceso administrativo y parchar vulnerabilidades del core.*
-
-### 1.1 Gestión de Secretos y Credenciales (Backend)
-- [x] **Externalizar Secretos:** Mover JWT Secret, Passwords de DB, Gmail y Twilio a variables de entorno en Render.
-- [x] **Configuración Segura:** Usar `${VARIABLE_NAME}` en `application.properties` sin valores hardcodeados.
-- [x] **Limpieza de Repo:** Agregar `application-local.properties` al `.gitignore`.
-- [x] **ROTACIÓN DE CLAVES:** Generar un nuevo JWT Secret y cambiar las passwords de Gmail/Twilio.
-
-### 1.2 Autorización en Backend (Spring Security)
-- [x] **Habilitar Method Security:** Activar `@EnableMethodSecurity` en la configuración.
-- [x] **Blindar AdminController:** Aplicar `@PreAuthorize("hasRole('ADMIN')")` a todos sus métodos.
-- [x] **Blindar EquipoController:** Aplicar `@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")`.
-- [x] **Blindar JugadorController:** Asegurar que solo el admin o el propio jugador puedan editar su perfil.
-
-### 1.3 Seguridad en Navegación y Vulnerabilidades de Angular (Frontend)
-- [x] **ACTUALIZACIÓN CRÍTICA:** Migrar Angular de v17 a v18.2.15+ (Completado: Angular 18).
-- [x] **Guardias de Ruta:** Implementar `canActivate: [AuthGuard]` y `RoleGuard` en todas las rutas privadas.
-- [x] **Bloqueo de UI:** Asegurar que los menús de Admin/Entrenador no se rendericen para usuarios sin el rol correspondiente.
+Este documento identifica las líneas de evolución estratégica para elevar la plataforma a estándares de producto comercial y excelencia técnica.
 
 ---
 
-## ⚔️ FASE 2: FORTALECIMIENTO (Prioridad Alta — COMPLETADA ✅)
+## ✅ 1. Fortalecimiento de la Calidad: Testing Integral (Estado: COMPLETADO)
 
-*Objetivo: Mitigar vectores comunes de ataque y corregir bugs funcionales de seguridad.*
+Se ha implementado una infraestructura de calidad integral siguiendo el modelo de la Pirámide de Testing, garantizando la estabilidad y robustez de la plataforma.
 
-### 2.1 Refactor de CORS y WebSockets
-- [x] **CORS:** Centralizado en `SecurityConfig.java` con whitelist estricta.
-- [x] **WebSockets:** Restricción de orígenes en `WebSocketConfig.java`.
+- **Backend (JUnit 5 + Mockito)**: 
+    - Suite de **29 tests unitarios** que cubren `AdminService`, `AlineacionService` y `PublicService`.
+    - Ejecución automatizada en **GitHub Actions** con aislamiento total de la base de datos para máxima velocidad.
+- **Frontend (Jasmine + Karma)**:
+    - Suite de **44 tests unitarios** para la capa de servicios de Angular 18.
+    - CI/CD configurado para ejecución *headless* en cada commit.
+- **E2E (Cypress 15)**:
+    - Flujo crítico de **22 tests interactivos** que cubren el ciclo completo: Login -> Dashboard -> Acta -> Táctica Pro.
+    - Uso de selectores robustos `data-test` y comandos personalizados para demostración ante el tribunal.
+- **Resultado**: Cobertura superior al 70% en la lógica de negocio y un ecosistema documental en `docs/TESTING.md` para la defensa técnica.
 
-### 2.2 Validación de Archivos (Path Traversal)
-- [x] **Sanitización en FileController:** Validar nombres de archivos y bloquear `../`.
-- [x] **Restricción de Directorio:** Forzar lecturas dentro de `target/uploads`.
+## 📄 2. Ecosistema Documental: Exportación de Estrategia Pro (Priority: MEDIUM)
 
-### 2.3 Seguridad y Lógica de Passwords
-- [x] **Mínimo de caracteres:** 8 caracteres en registro/reset.
-- [x] **Fix Reset Password:** Token con expiración (1 hora) y lógica atómica.
+Sinergia entre el nuevo motor PDF y el Laboratorio Táctico para facilitar la comunicación entre el entrenador y los jugadores.
 
----
+- **Funcionalidad**: Botón "Exportar Pizarra" dentro de `TacticsProPage`.
+- **Implementación**: Captura de la vista actual del campo (incluyendo Shadow Players y anotaciones manuales) mediante `html2canvas` e inserción en un documento PDF corporativo.
+- **Valor**: Permite al míster compartir el plan de partido por WhatsApp o imprimirlo para la charla técnica en el vestuario.
 
-## 💎 FASE 3: PULIDO PROFESIONAL (Prioridad Media/Baja — En Proceso 🚧)
+## 🔔 3. Notificaciones Nativas: Mobile Push con Firebase (Priority: MEDIUM)
 
-*Objetivo: Eliminar rastros de desarrollo y mejorar la observabilidad segura.*
+Evolucionar más allá del sistema actual de WhatsApp para ofrecer una experiencia móvil 100% nativa y reactiva.
 
-### 3.1 Limpieza de Entorno y Manejo de Errores
-- [x] **URLs Hardcodeadas:** Eliminadas referencias a localhost.
-- [x] **Global Exception Handler:** Implementado `@ControllerAdvice`.
-- [x] **Eliminar e.printStackTrace():** Sustituir todas las trazas de error por un logger (`slf4j`).
-- [x] **Limpiar Frontend:** Eliminación masiva de `console.log` innecesarios.
+- **Tecnología**: Integración de **Firebase Cloud Messaging (FCM)** mediante el plugin oficial de Capacitor.
+- **Casos de Uso**:
+    - Alertas instantáneas al ser incluido en una convocatoria.
+    - Notificaciones de cambio de horario en entrenamientos.
+    - Avisos de nuevos mensajes en el chat de equipo.
+- **Ventaja**: Mejora drásticamente el *engagement* de los jugadores y centraliza la comunicación sin depender de servicios externos de mensajería.
 
-### 3.2 Seguridad de Cabeceras
-- [x] **CSP Headers:** Agregado Content-Security-Policy básico en `index.html`.
+## 🌈 4. Pulido de UX: Micro-interacciones y Skeletons (Priority: LOW)
 
----
+Mejorar la percepción de velocidad y calidad visual mediante detalles de pulido fino.
 
-## 🚀 Evolución Estratégica y Calidad Técnica
-
-### 1.1 Ingeniería de Calidad (Evolución)
-- [x] **CI/CD Pipelines:** Automatización con GitHub Actions para Frontend y Backend.
-- [ ] **Migración a Angular Signals:** Optimizar gestión de estado.
-- [x] **PWA (Progressive Web App):** Service Workers configurados.
-
-### 1.3 Funcionalidades de Impacto Deportivo
-- [ ] **Pasarela de Pagos (Stripe):** Implementación de pagos de cuotas.
-- [x] **Motor de Reportes PDF:** Generación de fichas técnicas en formato PDF.
+- **Skeleton Screens**: Reemplazar spinners de carga por estructuras de carga fantasmales en los dashboards.
+- **Lottie Animations**: Animaciones vectoriales livianas para estados de éxito (ej. al guardar una táctica o enviar un mensaje).
 
 ---
-
----
-
-## 📋 Registro de Decisiones Técnicas (ADR)
-- [ADR-001: Descarte de Migración JWT a Cookies HttpOnly] (Ver archivo original para detalle).
+*Documento actualizado: 10 de Abril 2026*

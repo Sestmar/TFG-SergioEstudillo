@@ -27,7 +27,7 @@
         <div class="input-group">
           <label>CORREO ELECTRÓNICO</label>
           <div class="input-container">
-            <input type="email" formControlName="email" placeholder="ejemplo@futchain.com" class="leather-input">
+            <input type="email" formControlName="email" placeholder="ejemplo@futchain.com" class="leather-input" data-test="input-email">
             <ion-icon name="mail-outline"></ion-icon>
           </div>
           <div class="error-msg" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
@@ -38,7 +38,7 @@
         <div class="input-group">
           <label>CONTRASEÑA</label>
           <div class="input-container">
-            <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="••••••" class="leather-input">
+            <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="••••••" class="leather-input" data-test="input-password">
             <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" (click)="togglePasswordVisibility()" class="eye-icon"></ion-icon>
           </div>
           <div class="error-msg" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
@@ -56,7 +56,7 @@
           <a class="forgot-link" routerLink="/auth/forgot-password">¿Olvidaste tu contraseña?</a>
         </div>
 
-        <button type="submit" class="gold-button" [disabled]="loginForm.invalid || isLoading">
+        <button type="submit" class="gold-button" [disabled]="loginForm.invalid || isLoading" data-test="btn-submit">
           <span *ngIf="!isLoading">INICIAR SESIÓN</span>
           <ion-spinner name="dots" *ngIf="isLoading"></ion-spinner>
         </button>

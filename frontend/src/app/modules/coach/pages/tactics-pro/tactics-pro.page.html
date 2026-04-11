@@ -8,7 +8,7 @@
 
   <!-- CAMPO — PROTAGONISTA ABSOLUTO -->
   <div class="main-stage" *ngIf="!loading">
-    <div class="pitch-board">
+    <div class="pitch-board" data-test="pitch-board">
       <div class="pitch-texture"></div>
       <div class="pitch-markings">
         <div class="box top-box"></div>
@@ -44,7 +44,7 @@
       </canvas>
 
       <!-- Indicador de fase -->
-      <div class="phase-indicator" [class.attack]="currentPhase === 'attack'" [class.defense]="currentPhase === 'defense'">
+      <div class="phase-indicator" [class.attack]="currentPhase === 'attack'" [class.defense]="currentPhase === 'defense'" data-test="phase-indicator">
         {{ currentPhase === 'attack' ? '⚔ FASE ATAQUE' : '🛡 FASE DEFENSA' }}
       </div>
 

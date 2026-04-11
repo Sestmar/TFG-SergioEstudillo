@@ -1,44 +1,50 @@
-# 📝 PROMPT PARA ACTUALIZACIÓN DE README (SESIÓN 10/04/2026)
+Usuario@LAPTOP-8VI2TBCD MINGW64 ~/Documents/2DAM/TFG-SergioEstudillo/TFG-SergioEstudillo (preprod)
+$ git add .
+warning: in the working copy of 'frontend/tsconfig.app.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/cypress.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/cypress/e2e/flujo-critico.cy.ts', LF will be replaced by CRLF the next time Git touches it
+error: open("frontend/cypress/screenshots/flujo-critico.cy.ts/Flujo Crítico — DAM United FC -- 2. Dashboard del Entrenador -- debería mostrar el nombre del equipo gestionado -- before each hook (failed).png"): Filename too long
+error: unable to index file 'frontend/cypress/screenshots/flujo-critico.cy.ts/Flujo Crítico — DAM United FC -- 2. Dashboard del Entrenador -- debería mostrar el nombre del equipo gestionado -- before each hook (failed).png'
+fatal: adding files failed
 
-Copia y pega este prompt a tu IA encargada de la documentación:
+Usuario@LAPTOP-8VI2TBCD MINGW64 ~/Documents/2DAM/TFG-SergioEstudillo/TFG-SergioEstudillo (preprod)
+$ git commit -m "Fase de testing completada. Testeado funcionalidades backend y frontend y tests e2e"
+On branch preprod
+Your branch is up to date with 'origin/preprod'.
 
----
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   .github/workflows/frontend-ci.yml
+        modified:   frontend/package-lock.json
+        modified:   frontend/package.json
+        modified:   frontend/src/app/modules/auth/pages/login/login.page.html
+        modified:   frontend/src/app/modules/coach/pages/coach-dashboard/coach-dashboard.page.html
+        modified:   frontend/src/app/modules/coach/pages/tactics-pro/tactics-pro.page.html
+        modified:   frontend/src/app/modules/match-detail/match-detail.page.html
+        modified:   frontend/tsconfig.app.json
+        modified:   futuras-mejoras.md
+        modified:   instruccion.md
 
-```markdown
-Eres una IA documentativa experta. Tu misión es actualizar el `README.md` del proyecto **DAM United FC** basándote en las mejoras críticas implementadas en la sesión de hoy (10/04/2026).
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        frontend/cypress.config.ts
+        frontend/cypress/
+        frontend/karma.conf.js
+        frontend/src/app/core/services/admin/admin.service.spec.ts
+        frontend/src/app/core/services/api/api.service.spec.ts
+        frontend/src/app/core/services/auth/auth.service.spec.ts
+        frontend/src/app/core/services/match/match.service.spec.ts
+        frontend/src/test.ts
+        frontend/tsconfig.spec.json
+        src/backend-tfg/backend-tfg/src/test/java/com/DAMUnitedFC/backend_tfg/service/AdminServiceTest.java
+        src/backend-tfg/backend-tfg/src/test/java/com/DAMUnitedFC/backend_tfg/service/AlineacionServiceTest.java
 
-### 📑 CONTEXTO DE LA SESIÓN: SANEAMIENTO Y LABORATORIO TÁCTICO
+no changes added to commit (use "git add" and/or "git commit -a")
 
-En esta sesión se han realizado dos intervenciones de alto nivel:
+Usuario@LAPTOP-8VI2TBCD MINGW64 ~/Documents/2DAM/TFG-SergioEstudillo/TFG-SergioEstudillo (preprod)
+$ git push origin preprod
+Everything up-to-date
 
-1. **Saneamiento de Deuda Técnica (Arquitectura Backend):**
-   - **Inyección por Constructor**: Se eliminó `@Autowired` en `WebSocketConfig.java` en favor de inyección por constructor con campos `final` y `@RequiredArgsConstructor` (Lombok).
-   - **Centralización de Infraestructura**: Se extrajeron las URLs de producción hardcodeadas a `application.properties`, permitiendo la configuración vía variables de entorno (`APP_BACKEND_URL`, `APP_FRONTEND_URL`) con fallbacks automáticos.
-   - **Limpieza de Logs**: Se eliminaron 12 llamadas a `console.warn()` en el Frontend para evitar exposición de trazas en producción.
-
-2. **Nuevo Módulo "Laboratorio Táctico Pro" (UX Inmersiva):**
-   - **Interfaz Full-View**: Rediseño total de la pizarra táctica para ocupar el 100% de la pantalla sin scroll, optimizada para tablets y móviles.
-   - **Libertad Total de Posicionamiento**: Sistema de drag & drop libre basado en coordenadas relativas (%), rompiendo la rejilla rígida anterior.
-   - **Menú Flotante & Glassmorphism**: Implementación de un sidebar colapsable y banquillo tipo "Bottom Sheet" para maximizar el área de trabajo.
-   - **Estrategia Avanzada**: Fases de Ataque/Defensa con transiciones animadas, simulación de equipo rival (Shadow Players) y sistema de dibujo táctico (Canvas) con persistencia en LocalStorage.
-
----
-
-### 🛠️ TAREAS DE ACTUALIZACIÓN EN README.md
-
-1. **Sección "Highlights Técnicos"**:
-   - Añadir un bullet sobre el **"Laboratorio Táctico Pro"** destacando el uso de Angular CDK para posicionamiento libre y Canvas API para anotaciones persistentes.
-
-2. **Sección "Características Principales" (Módulo Entrenador)**:
-   - Resaltar la nueva capacidad de análisis táctico: "Pizarra Pro con simulación de rival, fases de juego animadas y herramientas de dibujo técnico".
-
-3. **Sección "Arquitectura & Estándares"**:
-   - Mencionar el saneamiento de la inyección de dependencias (Constructor Injection) y la externalización de la configuración de red.
-
-4. **Pie de Versión**:
-   - Actualizar a: *Versión: 7.0 — Tactical Laboratory Pro · Backend Sanitization · Inmersive UX*
-   - Fecha: 10 de Abril 2026
-
-Por favor, mantén el tono profesional, técnico y apasionado que caracteriza la documentación de este TFG.
-```
----
+Usuario@LAPTOP-8VI2TBCD MINGW64 ~/Documents/2DAM/TFG-SergioEstudillo/TFG-SergioEstudillo (preprod)
+$

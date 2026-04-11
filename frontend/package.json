@@ -10,7 +10,8 @@
     "build:prod": "ng build --configuration production",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "cypress open",
+    "e2e:headless": "cypress run --browser chrome"
   },
   "keywords": [
     "ionic",
@@ -67,15 +68,23 @@
     "@angular/language-service": "^18.2.14",
     "@capacitor/cli": "^5.0.0",
     "@ionic/angular-toolkit": "^10.0.0",
+    "@types/jasmine": "^5.1.15",
     "@types/node": "^20.0.0",
     "@types/sockjs-client": "^1.5.4",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@typescript-eslint/utils": "^8.0.0",
+    "cypress": "^15.13.1",
     "eslint": "^8.0.0",
     "eslint-plugin-import": "^2.0.0",
     "eslint-plugin-jsdoc": "^46.0.0",
     "eslint-plugin-prefer-arrow": "^1.0.0",
+    "jasmine-core": "^5.13.0",
+    "karma": "^6.4.4",
+    "karma-chrome-launcher": "^3.2.0",
+    "karma-coverage": "^2.2.1",
+    "karma-jasmine": "^5.1.0",
+    "karma-jasmine-html-reporter": "^2.2.0",
     "typescript": "~5.5.4"
   },
   "engines": {

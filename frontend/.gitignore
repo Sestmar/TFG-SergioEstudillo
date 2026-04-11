@@ -173,3 +173,7 @@ plugins
 
 # Service worker
 ngsw-worker.js
+
+# Cypress temporals
+cypress/screenshots/
+cypress/videos/
