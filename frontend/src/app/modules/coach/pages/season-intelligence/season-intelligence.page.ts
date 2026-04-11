@@ -196,6 +196,8 @@ export class SeasonIntelligencePage {
 
   // ─── PACE ANALYTICS ─────────────────────────────────────────────────────────
 
+  readonly TOTAL_PARTIDOS = 34;
+
   get eficienciaPuntos(): string {
     if (!this.stats || this.stats.pj === 0) return '0.0';
     return (this.stats.puntos / this.stats.pj).toFixed(1);
@@ -204,8 +206,7 @@ export class SeasonIntelligencePage {
   get proyeccionFinal(): number | null {
     if (!this.stats || this.stats.pj === 0) return null;
     const ritmo = this.stats.puntos / this.stats.pj;
-    const totalPartidos = 34;
-    return Math.round(ritmo * totalPartidos);
+    return Math.round(ritmo * this.TOTAL_PARTIDOS);
   }
 
   get distanciaObjetivo(): number | null {
@@ -216,5 +217,46 @@ export class SeasonIntelligencePage {
   get winRate(): string {
     if (!this.stats || this.stats.pj === 0) return '0';
     return Math.round((this.stats.g / this.stats.pj) * 100).toString();
+  }
+
+  // ─── PACE TRACK ──────────────────────────────────────────────────────────────
+
+  /** % de la temporada completada (0–100) */
+  get pctTemporada(): number {
+    if (!this.stats) return 0;
+    return Math.min(100, Math.round((this.stats.pj / this.TOTAL_PARTIDOS) * 100));
+  }
+
+  /** % que representan los puntos actuales sobre el máximo posible (pj*3) */
+  get pctPuntosActuales(): number {
+    if (!this.stats || this.stats.pj === 0) return 0;
+    const maxPosible = this.TOTAL_PARTIDOS * 3;
+    return Math.min(100, Math.round((this.stats.puntos / maxPosible) * 100));
+  }
+
+  /** % que representa la proyección final sobre el máximo posible */
+  get pctProyeccion(): number {
+    if (this.proyeccionFinal === null) return 0;
+    const maxPosible = this.TOTAL_PARTIDOS * 3;
+    return Math.min(100, Math.round((this.proyeccionFinal / maxPosible) * 100));
+  }
+
+  /** % que representa el objetivo sobre el máximo posible */
+  get pctObjetivo(): number {
+    if (!this.stats?.puntosObjetivo) return 0;
+    const maxPosible = this.TOTAL_PARTIDOS * 3;
+    return Math.min(100, Math.round((this.stats.puntosObjetivo / maxPosible) * 100));
+  }
+
+  get paceStatus(): 'on-track' | 'at-risk' | 'no-objetivo' {
+    if (!this.stats?.puntosObjetivo) return 'no-objetivo';
+    const dist = this.distanciaObjetivo ?? 0;
+    return dist >= 0 ? 'on-track' : 'at-risk';
+  }
+
+  get paceStatusLabel(): string {
+    if (this.paceStatus === 'on-track')    return 'EN RITMO';
+    if (this.paceStatus === 'at-risk')     return 'EN RIESGO';
+    return 'SIN OBJETIVO';
   }
 }

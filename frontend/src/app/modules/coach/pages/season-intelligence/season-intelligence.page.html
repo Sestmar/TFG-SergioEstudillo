@@ -95,11 +95,16 @@
 
     <!-- PACE ANALYTICS -->
     <div class="pace-card glass">
-      <div class="chart-header">
-        <span class="chart-title">ANÁLISIS PREDICTIVO · PACE</span>
-        <span class="chart-sub">Proyección al ritmo actual</span>
+
+      <div class="pace-card-header">
+        <div>
+          <span class="chart-title">ANÁLISIS PREDICTIVO · PACE</span>
+          <span class="chart-sub">Proyección al ritmo actual · {{ TOTAL_PARTIDOS }} jornadas</span>
+        </div>
+        <span class="pace-status-badge" [class]="paceStatus">{{ paceStatusLabel }}</span>
       </div>
 
+      <!-- KPI ROW -->
       <div class="pace-grid">
         <div class="pace-item">
           <span class="pace-val">{{ eficienciaPuntos }}</span>
@@ -113,24 +118,60 @@
           <span class="pace-val"
             [class.positive]="(distanciaObjetivo ?? 0) >= 0"
             [class.negative]="(distanciaObjetivo ?? 0) < 0">
-            {{ (distanciaObjetivo ?? 0) >= 0 ? '+' : '' }}{{ distanciaObjetivo ?? '—' }}
+            {{ (distanciaObjetivo ?? 0) >= 0 ? '+' : '' }}{{ distanciaObjetivo }}
           </span>
           <span class="pace-lbl">vs Objetivo</span>
         </div>
+        <div class="pace-item" *ngIf="!stats.puntosObjetivo">
+          <span class="pace-val">{{ stats.pj }}</span>
+          <span class="pace-lbl">Jornadas</span>
+        </div>
       </div>
 
-      <div class="pace-context" *ngIf="proyeccionFinal !== null">
-        <ion-icon name="analytics-outline"></ion-icon>
-        <span *ngIf="(distanciaObjetivo ?? 0) >= 0 && stats.puntosObjetivo">
-          Al ritmo actual alcanzarás el objetivo con <strong>{{ distanciaObjetivo }}</strong> puntos de margen.
+      <!-- PACE TRACK VISUAL -->
+      <div class="pace-track-wrap">
+        <div class="pace-track-labels">
+          <span>0 pts</span>
+          <span>{{ TOTAL_PARTIDOS * 3 }} pts máx.</span>
+        </div>
+
+        <div class="pace-track">
+          <!-- Barra de puntos actuales -->
+          <div class="pace-bar actual" [style.width.%]="pctPuntosActuales">
+            <span class="pace-bar-label">{{ stats.puntos }} pts</span>
+          </div>
+          <!-- Extensión proyectada (desde actuales hasta proyección) -->
+          <div class="pace-bar projected"
+               [style.left.%]="pctPuntosActuales"
+               [style.width.%]="pctProyeccion - pctPuntosActuales">
+          </div>
+          <!-- Línea de objetivo -->
+          <div class="pace-objetivo-line" *ngIf="stats.puntosObjetivo"
+               [style.left.%]="pctObjetivo">
+            <span class="pace-objetivo-tip">{{ stats.puntosObjetivo }}</span>
+          </div>
+        </div>
+
+        <div class="pace-track-sublabels">
+          <span>Temporada completada: <strong>{{ pctTemporada }}%</strong></span>
+          <span *ngIf="proyeccionFinal !== null">Proyección: <strong>{{ proyeccionFinal }} pts</strong></span>
+        </div>
+      </div>
+
+      <!-- MENSAJE CONTEXTUAL -->
+      <div class="pace-context" [class]="paceStatus">
+        <ion-icon [name]="paceStatus === 'on-track' ? 'checkmark-circle-outline' : paceStatus === 'at-risk' ? 'warning-outline' : 'analytics-outline'"></ion-icon>
+        <span *ngIf="paceStatus === 'on-track'">
+          Al ritmo actual llegarás al objetivo con <strong>{{ distanciaObjetivo }}</strong> pts de margen.
         </span>
-        <span *ngIf="(distanciaObjetivo ?? 0) < 0 && stats.puntosObjetivo">
-          Necesitás subir el rendimiento para alcanzar el objetivo. Déficit de <strong>{{ (distanciaObjetivo ?? 0) * -1 }}</strong> pts.
+        <span *ngIf="paceStatus === 'at-risk'">
+          Déficit de <strong>{{ (distanciaObjetivo ?? 0) * -1 }}</strong> pts respecto al objetivo. Hay que subir el rendimiento.
         </span>
-        <span *ngIf="!stats.puntosObjetivo">
-          Proyección de cierre de temporada: <strong>{{ proyeccionFinal }} puntos</strong>.
+        <span *ngIf="paceStatus === 'no-objetivo'">
+          Proyección de cierre: <strong>{{ proyeccionFinal ?? '—' }} puntos</strong>. Definí un objetivo para el análisis completo.
         </span>
       </div>
+
     </div>
 
     <div style="height: 40px;"></div>
