@@ -442,3 +442,69 @@ jc.jugador?.nombre
 // DESPUÉS (correcto)
 jc.jugador?.usuario?.nombre
 ```
+
+---
+
+## 33. UX/Performance: Skeleton Screens en Vistas Críticas 💀✅
+
+Se ha sustituido el patrón de carga genérico (spinner + texto) por **Skeleton Screens** en las tres vistas de mayor tráfico del entrenador, mejorando la percepción de velocidad y eliminando los saltos de layout (CLS — Cumulative Layout Shift).
+
+### Problema técnico resuelto
+
+Los spinners centrados (`ion-spinner`, `loader-pulse`) ocupan un espacio distinto al del contenido final. Cuando los datos llegan, el DOM se reconstruye y el usuario percibe un "salto" visual. Los skeleton screens resuelven esto porque **el contenedor de carga tiene exactamente la misma estructura y dimensiones que el contenido real** — el ojo humano no percibe diferencia entre el estado de carga y el estado de datos.
+
+### Implementación
+
+Se utilizaron exclusivamente componentes nativos de **Ionic 7** para máxima compatibilidad y consistencia con el sistema de diseño:
+
+```html
+<ion-skeleton-text animated="true" style="width: 60%; height: 14px; border-radius: 4px;"></ion-skeleton-text> 
+```
+
+La propiedad `animated="true"` activa el efecto shimmer (brillo deslizante) de forma nativa, sin CSS adicional.
+
+### Vistas afectadas
+
+#### 1. `coach-dashboard` (`coach-dashboard.page.html`)
+**Antes**: `<div class="loading-state"><div class="loader-pulse"></div><p>Cargando...</p></div>`
+
+**Después**: Skeleton completo que replica el layout real:
+- **Sidebar izquierdo**: 5 iconos circulares de navegación
+- **Header pro**: saludo (línea corta) + nombre (línea larga) + foto de perfil circular
+- **Club identity card**: escudo circular + 3 líneas de info + stats bar (2 items)
+- **Status grid**: 2 cards con icono circular + 2 líneas de texto
+- **Actions grid**: 1 card grande + 3 cards pequeñas con icono circular + título + descripción
+
+#### 2. `my-team` (`my-team.page.html`)
+**Antes**: `<ion-spinner name="crescent" color="secondary">`
+
+**Después**: Skeleton que replica la estructura de secciones de posición:
+- 2 bloques `position-section`, cada uno con su `section-label` (dot + texto + count-pill)
+- 3 `player-card` por sección con: `pos-bar` lateral neutro, avatar circular (48px), dorsal + nombre + posición, status dot
+
+#### 3. `match-detail` (`match-detail.page.html`)      
+**Antes**: `<ion-spinner name="crescent" color="secondary">`
+
+**Después**: Skeleton que replica el acta completa:    
+- **Scoreboard**: 2 logos circulares (local/rival) + bloque marcador central (90px ancho) + status pill + 2 líneas de meta (fecha/lugar)
+- **Section header**: icono circular + texto "PARTICIPANTES"
+- **5 player-card-dark**: avatar circular con dorsal badge superpuesto + nombre + posición + status badge (TITULAR/SUPLENTE)
+
+### Principios de diseño aplicados
+
+| Regla | Cómo se aplicó |
+|---|---|
+| **Mismo wrapper CSS** | El skeleton usa `dashboard-layout`, `main-container`, `position-section` — los mismos contenedores del contenido real |
+| **Dimensiones fijas** | Avatares siempre 48px × 48px con `border-radius: 50%`, igual que las `<img>` reales |
+| **Anchos variables** | Líneas de texto al 80%, 60%, 50% para simular jerarquía tipográfica natural |        
+| **pointer-events: none** | Los skeleton items no son interactuables — no generan confusión al usuario |     
+| **Sin CSS adicional** | Cero nuevas clases. Todo mediante `style` inline de precisión quirúrgica |
+
+### Archivos modificados
+
+| Archivo | Cambio |
+|---|---|
+| `coach/pages/coach-dashboard/coach-dashboard.page.html` | Reemplazado bloque `loading-state` por skeleton completo del layout |
+| `coach/pages/my-team/my-team.page.html` | Reemplazado `ion-spinner` por skeleton de secciones + player-cards |
+| `match-detail/match-detail.page.html` | Reemplazado `ion-spinner` por skeleton de scoreboard + player-list |
+

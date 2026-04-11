@@ -6,7 +6,6 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 
 import { TacticsProPageRoutingModule } from './tactics-pro-routing.module';
 import { TacticsProPage } from './tactics-pro.page';
-
 @NgModule({
   imports: [
     CommonModule,

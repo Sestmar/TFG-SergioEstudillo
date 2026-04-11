@@ -16,8 +16,60 @@
 
 <ion-content>
 
-  <div *ngIf="loading" class="spinner-container">
-    <ion-spinner name="crescent" color="secondary"></ion-spinner>
+  <!-- SKELETON SCREEN -->
+  <div *ngIf="loading" class="main-container">
+
+    <!-- Scoreboard skeleton -->
+    <div class="scoreboard-card" style="pointer-events:none;">
+      <div class="teams-row" style="display:flex;align-items:center;justify-content:space-between;padding:16px;">
+        <!-- Equipo local -->
+        <div class="team-col" style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <ion-skeleton-text animated="true" style="width:56px;height:56px;border-radius:50%;"></ion-skeleton-text>
+          <ion-skeleton-text animated="true" style="width:80px;height:12px;border-radius:4px;"></ion-skeleton-text>
+        </div>
+        <!-- Marcador central -->
+        <div class="score-col" style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <ion-skeleton-text animated="true" style="width:90px;height:40px;border-radius:8px;"></ion-skeleton-text>
+          <ion-skeleton-text animated="true" style="width:70px;height:20px;border-radius:10px;"></ion-skeleton-text>
+        </div>
+        <!-- Equipo rival -->
+        <div class="team-col" style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <ion-skeleton-text animated="true" style="width:56px;height:56px;border-radius:50%;"></ion-skeleton-text>
+          <ion-skeleton-text animated="true" style="width:80px;height:12px;border-radius:4px;"></ion-skeleton-text>
+        </div>
+      </div>
+      <!-- Match meta skeleton -->
+      <div class="match-meta" style="display:flex;gap:16px;padding:8px 16px 16px;">
+        <ion-skeleton-text animated="true" style="width:140px;height:12px;border-radius:4px;"></ion-skeleton-text>
+        <ion-skeleton-text animated="true" style="width:100px;height:12px;border-radius:4px;"></ion-skeleton-text>
+      </div>
+    </div>
+
+    <!-- Section header skeleton -->
+    <div class="section-header" style="display:flex;align-items:center;gap:8px;pointer-events:none;">
+      <ion-skeleton-text animated="true" style="width:18px;height:18px;border-radius:50%;"></ion-skeleton-text>
+      <ion-skeleton-text animated="true" style="width:120px;height:16px;border-radius:4px;"></ion-skeleton-text>
+    </div>
+
+    <!-- Player list skeleton (5 jugadores) -->
+    <div class="player-list">
+      <div class="player-card-dark" *ngFor="let i of [1,2,3,4,5]" style="pointer-events:none;">
+        <div class="left-info" style="display:flex;align-items:center;gap:12px;">
+          <div class="avatar-wrapper" style="position:relative;flex-shrink:0;">
+            <ion-skeleton-text animated="true" style="width:48px;height:48px;border-radius:50%;"></ion-skeleton-text>
+            <ion-skeleton-text animated="true" style="width:22px;height:18px;border-radius:4px;position:absolute;bottom:-4px;right:-4px;"></ion-skeleton-text>
+          </div>
+          <div class="text-info" style="display:flex;flex-direction:column;gap:6px;">
+            <ion-skeleton-text animated="true" style="width:130px;height:14px;border-radius:4px;"></ion-skeleton-text>
+            <ion-skeleton-text animated="true" style="width:80px;height:11px;border-radius:4px;"></ion-skeleton-text>
+          </div>
+        </div>
+        <div class="right-stats" style="display:flex;align-items:center;gap:6px;">
+          <ion-skeleton-text animated="true" style="width:64px;height:22px;border-radius:6px;"></ion-skeleton-text>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <div *ngIf="!loading && match" class="main-container animate-fade-in">

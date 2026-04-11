@@ -12,6 +12,8 @@ import { AppRoutingModule } from './app-routing.module';
 import { AuthInterceptor, ErrorInterceptor } from '@core/interceptors';
 import { ServiceWorkerModule } from '@angular/service-worker';
 
+
+
 @NgModule({ declarations: [AppComponent],
     bootstrap: [AppComponent], imports: [BrowserModule,
         IonicModule.forRoot({
