@@ -1,0 +1,157 @@
+.season-widget {
+  background: rgba(15, 22, 45, 0.75);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(12px);
+  margin: 12px 0;
+
+  // ── Cabecera ────────────────────────────────────────────────────────────────
+  .widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+
+    .category-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #a78bfa;
+
+      ion-icon { font-size: 13px; }
+    }
+
+    .puntos-total {
+      font-size: 20px;
+      font-weight: 800;
+      color: #e2e8f0;
+    }
+  }
+
+  // ── Tabla stats ─────────────────────────────────────────────────────────────
+  .stats-row {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    padding: 10px 8px;
+    margin-bottom: 14px;
+
+    .stat-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 32px;
+
+      .val {
+        font-size: 16px;
+        font-weight: 700;
+        color: #e2e8f0;
+        line-height: 1;
+      }
+
+      .lbl {
+        font-size: 9px;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        margin-top: 3px;
+        text-transform: uppercase;
+      }
+
+      &.green .val { color: #4ade80; }
+      &.yellow .val { color: #fbbf24; }
+      &.red .val { color: #f87171; }
+      &.pos .val { color: #4ade80; }
+      &.neg .val { color: #f87171; }
+    }
+  }
+
+  // ── Racha ────────────────────────────────────────────────────────────────────
+  .racha-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+
+    .racha-lbl {
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #64748b;
+      min-width: 36px;
+    }
+
+    .racha-dots {
+      display: flex;
+      gap: 6px;
+
+      .racha-dot {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0;
+
+        &.victoria {
+          background: rgba(74, 222, 128, 0.15);
+          border: 1.5px solid #4ade80;
+          color: #4ade80;
+        }
+
+        &.empate {
+          background: rgba(251, 191, 36, 0.15);
+          border: 1.5px solid #fbbf24;
+          color: #fbbf24;
+        }
+
+        &.derrota {
+          background: rgba(248, 113, 113, 0.15);
+          border: 1.5px solid #f87171;
+          color: #f87171;
+        }
+      }
+    }
+  }
+
+  // ── Objetivo / Progress bar ──────────────────────────────────────────────────
+  .objetivo-row {
+    .objetivo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+
+      .objetivo-lbl {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: #94a3b8;
+
+        ion-icon { font-size: 12px; }
+      }
+
+      .objetivo-val {
+        font-size: 12px;
+        font-weight: 700;
+        color: #e2e8f0;
+      }
+    }
+
+    ion-progress-bar {
+      --background: rgba(255, 255, 255, 0.08);
+      --progress-background: linear-gradient(90deg, #7c3aed, #a78bfa);
+      border-radius: 4px;
+      height: 6px;
+    }
+  }
+}

@@ -1,0 +1,72 @@
+<div class="season-widget" *ngIf="stats">
+
+  <!-- CABECERA: categoría -->
+  <div class="widget-header">
+    <div class="category-badge">
+      <ion-icon name="trophy-outline"></ion-icon>
+      <span>{{ stats.categoriaNombre || 'Liga' }}</span>
+    </div>
+    <span class="puntos-total">{{ stats.puntos }} pts</span>
+  </div>
+
+  <!-- TABLA DE STATS -->
+  <div class="stats-row">
+    <div class="stat-cell">
+      <span class="val">{{ stats.pj }}</span>
+      <span class="lbl">PJ</span>
+    </div>
+    <div class="stat-cell green">
+      <span class="val">{{ stats.g }}</span>
+      <span class="lbl">G</span>
+    </div>
+    <div class="stat-cell yellow">
+      <span class="val">{{ stats.e }}</span>
+      <span class="lbl">E</span>
+    </div>
+    <div class="stat-cell red">
+      <span class="val">{{ stats.p }}</span>
+      <span class="lbl">P</span>
+    </div>
+    <div class="stat-cell">
+      <span class="val">{{ stats.gf }}</span>
+      <span class="lbl">GF</span>
+    </div>
+    <div class="stat-cell">
+      <span class="val">{{ stats.gc }}</span>
+      <span class="lbl">GC</span>
+    </div>
+    <div class="stat-cell" [class.pos]="stats.gf > stats.gc" [class.neg]="stats.gf < stats.gc">
+      <span class="val">{{ diferencia }}</span>
+      <span class="lbl">DIF</span>
+    </div>
+  </div>
+
+  <!-- RACHA (últimos 5) -->
+  <div class="racha-row" *ngIf="stats.racha?.length">
+    <span class="racha-lbl">Forma</span>
+    <div class="racha-dots">
+      <div class="racha-dot"
+           *ngFor="let r of stats.racha"
+           [class]="rachaColor(r)"
+           [title]="r === 'V' ? 'Victoria' : r === 'E' ? 'Empate' : 'Derrota'">
+        {{ r }}
+      </div>
+    </div>
+  </div>
+
+  <!-- BARRA DE OBJETIVO (solo si hay objetivo definido) -->
+  <div class="objetivo-row" *ngIf="stats.puntosObjetivo">
+    <div class="objetivo-header">
+      <span class="objetivo-lbl">
+        <ion-icon name="flag-outline"></ion-icon>
+        Objetivo temporada
+      </span>
+      <span class="objetivo-val">{{ stats.puntos }} / {{ stats.puntosObjetivo }} pts</span>
+    </div>
+    <ion-progress-bar
+      [value]="progreso"
+      [color]="progreso >= 1 ? 'success' : 'secondary'">
+    </ion-progress-bar>
+  </div>
+
+</div>

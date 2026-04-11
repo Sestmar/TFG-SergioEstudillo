@@ -475,3 +475,16 @@ export interface PlayerHistory {
   convocatorias: PlayerHistoryConvocatoria[];
   incidencias: PlayerHistoryIncidencia[];
 }
+
+export interface SeasonStats {
+  pj: number;
+  g: number;
+  e: number;
+  p: number;
+  gf: number;
+  gc: number;
+  puntos: number;
+  puntosObjetivo: number | null;
+  categoriaNombre: string | null;
+  racha: string[];
+}
