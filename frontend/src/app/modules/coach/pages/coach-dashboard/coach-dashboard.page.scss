@@ -379,6 +379,28 @@
       .arrow-icon { color: white; opacity: 0.45; font-size: 1.1rem; }
     }
   }
+
+  // Enfermería en alerta
+  .action-card.card-alert {
+    border-color: rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.08);
+  }
+
+  // Tarjeta Goleador
+  .action-card.scorer-card {
+    .scorer-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 2px solid var(--gold); overflow: hidden;
+      margin-bottom: 8px; flex-shrink: 0;
+      img { width: 100%; height: 100%; object-fit: cover; }
+    }
+    .goal-chip {
+      font-size: 0.72rem; color: var(--gold); font-weight: 800;
+      background: rgba(245, 158, 11, 0.1);
+      padding: 2px 8px; border-radius: 6px;
+      margin-top: auto; width: fit-content;
+    }
+  }
 }
 
 // ─── MATCHES VIEW ─────────────────────────────────────────────────────────────

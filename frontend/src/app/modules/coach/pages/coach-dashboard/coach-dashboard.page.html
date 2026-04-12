@@ -48,7 +48,7 @@
         <div class="action-card big primary" style="pointer-events:none;">
           <ion-skeleton-text animated="true" style="width:100%;height:100%;border-radius:12px;min-height:80px;"></ion-skeleton-text>
         </div>
-        <div class="action-card small" *ngFor="let i of [1,2,3]" style="pointer-events:none;">
+        <div class="action-card small" *ngFor="let i of [1,2,3,4]" style="pointer-events:none;">
           <ion-skeleton-text animated="true" style="width:40px;height:40px;border-radius:50%;margin-bottom:8px;"></ion-skeleton-text>
           <ion-skeleton-text animated="true" style="width:70%;height:12px;border-radius:4px;margin-bottom:4px;"></ion-skeleton-text>
           <ion-skeleton-text animated="true" style="width:50%;height:10px;border-radius:4px;"></ion-skeleton-text>
@@ -158,44 +158,6 @@
           (editarClicked)="editarObjetivo()">
         </app-season-stats-widget>
 
-        <div class="status-grid animate-fade-in-up delay-1" *ngIf="managedTeamId">
-
-          <div class="status-card" [class.alert]="stats.injured > 0" (click)="navigateToAction('/coach/my-team')">
-            <div class="card-icon">
-              <ion-icon name="medkit"></ion-icon>
-            </div>
-            <div class="card-info">
-              <span class="label">Enfermería</span>
-              <span class="value" *ngIf="stats.injured === 0">Todo OK</span>
-              <span class="value danger" *ngIf="stats.injured > 0">{{ stats.injured }} Bajas</span>
-            </div>
-            <ion-icon name="chevron-forward" class="mini-arrow"></ion-icon>
-          </div>
-
-          <div class="status-card highlight" *ngIf="topScorer" (click)="goToStats()">
-            <div class="player-circle">
-              <img [src]="topScorer.usuario?.fotoUrl || topScorer.fotoUrl" onError="this.src='assets/img/default-avatar.png'">
-            </div>
-            <div class="card-info">
-              <span class="label">Goleador</span>
-              <span class="value name">{{ topScorer.usuario?.nombre || topScorer.nombre }}</span>
-            </div>
-            <div class="goal-badge">
-              ⚽ {{ topScorer.golesTemporada || topScorer.goles || 0 }}
-            </div>
-          </div>
-
-          <div class="status-card" *ngIf="!topScorer" (click)="goToStats()">
-            <div class="card-icon blue">
-              <ion-icon name="trending-up"></ion-icon>
-            </div>
-            <div class="card-info">
-              <span class="label">Rendimiento</span>
-              <span class="value">Sin datos</span>
-            </div>
-          </div>
-
-        </div>
 
         <div class="section-title">
           <h3>Panel de Gestión</h3>
@@ -218,12 +180,15 @@
             </div>
           </div>
 
-          <div class="action-card small" (click)="navigateToAction('/coach/my-team')">
-            <div class="icon-circle secondary">
+          <div class="action-card small" [class.card-alert]="stats.injured > 0" (click)="navigateToAction('/coach/my-team')">
+            <div class="icon-circle"
+                 [style.background]="stats.injured > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)'"
+                 [style.color]="stats.injured > 0 ? '#ef4444' : '#10b981'">
               <ion-icon name="medkit-outline"></ion-icon>
             </div>
             <span class="title">Enfermería</span>
-            <span class="desc">Ver lesionados</span>
+            <span class="desc" *ngIf="stats.injured === 0">Todo OK</span>
+            <span class="desc" *ngIf="stats.injured > 0" style="color: #ef4444; font-weight: 700;">{{ stats.injured }} Bajas</span>
           </div>
 
           <div class="action-card small" (click)="setView('matches')" data-test="card-proximos-partidos">
@@ -243,6 +208,24 @@
             <ion-badge *ngIf="((noLeidos$ | async) ?? 0) > 0" color="danger" class="chat-badge">
               {{ noLeidos$ | async }}
             </ion-badge>
+          </div>
+
+          <div class="action-card small scorer-card" *ngIf="topScorer" (click)="goToStats()">
+            <div class="scorer-avatar">
+              <img [src]="topScorer.usuario?.fotoUrl || topScorer.fotoUrl"
+                   (error)="$any($event.target).onerror=null; $any($event.target).src='assets/img/default-avatar.png'">
+            </div>
+            <span class="title">{{ topScorer.usuario?.nombre || topScorer.nombre }}</span>
+            <span class="desc">Top Goleador</span>
+            <span class="goal-chip">⚽ {{ topScorer.golesTemporada || topScorer.goles || 0 }}</span>
+          </div>
+
+          <div class="action-card small" *ngIf="!topScorer" (click)="goToStats()">
+            <div class="icon-circle" style="background: rgba(37, 99, 235, 0.15); color: var(--accent-blue);">
+              <ion-icon name="trending-up"></ion-icon>
+            </div>
+            <span class="title">Rendimiento</span>
+            <span class="desc">Sin datos</span>
           </div>
 
         </div>
