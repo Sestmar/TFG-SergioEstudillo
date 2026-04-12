@@ -32,6 +32,12 @@ const routes: Routes = [
     loadChildren: () => import('./modules/players/pages/player-dashboard/player-dashboard.module').then(m => m.PlayerDashboardPageModule),
     canActivate: [AuthGuard]
   },
+  {
+    path: 'player-performance',
+    loadChildren: () => import('./modules/players/pages/player-performance/player-performance.module').then(m => m.PlayerPerformancePageModule),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['JUGADOR'] }
+  },
 
   // ENTRENADOR (DASHBOARD)
   {

@@ -1,0 +1,27 @@
+<ion-content class="perf-bg">
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading-state">
+    <ion-spinner name="crescent" color="secondary"></ion-spinner>
+    <p>Cargando rendimiento...</p>
+  </div>
+
+  <div *ngIf="!loading" class="perf-layout">
+
+    <!-- HEADER -->
+    <div class="perf-header">
+      <ion-button fill="clear" (click)="goBack()" class="back-btn">
+        <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+      </ion-button>
+      <span class="page-title">Mi Rendimiento</span>
+    </div>
+
+    <!-- Contenido principal — se rellena en T2, T3, T4 -->
+    <div class="placeholder-state">
+      <ion-icon name="analytics-outline"></ion-icon>
+      <p>Página en construcción — T2 pendiente</p>
+    </div>
+
+  </div>
+
+</ion-content>
