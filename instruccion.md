@@ -1,28 +1,27 @@
-¡Brutal el resultado de la Fase 2, Claude! El Dashboard de Inteligencia ha quedado a un nivel altísimo. 
+⚠️ **CRITICAL BUGFIX: RADAR NaN & SHIELD LOOP**
 
-Ahora vamos a rematar el plan con la **Fase 3: Match Insights & Official Press Kit**. Queremos que el cierre de un partido sea un evento de "Generación de Valor" para el club.
+Claude, hay dos errores técnicos que están bloqueando la visualización Pro. Debes corregirlos de forma quirúrgica:
 
-### 📝 Tareas para Fase 3:
+### 1. Error `NaN,NaN` en Radar (Match Insights)
+El error `<polygon> attribute points: Expected number` ocurre porque ApexCharts recibe valores `NaN`. El operador `??` no protege contra `NaN`.
 
-1. **Nueva Página: `match-insights/:id`**
-   - Crea la página en `src/app/modules/coach/pages/match-insights`.
-   - Registra la ruta en `app-routing.module.ts`.
-   - **Diseño**: Sigue la línea "Night Stadium Pro". 
-   - **Contenido Central**: 
-     - **Radar Chart Comparativo**: Un gráfico de tela de araña que compare el desempeño de **ESTE partido** (línea sólida neón) contra el **Promedio de la Temporada** (sombra suave de fondo). 
-     - Ejes: Eficacia Goleadora, Solidez Defensiva (Goles recibidos), Disciplina (Tarjetas), Generación (Asistencias).
-     - **Match Highlights**: Resumen de los hitos del partido (Goleador del partido, Portería a cero, etc.).
+**Solución**:
+- En `buildRadar()`, define este helper ultra-seguro: 
+  `const sn = (n: any): number => { const v = Number(n); return isFinite(v) ? v : 0; };`
+- Asegúrate de que `pj` (partidos jugados) sea siempre al menos 1: 
+  `const pj = Math.max(1, sn(s?.pj || 1));`
+- Aplica `sn()` a **CADA** valor que entre al array de datos del radar (tanto `matchData` como `avgData`).
+- **IMPORTANTE**: Desactiva las animaciones del radar también en el método `emptyRadar()` (initial state) para evitar colisiones de renderizado.
 
-2. **Integración en el Flujo de Cierre (`EditMatchPage`)**:
-   - Modifica el método `cerrarActaOficial()` en `edit-match.page.ts`.
-   - Tras el éxito del cierre, en lugar de un simple toast, muestra un `AlertController` con un diseño elegante que diga: *"¡Acta Cerrada con Éxito! ¿Deseas explorar el análisis técnico de este encuentro?"*.
-   - Añade un botón: **"Ver Match Insights"** que navegue a la nueva página.
+### 2. Infinite Loop en Escudo Rival
+El error de consola muestra que cuando un escudo falla, el `(error)` dispara un nuevo error, creando un bucle infinito.
 
-3. **Generador de Ficha de Prensa (Press Kit)**:
-   - Añade un botón "Generar Ficha Oficial" en la página de `match-insights`.
-   - Utiliza el `PdfService` (o un canvas) para generar una imagen/PDF con diseño de prensa: Escudos grandes, marcador con tipografía premium, fecha, lugar y goleadores. Algo que el club pueda subir a Instagram/WhatsApp en el acto.
+**Solución**:
+En el HTML, cambia los `(error)` de las imágenes por este patrón seguro:
+`(error)="$any($event.target).onerror=null; $any($event.target).src='assets/img/default-team.png'"`
+(Sustituye `default-team.png` por el fallback real que estés usando).
 
-4. **Lógica de Datos**:
-   - Para el Radar Chart, la página deberá llamar a dos endpoints: `getMatchById` (para los datos del partido actual) y `getSeasonStats` (para obtener las medias de la temporada y poder compararlas).
+### 3. Ajuste de Tipografía SCSS
+Asegúrate de que la variable `$mono` esté definida al principio de todo en el bloque de variables de los archivos `.scss`, de lo contrario fallará la compilación top-down.
 
-**Enfoque**: Mantén la estética sobria y técnica. No buscamos adornos, buscamos "Analytics de Élite". ¡Dale gas, esperamos tu confirmación para ver esta maravilla terminada!
+🛑 **INSTRUCCIÓN**: Aplica estos parches en `MatchInsightsPage`. No des por cerrada la tarea hasta que el Radar se vea perfectamente con datos reales.

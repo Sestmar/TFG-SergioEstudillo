@@ -43,12 +43,12 @@ const routes: Routes = [
 
   // --- OTRAS RUTAS DE COACH ---
 
-  // SEASON INTELLIGENCE
+  // SEASON INTELLIGENCE (Coach + Jugador)
   {
     path: 'coach/season-intelligence',
     loadChildren: () => import('./modules/coach/pages/season-intelligence/season-intelligence.module').then(m => m.SeasonIntelligencePageModule),
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: ['ADMIN', 'ENTRENADOR'] }
+    data: { roles: ['ADMIN', 'ENTRENADOR', 'JUGADOR'] }
   },
 
   // ESTADÍSTICAS DE EQUIPO
@@ -116,6 +116,14 @@ const routes: Routes = [
   },
 
   // --- COMUNES ---
+
+  // MATCH INSIGHTS (Coach + Jugador)
+  {
+    path: 'match-insights/:id',
+    loadChildren: () => import('./modules/match-insights/match-insights.module').then(m => m.MatchInsightsPageModule),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'ENTRENADOR', 'JUGADOR'] }
+  },
 
   {
     path: 'profile',

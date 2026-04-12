@@ -1,0 +1,514 @@
+$bg-deep:      #0a0e1a;
+$glass-bg:     rgba(255, 255, 255, 0.04);
+$glass-border: rgba(255, 255, 255, 0.08);
+$neon:         #a855f7;
+$text-hi:      #f1f5f9;
+$text-mid:     #94a3b8;
+$text-lo:      #475569;
+$green:        #22c55e;
+$yellow:       #eab308;
+$red:          #ef4444;
+$blue:         #3b82f6;
+$mono:         ui-monospace, 'SF Mono', 'Fira Code', 'Courier New', monospace;
+
+.insights-bg {
+  --background:
+    repeating-linear-gradient(0deg,   transparent, transparent 39px, rgba(168,85,247,0.035) 40px),
+    repeating-linear-gradient(90deg,  transparent, transparent 39px, rgba(168,85,247,0.035) 40px),
+    #{$bg-deep};
+}
+
+// ─── SCANLINE SWEEP ──────────────────────────────────────────────────────────
+@keyframes scanline {
+  0%   { top: 0%;    opacity: 0; }
+  4%   { opacity: 1; }
+  96%  { opacity: 1; }
+  100% { top: 100%;  opacity: 0; }
+}
+
+.mi-layout {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.glass {
+  background:
+    linear-gradient($glass-bg, $glass-bg) padding-box,
+    linear-gradient(135deg, rgba(168,85,247,0.3) 0%, rgba(255,255,255,0.05) 45%, rgba(168,85,247,0.12) 100%) border-box;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: -1px;
+    width: 14px; height: 14px;
+    border-top: 1.5px solid rgba(168,85,247,0.65);
+    border-left: 1.5px solid rgba(168,85,247,0.65);
+    border-radius: 16px 0 0 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 0%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(168,85,247,0.2) 25%, rgba(255,255,255,0.18) 50%, rgba(168,85,247,0.2) 75%, transparent 100%);
+    animation: scanline 8s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 5;
+  }
+}
+
+// ─── HEADER ──────────────────────────────────────────────────────────────────
+.mi-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 4px;
+
+  .back-btn {
+    background: $glass-bg;
+    border: 1px solid $glass-border;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $text-hi;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .header-title {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    .title-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; color: $neon; }
+    .title-sub   { font-size: 0.85rem; color: $text-mid; margin-top: 1px; }
+  }
+}
+
+.resultado-badge {
+  font-size: 1rem;
+  font-weight: 900;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.victoria { background: rgba(34,197,94,0.15); color: $green; border: 1.5px solid $green; }
+  &.empate   { background: rgba(234,179,8,0.15);  color: $yellow; border: 1.5px solid $yellow; }
+  &.derrota  { background: rgba(239,68,68,0.15);  color: $red;   border: 1.5px solid $red; }
+}
+
+// ─── SCOREBOARD LCD ──────────────────────────────────────────────────────────
+.scoreboard {
+  padding: 20px 12px 16px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(168,85,247,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+}
+
+.scoreboard-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.shield-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 70px;
+
+  .shield-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: $text-lo;
+    text-transform: uppercase;
+    font-family: $mono;
+  }
+}
+
+.shield-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1.5px solid rgba(168, 85, 247, 0.25);
+  filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.4));
+
+  &.rival-shield {
+    background: rgba(148, 163, 184, 0.08);
+    border-color: rgba(148, 163, 184, 0.2);
+    filter: drop-shadow(0 0 8px rgba(148, 163, 184, 0.2));
+  }
+}
+
+.shield-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.score-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.score-lcd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;
+
+  .score-digit {
+    font-size: 3.8rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: $text-hi;
+    text-shadow: 0 0 20px rgba(255,255,255,0.15);
+    letter-spacing: -2px;
+  }
+
+  .score-sep {
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: $text-lo;
+    margin-top: -4px;
+  }
+
+  &.victoria .score-digit {
+    color: $green;
+    text-shadow: 0 0 24px rgba(34, 197, 94, 0.5);
+  }
+  &.empate .score-digit {
+    color: $yellow;
+    text-shadow: 0 0 24px rgba(234, 179, 8, 0.5);
+  }
+  &.derrota .score-digit {
+    color: $red;
+    text-shadow: 0 0 24px rgba(239, 68, 68, 0.5);
+  }
+}
+
+.score-rival-name {
+  font-size: 0.78rem;
+  color: $text-mid;
+  font-weight: 500;
+  text-align: center;
+}
+
+.score-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.65rem;
+  color: $text-lo;
+  font-family: $mono;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    ion-icon { font-size: 0.75rem; }
+  }
+}
+
+// ─── KPI ROW ─────────────────────────────────────────────────────────────────
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.kpi-mini {
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+
+  ion-icon {
+    font-size: 1.2rem;
+    &.icon-green  { color: $green; }
+    &.icon-yellow { color: $yellow; }
+    &.icon-blue   { color: $blue; }
+    &.icon-dim    { color: $text-lo; }
+  }
+
+  .kpi-v {
+    font-size: 1rem;
+    font-weight: 800;
+    color: $text-hi;
+    line-height: 1;
+    font-family: $mono;
+  }
+
+  .kpi-l {
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: $text-lo;
+    text-transform: uppercase;
+    text-align: center;
+    font-family: $mono;
+  }
+}
+
+// ─── CHART CARD ──────────────────────────────────────────────────────────────
+.chart-card {
+  padding: 16px;
+
+  // El scanline animado crea un GPU composite layer que oculta el SVG de ApexCharts.
+  // Se desactiva en los cards con gráficos para evitar el conflicto de stacking.
+  &.glass::after { content: none; }
+}
+
+.chart-header {
+  margin-bottom: 8px;
+  .chart-title {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: $neon;
+    text-transform: uppercase;
+  }
+  .chart-sub {
+    display: block;
+    font-size: 0.75rem;
+    color: $text-lo;
+    margin-top: 2px;
+    .vs-sep { color: $neon; font-weight: 600; }
+  }
+}
+
+.radar-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: $text-lo;
+  margin-top: 8px;
+  ion-icon { color: $neon; }
+}
+
+// ─── DETAIL CARD ─────────────────────────────────────────────────────────────
+.detail-card { padding: 14px 16px; }
+
+// ─── SCORER CARDS (FIFA STYLE) ────────────────────────────────────────────────
+.scorer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.scorer-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+.scorer-rank {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: $text-lo;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+  &.gold { color: #eab308; text-shadow: 0 0 8px rgba(234, 179, 8, 0.6); }
+}
+
+.scorer-avatar-wrap { position: relative; flex-shrink: 0; }
+
+.scorer-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(168, 85, 247, 0.4);
+  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.35));
+}
+
+.scorer-name {
+  flex: 1;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: $text-hi;
+}
+
+.scorer-goals {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+
+  .scorer-ball {
+    font-size: 1rem;
+    color: $green;
+    filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.6));
+  }
+
+  .scorer-count {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: $green;
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+  }
+}
+
+// ─── DISCIPLINE CARDS ────────────────────────────────────────────────────────
+@keyframes pulse-yellow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(234,179,8,0);    border-color: rgba(234,179,8,0.25); }
+  50%       { box-shadow: 0 0 14px 2px rgba(234,179,8,0.25); border-color: rgba(234,179,8,0.7); }
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0);    border-color: rgba(239,68,68,0.25); }
+  50%       { box-shadow: 0 0 16px 3px rgba(239,68,68,0.3);  border-color: rgba(239,68,68,0.75); }
+}
+
+.discipline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.discipline-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+
+  &.has-yellow { animation: pulse-yellow 2.2s ease-in-out infinite; }
+  &.has-red    { animation: pulse-red    1.8s ease-in-out infinite; }
+}
+
+.discipline-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: $glass-border;
+}
+
+.discipline-name {
+  flex: 1;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: $text-hi;
+}
+
+.discipline-cards {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.disc-card {
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 3px 7px;
+  border-radius: 4px;
+
+  &.yellow {
+    background: rgba(234, 179, 8, 0.15);
+    color: #eab308;
+    border: 1px solid rgba(234, 179, 8, 0.4);
+  }
+  &.red {
+    background: rgba(239, 68, 68, 0.15);
+    color: $red;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+  }
+}
+
+// ─── PRESS KIT BUTTON ────────────────────────────────────────────────────────
+.presskit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  border-radius: 14px;
+  color: #a78bfa;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:active { background: rgba(168, 85, 247, 0.2); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  ion-icon { font-size: 1.1rem; }
+
+  .pk-badge {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    background: $neon;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+}
+
+// ─── EMPTY STATE ─────────────────────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  gap: 12px;
+  color: $text-lo;
+  ion-icon { font-size: 3rem; }
+  p { font-size: 0.9rem; }
+}

@@ -653,3 +653,299 @@ Paleta de resultados: victoria `#4ade80`, empate `#fbbf24`, derrota `#f87171`. B
 | `player-dashboard.module.ts` | Import del widget standalone |
 | `player-dashboard.page.ts` | Propiedad `seasonStats`, carga en `loadPlayerProfile()` |
 | `player-dashboard.page.html` | Widget read-only entre identity card y acciones |
+
+---
+
+## Mejora 6 — Season Intelligence Suite + Match Insights Visual Upgrade
+
+**Estado:** Completado  
+**Rama:** preprod  
+**Fecha de cierre:** 2026-04-12
+
+### Objetivo
+
+Evolucionar la tarjeta de estadísticas básica a un sistema de inteligencia táctica profesional con dos páginas dedicadas, gráficos interactivos, PDF exportable y diseño "Night Stadium Pro".
+
+---
+
+### Fase A — Expansión del Backend (SeasonStatsDto)
+
+**Contexto:** El DTO original solo tenía PJ/G/E/P/GF/GC/Puntos. Se necesitaban datos analíticos para alimentar los gráficos.
+
+**`SeasonStatsDto.java`** — Nuevos campos:
+```java
+private List<MatchSummaryDto> historialCompleto;  // Últimos 15 partidos
+private int cleanSheets;
+private double promedioGolesFavor;
+private double promedioGolesContra;
+private int mayorRachaVictorias;
+private int tarjetasAmarillasTotal;
+private int tarjetasRojasTotal;
+private int asistenciasTotal;
+```
+
+**`EquipoService.getSeasonStats()`** — Refactor completo: un único loop sobre los partidos con inyección de `AlineacionRepository` para tarjetas y asistencias. El historial se limita a los últimos 15 partidos en orden cronológico inverso.
+
+**`AlineacionRepository`** — Query derivada añadida:
+```java
+List<Alineacion> findByPartido_IdPartidoAndEquipo_IdEquipo(Long idPartido, Integer idEquipo);
+```
+
+---
+
+### Fase B — Season Intelligence Page (`/coach/season-intelligence`)
+
+**Acceso:** ADMIN, ENTRENADOR, JUGADOR  
+**Módulo:** `season-intelligence.module.ts` con `NgApexchartsModule`
+
+#### Detección de Rol
+```typescript
+const isJugador = this.authService.hasRole('JUGADOR');
+// Jugador usa getPlayerTeamByUserId() — coach usa getDashboardData()
+// Razón: /api/equipos/** GET es permitAll() en SecurityConfig
+```
+
+#### Sparkline de Rendimiento
+Doble serie: puntos acumulados (sólido) + puntos por jornada (dashed). Fuente: `historialCompleto` del DTO.
+
+#### Radar de Excelencia (5 ejes, escala 0–100)
+| Eje | Fórmula |
+|-----|---------|
+| Ataque | `promedio_goles_favor × 25` |
+| Defensa | `cleanSheets / pj × 100` |
+| Disciplina | `100 - (am/pj × 20) - (rj/pj × 40)` |
+| Asistencias | `asistencias_total / pj × 25` |
+| Eficacia | `victorias / pj × 100` |
+
+#### Pace Analytics (Análisis Predictivo)
+```typescript
+readonly TOTAL_PARTIDOS = 34;
+get proyeccionFinal() { return Math.round((puntos/pj) * 34); }
+get paceStatus(): 'on-track' | 'at-risk' | 'no-objetivo'
+```
+Visual: barra con extensión proyectada (dashed) + línea vertical de objetivo (verde) + shimmer animado.
+
+#### Hero Points Card
+Nueva sección `.si-hero` con puntos totales `4.2rem` en glow neón morado + record W/D/L con colores semánticos.
+
+---
+
+### Fase C — Match Insights Page (`/match-insights/:id`)
+
+**Acceso:** ADMIN, ENTRENADOR, JUGADOR
+
+#### Carga Resiliente (Promise.allSettled)
+```typescript
+const [lineup, seasonStats] = await Promise.allSettled([
+  firstValueFrom(matchSvc.getLineup(matchId)),
+  equipoId ? firstValueFrom(coachSvc.getSeasonStats(equipoId)) : Promise.resolve(null)
+]);
+// Degradación elegante si no hay lineup o si el equipo no tiene stats de temporada
+```
+
+#### Scoreboard LCD
+Layout flex tres columnas: escudo local / marcador / escudo rival. Marcador `3.8rem` con `text-shadow` semántico por resultado (verde/amarillo/rojo).
+
+#### Radar Comparativo — Diseño e Implementación Final
+
+**4 ejes:** Ataque / Defensa / Disciplina / Generación  
+**2 series:** `Este partido` vs `Media de temporada`, normalizadas a escala 0–100 (idéntica al Radar de Excelencia de Season Intelligence).
+
+**Fórmulas de normalización por eje:**
+
+| Eje | Este partido | Media temporada |
+|-----|-------------|-----------------|
+| Ataque | `golesFavor × 25` (cap 100) | `promedioGolesFavor × 25` |
+| Defensa | `cleanSheetMatch ? 100 : 0` | `cleanSheets / pj × 100` |
+| Disciplina | `100 - (am × 20) - (rj × 40)` | `100 - (am/pj × 20) - (rj/pj × 40)` |
+| Generación | `asistencias × 25` (cap 100) | `asistenciasTotal / pj × 25` |
+
+**Guard NaN ultra-seguro** — `??` no protege contra `NaN` en JavaScript. Si `Math.max(1, valor)` recibe un valor no numérico (ej. string del backend), devuelve `NaN`, que contamina todas las divisiones posteriores:
+
+```typescript
+const sn = (n: any): number => { const v = Number(n); return isFinite(v) ? v : 0; };
+const pj = Math.max(1, sn(s?.pj));  // pj también pasa por sn()
+const safe = (arr: number[]) => arr.map(v => isFinite(v) ? v : 0);  // capa final
+```
+
+**Decisión arquitectural:** Ver sección "Resolución Final del Radar: SVG Nativo" más abajo.
+
+#### Press Kit PDF
+`PdfService.generarMatchCardPDF(partido, lineup)` — sección scoreboard oscura + metadata + goleadores/asistencias + disciplina. Exportado con `html2canvas` + `jsPDF`.
+
+#### Integración de Navegación
+- **Match Detail**: botón "Analytics" visible solo cuando `estado === 'FINALIZADO'`
+- **Edit Match**: al cerrar acta, `AlertController` ofrece ir directamente a Match Insights
+
+---
+
+### Upgrade Visual — Night Stadium Pro
+
+#### Sistema de Tokens SCSS
+```scss
+$bg-deep: #0a0e1a;  $neon: #a855f7;  $glass-bg: rgba(255,255,255,0.04);
+$green: #22c55e;    $yellow: #eab308; $red: #ef4444;
+$mono: ui-monospace, 'SF Mono', 'Fira Code', 'Courier New', monospace;
+// CRÍTICO: $mono debe declararse en el bloque de tokens (línea 1), no a mitad
+// del archivo. SCSS procesa top-down y variables usadas antes de su declaración
+// producen "Undefined variable" en tiempo de compilación.
+```
+
+#### Paso 1 — Scoreboards e Identidad
+- Match Insights: scoreboard LCD con escudos con `drop-shadow` neón
+- Season Intelligence: hero card con puntos `4.2rem` + glow triple + PRO badge pill
+
+#### Paso 2 — Glassmorphism 2.0
+- Cyber-grid: `repeating-linear-gradient` doble en `--background` de `ion-content`
+- Gradient border con `background-clip: padding-box / border-box`
+- `backdrop-filter: blur(25px)`
+- Bracket corner top-left via `::before`
+
+#### Paso 3 — Living Data
+- Counter animations: ease-out cúbico con `requestAnimationFrame`, valores escalonados
+- Sparkline: `animations: { enabled: true, speed: 1200, animateGradually: { delay: 120 } }`
+- Radar: `animations: { enabled: false }` (ver nota en Fase C)
+- Pace bar: `@keyframes pace-shimmer` con `background-size: 200%` en loop 2.5s
+
+#### Paso 4 — Elite Micro-Cards
+- Goleadores: rank dorado para #1, avatar con border neón, ícono balón con drop-shadow verde
+- Disciplina: `@keyframes pulse-yellow` / `pulse-red` en bordes de cards por 2.2s/1.8s
+- KPI Season Intelligence: `.kpi-card--shield` (verde) / `--trend` (neón) / `--trophy` (dorado)
+
+#### Paso 5 — Scanlines & Technical Overlays
+```scss
+@keyframes scanline {
+  0% { top:0%; opacity:0; } 4% { opacity:1; } 96% { opacity:1; } 100% { top:100%; opacity:0; }
+}
+// Excluido de .chart-card: GPU composite layer del pseudo-elemento animado
+// puede ocluir el SVG de ApexCharts en Chrome (la capa se dimensiona contra
+// el bounding box del padre, no contra el height:1px del pseudo-elemento).
+.chart-card.glass::after { content: none; }
+```
+
+---
+
+### Resolución Final del Radar: SVG Nativo
+
+#### El problema real — ApexCharts + Ionic Lazy Loading
+
+Tras múltiples iteraciones de debug, `console.log` confirmó que `seasonStats` llegaba correctamente con todos los valores. El radar seguía mostrando `<polygon> attribute points: Expected number, "NaN,NaN"`. La causa raíz no estaba en los datos.
+
+**Root cause:** `match-insights` es un módulo lazy-loaded independiente (`loadChildren` en `app-routing`). Cuando el usuario navega a `/match-insights/:id`, el bundle de `ng-apexcharts` se descarga por primera vez. El componente Angular inicializa y ejecuta `buildRadar()` antes de que el inicializador de ApexCharts termine de ejecutarse — el chart intenta calcular coordenadas SVG con dimensiones `0 × 0` → `NaN` en todos los polygon points.
+
+**Por qué funciona en Season Intelligence y no en Match Insights:**
+
+Season Intelligence es accedida típicamente desde el dashboard del entrenador, que en el mismo flujo de navegación ya visitó `team-stats` o `player-dashboard` — ambas páginas también importan `NgApexchartsModule`. El bundle de ApexCharts ya está en memoria del browser cuando llegan a season-intelligence. Match Insights puede ser la **primera ruta del usuario que carga ApexCharts** en la sesión (acceso directo desde el listado de partidos), sin caché previo del bundle.
+
+| Módulo | NgApexchartsModule | Primera carga típica | Resultado |
+|--------|--------------------|----------------------|-----------|
+| `team-stats` | ✓ | Desde coach dashboard | Bundle cacheado |
+| `player-dashboard` | ✓ | Desde login | Bundle cacheado |
+| `season-intelligence` | ✓ | Siempre después de team-stats o player-dashboard | OK |
+| `match-insights` | ✓ (eliminado) | Potencialmente primera ruta con ApexCharts | FALLO |
+
+**Intentos previos antes de la solución final:**
+
+1. `animations: { enabled: false }` — no resuelve el timing del bundle
+2. `emptyRadar()` con animaciones deshabilitadas — no resuelve
+3. `ionViewWillEnter` → `ionViewDidEnter` + `setTimeout(100)` — mejora marginal, falla en dispositivos lentos
+4. Contenedor `height: 350px` explícito + `*ngIf` con guard de datos — no resuelve el timing del bundle
+
+#### Decisión: Migración a SVG Nativo
+
+Se eliminó `NgApexchartsModule` de `match-insights.module.ts` y se reemplazó el `<apx-chart>` por un `<svg>` generado con trigonometría Angular inline.
+
+**Implementación del generador de polygon points:**
+
+```typescript
+// Convierte array de valores 0–100 a polygon points SVG para N ejes
+radarPoints(data: number[]): string {
+  const cx = 150, cy = 150, r = 100, n = data.length;
+  return data.map((v, i) => {
+    const angle = (2 * Math.PI * i / n) - Math.PI / 2;
+    const x = cx + r * (v / 100) * Math.cos(angle);
+    const y = cy + r * (v / 100) * Math.sin(angle);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+}
+```
+
+Para 4 ejes, el eje 0 empieza en `-π/2` (arriba), y cada eje gira `2π/4 = 90°` en sentido horario: Ataque (arriba), Defensa (derecha), Disciplina (abajo), Generación (izquierda). El grid son 5 polígonos estáticos al 100/80/60/40/20% — para 4 ejes con ángulos rectos, son rombos con vértices fijos computados de antemano en el HTML.
+
+**Template SVG:**
+
+```html
+<svg viewBox="0 0 300 300" style="width:100%;max-width:300px;display:block;margin:0 auto;">
+  <!-- Grid estático (5 niveles) -->
+  <polygon points="150,50 250,150 150,250 50,150" fill="rgba(168,85,247,0.03)" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+  <!-- ... 4 polígonos más para 80/60/40/20% ... -->
+  <!-- Ejes -->
+  <line x1="150" y1="150" x2="150" y2="50" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <!-- ... 3 ejes más ... -->
+  <!-- Media temporada (dashed) -->
+  <polygon [attr.points]="radarPoints(radarAvg)" fill="rgba(148,163,184,0.10)"
+           stroke="rgba(148,163,184,0.55)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <!-- Este partido (sólido) -->
+  <polygon [attr.points]="radarPoints(radarMatch)" fill="rgba(168,85,247,0.22)"
+           stroke="#a855f7" stroke-width="2"/>
+  <!-- Etiquetas posicionadas fuera de los vértices -->
+  <text x="150" y="33" text-anchor="middle" fill="#94a3b8" font-size="11">Ataque</text>
+  <!-- ... 3 etiquetas más ... -->
+</svg>
+```
+
+**Comparativa ApexCharts vs SVG Nativo para este caso:**
+
+| Característica | ApexCharts | SVG Nativo |
+|---|---|---|
+| Tiempo de renderizado | Depende de bundle lazy | Instantáneo (DOM nativo) |
+| Dependencia externa | ng-apexcharts + apexcharts | Ninguna |
+| Tooltips al hover | ✓ | ✗ |
+| Animación de entrada | ✓ | ✗ |
+| Grid + polígonos + labels | ✓ | ✓ |
+| Leyenda | ✓ | ✓ (inline) |
+| Fiabilidad en lazy modules | ✗ (timing issue) | ✓ |
+| Tamaño de bundle | +~200KB | +0KB |
+
+Para un radar comparativo de 4 métricas sin interactividad crítica, las ventajas de SVG nativo superan ampliamente las pérdidas (tooltip y animación de entrada).
+
+---
+
+### Bugs Resueltos
+
+| Bug | Causa raíz | Fix |
+|-----|-----------|-----|
+| Radar NaN en polygon points | ApexCharts bundle carga lazy después del render del componente — dimensiones `0×0` en el init → coordenadas NaN | Migración completa a SVG nativo (eliminado ApexCharts de match-insights) |
+| `Math.max(1, pj)` devuelve NaN | `Math.max` con valor no numérico (ej. string del backend) propaga NaN. `??` no filtra NaN, solo null/undefined | `const pj = Math.max(1, sn(s?.pj))` — pj también pasa por el helper `sn()` |
+| Escudo rival en loop infinito | `(error)` setea `src` a imagen fallida sin cortar el evento → nuevo error → loop | `(error)="$any($event.target).onerror=null; $any($event.target).src='fallback'"` |
+| Avatar goleadores/disciplina en loop | Mismo patrón — `(error)` sin `onerror=null` previo | Mismo fix aplicado a todos los `<img>` con fallback |
+| `$mono` undefined en SCSS | Variable declarada a mitad del archivo, usada antes en top-down compilation | Movida al bloque de tokens, línea 1 del archivo |
+| `victorias`/`empates` TypeScript error | `SeasonStats` usa campos `g`/`e`/`p` (no nombres completos en español) | Acceso correcto: `s.g`, `s.e`, `s.p` en `runCounterAnimations()` |
+| Jugador sin acceso a Season Intelligence | Usaba `getDashboardData` (endpoint exclusivo coach) | `hasRole('JUGADOR')` → rama alternativa con `getPlayerTeamByUserId` |
+| `animateGradually` en radar ApexCharts | Opción diseñada para bar/area charts — en radar produce polígono incompleto | Eliminado del objeto de configuración del radar |
+
+---
+
+### Archivos Modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `SeasonStatsDto.java` | +8 campos analíticos |
+| `EquipoService.java` | Refactor `getSeasonStats()` completo |
+| `AlineacionRepository.java` | Query derivada por partido y equipo |
+| `models.ts` | Interface `MatchSummary` + extensión `SeasonStats` |
+| `season-intelligence.page.ts` | Página nueva completa (charts + pace + counters) |
+| `season-intelligence.page.html` | Template con sparkline, radar, pace track, hero |
+| `season-intelligence.page.scss` | Sistema visual Night Stadium Pro |
+| `season-intelligence.module.ts` | NgApexchartsModule |
+| `match-insights.page.ts` | Página nueva: scoreboard LCD, counter animations, `radarPoints()` SVG, `buildRadar()` con guards NaN |
+| `match-insights.page.html` | Scoreboard LCD + KPI row + radar SVG nativo + FIFA scorer cards + disciplina + press kit |
+| `match-insights.page.scss` | Sistema visual Night Stadium Pro |
+| `match-insights.module.ts` | `NgApexchartsModule` eliminado — radar migrado a SVG nativo |
+| `season-stats-widget.component.*` | Link "Intelligence Pro" + `mostrarIntelligence` input |
+| `coach-dashboard.page.html` | `[mostrarIntelligence]="true"` |
+| `player-dashboard.page.html` | `[mostrarIntelligence]="true"` |
+| `edit-match.page.ts` | AlertController post-cierre con nav a Match Insights |
+| `match-detail.page.html` | Botón Analytics (solo estado FINALIZADO) |
+| `pdf.service.ts` | `generarMatchCardPDF()` |
+| `app-routing.module.ts` | Rutas `season-intelligence` y `match-insights/:id` |

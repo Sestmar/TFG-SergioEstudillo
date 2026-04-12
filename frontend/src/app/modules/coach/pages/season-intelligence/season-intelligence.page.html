@@ -34,26 +34,56 @@
         <span class="title-label">SEASON INTELLIGENCE</span>
         <span class="title-sub">{{ stats.categoriaNombre || 'Temporada Actual' }}</span>
       </div>
-      <div class="header-badge">PRO</div>
+      <div class="header-badge">
+        <ion-icon name="analytics-outline"></ion-icon>
+        PRO
+      </div>
+    </div>
+
+    <!-- HERO PUNTOS -->
+    <div class="si-hero glass">
+      <div class="si-hero-points">
+        <span class="hero-pts-val">{{ displayPuntos }}</span>
+        <span class="hero-pts-lbl">PUNTOS</span>
+      </div>
+      <div class="si-hero-divider"></div>
+      <div class="si-hero-record">
+        <div class="hero-record-item">
+          <span class="hero-rec-val">{{ displayPj }}</span>
+          <span class="hero-rec-lbl">PJ</span>
+        </div>
+        <div class="hero-record-item win">
+          <span class="hero-rec-val">{{ displayVictorias }}</span>
+          <span class="hero-rec-lbl">V</span>
+        </div>
+        <div class="hero-record-item draw">
+          <span class="hero-rec-val">{{ displayEmpates }}</span>
+          <span class="hero-rec-lbl">E</span>
+        </div>
+        <div class="hero-record-item loss">
+          <span class="hero-rec-val">{{ displayDerrotas }}</span>
+          <span class="hero-rec-lbl">D</span>
+        </div>
+      </div>
     </div>
 
     <!-- KPI CARDS -->
     <div class="kpi-grid">
 
-      <div class="kpi-card glass">
-        <span class="kpi-value">{{ stats.cleanSheets ?? 0 }}</span>
-        <span class="kpi-label">Vallas Invictas</span>
+      <div class="kpi-card glass kpi-card--shield">
+        <span class="kpi-value">{{ displayCleanSheets }}</span>
+        <span class="kpi-label">Port. cero</span>
         <ion-icon name="shield-checkmark-outline" class="kpi-icon"></ion-icon>
       </div>
 
-      <div class="kpi-card glass">
-        <span class="kpi-value">{{ stats.mayorRachaVictorias ?? 0 }}</span>
+      <div class="kpi-card glass kpi-card--trend">
+        <span class="kpi-value">{{ displayRacha }}</span>
         <span class="kpi-label">Máx. Racha</span>
         <ion-icon name="trending-up-outline" class="kpi-icon"></ion-icon>
       </div>
 
-      <div class="kpi-card glass">
-        <span class="kpi-value">{{ winRate }}<small>%</small></span>
+      <div class="kpi-card glass kpi-card--trophy">
+        <span class="kpi-value">{{ displayWinRateNum }}<small>%</small></span>
         <span class="kpi-label">Win Rate</span>
         <ion-icon name="trophy-outline" class="kpi-icon"></ion-icon>
       </div>
@@ -66,11 +96,20 @@
         <span class="chart-title">RENDIMIENTO · ÚLTIMOS PARTIDOS</span>
         <span class="chart-sub">Evolución de puntos acumulados y por jornada</span>
       </div>
-      <apexchart
-        [options]="sparklineOptions"
+      <apx-chart
         [series]="sparklineOptions.series"
-        height="160">
-      </apexchart>
+        [chart]="sparklineOptions.chart"
+        [colors]="sparklineOptions.colors"
+        [stroke]="sparklineOptions.stroke"
+        [fill]="sparklineOptions.fill"
+        [markers]="sparklineOptions.markers"
+        [xaxis]="sparklineOptions.xaxis"
+        [yaxis]="sparklineOptions.yaxis"
+        [grid]="sparklineOptions.grid"
+        [legend]="sparklineOptions.legend"
+        [tooltip]="sparklineOptions.tooltip"
+        [dataLabels]="sparklineOptions.dataLabels">
+      </apx-chart>
     </div>
 
     <!-- RADAR -->
@@ -79,11 +118,20 @@
         <span class="chart-title">RADAR DE EXCELENCIA</span>
         <span class="chart-sub">Índice multidimensional · escala 0–100</span>
       </div>
-      <apexchart
-        [options]="radarOptions"
+      <apx-chart
         [series]="radarOptions.series"
-        height="280">
-      </apexchart>
+        [chart]="radarOptions.chart"
+        [colors]="radarOptions.colors"
+        [xaxis]="radarOptions.xaxis"
+        [yaxis]="radarOptions.yaxis"
+        [fill]="radarOptions.fill"
+        [stroke]="radarOptions.stroke"
+        [markers]="radarOptions.markers"
+        [plotOptions]="radarOptions.plotOptions"
+        [dataLabels]="radarOptions.dataLabels"
+        [legend]="radarOptions.legend"
+        [tooltip]="radarOptions.tooltip">
+      </apx-chart>
       <div class="radar-legend">
         <div class="rl-item"><span class="rl-dot"></span> Ataque: prom. goles/partido × 25</div>
         <div class="rl-item"><span class="rl-dot"></span> Defensa: % partidos sin encajar</div>
@@ -107,11 +155,11 @@
       <!-- KPI ROW -->
       <div class="pace-grid">
         <div class="pace-item">
-          <span class="pace-val">{{ eficienciaPuntos }}</span>
+          <span class="pace-val">{{ displayEficiencia }}</span>
           <span class="pace-lbl">Pts / Partido</span>
         </div>
         <div class="pace-item">
-          <span class="pace-val">{{ proyeccionFinal ?? '—' }}</span>
+          <span class="pace-val">{{ displayProyeccion ?? '—' }}</span>
           <span class="pace-lbl">Proyección Final</span>
         </div>
         <div class="pace-item" *ngIf="stats.puntosObjetivo">

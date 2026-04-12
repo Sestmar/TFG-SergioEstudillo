@@ -234,10 +234,24 @@ export class EditMatchPage implements OnInit {
     const payload = this.construirPayload();
 
     this.matchSvc.closeMatchReport(payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: () => {
+        next: async () => {
             this.saving = false;
-            this.presentToast('Acta cerrada y estadísticas actualizadas 🏆', 'success');
-            this.loadData(); 
+            this.loadData();
+            const alert = await this.alertCtrl.create({
+                header: 'Acta Cerrada',
+                message: '¿Querés explorar el análisis técnico del encuentro?',
+                cssClass: 'night-alert',
+                buttons: [
+                    { text: 'Ahora no', role: 'cancel' },
+                    {
+                        text: 'Ver Análisis',
+                        handler: () => {
+                            this.router.navigate(['/match-insights', this.matchId]);
+                        }
+                    }
+                ]
+            });
+            await alert.present();
         },
         error: () => {
             this.saving = false;

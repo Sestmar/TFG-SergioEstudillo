@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { NavController } from '@ionic/angular';
 import { SeasonStats } from 'src/app/shared/models/models';
 import { CoachService } from 'src/app/core/services/coach/coach.service';
+import { PlayerService } from 'src/app/core/services/player/player.service';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
 import { firstValueFrom, filter } from 'rxjs';
 
@@ -34,9 +35,22 @@ export class SeasonIntelligencePage {
   sparklineOptions: ChartOptions = this.emptySparkline();
   radarOptions: ChartOptions = this.emptyRadar();
 
+  // ─── DISPLAY VALUES (animated counters) ──────────────────────────────────────
+  displayPuntos      = 0;
+  displayPj          = 0;
+  displayVictorias   = 0;
+  displayEmpates     = 0;
+  displayDerrotas    = 0;
+  displayCleanSheets = 0;
+  displayRacha       = 0;
+  displayWinRateNum  = 0;
+  displayEficiencia  = '0.0';
+  displayProyeccion: number | null = null;
+
   constructor(
     private navCtrl: NavController,
     private coachService: CoachService,
+    private playerService: PlayerService,
     private authService: AuthService
   ) {}
 
@@ -50,13 +64,25 @@ export class SeasonIntelligencePage {
       const user = await firstValueFrom(
         this.authService.currentUser$.pipe(filter(u => !!u))
       );
-      const dashboard = await firstValueFrom(
-        this.coachService.getDashboardData(user!.idUsuario)
-      );
-      const equipoId = dashboard?.equipo?.idEquipo ?? dashboard?.equipo?.id;
+      const isJugador = this.authService.hasRole('JUGADOR');
+      let equipoId: number | null = null;
+
+      if (isJugador) {
+        const equipo = await firstValueFrom(
+          this.playerService.getPlayerTeamByUserId(user!.idUsuario)
+        );
+        equipoId = equipo?.idEquipo ?? equipo?.id ?? null;
+      } else {
+        const dashboard = await firstValueFrom(
+          this.coachService.getDashboardData(user!.idUsuario)
+        );
+        equipoId = dashboard?.equipo?.idEquipo ?? dashboard?.equipo?.id ?? null;
+      }
+
       if (!equipoId) return;
       this.stats = await firstValueFrom(this.coachService.getSeasonStats(equipoId));
       this.buildCharts();
+      this.runCounterAnimations();
     } finally {
       this.loading = false;
     }
@@ -66,6 +92,53 @@ export class SeasonIntelligencePage {
     if (!this.stats) return;
     this.buildSparkline();
     this.buildRadar();
+  }
+
+  // ─── COUNTER ANIMATIONS ──────────────────────────────────────────────────────
+
+  private animateCounter(to: number, durationMs: number, setter: (v: number) => void) {
+    const start = performance.now();
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / durationMs, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setter(Math.round(to * eased));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  private runCounterAnimations() {
+    if (!this.stats) return;
+    const s = this.stats;
+    const winRateNum    = s.pj > 0 ? Math.round((s.g / s.pj) * 100) : 0;
+    const eficienciaNum = s.pj > 0 ? s.puntos / s.pj : 0;
+
+    this.animateCounter(s.puntos, 700,  v => this.displayPuntos      = v);
+    this.animateCounter(s.pj,     500,  v => this.displayPj          = v);
+    this.animateCounter(s.g,      600,  v => this.displayVictorias   = v);
+    this.animateCounter(s.e,      650,  v => this.displayEmpates     = v);
+    this.animateCounter(s.p,      600,  v => this.displayDerrotas    = v);
+    this.animateCounter(s.cleanSheets ?? 0,     700,  v => this.displayCleanSheets = v);
+    this.animateCounter(s.mayorRachaVictorias ?? 0, 800, v => this.displayRacha   = v);
+    this.animateCounter(winRateNum,             900,  v => this.displayWinRateNum  = v);
+
+    const proyeccion = this.proyeccionFinal;
+    if (proyeccion !== null) {
+      this.animateCounter(proyeccion, 1000, v => this.displayProyeccion = v);
+    } else {
+      this.displayProyeccion = null;
+    }
+
+    // Eficiencia es float — animación manual
+    const efDur   = 800;
+    const efStart = performance.now();
+    const efStep  = (now: number) => {
+      const progress = Math.min((now - efStart) / efDur, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      this.displayEficiencia = (eficienciaNum * eased).toFixed(1);
+      if (progress < 1) requestAnimationFrame(efStep);
+    };
+    requestAnimationFrame(efStep);
   }
 
   // ─── SPARKLINE ───────────────────────────────────────────────────────────────
@@ -96,7 +169,14 @@ export class SeasonIntelligencePage {
         foreColor: '#64748b',
         toolbar: { show: false },
         fontFamily: 'inherit',
-        sparkline: { enabled: false }
+        sparkline: { enabled: false },
+        animations: {
+          enabled: true,
+          easing: 'easeinout',
+          speed: 1200,
+          animateGradually: { enabled: true, delay: 120 },
+          dynamicAnimation: { enabled: true, speed: 350 }
+        }
       },
       colors: ['#a855f7', '#3b82f6'],
       stroke: { curve: 'smooth', width: [2, 2], dashArray: [0, 4] },
@@ -144,7 +224,12 @@ export class SeasonIntelligencePage {
         background: 'transparent',
         foreColor: '#64748b',
         toolbar: { show: false },
-        fontFamily: 'inherit'
+        fontFamily: 'inherit',
+        animations: {
+          enabled: true,
+          easing: 'easeinout',
+          speed: 800
+        }
       },
       colors: ['#a855f7'],
       xaxis: {

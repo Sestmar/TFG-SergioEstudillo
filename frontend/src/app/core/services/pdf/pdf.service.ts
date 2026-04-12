@@ -241,6 +241,109 @@ export class PdfService {
     await this.exportar(html, `estadisticas_${equipoNombre.replace(/ /g, '_')}_${hoy.replace(/\//g, '-')}.pdf`);
   }
 
+  // ─── FICHA DE PARTIDO (PRESS KIT) ────────────────────────────────────────────
+
+  public async generarMatchCardPDF(partido: Partido, lineup: LineupSlotDto[]): Promise<void> {
+    const fecha  = this.formatFecha(partido.fechaHora);
+    const hora   = this.formatHora(partido.fechaHora);
+    const equipo = partido.equipo?.nombre ?? 'DAM United FC';
+    const rival  = partido.rival ?? 'Rival';
+    const gf     = partido.golesFavor  ?? 0;
+    const gc     = partido.golesContra ?? 0;
+
+    const resultado  = gf > gc ? 'VICTORIA' : gf === gc ? 'EMPATE' : 'DERROTA';
+    const colorRes   = gf > gc ? '#22c55e'  : gf === gc ? '#eab308' : '#ef4444';
+
+    const goleadores = lineup
+      .filter(p => (p.goles ?? 0) > 0)
+      .sort((a, b) => (b.goles ?? 0) - (a.goles ?? 0))
+      .map(p => {
+        const nombre = `${p.nombre ?? ''} ${p.apellidos ?? ''}`.trim();
+        return `<li style="margin:4px 0;font-size:13px;">⚽ ${nombre} (${p.goles})</li>`;
+      }).join('') || '<li style="font-size:13px;color:#6b7280;">Sin goles registrados</li>';
+
+    const asistentes = lineup
+      .filter(p => (p.asistencias ?? 0) > 0)
+      .map(p => {
+        const nombre = `${p.nombre ?? ''} ${p.apellidos ?? ''}`.trim();
+        return `<li style="margin:4px 0;font-size:13px;">🎯 ${nombre} (${p.asistencias})</li>`;
+      }).join('') || '<li style="font-size:13px;color:#6b7280;">Sin asistencias</li>';
+
+    const amarillas = lineup.filter(p => (p.tarjetaAmarilla ?? 0) > 0);
+    const rojas     = lineup.filter(p => (p.tarjetaRoja    ?? 0) > 0);
+    const tarjetas  = [
+      ...amarillas.map(p => `<li style="margin:4px 0;font-size:13px;">🟨 ${p.nombre ?? ''} ${p.apellidos ?? ''}</li>`),
+      ...rojas.map(p    => `<li style="margin:4px 0;font-size:13px;">🟥 ${p.nombre ?? ''} ${p.apellidos ?? ''}</li>`)
+    ].join('') || '<li style="font-size:13px;color:#6b7280;">Sin tarjetas</li>';
+
+    const statsRow = (label: string, value: string | number) =>
+      `<tr>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:12px;">${label}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;font-size:13px;font-weight:700;text-align:right;">${value}</td>
+      </tr>`;
+
+    const html = `
+      <div style="font-family:Arial,sans-serif;width:700px;background:#fff;padding:0;color:#111;">
+        ${this.cabecera('FICHA DE PARTIDO', equipo)}
+
+        <div style="padding:24px 30px 0;">
+
+          <!-- RESULTADO DESTACADO -->
+          <div style="background:#0a0e1a;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px;">
+            <div style="font-size:11px;letter-spacing:2px;color:#a78bfa;text-transform:uppercase;margin-bottom:8px;">
+              ${partido.competicion ?? 'Partido Oficial'}
+            </div>
+            <div style="font-size:36px;font-weight:900;color:#fff;letter-spacing:4px;margin-bottom:4px;">
+              ${gf} – ${gc}
+            </div>
+            <div style="font-size:13px;color:#94a3b8;margin-bottom:12px;">
+              ${equipo} vs ${rival}
+            </div>
+            <div style="display:inline-block;background:${colorRes};color:#fff;font-size:11px;font-weight:800;
+                        letter-spacing:2px;padding:4px 14px;border-radius:6px;">
+              ${resultado}
+            </div>
+          </div>
+
+          <!-- METADATA -->
+          <table style="width:100%;border-collapse:collapse;margin-bottom:24px;background:#f9fafb;border-radius:8px;overflow:hidden;">
+            ${statsRow('Fecha', fecha)}
+            ${statsRow('Hora', hora)}
+            ${statsRow('Lugar', partido.lugar ?? '—')}
+            ${statsRow('Goles a favor', gf)}
+            ${statsRow('Goles en contra', gc)}
+            ${statsRow('Amarillas', amarillas.length)}
+            ${statsRow('Rojas', rojas.length)}
+          </table>
+
+          <!-- GOLES Y ASISTENCIAS -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+            <div>
+              <h3 style="font-size:13px;font-weight:700;color:#0a0e1a;border-bottom:2px solid ${this.ACCENT};
+                         padding-bottom:6px;margin-bottom:12px;">GOLES</h3>
+              <ul style="list-style:none;padding:0;margin:0;">${goleadores}</ul>
+            </div>
+            <div>
+              <h3 style="font-size:13px;font-weight:700;color:#0a0e1a;border-bottom:2px solid ${this.ACCENT};
+                         padding-bottom:6px;margin-bottom:12px;">ASISTENCIAS</h3>
+              <ul style="list-style:none;padding:0;margin:0;">${asistentes}</ul>
+            </div>
+          </div>
+
+          <!-- TARJETAS -->
+          <div style="margin-bottom:24px;">
+            <h3 style="font-size:13px;font-weight:700;color:#0a0e1a;border-bottom:2px solid ${this.ACCENT};
+                       padding-bottom:6px;margin-bottom:12px;">DISCIPLINA</h3>
+            <ul style="list-style:none;padding:0;margin:0;">${tarjetas}</ul>
+          </div>
+
+        </div>
+        ${this.pie()}
+      </div>`;
+
+    await this.exportar(html, `ficha_partido_${rival.replace(/ /g, '_')}_${fecha.replace(/\//g, '-')}.pdf`);
+  }
+
   // ─── ESTRATEGIA TÁCTICA ──────────────────────────────────────────────────────
 
   public async generarEstrategiaPDF(
