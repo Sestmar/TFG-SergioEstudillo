@@ -15,6 +15,7 @@ import com.DAMUnitedFC.backend_tfg.repository.IncidenciaRepository;
 import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
 import java.util.List;
@@ -93,11 +94,15 @@ public class JugadorService {
                 .map(Jugador::getEquipoPrincipal);
     }
 
+    @Transactional(readOnly = true)
     public PlayerHistoryDto getHistorial(Integer id) {
         Jugador jugador = obtener(id);
 
-        // Alineaciones
-        List<Alineacion> alineaciones = alineacionRepo.findByJugador(jugador);
+        // Alineaciones (filtramos las huérfanas sin partido asociado)
+        List<Alineacion> alineaciones = alineacionRepo.findByJugador(jugador)
+                .stream()
+                .filter(a -> a.getPartido() != null)
+                .collect(java.util.stream.Collectors.toList());
 
         // Totales calculados desde alineaciones
         int totalPartidos = alineaciones.size();

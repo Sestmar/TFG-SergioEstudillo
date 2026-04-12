@@ -199,6 +199,17 @@
   }
 }
 
+// ─── ANIMACIONES ─────────────────────────────────────────────────────────────
+.animate-scale-in    { animation: perfScaleIn  0.4s ease-out backwards; }
+.animate-fade-in-up  { animation: perfFadeUp   0.45s ease-out backwards; }
+
+.delay-1 { animation-delay: 0.08s; }
+.delay-2 { animation-delay: 0.16s; }
+.delay-3 { animation-delay: 0.24s; }
+
+@keyframes perfScaleIn { from { opacity: 0; transform: scale(0.93); } to { opacity: 1; transform: scale(1); } }
+@keyframes perfFadeUp  { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
 // ─── SECTION TITLE ───────────────────────────────────────────────────────────
 .section-title {
   display: flex;
@@ -241,6 +252,8 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
+    transition: transform 0.15s;
+    &:active { transform: scale(0.97); }
 
     .kpi-value {
       font-size: 1.8rem;
@@ -268,6 +281,115 @@
     &.accent-blue  .kpi-value { color: var(--neon-blue); }
     &.accent-gold  .kpi-value { color: var(--gold); }
   }
+}
+
+// ─── DISCIPLINA ──────────────────────────────────────────────────────────────
+.disciplina-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+
+  .disciplina-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+
+    .disciplina-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+    }
+
+    .disciplina-badge {
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 10px;
+      border-radius: 8px;
+
+      &.impecable { background: rgba(16,185,129,0.15);  color: #10b981; }
+      &.buena     { background: rgba(245,158,11,0.12);  color: #f59e0b; }
+      &.mejorable { background: rgba(249,115,22,0.15);  color: #f97316; }
+      &.critica   { background: rgba(239,68,68,0.15);   color: #ef4444; }
+    }
+  }
+
+  .disciplina-stats {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+
+    .tarjeta-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+
+      .tarjeta-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      // Rectángulo estilo tarjeta de fútbol
+      .card-rect {
+        display: block;
+        width: 22px;
+        height: 30px;
+        border-radius: 3px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+
+        &.amarilla { background: linear-gradient(145deg, #f59e0b, #d97706); }
+        &.roja     { background: linear-gradient(145deg, #ef4444, #dc2626); }
+      }
+
+      .tarjeta-value {
+        font-size: 1.6rem;
+        font-weight: 900;
+        font-family: ui-monospace, monospace;
+        line-height: 1;
+        color: var(--text-main);
+      }
+
+      .tarjeta-label {
+        font-size: 0.58rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--text-dim);
+      }
+    }
+
+    .tarjeta-divider {
+      width: 1px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.07);
+    }
+  }
+}
+
+// Tarjetas mini en match history cards
+.card-rect-mini {
+  display: inline-block;
+  width: 8px;
+  height: 11px;
+  border-radius: 1.5px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+
+  &.amarilla { background: #f59e0b; }
+  &.roja     { background: #ef4444; }
+}
+
+.mini-badge {
+  &.card-amarilla { background: rgba(245,158,11,0.12); color: #f59e0b; gap: 4px; }
+  &.card-roja     { background: rgba(239,68,68,0.12);  color: #ef4444; gap: 4px; }
 }
 
 // ─── CHART GLASS ─────────────────────────────────────────────────────────────

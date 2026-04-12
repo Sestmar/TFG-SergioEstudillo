@@ -140,6 +140,15 @@ export class PlayerPerformancePage implements OnInit {
     return 'loss';
   }
 
+  getDisciplinaLabel(): { text: string; cls: string } {
+    const a = this.history?.tarjetasAmarillas ?? 0;
+    const r = this.history?.tarjetasRojas     ?? 0;
+    if (r >= 2)  return { text: 'Crítica',    cls: 'critica'   };
+    if (r === 1 || a >= 4) return { text: 'Mejorable', cls: 'mejorable' };
+    if (a >= 1)  return { text: 'Buena',      cls: 'buena'     };
+    return       { text: 'Impecable',  cls: 'impecable' };
+  }
+
   getMinutesDisplay(p: PlayerHistoryPartido): string {
     if (p.minutoEntrada == null && p.minutoSalida == null) return '90\'';
     const entrada = p.minutoEntrada ?? 0;

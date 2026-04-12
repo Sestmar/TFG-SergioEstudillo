@@ -17,7 +17,7 @@
     </div>
 
     <!-- ═══ HERO: CROMO DE JUGADOR ════════════════════════════════════════ -->
-    <div class="player-cromo" [class.estado-activo]="isActive()" [class.estado-baja]="!isActive()">
+    <div class="player-cromo animate-scale-in" [class.estado-activo]="isActive()" [class.estado-baja]="!isActive()">
 
       <!-- Dorsal watermark -->
       <span class="dorsal-watermark">{{ history.dorsal || '—' }}</span>
@@ -52,7 +52,7 @@
     </div>
 
     <!-- ═══ KPI ROW ════════════════════════════════════════════════════════ -->
-    <div class="kpi-grid">
+    <div class="kpi-grid animate-fade-in-up delay-1">
 
       <div class="kpi-card">
         <span class="kpi-value">{{ history.partidosTotales }}</span>
@@ -76,12 +76,39 @@
 
     </div>
 
+    <!-- ═══ DISCIPLINA ═══════════════════════════════════════════════════ -->
+    <div class="disciplina-card animate-fade-in-up delay-2">
+      <div class="disciplina-header">
+        <span class="disciplina-title">Disciplina</span>
+        <span class="disciplina-badge" [ngClass]="getDisciplinaLabel().cls">
+          {{ getDisciplinaLabel().text }}
+        </span>
+      </div>
+      <div class="disciplina-stats">
+        <div class="tarjeta-item amarilla">
+          <div class="tarjeta-icon">
+            <span class="card-rect amarilla"></span>
+          </div>
+          <span class="tarjeta-value">{{ history.tarjetasAmarillas }}</span>
+          <span class="tarjeta-label">Amarillas</span>
+        </div>
+        <div class="tarjeta-divider"></div>
+        <div class="tarjeta-item roja">
+          <div class="tarjeta-icon">
+            <span class="card-rect roja"></span>
+          </div>
+          <span class="tarjeta-value">{{ history.tarjetasRojas }}</span>
+          <span class="tarjeta-label">Rojas</span>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ RADAR PERSONAL ═══════════════════════════════════════════════ -->
-    <div class="section-title">
+    <div class="section-title animate-fade-in-up delay-3">
       <h3>Radar de Rendimiento</h3>
     </div>
 
-    <div class="chart-glass" *ngIf="history.partidosTotales > 0; else emptyRadar">
+    <div class="chart-glass animate-fade-in-up delay-3" *ngIf="history.partidosTotales > 0; else emptyRadar">
       <apx-chart
         [series]="radarOptions.series"
         [chart]="radarOptions.chart"
@@ -139,6 +166,12 @@
             <span class="mini-badge sub" *ngIf="!p.esTitular">Suplente</span>
             <span class="mini-badge gold" *ngIf="p.esCapitan">
               <ion-icon name="ribbon-outline"></ion-icon> Capitán
+            </span>
+            <span class="mini-badge card-amarilla" *ngIf="p.tarjetaAmarilla > 0">
+              <span class="card-rect-mini amarilla"></span>{{ p.tarjetaAmarilla }}
+            </span>
+            <span class="mini-badge card-roja" *ngIf="p.tarjetaRoja > 0">
+              <span class="card-rect-mini roja"></span>{{ p.tarjetaRoja }}
             </span>
           </div>
         </div>

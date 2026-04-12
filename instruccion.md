@@ -1,139 +1,135 @@
-La idea ahora es potenciar el player-dashboard ya que en comparacion al
- modulo de coach es un poco pobre. Mira en nuevas-mejoras.md el plan de
-accion y antes de ponerte a ello, dime si es valido o sugieres hacer
-alguna otra cosa. El centro analitico inteligente está integrado en
-player-dashboard, pero más allá de eso, no puede ver el match-insights ni
- nada. Al igual que coach-dashboard tiene pizarra tactica, match-insights
- y demás, el jugador debe tener sus cositas tambien.
+2026-04-12T23:04:07.451+02:00 ERROR 16828 --- [BackendTFG] [io-8080-exec-10] c.D.b.config.GlobalExceptionHandler      : Error inesperado en [/api/jugadores/4/history]: Cannot invoke "com.DAMUnitedFC.backend_tfg.model.Partido.getIdPartido()" because the return value of "com.DAMUnitedFC.backend_tfg.model.Alineacion.getPartido()" is null
 
-  Read 1 file (ctrl+o to expand)
-
-● Déjame ver el player-dashboard actual antes de opinar.
-
-  Searched for 1 pattern, read 1 file (ctrl+o to expand)
-
-● Déjame ver el .ts para entender qué datos maneja, y qué rutas existen
-  para el jugador:
-
-  Searched for 1 pattern, read 1 file (ctrl+o to expand)
-
-● Bien, tengo todo el contexto. Dejame verificar rápido qué rutas existen
-  y si match-insights está protegida por rol:
-
-  Searched for 2 patterns (ctrl+o to expand)
-
-● Ahora sí tengo todo el contexto. Te doy mi análisis.
-
-  ---
-  El plan es sólido, pero le falta la pieza más importante
-
-  Lo que propone nuevas-mejoras.md está bien — el Cromo FIFA, los KPI
-  arriba, limpiar el scroll, el panel compacto abajo. Todo eso es
-  correcto. Pero hay un dato crítico que el plan no explotó:
-
-  match-insights ya está habilitada para JUGADOR en el routing:
-
-  path: 'match-insights/:id',
-  data: { roles: ['ADMIN', 'ENTRENADOR', 'JUGADOR'] }
-
-  El jugador ya tiene acceso a esa página. El problema es que no hay
-  ningún botón que lo lleve ahí. En la lista de eventos del coach, cada
-  partido tiene tres botones (pizarra, acta, laboratorio). El jugador solo
-   tiene un botón de "info" que muestra un alert o va a match-detail.
-
-  Lo que le falta al plan: en la lista de eventos del jugador, cuando el
-  evento es un PARTIDO, agregar el botón de match-insights — igual que el
-  coach, pero sin pizarra táctica (eso es solo para entrenadores).
-
-  ---
-  Lo que yo haría, en orden:
-
-  TAREA 1 — Cromo de Jugador ✅ del plan — ok tal cual
-  TAREA 2 — KPIs arriba + subir gráficos ✅ del plan — ok
-  TAREA 3 — Panel compacto abajo ✅ del plan — ok
-  TAREA EXTRA — Botón match-insights en eventos de partido — esto es lo
-  que hace que el jugador "tenga sus cositas", como vos dijiste
-
-  ---
-  Una sola advertencia técnica
-
-  Los dos charts (apx-chart) del player-dashboard tienen el mismo
-  potencial problema de timing que teníamos en match-insights ayer. Si el
-  player-dashboard es la primera página que carga ApexCharts en la sesión
-  del jugador, el radar puede aparecer en blanco.
-
-  Propongo que el radar personal también lo migremos a SVG nativo (igual
-  que hicimos ayer con match-insights), y el gráfico de evolución lo
-  dejamos con ApexCharts porque es area chart y vale la pena. ¿Ese
-  trade-off te parece bien o preferís dejar ambos en ApexCharts y asumir
-  el riesgo?
-
-  ---
-  Resumen: ¿arrancamos con el plan tal cual + el botón de match-insights
-  en la lista de eventos del jugador + migración del radar personal a SVG?
-
-✻ Worked for 1m 5s
-
-> no es que quiera hacer un panel abajo mas compacto, lo que quiero es
-que al igual que el entrenador tiene el dashboard analitico y ademas el
-centro analitico inteligente, en el jugador hacer algo similar pero mas
-especifico para que el jugador pueda ver todas sus estadisticas ahí, por
-partido, y etc. Respecto a la pregunta de SVG o apexChart prefiero hacer
-el trade-off
-
-● Bien, entiendo. Antes de proponer nada déjame revisar qué datos tiene
-  disponibles el backend para el jugador, para saber qué podemos mostrar
-  realmente:
-
-  Searched for 2 patterns, read 1 file (ctrl+o to expand)
-
-● Hay un endpoint que lo cambia todo. getPlayerHistory() → GET
-  /jugadores/{id}/history ya devuelve:
-
-  - Por partido: rival, fecha, goles, asistencias, minutoEntrada,
-  minutoSalida, capitán, amarillas, rojas
-  - Convocatorias históricas
-  - Incidencias (lesiones)
-  - Totales: partidos, minutos, goles, asistencias, tarjetas
-
-  Eso es exactamente lo que necesitás. Ahora, la propuesta concreta:
-
-  ---
-  Lo que propongo (análogo al coach)
-
-  Coach tiene:
-  - coach-dashboard → hub principal
-  - season-intelligence → Centro Analítico del equipo
-  - match-insights → análisis por partido
-
-  Jugador tendría:
-  - player-dashboard → hub principal (refactorizado como dice el plan)
-  - NUEVA página: player-performance → "Mi Centro de Rendimiento Personal"
-  - match-insights (ya accesible) → análisis por partido con enlace desde
-  sus eventos
-
-  ---
-  Qué muestra player-performance:
-
-  Con los datos que ya existen en el backend:
-
-  1. Hero card — dorsal, posición, estado, foto
-  2. KPI row — Partidos / Goles / Asistencias / Minutos (los totales)
-  3. Radar personal — el que ya existe en el dashboard pero elevado a
-  protagonista
-  4. Historial por partido — tabla/cards con cada partido: rival, fecha,
-  goles, asistencias, minutos jugados, tarjetas. Con botón a
-  match-insights de ese partido
-  5. Disciplina — amarillas/rojas acumuladas con contexto visual
-
-  ---
-  ¿Qué pasa con el player-dashboard actual?
-
-  El plan de nuevas-mejoras.md sigue siendo válido como refactor del hub,
-  pero en lugar del "Centro de Rendimiento" embebido ahí, simplemente se
-  agrega un acceso a player-performance en las acciones (igual que
-  season-intelligence se accede desde el widget del coach).
-
-  ---
-  ¿Te parece ese enfoque, o preferís que sea una sección embebida dentro
-  del player-dashboard en lugar de una página aparte?
+java.lang.NullPointerException: Cannot invoke "com.DAMUnitedFC.backend_tfg.model.Partido.getIdPartido()" because the return value of "com.DAMUnitedFC.backend_tfg.model.Alineacion.getPartido()" is null
+        at com.DAMUnitedFC.backend_tfg.service.JugadorService.lambda$getHistorial$8(JugadorService.java:115) ~[classes/:na]       
+        at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197) ~[na:na]
+        at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708) ~[na:na]
+        at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509) ~[na:na]
+        at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499) ~[na:na]
+        at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921) ~[na:na]
+        at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234) ~[na:na]
+        at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682) ~[na:na]
+        at com.DAMUnitedFC.backend_tfg.service.JugadorService.getHistorial(JugadorService.java:133) ~[classes/:na]
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+        at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:360) ~[spring-aop-6.2.12.jar:6.2.12]
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) ~[spring-aop-6.2.12.jar:6.2.12]
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) ~[spring-aop-6.2.12.jar:6.2.12]
+        at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:380) ~[spring-tx-6.2.12.jar:6.2.12]
+        at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.2.12.jar:6.2.12]
+        at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.2.12.jar:6.2.12]
+        at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728) ~[spring-aop-6.2.12.jar:6.2.12]
+        at com.DAMUnitedFC.backend_tfg.service.JugadorService$$SpringCGLIB$$0.getHistorial(<generated>) ~[classes/:na]
+        at com.DAMUnitedFC.backend_tfg.controller.JugadorController.getHistorial(JugadorController.java:66) ~[classes/:na]        
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+        at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:360) ~[spring-aop-6.2.12.jar:6.2.12]
+        at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:724) ~[spring-aop-6.2.12.jar:6.2.12]
+        at com.DAMUnitedFC.backend_tfg.controller.JugadorController$$SpringCGLIB$$0.getHistorial(<generated>) ~[classes/:na]      
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+        at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:258) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:191) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118) ~[spring-webmvc-6.2.12.jar:6.2.12]
+        at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:991) ~[spring-webmvc-6.2.12.jar:6.2.12]
+        at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:896) ~[spring-webmvc-6.2.12.jar:6.2.12]
+        at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87) ~[spring-webmvc-6.2.12.jar:6.2.12]
+        at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089) ~[spring-webmvc-6.2.12.jar:6.2.12]
+        at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979) ~[spring-webmvc-6.2.12.jar:6.2.12]
+        at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014) ~[spring-webmvc-6.2.12.jar:6.2.12]
+        at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903) ~[spring-webmvc-6.2.12.jar:6.2.12]   
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564) ~[tomcat-embed-core-10.1.48.jar:6.0]
+        at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885) ~[spring-webmvc-6.2.12.jar:6.2.12] 
+        at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658) ~[tomcat-embed-core-10.1.48.jar:6.0]
+        at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51) ~[tomcat-embed-websocket-10.1.48.jar:10.1.48]   
+        at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:110) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:365) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:101) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:125) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:119) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at com.DAMUnitedFC.backend_tfg.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:66) ~[classes/:na]
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191) ~[spring-security-web-6.5.6.jar:6.5.6]
+        at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.filter.ServletRequestPathFilter.doFilter(ServletRequestPathFilter.java:52) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-6.2.12.jar:6.2.12]       
+        at org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebSecurityConfiguration.java:319) ~[spring-security-config-6.5.6.jar:6.5.6]
+        at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$4(HandlerMappingIntrospector.java:267) ~[spring-webmvc-6.2.12.jar:6.2.12]
+        at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-6.2.12.jar:6.2.12]       
+        at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:240) ~[spring-security-config-6.5.6.jar:6.5.6]
+        at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:362) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:278) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.12.jar:6.2.12]
+        at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:138) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:88) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113) ~[tomcat-embed-core-10.1.48.jar:10.1.48] 
+        at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83) ~[tomcat-embed-core-10.1.48.jar:10.1.48]  
+        at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:342) ~[tomcat-embed-core-10.1.48.jar:10.1.48]   
+        at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:399) ~[tomcat-embed-core-10.1.48.jar:10.1.48]    
+        at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1774) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:973) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:491) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.48.jar:10.1.48]
+        at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
