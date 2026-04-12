@@ -76,8 +76,101 @@
 
     </div>
 
-    <!-- T3, T4 se añaden aquí -->
-    <div style="height: 40px;"></div>
+    <!-- ═══ RADAR PERSONAL ═══════════════════════════════════════════════ -->
+    <div class="section-title">
+      <h3>Radar de Rendimiento</h3>
+    </div>
+
+    <div class="chart-glass" *ngIf="history.partidosTotales > 0; else emptyRadar">
+      <apx-chart
+        [series]="radarOptions.series"
+        [chart]="radarOptions.chart"
+        [xaxis]="radarOptions.xaxis"
+        [yaxis]="radarOptions.yaxis"
+        [colors]="radarOptions.colors"
+        [fill]="radarOptions.fill"
+        [stroke]="radarOptions.stroke"
+        [markers]="radarOptions.markers"
+        [plotOptions]="radarOptions.plotOptions"
+        [dataLabels]="radarOptions.dataLabels"
+        [tooltip]="radarOptions.tooltip">
+      </apx-chart>
+    </div>
+
+    <ng-template #emptyRadar>
+      <div class="empty-state">
+        <ion-icon name="analytics-outline"></ion-icon>
+        <p>¡A por el próximo partido para empezar a sumar!</p>
+      </div>
+    </ng-template>
+
+    <!-- ═══ HISTORIAL POR PARTIDO ═════════════════════════════════════════ -->
+    <div class="section-title" style="margin-top: 8px;">
+      <h3>Mis Partidos</h3>
+      <span class="count-badge">{{ partidosFinalizados.length }}</span>
+    </div>
+
+    <div class="match-history-list" *ngIf="partidosFinalizados.length > 0; else emptyHistory">
+
+      <div class="match-history-card"
+           *ngFor="let p of partidosFinalizados"
+           (click)="goToMatchInsights(p)">
+
+        <!-- Fecha -->
+        <div class="date-col">
+          <span class="day">{{ p.fechaHora | date:'dd' }}</span>
+          <span class="month">{{ p.fechaHora | date:'MMM' | uppercase }}</span>
+        </div>
+
+        <!-- Info central -->
+        <div class="match-col">
+          <div class="rival-row">
+            <img *ngIf="p.escudoRivalUrl"
+                 [src]="p.escudoRivalUrl"
+                 (error)="$any($event.target).onerror=null; $any($event.target).src='assets/img/mi-club-logo.png'"
+                 class="rival-shield">
+            <span class="rival-name">{{ p.rival || 'Rival' }}</span>
+            <span class="result-badge" [ngClass]="getResultClass(p)">
+              {{ p.golesFavor }}–{{ p.golesContra }}
+            </span>
+          </div>
+          <div class="badges-row">
+            <span class="mini-badge" *ngIf="p.esTitular">Titular</span>
+            <span class="mini-badge sub" *ngIf="!p.esTitular">Suplente</span>
+            <span class="mini-badge gold" *ngIf="p.esCapitan">
+              <ion-icon name="ribbon-outline"></ion-icon> Capitán
+            </span>
+          </div>
+        </div>
+
+        <!-- Stats del jugador en ese partido -->
+        <div class="player-stats-col">
+          <div class="stat-chip" *ngIf="p.golesJugador > 0">
+            <span class="chip-icon">⚽</span>
+            <span>{{ p.golesJugador }}</span>
+          </div>
+          <div class="stat-chip" *ngIf="p.asistenciasJugador > 0">
+            <span class="chip-icon">🎯</span>
+            <span>{{ p.asistenciasJugador }}</span>
+          </div>
+          <div class="stat-chip dim">
+            <ion-icon name="time-outline"></ion-icon>
+            <span>{{ p.minutosJugados }}'</span>
+          </div>
+          <ion-icon name="chevron-forward" class="arrow-icon"></ion-icon>
+        </div>
+
+      </div>
+    </div>
+
+    <ng-template #emptyHistory>
+      <div class="empty-state">
+        <ion-icon name="football-outline"></ion-icon>
+        <p>¡A por el próximo partido para empezar a sumar!</p>
+      </div>
+    </ng-template>
+
+    <div style="height: 60px;"></div>
 
   </div>
 
