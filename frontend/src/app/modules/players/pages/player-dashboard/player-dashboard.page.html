@@ -15,11 +15,14 @@
       <div class="sidebar-icon" (click)="navigateTo('/calendar')">
         <ion-icon name="calendar-outline"></ion-icon>
       </div>
-      <div class="sidebar-icon" (click)="navigateTo('/club')">
-        <ion-icon name="shield-checkmark-outline"></ion-icon>
+      <div class="sidebar-icon" (click)="navigateTo('/player-performance')">
+        <ion-icon name="analytics-outline"></ion-icon>
       </div>
       <div class="sidebar-icon" (click)="navigateTo('/profile')">
         <ion-icon name="person-outline"></ion-icon>
+      </div>
+      <div class="sidebar-icon" [class.active]="currentView === 'matches'" (click)="setView('matches')">
+        <ion-icon name="football-outline"></ion-icon>
       </div>
       <div class="sidebar-icon" (click)="navigateTo('/chat')" style="position: relative;">
         <ion-icon name="chatbubbles-outline"></ion-icon>
@@ -58,6 +61,8 @@
           </div>
       </ng-container>
     </div>
+
+    <ng-container *ngIf="currentView === 'dashboard'">
 
     <div class="player-identity-card" *ngIf="currentTeam">
       <div class="card-bg-glow"></div>
@@ -120,7 +125,7 @@
         <span class="title">Calendario</span>
       </div>
 
-      <div class="action-card" (click)="navigateTo('/club')">
+      <div class="action-card" (click)="setView('squad')">
         <div class="icon-circle secondary">
           <ion-icon name="shield-checkmark"></ion-icon>
         </div>
@@ -149,6 +154,13 @@
         <ion-badge *ngIf="((noLeidos$ | async) ?? 0) > 0" color="danger" class="chat-badge">
           {{ noLeidos$ | async }}
         </ion-badge>
+      </div>
+
+      <div class="action-card" (click)="setView('matches')">
+        <div class="icon-circle" style="background: rgba(245,158,11,0.15); color: var(--gold);">
+          <ion-icon name="football"></ion-icon>
+        </div>
+        <span class="title">Partidos</span>
       </div>
     </div>
 
@@ -193,68 +205,170 @@
       </div>
     </div>
 
-    <div class="section-title" id="stats-section" style="margin-top: 30px;"> 
-      <h3>Rendimiento</h3>
-    </div>
-
-    <div class="detailed-stats-card">
-      <div class="stat-item">
-        <span class="val">{{ playerStats?.partidosTotales || 0 }}</span>
-        <span class="lbl">Partidos</span>
-      </div>
-      <div class="stat-item">
-        <span class="val">{{ playerStats?.golesTotales || 0 }}</span>
-        <span class="lbl">Goles</span>
-      </div>
-      <div class="stat-item">
-        <span class="val">{{ playerStats?.asistenciasTotales || 0 }}</span>
-        <span class="lbl">Asist.</span>
-      </div>
-      <div class="stat-item">
-        <span class="val highlight">{{ playerStats?.minutosJugados || 0 }}'</span>
-        <span class="lbl">Minutos</span>
-      </div>
-    </div>
-
-    <!-- Evolución del equipo -->
-    <div class="section-title" style="margin-top: 24px;">
-      <h3>Evolución del Equipo</h3>
-    </div>
-    <div class="chart-card">
-      <apx-chart
-        [series]="evolutionChartOptions.series"
-        [chart]="evolutionChartOptions.chart"
-        [xaxis]="evolutionChartOptions.xaxis"
-        [yaxis]="evolutionChartOptions.yaxis"
-        [colors]="evolutionChartOptions.colors"
-        [fill]="evolutionChartOptions.fill"
-        [stroke]="evolutionChartOptions.stroke"
-        [dataLabels]="evolutionChartOptions.dataLabels"
-        [grid]="evolutionChartOptions.grid"
-        [tooltip]="evolutionChartOptions.tooltip">
-      </apx-chart>
-    </div>
-
-    <!-- Radar personal -->
-    <div class="section-title" style="margin-top: 24px;">
-      <h3>Mis Stats de Temporada</h3>
-    </div>
-    <div class="chart-card" *ngIf="playerStats">
-      <apx-chart
-        [series]="statsRadarOptions.series"
-        [chart]="statsRadarOptions.chart"
-        [xaxis]="statsRadarOptions.xaxis"
-        [yaxis]="statsRadarOptions.yaxis"
-        [colors]="statsRadarOptions.colors"
-        [fill]="statsRadarOptions.fill"
-        [stroke]="statsRadarOptions.stroke"
-        [markers]="statsRadarOptions.markers"
-        [plotOptions]="statsRadarOptions.plotOptions"
-        [tooltip]="statsRadarOptions.tooltip">
-      </apx-chart>
-    </div>
-
     <div class="spacer" style="height: 80px;"></div>
+
+    </ng-container><!-- /dashboard view -->
+
+    <!-- ═══ SQUAD VIEW ════════════════════════════════════════ -->
+    <div *ngIf="currentView === 'squad'" class="squad-view">
+
+      <div class="squad-header">
+        <ion-button fill="clear" (click)="setView('dashboard')" class="squad-back-btn">
+          <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+        </ion-button>
+        <div class="squad-header-info">
+          <span class="squad-title">{{ currentTeam?.nombre }}</span>
+          <span class="squad-count">{{ teamPlayers.length }} jugadores</span>
+        </div>
+      </div>
+
+      <div class="squad-list">
+        <div class="squad-player-card" *ngFor="let player of teamPlayers"
+             [class.squad-me]="player.idJugador === currentPlayer?.idJugador">
+
+          <span class="squad-dorsal">{{ player.dorsal || '—' }}</span>
+
+          <div class="squad-photo">
+            <img *ngIf="player.usuario?.fotoUrl"
+                 [src]="player.usuario!.fotoUrl"
+                 (error)="$any($event.target).onerror=null; $any($event.target).src='assets/img/default-avatar.png'"
+                 class="squad-thumb">
+            <div *ngIf="!player.usuario?.fotoUrl" class="squad-initials">
+              {{ (player.usuario?.nombre || '?')[0] | uppercase }}
+            </div>
+          </div>
+
+          <div class="squad-info">
+            <span class="squad-name">{{ player.usuario?.nombre }} {{ player.usuario?.apellidos }}</span>
+            <span class="squad-pos">{{ player.posicion | titlecase }}</span>
+          </div>
+
+          <span class="squad-status-dot"
+                [class.activo]="player.estado === 'ACTIVO'"
+                [class.baja]="player.estado !== 'ACTIVO'">
+          </span>
+
+        </div>
+      </div>
+
+      <div style="height: 80px;"></div>
+
+    </div><!-- /squad view -->
+
+    <!-- ═══ MATCHES VIEW ═════════════════════════════════════ -->
+    <div *ngIf="currentView === 'matches'" class="matches-view">
+
+      <!-- Header -->
+      <div class="squad-header">
+        <ion-button fill="clear" (click)="setView('dashboard')" class="squad-back-btn">
+          <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+        </ion-button>
+        <div class="squad-header-info">
+          <span class="squad-title">Partidos</span>
+          <span class="squad-count">{{ upcomingConvocations.length }} próximos</span>
+        </div>
+      </div>
+
+      <!-- MATCHDAY HYPE -->
+      <div *ngIf="todayMatch" class="matchday-hero">
+        <div class="matchday-label">
+          <ion-icon name="football"></ion-icon>
+          MATCHDAY
+        </div>
+        <div class="matchday-vs">
+          <span class="matchday-team">{{ currentTeam?.nombre }}</span>
+          <span class="vs-circle">VS</span>
+          <div class="matchday-rival">
+            <img *ngIf="todayMatch.escudoRivalUrl"
+                 [src]="todayMatch.escudoRivalUrl"
+                 (error)="$any($event.target).onerror=null; $any($event.target).src='assets/img/mi-club-logo.png'"
+                 class="rival-shield-lg">
+            <span>{{ todayMatch.rival }}</span>
+          </div>
+        </div>
+        <div class="matchday-meta">
+          <ion-icon name="time-outline"></ion-icon>
+          {{ todayMatch.fechaHora | date:'HH:mm' }}
+          <span class="dot">•</span>
+          <ion-icon name="location-outline"></ion-icon>
+          {{ todayMatch.lugar || 'Ubicación por confirmar' }}
+        </div>
+        <ion-button *ngIf="todayMatch.estado === 'FINALIZADO'"
+                    fill="solid" size="small" class="insights-btn"
+                    (click)="goToMatchInsights(todayMatch)">
+          <ion-icon name="analytics-outline" slot="start"></ion-icon>
+          Ver análisis
+        </ion-button>
+      </div>
+
+      <!-- PRÓXIMOS -->
+      <div class="section-title" *ngIf="upcomingConvocations.length > 0">
+        <h3>Próximos</h3>
+      </div>
+
+      <div class="match-list" *ngIf="upcomingConvocations.length > 0">
+        <div class="match-row" *ngFor="let p of upcomingConvocations"
+             [class.is-today]="todayMatch?.idPartido === p.idPartido">
+          <div class="match-date-col">
+            <span class="day">{{ p.fechaHora | date:'dd' }}</span>
+            <span class="month">{{ p.fechaHora | date:'MMM' | uppercase }}</span>
+          </div>
+          <div class="match-info-col">
+            <div class="match-rival-row">
+              <img *ngIf="p.escudoRivalUrl"
+                   [src]="p.escudoRivalUrl"
+                   (error)="$any($event.target).onerror=null; $any($event.target).src='assets/img/mi-club-logo.png'"
+                   class="shield-sm">
+              <span class="rival">{{ p.rival || 'Rival' }}</span>
+              <span class="type-tag" [class.match]="p.tipo === 'PARTIDO'">{{ p.tipo }}</span>
+            </div>
+            <div class="match-sub">
+              <ion-icon name="time-outline"></ion-icon>{{ p.fechaHora | date:'HH:mm' }}
+              <span class="dot">•</span>
+              <ion-icon name="location-outline"></ion-icon>{{ p.lugar || 'Por confirmar' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-matches" *ngIf="upcomingConvocations.length === 0">
+        <ion-icon name="calendar-outline"></ion-icon>
+        <p>Sin partidos próximos</p>
+      </div>
+
+      <!-- RECIENTES FINALIZADOS -->
+      <div class="section-title" *ngIf="recentMatches.length > 0" style="margin-top: 20px;">
+        <h3>Recientes</h3>
+      </div>
+
+      <div class="match-list" *ngIf="recentMatches.length > 0">
+        <div class="match-row result-row" *ngFor="let p of recentMatches">
+          <div class="match-date-col">
+            <span class="day">{{ p.fechaHora | date:'dd' }}</span>
+            <span class="month">{{ p.fechaHora | date:'MMM' | uppercase }}</span>
+          </div>
+          <div class="match-info-col">
+            <div class="match-rival-row">
+              <img *ngIf="p.escudoRivalUrl"
+                   [src]="p.escudoRivalUrl"
+                   (error)="$any($event.target).onerror=null; $any($event.target).src='assets/img/mi-club-logo.png'"
+                   class="shield-sm">
+              <span class="rival">{{ p.rival || 'Rival' }}</span>
+              <span class="result-badge" [ngClass]="getResultClass(p)">
+                {{ p.golesFavor }}–{{ p.golesContra }}
+              </span>
+            </div>
+          </div>
+          <ion-button fill="clear" size="small" class="insights-link"
+                      (click)="goToMatchInsights(p)">
+            <ion-icon name="analytics-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
+      </div>
+
+      <div style="height: 80px;"></div>
+
+    </div><!-- /matches view -->
 
     </div> <!-- /main-content -->
   </div> <!-- /dashboard-layout -->

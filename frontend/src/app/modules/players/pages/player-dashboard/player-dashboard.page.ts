@@ -50,6 +50,11 @@ export class PlayerDashboardPage implements OnInit {
   playerStats: PlayerStats | null = null;
   seasonStats: SeasonStats | null = null;
 
+  currentView: 'dashboard' | 'squad' | 'matches' = 'dashboard';
+  teamPlayers: Jugador[] = [];
+  recentMatches: Partido[] = [];
+  todayMatch: Partido | null = null;
+
   // ── CHART: Evolución del equipo (Area) ─────────────────────
   evolutionChartOptions: ChartOptions = {
     series: [{ name: 'Goles a Favor', data: [] }],
@@ -204,6 +209,15 @@ export class PlayerDashboardPage implements OnInit {
                   }
                   this.loadPlayerStats(realPlayerId);
               }
+
+              const teamId = this.currentTeam?.id || this.currentTeam?.idEquipo;
+              if (teamId) {
+                  this.teamPlayers = players.filter(p => {
+                      const ep = p.equipoPrincipal as EquipoResumen | null | undefined;
+                      const pTeamId = ep?.id || ep?.idEquipo;
+                      return pTeamId === teamId;
+                  }).sort((a, b) => (a.dorsal ?? 99) - (b.dorsal ?? 99));
+              }
           } else {
               this.loading = false;
           }
@@ -217,16 +231,24 @@ export class PlayerDashboardPage implements OnInit {
               this.upcomingConvocations = matches
                   .filter(m => new Date(m.fechaHora) >= now)
                   .sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime())
-                  .slice(0, 5); 
+                  .slice(0, 5);
 
               this.stats.upcomingConvocations = this.upcomingConvocations.length;
               this.stats.totalConvocations = matches.length;
 
-              const pastFinished = matches
-                .filter(m => m.estado === 'FINALIZADO' && m.tipo === 'PARTIDO')
-                .sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime())
-                .slice(-8);
-              this.buildEvolutionChart(pastFinished);
+              // Partido hoy (Matchday Hype)
+              const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+              const todayEnd   = new Date(); todayEnd.setHours(23, 59, 59, 999);
+              this.todayMatch = matches.find(m => {
+                  const d = new Date(m.fechaHora);
+                  return d >= todayStart && d <= todayEnd && m.tipo === 'PARTIDO';
+              }) ?? null;
+
+              // Partidos recientes finalizados
+              this.recentMatches = matches
+                  .filter(m => m.estado === 'FINALIZADO' && m.tipo === 'PARTIDO')
+                  .sort((a, b) => new Date(b.fechaHora).getTime() - new Date(a.fechaHora).getTime())
+                  .slice(0, 5);
 
               this.loading = false;
           },
@@ -246,6 +268,22 @@ export class PlayerDashboardPage implements OnInit {
         },
         error: () => {}
       });
+  }
+
+  setView(view: 'dashboard' | 'squad' | 'matches') {
+    this.currentView = view;
+  }
+
+  goToMatchInsights(match: Partido) {
+    const id = match.idPartido || match.id;
+    this.router.navigate(['/match-insights', id]);
+  }
+
+  getResultClass(p: Partido): string {
+    if (p.golesFavor == null || p.golesContra == null) return '';
+    if (p.golesFavor > p.golesContra) return 'win';
+    if (p.golesFavor === p.golesContra) return 'draw';
+    return 'loss';
   }
 
   // 🔥 MÉTODO NAVIGATE MEJORADO PARA JUGADORES

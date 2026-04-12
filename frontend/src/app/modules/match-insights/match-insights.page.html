@@ -189,8 +189,8 @@
                (error)="$any($event.target).onerror=null; $any($event.target).src='assets/img/default-avatar.png'">
           <span class="discipline-name">{{ p.nombre }} {{ p.apellidos }}</span>
           <div class="discipline-cards">
-            <span *ngIf="(p.tarjetaAmarilla ?? 0) > 0" class="disc-card yellow">AM</span>
-            <span *ngIf="(p.tarjetaRoja ?? 0) > 0"     class="disc-card red">RJ</span>
+            <span *ngIf="(p.tarjetaAmarilla ?? 0) > 0" class="disc-card yellow"></span>
+            <span *ngIf="(p.tarjetaRoja ?? 0) > 0"     class="disc-card red"></span>
           </div>
         </div>
       </div>
