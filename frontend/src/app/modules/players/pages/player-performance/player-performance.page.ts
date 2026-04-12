@@ -75,6 +75,10 @@ export class PlayerPerformancePage implements OnInit {
     this.router.navigate(['/match-insights', partido.idPartido]);
   }
 
+  isActive(): boolean {
+    return this.history?.estado === 'ACTIVO';
+  }
+
   getMinutesDisplay(p: PlayerHistoryPartido): string {
     if (p.minutoEntrada == null && p.minutoSalida == null) return '90\'';
     const entrada = p.minutoEntrada ?? 0;

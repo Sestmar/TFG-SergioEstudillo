@@ -6,7 +6,7 @@
     <p>Cargando rendimiento...</p>
   </div>
 
-  <div *ngIf="!loading" class="perf-layout">
+  <div *ngIf="!loading && history" class="perf-layout">
 
     <!-- HEADER -->
     <div class="perf-header">
@@ -16,11 +16,68 @@
       <span class="page-title">Mi Rendimiento</span>
     </div>
 
-    <!-- Contenido principal — se rellena en T2, T3, T4 -->
-    <div class="placeholder-state">
-      <ion-icon name="analytics-outline"></ion-icon>
-      <p>Página en construcción — T2 pendiente</p>
+    <!-- ═══ HERO: CROMO DE JUGADOR ════════════════════════════════════════ -->
+    <div class="player-cromo" [class.estado-activo]="isActive()" [class.estado-baja]="!isActive()">
+
+      <!-- Dorsal watermark -->
+      <span class="dorsal-watermark">{{ history.dorsal || '—' }}</span>
+
+      <!-- Estado badge top-right -->
+      <div class="estado-badge" [class.activo]="isActive()" [class.baja]="!isActive()">
+        <ion-icon [name]="isActive() ? 'checkmark-circle' : 'close-circle'"></ion-icon>
+        {{ history.estado }}
+      </div>
+
+      <!-- Foto + glow -->
+      <div class="photo-wrapper" [class.glow-green]="isActive()" [class.glow-red]="!isActive()">
+        <img *ngIf="currentPlayer?.usuario?.fotoUrl"
+             [src]="currentPlayer!.usuario.fotoUrl"
+             (error)="$any($event.target).onerror=null; $any($event.target).src='assets/img/default-avatar.png'"
+             class="player-photo">
+        <div *ngIf="!currentPlayer?.usuario?.fotoUrl" class="photo-initials">
+          {{ (history.nombreCompleto || 'J')[0] | uppercase }}
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="cromo-info">
+        <h2 class="player-name">{{ history.nombreCompleto }}</h2>
+        <div class="cromo-meta">
+          <span class="position-badge">{{ history.posicion | titlecase }}</span>
+          <span class="dot">•</span>
+          <span class="team-name">{{ history.equipoActual }}</span>
+        </div>
+      </div>
+
     </div>
+
+    <!-- ═══ KPI ROW ════════════════════════════════════════════════════════ -->
+    <div class="kpi-grid">
+
+      <div class="kpi-card">
+        <span class="kpi-value">{{ history.partidosTotales }}</span>
+        <span class="kpi-label">Partidos</span>
+      </div>
+
+      <div class="kpi-card accent-green">
+        <span class="kpi-value">{{ history.goles }}</span>
+        <span class="kpi-label">Goles</span>
+      </div>
+
+      <div class="kpi-card accent-blue">
+        <span class="kpi-value">{{ history.asistencias }}</span>
+        <span class="kpi-label">Asistencias</span>
+      </div>
+
+      <div class="kpi-card accent-gold">
+        <span class="kpi-value">{{ history.minutosJugados }}<small>'</small></span>
+        <span class="kpi-label">Minutos</span>
+      </div>
+
+    </div>
+
+    <!-- T3, T4 se añaden aquí -->
+    <div style="height: 40px;"></div>
 
   </div>
 

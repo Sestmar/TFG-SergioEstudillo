@@ -41,17 +41,205 @@
   }
 }
 
-// ─── PLACEHOLDER (se elimina en T2) ──────────────────────────────────────────
-.loading-state,
-.placeholder-state {
+// ─── LOADING ─────────────────────────────────────────────────────────────────
+.loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 60vh;
+  height: 70vh;
   gap: 16px;
   color: var(--text-dim);
-
-  ion-icon { font-size: 3rem; opacity: 0.4; }
   p { font-size: 0.85rem; }
+}
+
+// ─── CROMO DE JUGADOR ─────────────────────────────────────────────────────────
+.player-cromo {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  padding: 28px 20px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(145deg, #0d1b3e 0%, #111827 60%, #0a0f1e 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+
+  // Borde neon dinámico según estado
+  &.estado-activo {
+    box-shadow:
+      0 0 0 1.5px rgba(16, 185, 129, 0.4),
+      0 12px 40px -8px rgba(16, 185, 129, 0.2);
+  }
+  &.estado-baja {
+    box-shadow:
+      0 0 0 1.5px rgba(239, 68, 68, 0.4),
+      0 12px 40px -8px rgba(239, 68, 68, 0.2);
+  }
+
+  // Número de dorsal como marca de agua
+  .dorsal-watermark {
+    position: absolute;
+    top: -10px;
+    right: 12px;
+    font-size: 8rem;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.04);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+    letter-spacing: -4px;
+  }
+
+  // Badge estado (top-right)
+  .estado-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 3px 8px;
+    border-radius: 8px;
+
+    &.activo {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    &.baja {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    ion-icon { font-size: 0.75rem; }
+  }
+
+  // Foto con halo
+  .photo-wrapper {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    padding: 3px;
+    position: relative;
+    z-index: 1;
+
+    &.glow-green {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.45);
+    }
+    &.glow-red {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.45);
+    }
+
+    .player-photo,
+    .photo-initials {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--bg-deep);
+    }
+
+    .photo-initials {
+      background: rgba(15, 22, 45, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+  }
+
+  // Nombre + meta
+  .cromo-info {
+    text-align: center;
+    z-index: 1;
+
+    .player-name {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+
+    .cromo-meta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+
+      .position-badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--neon-purple);
+        background: rgba(139, 92, 246, 0.12);
+        padding: 2px 8px;
+        border-radius: 6px;
+      }
+
+      .dot { color: var(--text-dim); font-size: 0.6rem; }
+
+      .team-name {
+        font-size: 0.72rem;
+        color: var(--text-dim);
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// ─── KPI GRID ─────────────────────────────────────────────────────────────────
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  .kpi-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 16px 12px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+
+    .kpi-value {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--text-main);
+      font-family: ui-monospace, 'Cascadia Code', monospace;
+      line-height: 1;
+
+      small {
+        font-size: 1rem;
+        opacity: 0.6;
+      }
+    }
+
+    .kpi-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    // Variantes de color en el valor
+    &.accent-green .kpi-value { color: #10b981; }
+    &.accent-blue  .kpi-value { color: var(--neon-blue); }
+    &.accent-gold  .kpi-value { color: var(--gold); }
+  }
 }
