@@ -55,10 +55,16 @@ export class MatchInsightsPage {
       if (!matchId) return;
 
       // El partido es crítico — falla duro si no existe
-      this.match = await firstValueFrom(this.matchSvc.getMatchById(matchId));
+      const rawMatch = await firstValueFrom(this.matchSvc.getMatchById(matchId));
+      
+      // SANITIZACIÓN: Escudo Rival (Evita 404 en consola)
+      if (!rawMatch.escudoRivalUrl || rawMatch.escudoRivalUrl === 'null' || rawMatch.escudoRivalUrl === 'undefined') {
+        rawMatch.escudoRivalUrl = 'assets/img/mi-club-logo.png';
+      }
+      this.match = rawMatch;
 
       // La alineación y las stats de temporada son opcionales — degradación elegante
-      const [lineup, seasonStats] = await Promise.allSettled([
+      const [lineupRes, seasonStatsRes] = await Promise.allSettled([
         firstValueFrom(this.matchSvc.getLineup(matchId)),
         this.match.idEquipo ?? this.match.equipo?.idEquipo ?? this.match.equipo?.id
           ? firstValueFrom(this.coachSvc.getSeasonStats(
@@ -67,8 +73,17 @@ export class MatchInsightsPage {
           : Promise.resolve(null)
       ]);
 
-      this.lineup      = lineup.status      === 'fulfilled' ? (lineup.value      ?? []) : [];
-      this.seasonStats = seasonStats.status === 'fulfilled' ? seasonStats.value         : null;
+      const rawLineup = lineupRes.status === 'fulfilled' ? (lineupRes.value ?? []) : [];
+      
+      // SANITIZACIÓN: Fotos de jugadores (Evita 404 en consola)
+      this.lineup = rawLineup.map(p => ({
+        ...p,
+        fotoUrl: (!p.fotoUrl || p.fotoUrl === 'null' || p.fotoUrl === 'undefined') 
+                 ? 'assets/img/default-player.png' 
+                 : p.fotoUrl
+      }));
+
+      this.seasonStats = seasonStatsRes.status === 'fulfilled' ? seasonStatsRes.value : null;
 
       this.calcMatchStats();
       this.buildRadar();

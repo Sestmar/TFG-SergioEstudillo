@@ -38,8 +38,7 @@
         <!-- Escudo local -->
         <div class="shield-col local">
           <div class="shield-wrap">
-            <img src="assets/img/mi-club-logo.png" class="shield-img"
-                 onError="this.src='assets/img/mi-club-logo.png'">
+            <img src="assets/img/mi-club-logo.png" class="shield-img">
           </div>
           <span class="shield-label">LOCAL</span>
         </div>
@@ -61,8 +60,13 @@
         <!-- Escudo rival -->
         <div class="shield-col rival">
           <div class="shield-wrap rival-shield">
-            <img [src]="match.escudoRivalUrl || 'assets/img/default-shield.png'" class="shield-img"
-                 (error)="$any($event.target).onerror=null; $any($event.target).src='assets/img/default-shield.png'">
+            <img *ngIf="match.escudoRivalUrl" 
+                 [src]="match.escudoRivalUrl" 
+                 class="shield-img"
+                 (error)="match.escudoRivalUrl = ''">
+            <div *ngIf="!match.escudoRivalUrl" class="fallback-shield">
+              <ion-icon name="shield-outline"></ion-icon>
+            </div>
           </div>
           <span class="shield-label">RIVAL</span>
         </div>
@@ -161,9 +165,13 @@
         <div class="scorer-card" *ngFor="let p of goleadores; let i = index">
           <span class="scorer-rank" [class.gold]="i === 0">{{ i + 1 }}</span>
           <div class="scorer-avatar-wrap">
-            <img [src]="p.fotoUrl || 'assets/img/default-avatar.png'"
+            <img *ngIf="p.fotoUrl" 
+                 [src]="p.fotoUrl" 
                  class="scorer-avatar"
-                 (error)="$any($event.target).onerror=null; $any($event.target).src='assets/img/default-avatar.png'">
+                 (error)="p.fotoUrl = ''">
+            <div *ngIf="!p.fotoUrl" class="fallback-avatar">
+              <ion-icon name="person"></ion-icon>
+            </div>
           </div>
           <span class="scorer-name">{{ p.nombre }} {{ p.apellidos }}</span>
           <div class="scorer-goals">
@@ -184,9 +192,15 @@
              *ngFor="let p of tarjetas"
              [class.has-red]="(p.tarjetaRoja ?? 0) > 0"
              [class.has-yellow]="(p.tarjetaAmarilla ?? 0) > 0 && (p.tarjetaRoja ?? 0) === 0">
-          <img [src]="p.fotoUrl || 'assets/img/default-avatar.png'"
-               class="discipline-avatar"
-               (error)="$any($event.target).onerror=null; $any($event.target).src='assets/img/default-avatar.png'">
+          <div class="discipline-avatar-wrap">
+            <img *ngIf="p.fotoUrl" 
+                 [src]="p.fotoUrl" 
+                 class="discipline-avatar"
+                 (error)="p.fotoUrl = ''">
+            <div *ngIf="!p.fotoUrl" class="fallback-avatar sm">
+              <ion-icon name="person"></ion-icon>
+            </div>
+          </div>
           <span class="discipline-name">{{ p.nombre }} {{ p.apellidos }}</span>
           <div class="discipline-cards">
             <span *ngIf="(p.tarjetaAmarilla ?? 0) > 0" class="disc-card yellow"></span>
