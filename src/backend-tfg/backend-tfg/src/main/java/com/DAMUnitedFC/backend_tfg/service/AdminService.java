@@ -28,6 +28,7 @@ public class AdminService {
     private final AsistenciaRepository asistenciaRepo;
     private final PasswordEncoder passwordEncoder;
     private final PartidoService partidoService;
+    private final NotificationService notificationService;
     private final String backendUrl;
 
     public AdminService(UsuarioRepository usuarioRepo,
@@ -41,6 +42,7 @@ public class AdminService {
                         AsistenciaRepository asistenciaRepo,
                         PasswordEncoder passwordEncoder,
                         PartidoService partidoService,
+                        NotificationService notificationService,
                         @Value("${app.backend.url}") String backendUrl) {
         this.usuarioRepo = usuarioRepo;
         this.jugadorRepo = jugadorRepo;
@@ -53,6 +55,7 @@ public class AdminService {
         this.asistenciaRepo = asistenciaRepo;
         this.passwordEncoder = passwordEncoder;
         this.partidoService = partidoService;
+        this.notificationService = notificationService;
         this.backendUrl = backendUrl;
     }
 
@@ -442,5 +445,31 @@ public class AdminService {
             response.add(item);
         }
         return response;
+    }
+
+    @Transactional
+    public void confirmarAsistencia(Long idEntrenamiento, Integer idJugador) {
+        Jugador jugador = jugadorRepo.findById(idJugador)
+                .orElseThrow(() -> new RuntimeException("Jugador no encontrado: " + idJugador));
+        Asistencia asistencia = asistenciaRepo.findByIdEntrenamientoAndJugador(idEntrenamiento, jugador)
+                .orElseGet(() -> {
+                    Asistencia a = new Asistencia();
+                    a.setIdEntrenamiento(idEntrenamiento);
+                    a.setJugador(jugador);
+                    return a;
+                });
+        asistencia.setEstado("ASISTE");
+        asistenciaRepo.save(asistencia);
+
+        // Notificar al coach del equipo
+        Equipo equipo = jugador.getEquipoPrincipal();
+        if (equipo != null && equipo.getEntrenador() != null && equipo.getEntrenador().getUsuario() != null) {
+            String nombreJugador = jugador.getUsuario() != null ? jugador.getUsuario().getNombre() : "Un jugador";
+            notificationService.send(
+                    equipo.getEntrenador().getUsuario(),
+                    "✅ Confirmación de asistencia",
+                    "⚽ " + nombreJugador + " ha confirmado su asistencia al entrenamiento."
+            );
+        }
     }
 }

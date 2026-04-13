@@ -59,11 +59,15 @@ public class PartidoService {
 
                 String title = "⚽ Nuevo partido confirmado";
                 String body = String.format("🆚 %s | 📍 %s | 📅 %s\nConfirmá tu asistencia en la app.", rival, lugar, fechaHora);
+                Map<String, String> matchData = Map.of(
+                        "route", "/match-detail/" + guardado.getIdPartido(),
+                        "type", "MATCH"
+                );
 
                 for (Jugador jugador : jugadores) {
                     if (jugador.getUsuario() != null) {
                         log.info("Notificando a jugador ID {}", jugador.getIdJugador());
-                        notificationService.send(jugador.getUsuario(), title, body);
+                        notificationService.send(jugador.getUsuario(), title, body, matchData);
                     } else {
                         log.warn("Jugador ID {} sin usuario asociado — se omite", jugador.getIdJugador());
                     }
@@ -73,7 +77,7 @@ public class PartidoService {
                 Entrenador entrenador = guardado.getEquipo().getEntrenador();
                 if (entrenador != null && entrenador.getUsuario() != null) {
                     log.info("Notificando a entrenador ID {}", entrenador.getIdEntrenador());
-                    notificationService.send(entrenador.getUsuario(), title, body);
+                    notificationService.send(entrenador.getUsuario(), title, body, matchData);
                 }
 
                 log.info("Proceso de notificaciones finalizado para partido {}", guardado.getIdPartido());

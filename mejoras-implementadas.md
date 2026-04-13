@@ -799,3 +799,294 @@ getEstadoColor(estado?: string): string   // Devuelve hex para usar en [style.co
 - `team-detail.page.html` — `(click)="openPlayerSheet(p)"` en tarjetas; stat ESTADO; `ion-modal` bottom sheet completo
 - `team-detail.page.scss` — cursor pointer + `:active` en tarjetas; `.card-chevron`; `.estado-dot`; sección completa `.player-sheet` con handle, header, stats y info-grid
 
+---
+
+## 23. Migración a Notificaciones Push Nativas: De Twilio a FCM 🔔✅
+
+Se ha reemplazado el sistema de alertas basado en WhatsApp (Twilio Sandbox) por un sistema de **Notificaciones Push Nativas multiplataforma** usando Firebase Cloud Messaging (FCM) y `@capacitor/push-notifications`. La migración elimina la dependencia de una API de pago, escala infinitamente y ofrece una experiencia 100% nativa integrada en el sistema operativo del dispositivo.
+
+### Desafío Técnico
+
+El sistema original de Twilio presentaba tres limitaciones críticas para producción:
+1. **Coste y restricciones del Sandbox**: El Sandbox de Twilio solo permite enviar WhatsApp a números pre-aprobados, lo que hace imposible escalar a usuarios reales.
+2. **Dependencia de número de teléfono**: El sistema requería que cada usuario tuviese el teléfono registrado; si no, la notificación se perdía silenciosamente.
+3. **Experiencia no nativa**: Un mensaje de WhatsApp es genérico y no diferencia el origen de la app.
+
+### Arquitectura de la Solución: Provider Pattern
+
+Se diseñó un **Provider Pattern** que desacopla completamente la lógica de envío del canal de entrega. Esto permite activar FCM sin romper Twilio (que actúa como fallback) y cambiar de proveedor en el futuro con cambios mínimos.
+
+```
+NotificationService (orquestador)
+    ├── FcmNotificationProvider  → si el usuario tiene fcmToken
+    └── WhatsAppNotificationProvider → fallback si no tiene token
+```
+
+### Implementación Backend (Spring Boot)
+
+**Infraestructura y configuración:**
+- **`pom.xml`**: Añadida dependencia `firebase-admin:9.3.0`.
+- **`FirebaseConfig.java`** *(nuevo)*: Inicializa el Firebase Admin SDK en el arranque. Resuelve el `InputStream` de forma inteligente: si el path comienza con `classpath:`, usa `ClassPathResource` (local); si es una ruta absoluta, usa `FileInputStream` (Render Secret File). Falla gracefully con un WARN si el archivo no existe, sin romper el arranque del servidor.
+- **`application.properties`**: Añadida propiedad `firebase.config.path=${FIREBASE_CONFIG_PATH:classpath:serviceAccountKey.json}`. En local lee del classpath; en producción lee la variable de entorno `FIREBASE_CONFIG_PATH` que apunta al Secret File de Render.
+
+**Modelo de datos:**
+- **`Usuario.java`**: Añadido campo `fcmToken` (`@Column name="fcm_token"`, `length=512`). Cada dispositivo registrado tiene su propio token único de FCM.
+
+**Provider Pattern:**
+- **`NotificationProvider.java`** *(interfaz)*: Contrato `sendNotification(Usuario, String title, String body)`.
+- **`FcmNotificationProvider.java`** *(nuevo)*: Implementación FCM. Skip automático si Firebase no está inicializado o el usuario no tiene token. Captura `FirebaseMessagingException` con su código de error específico: si el código es `UNREGISTERED` o `INVALID_ARGUMENT`, el token ya no es válido y se pone a `null` en la base de datos automáticamente (limpieza de tokens muertos).
+- **`WhatsAppNotificationProvider.java`** *(nuevo)*: Wrapper del `WhatsAppService` existente. Actúa como fallback para usuarios sin `fcmToken`.
+- **`NotificationService.java`** *(nuevo — orquestador)*: Servicio `@Async` que implementa la lógica de prioridad. Si el usuario tiene `fcmToken`, delega a FCM. Si no, usa WhatsApp como fallback.
+
+```java
+@Async
+public void send(Usuario usuario, String title, String body) {
+    if (usuario.getFcmToken() != null && !usuario.getFcmToken().isBlank()) {
+        fcmProvider.sendNotification(usuario, title, body);
+    } else {
+        whatsAppProvider.sendNotification(usuario, title, body); // Fallback
+    }
+}
+```
+
+**Endpoint de registro de token:**
+- **`UsuarioService.java`**: Añadido método `actualizarFcmToken(email, token)`.
+- **`UserController.java`**: Nuevo endpoint `PUT /api/usuarios/fcm-token`. Usa `@AuthenticationPrincipal` para asociar el token al usuario autenticado por JWT (más seguro que aceptar un ID por path). Cubierto por `anyRequest().authenticated()` en `SecurityConfig`.
+
+**Casos de uso notificados:**
+
+| Evento | Destinatarios |
+|---|---|
+| Creación de partido | Todos los jugadores del equipo + entrenador |
+| Recordatorio 24h (Cron) | Todos los jugadores del equipo |
+| Mensaje privado de chat | El destinatario del mensaje |
+| Mensaje en chat de equipo | Todos los miembros del equipo excepto el remitente |
+
+```java
+// Broadcast en ChatService — notifica a toda la plantilla excepto al que escribe
+private void broadcastEquipo(Equipo equipo, Usuario remitente, String senderName, String preview) {
+    String title = "💬 " + senderName + " en " + equipo.getNombre();
+    jugadorRepository.findByEquipoPrincipal_IdEquipo(equipo.getIdEquipo())
+        .stream()
+        .filter(j -> j.getUsuario() != null
+                  && !j.getUsuario().getIdUsuario().equals(remitente.getIdUsuario()))
+        .forEach(j -> notificationService.send(j.getUsuario(), title, preview));
+    // También al entrenador si no es el remitente
+}
+```
+
+### Implementación Frontend (Ionic + Angular + Capacitor)
+
+**Instalación y configuración nativa:**
+- **`package.json`**: Añadido `@capacitor/push-notifications:^5.0.0`.
+- **`capacitor.config.ts`**: Plugin `PushNotifications` configurado con `presentationOptions: ['badge', 'sound', 'alert']`.
+
+**`PushNotificationService.ts`** *(nuevo)*: Servicio central del frontend que gestiona todo el ciclo de vida de las push:
+
+1. **Solicitud de permisos** al usuario al hacer login (solo en plataforma nativa; no hace nada en web/browser).
+2. **Registro con FCM** y captura del token mediante el listener `registration`.
+3. **Envío del token al backend** (`PUT /api/usuarios/fcm-token`) solo si el token ha cambiado respecto al almacenado en `StorageService`, evitando re-envíos innecesarios.
+4. **Guard anti-duplicación**: Flag `listenersRegistered` que previene el registro múltiple de listeners en caso de logout/re-login.
+5. **Foreground toast**: Al recibir una notificación con la app abierta (`pushNotificationReceived`), muestra un toast con las clases `night-toast toast-info` del sistema de diseño de la app — misma estética que el resto de alertas. Descarta el toast anterior si sigue visible para evitar apilamiento.
+
+```typescript
+private async showForegroundToast(title: string, body: string): Promise<void> {
+    if (this.activeToast) {
+        await this.activeToast.dismiss().catch(() => {});
+    }
+    const toast = await this.toastController.create({
+        header: title || undefined,
+        message: body,
+        duration: 5000,
+        position: 'top',
+        cssClass: ['night-toast', 'toast-info'],
+        buttons: [{ icon: 'close-outline', role: 'cancel' }]
+    });
+    this.activeToast = toast;
+    await toast.present();
+}
+```
+
+- **`AuthService.ts`**: `pushNotificationService.initialize()` se llama en el `tap()` post-login, justo después de obtener el usuario actual.
+
+**Configuración nativa Android:**
+- **`AndroidManifest.xml`**: Añadidos permisos `WAKE_LOCK` (procesador activo en background) y `POST_NOTIFICATIONS` (requerido en Android 13+ / API 33). Añadida `meta-data` del icono de notificación (`ic_notification`) y del color de acento (`colorPrimary`) para evitar el cuadrado negro genérico en la barra de estado.
+- **`ic_notification.xml`** *(nuevo)*: Icono vector monocromático blanco (silueta de pelota de fútbol). Android exige iconos de notificación completamente blancos sobre fondo transparente.
+- **`colors.xml`** *(nuevo)*: Define `colorPrimary #1A1A2E`, `colorPrimaryDark #0F0F1A` y `colorAccent #00D4AA`. Resuelve además una referencia huérfana que ya existía en `styles.xml` y que podría haber roto el build en el futuro.
+- **`MainActivity.java`**: Sin modificaciones. `BridgeActivity` de Capacitor 5+ registra los plugins automáticamente, incluyendo el `FirebaseMessagingService` del plugin push (mergeado en el build).
+
+### Estrategia de Despliegue en Render
+
+El `serviceAccountKey.json` es una clave privada de cuenta de servicio con permisos de admin sobre Firebase — nunca debe commitearse a Git. La solución para producción usa los **Secret Files** de Render:
+
+1. Crear un Secret File con nombre `serviceAccountKey.json` → Render lo monta automáticamente en `/etc/secrets/serviceAccountKey.json`.
+2. Añadir variable de entorno `FIREBASE_CONFIG_PATH=/etc/secrets/serviceAccountKey.json`.
+3. El `FirebaseConfig` detecta la ruta absoluta y usa `FileInputStream` en lugar de `ClassPathResource`.
+
+El `google-services.json` (frontend Android) **no es secreto** — es una configuración pública restringida por `package_name` y SHA-1 del certificado. Se puede commitear sin riesgo, ya que además queda compilado dentro del APK.
+
+### Archivos modificados o creados
+
+**Backend:**
+- `pom.xml` — dependencia `firebase-admin:9.3.0`
+- `config/FirebaseConfig.java` — inicialización dinámica (classpath / FileInputStream)
+- `model/Usuario.java` — campo `fcmToken`
+- `service/NotificationProvider.java` — interfaz del Provider Pattern
+- `service/FcmNotificationProvider.java` — implementación FCM con limpieza de tokens inválidos
+- `service/WhatsAppNotificationProvider.java` — wrapper Twilio para fallback
+- `service/NotificationService.java` — orquestador @Async (FCM-first)
+- `service/UsuarioService.java` — método `actualizarFcmToken()`
+- `controller/UserController.java` — endpoint `PUT /api/usuarios/fcm-token`
+- `service/PartidoService.java` — migrado a `NotificationService`
+- `service/NotificacionScheduler.java` — migrado a `NotificationService`
+- `service/ChatService.java` — push en privados + broadcast en equipo
+- `resources/application.properties` — propiedad `firebase.config.path`
+
+**Frontend:**
+- `package.json` — `@capacitor/push-notifications:^5.0.0`
+- `capacitor.config.ts` — config `PushNotifications`
+- `core/services/push/push-notification.service.ts` — nuevo servicio completo
+- `core/services/auth/auth.service.ts` — trigger `initialize()` post-login
+- `android/app/src/main/AndroidManifest.xml` — permisos FCM + meta-data
+- `android/app/src/main/res/drawable/ic_notification.xml` — icono monocromático
+- `android/app/src/main/res/values/colors.xml` — paleta de colores
+
+---
+
+### Fase Final: Deep Linking, Auto-Asistencia y Notificaciones de Confirmación
+
+Una vez el sistema FCM base estaba operativo (notificaciones de chat y de partido llegando al dispositivo), se completó el ciclo con tres mejoras que cierran la experiencia de usuario.
+
+#### Deep Linking — Ruteo Inteligente al Tocar la Notificación
+
+**Desafío**: Al tocar una notificación, la app se abría pero aterrizaba siempre en la pantalla de inicio, sin contexto. El usuario tenía que navegar manualmente hasta el chat o el partido que generó la alerta.
+
+**Solución**: Se extendió el sistema de notificaciones para incluir un **Data Payload** en cada mensaje FCM. El payload viaja junto a la notificación y contiene la ruta destino de la app.
+
+El `NotificationProvider` se extendió con un default method que acepta el mapa de datos:
+
+```java
+// NotificationProvider.java — el default garantiza compatibilidad con WhatsApp (fallback)
+default void sendNotification(Usuario usuario, String title, String body, Map<String, String> data) {
+    sendNotification(usuario, title, body); // WhatsApp ignora el data payload
+}
+```
+
+El `FcmNotificationProvider` sobreescribe el método y adjunta el payload al mensaje:
+
+```java
+// FcmNotificationProvider.java
+Message.Builder builder = Message.builder()
+    .setToken(fcmToken)
+    .setNotification(Notification.builder().setTitle(title).setBody(body).build());
+
+if (data != null && !data.isEmpty()) {
+    builder.putAllData(data);
+}
+```
+
+Cada servicio que dispara notificaciones ahora envía la ruta correspondiente:
+
+| Evento | Data Payload |
+|---|---|
+| Mensaje de chat (privado o equipo) | `{ "route": "/chat", "type": "CHAT" }` |
+| Creación de partido | `{ "route": "/match-detail/{id}", "type": "MATCH" }` |
+
+En el frontend, el listener `pushNotificationActionPerformed` — que antes estaba vacío — ahora lee el campo `route` del payload y navega directamente:
+
+```typescript
+// push-notification.service.ts
+PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
+    const data = action.notification.data as Record<string, string> | undefined;
+    const route = data?.['route'];
+    if (route) {
+        this.router.navigateByUrl(route);
+    }
+});
+```
+
+#### Auto-Asistencia a Entrenamientos (Acción del Jugador)
+
+**Desafío**: Los jugadores no podían confirmar su asistencia a un entrenamiento desde la app. El único canal era que el entrenador la registrase manualmente desde la pantalla de asistencia del panel de gestión.
+
+**Solución**: Se creó un endpoint de confirmación accesible por el rol `JUGADOR` y se añadió el botón en la tarjeta de eventos del Player Dashboard.
+
+El endpoint vive en `AdminController` con un `@PreAuthorize` a nivel de método que sobreescribe la restricción de clase (`hasRole('ADMIN')`), permitiendo que jugadores, entrenadores y administradores lo llamen:
+
+```java
+// AdminController.java
+@PostMapping("/entrenamiento/{id}/confirmar")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR', 'JUGADOR')")
+public ResponseEntity<?> confirmarAsistencia(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
+    Integer idJugador = ((Number) payload.get("idJugador")).intValue();
+    adminService.confirmarAsistencia(id, idJugador);
+    return ResponseEntity.ok(Collections.singletonMap("message", "Asistencia confirmada"));
+}
+```
+
+La lógica en `AdminService` hace un upsert: si ya existe un registro de asistencia para ese jugador y entrenamiento, lo actualiza; si no, lo crea:
+
+```java
+// AdminService.java
+public void confirmarAsistencia(Long idEntrenamiento, Integer idJugador) {
+    Jugador jugador = jugadorRepo.findById(idJugador).orElseThrow(...);
+    Asistencia asistencia = asistenciaRepo
+        .findByIdEntrenamientoAndJugador(idEntrenamiento, jugador)
+        .orElseGet(() -> { /* nuevo registro */ });
+    asistencia.setEstado("ASISTE");
+    asistenciaRepo.save(asistencia);
+}
+```
+
+En el Player Dashboard, la tarjeta de "Próximos Eventos" muestra un botón `checkmark-circle-outline` únicamente para eventos `tipo !== 'PARTIDO'`. Tras confirmar, el ícono cambia a `checkmark-circle` verde y el botón se deshabilita. El estado se gestiona en sesión con un `Set<number>`:
+
+```typescript
+// player-dashboard.page.ts
+confirmedTrainings = new Set<number>();
+
+isTrainingConfirmed(conv: Partido): boolean {
+    const id = conv.idPartido ?? conv.id;
+    return id != null && this.confirmedTrainings.has(id);
+}
+```
+
+#### Notificación al Coach al Confirmar Asistencia
+
+**Desafío**: El entrenador no tenía visibilidad en tiempo real de qué jugadores habían confirmado su asistencia al entrenamiento.
+
+**Solución**: Dentro del mismo método `confirmarAsistencia()` de `AdminService`, tras persistir el estado `ASISTE`, se navega por la cadena de relaciones del jugador para localizar al entrenador de su equipo y dispararle una notificación push:
+
+```java
+// AdminService.java — al final de confirmarAsistencia()
+Equipo equipo = jugador.getEquipoPrincipal();
+if (equipo != null && equipo.getEntrenador() != null
+        && equipo.getEntrenador().getUsuario() != null) {
+    String nombreJugador = jugador.getUsuario() != null
+        ? jugador.getUsuario().getNombre() : "Un jugador";
+    notificationService.send(
+        equipo.getEntrenador().getUsuario(),
+        "✅ Confirmación de asistencia",
+        "⚽ " + nombreJugador + " ha confirmado su asistencia al entrenamiento."
+    );
+}
+```
+
+La cadena es null-safe en cada paso: si el jugador no tiene equipo, si el equipo no tiene entrenador asignado o si el entrenador no tiene usuario vinculado, la notificación simplemente no se envía sin lanzar ninguna excepción.
+
+#### Archivos modificados en la Fase Final
+
+**Backend:**
+- `service/NotificationProvider.java` — default method con `Map<String, String> data`
+- `service/FcmNotificationProvider.java` — override con `.putAllData(data)` en el builder
+- `service/NotificationService.java` — sobrecarga `send(..., Map data)`
+- `service/ChatService.java` — data payload `CHAT` en mensajes privados y broadcast
+- `service/PartidoService.java` — data payload `MATCH` con ID real del partido
+- `service/AdminService.java` — método `confirmarAsistencia()` con upsert + notificación al coach; inyectado `NotificationService`
+- `controller/AdminController.java` — endpoint `POST /api/admin/entrenamiento/{id}/confirmar`
+
+**Frontend:**
+- `core/services/push/push-notification.service.ts` — `Router` inyectado; `pushNotificationActionPerformed` con `navigateByUrl()`
+- `core/services/player/player.service.ts` — método `confirmarAsistenciaEntrenamiento()`
+- `modules/players/pages/player-dashboard/player-dashboard.page.ts` — `confirmedTrainings: Set<number>`, métodos `isTrainingConfirmed()` y `confirmarAsistencia()`
+- `modules/players/pages/player-dashboard/player-dashboard.page.html` — botón de confirmación condicional en tarjetas de entrenamiento
+

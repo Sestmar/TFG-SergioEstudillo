@@ -78,6 +78,10 @@ export class PlayerService {
     return this.apiService.get<Jugador[]>('/jugadores/available', { teamId });
   }
 
+  confirmarAsistenciaEntrenamiento(idEntrenamiento: number, idJugador: number): Observable<void> {
+    return this.apiService.post<void>(`/admin/entrenamiento/${idEntrenamiento}/confirmar`, { idJugador });
+  }
+
   getPlayerPositions(): PlayerPosition[] {
     return [
       'PORTERO', 'DEFENSA_CENTRAL', 'LATERAL_DERECHO', 'LATERAL_IZQUIERDO',

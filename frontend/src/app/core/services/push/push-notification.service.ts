@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
 import { ToastController } from '@ionic/angular';
@@ -18,7 +19,8 @@ export class PushNotificationService {
   constructor(
     private apiService: ApiService,
     private storageService: StorageService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private router: Router
   ) {}
 
   /**
@@ -59,9 +61,13 @@ export class PushNotificationService {
       this.showForegroundToast(title, body);
     });
 
-    // Usuario tocó la notificación — aquí se puede navegar a la pantalla correspondiente
-    PushNotifications.addListener('pushNotificationActionPerformed', (_action: ActionPerformed) => {
-      // Navegación futura: usar Router para ir a la pantalla según data del payload
+    // Usuario tocó la notificación — navegar a la pantalla según el data payload
+    PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
+      const data = action.notification.data as Record<string, string> | undefined;
+      const route = data?.['route'];
+      if (route) {
+        this.router.navigateByUrl(route);
+      }
     });
   }
 

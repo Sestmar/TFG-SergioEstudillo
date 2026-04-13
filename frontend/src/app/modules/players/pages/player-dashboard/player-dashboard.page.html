@@ -200,6 +200,15 @@
            <ion-button fill="clear" class="action-btn" (click)="showMatchDetails(conv); $event.stopPropagation()">
              <ion-icon name="information-circle"></ion-icon>
            </ion-button>
+           <ion-button
+             *ngIf="conv.tipo !== 'PARTIDO'"
+             fill="clear"
+             class="action-btn"
+             [disabled]="isTrainingConfirmed(conv)"
+             (click)="confirmarAsistencia(conv); $event.stopPropagation()">
+             <ion-icon [name]="isTrainingConfirmed(conv) ? 'checkmark-circle' : 'checkmark-circle-outline'"
+                       [style.color]="isTrainingConfirmed(conv) ? 'var(--ion-color-success)' : ''"></ion-icon>
+           </ion-button>
            <div class="status-dot confirmed"></div>
         </div>
       </div>

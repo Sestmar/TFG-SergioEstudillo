@@ -8,6 +8,8 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.Notification;
+
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,11 @@ public class FcmNotificationProvider implements NotificationProvider {
 
     @Override
     public void sendNotification(Usuario usuario, String title, String body) {
+        sendNotification(usuario, title, body, Map.of());
+    }
+
+    @Override
+    public void sendNotification(Usuario usuario, String title, String body, Map<String, String> data) {
         if (FirebaseApp.getApps().isEmpty()) {
             log.warn("Firebase no inicializado — se omite push a usuario {}", usuario.getIdUsuario());
             return;
@@ -35,15 +42,18 @@ public class FcmNotificationProvider implements NotificationProvider {
         }
 
         try {
-            Message message = Message.builder()
+            Message.Builder builder = Message.builder()
                     .setToken(fcmToken)
                     .setNotification(Notification.builder()
                             .setTitle(title)
                             .setBody(body)
-                            .build())
-                    .build();
+                            .build());
 
-            String response = FirebaseMessaging.getInstance().send(message);
+            if (data != null && !data.isEmpty()) {
+                builder.putAllData(data);
+            }
+
+            String response = FirebaseMessaging.getInstance().send(builder.build());
             log.info("Push enviado a usuario {} — messageId: {}", usuario.getIdUsuario(), response);
 
         } catch (FirebaseMessagingException e) {

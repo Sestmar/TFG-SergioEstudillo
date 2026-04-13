@@ -54,6 +54,7 @@ export class PlayerDashboardPage implements OnInit {
   teamPlayers: Jugador[] = [];
   recentMatches: Partido[] = [];
   todayMatch: Partido | null = null;
+  confirmedTrainings = new Set<number>();
 
   // ── CHART: Evolución del equipo (Area) ─────────────────────
   evolutionChartOptions: ChartOptions = {
@@ -422,4 +423,40 @@ export class PlayerDashboardPage implements OnInit {
   getPlayerAttendanceStatus(conv: Partido): string { return 'PENDIENTE'; }
   getAttendanceStatusColor(status: string): string { return 'primary'; }
   getAttendanceStatusText(status: string): string { return 'Convocado'; }
+
+  isTrainingConfirmed(conv: Partido): boolean {
+    const id = conv.idPartido ?? conv.id;
+    return id != null && this.confirmedTrainings.has(id);
+  }
+
+  async confirmarAsistencia(conv: Partido): Promise<void> {
+    const idEntrenamiento = conv.idPartido ?? conv.id;
+    const idJugador = this.currentPlayer?.idJugador;
+    if (!idEntrenamiento || !idJugador) return;
+
+    this.playerService.confirmarAsistenciaEntrenamiento(idEntrenamiento, idJugador)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: async () => {
+          this.confirmedTrainings.add(idEntrenamiento);
+          const toast = await this.toastCtrl.create({
+            message: '✅ Asistencia confirmada',
+            duration: 2500,
+            position: 'top',
+            color: 'success',
+            cssClass: 'night-toast'
+          });
+          await toast.present();
+        },
+        error: async () => {
+          const toast = await this.toastCtrl.create({
+            message: 'Error al confirmar asistencia',
+            duration: 2500,
+            position: 'top',
+            color: 'danger'
+          });
+          await toast.present();
+        }
+      });
+  }
 }

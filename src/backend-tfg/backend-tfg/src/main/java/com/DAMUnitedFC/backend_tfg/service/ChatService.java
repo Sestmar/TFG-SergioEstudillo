@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,7 +62,8 @@ public class ChatService {
             notificationService.send(
                     mensaje.getDestinatario(),
                     "💬 Nuevo mensaje de " + senderName,
-                    preview
+                    preview,
+                    Map.of("route", "/chat", "type", "CHAT")
             );
         } else if (mensaje.getEquipo() != null) {
             // Mensaje de equipo — broadcast a todos los miembros excepto el remitente
@@ -73,6 +75,7 @@ public class ChatService {
 
     private void broadcastEquipo(Equipo equipo, Usuario remitente, String senderName, String preview) {
         String title = "💬 " + senderName + " en " + equipo.getNombre();
+        Map<String, String> chatData = Map.of("route", "/chat", "type", "CHAT");
 
         // Notificar a los jugadores del equipo (excepto el remitente)
         List<Jugador> jugadores = jugadorRepository.findByEquipoPrincipal_IdEquipo(equipo.getIdEquipo());
@@ -81,14 +84,14 @@ public class ChatService {
             if (destinatario == null || destinatario.getIdUsuario().equals(remitente.getIdUsuario())) {
                 continue;
             }
-            notificationService.send(destinatario, title, preview);
+            notificationService.send(destinatario, title, preview, chatData);
         }
 
         // Notificar al entrenador del equipo (excepto si es el remitente)
         Entrenador entrenador = equipo.getEntrenador();
         if (entrenador != null && entrenador.getUsuario() != null
                 && !entrenador.getUsuario().getIdUsuario().equals(remitente.getIdUsuario())) {
-            notificationService.send(entrenador.getUsuario(), title, preview);
+            notificationService.send(entrenador.getUsuario(), title, preview, chatData);
         }
     }
 
