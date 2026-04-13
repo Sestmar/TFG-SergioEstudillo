@@ -7,12 +7,13 @@ import { jwtDecode } from 'jwt-decode';
 // ✅ IMPORTS ABSOLUTOS
 import { ApiService } from 'src/app/core/services/api/api.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
-import { 
-  User, 
-  AuthResponse, 
-  UserLoginDto, 
-  UserRegisterDto, 
-  JwtPayload 
+import { PushNotificationService } from 'src/app/core/services/push/push-notification.service';
+import {
+  User,
+  AuthResponse,
+  UserLoginDto,
+  UserRegisterDto,
+  JwtPayload
 } from 'src/app/shared/models/models';
 
 const jwtConfig = {
@@ -36,7 +37,8 @@ export class AuthService {
   constructor(
     private apiService: ApiService,
     private storageService: StorageService,
-    private router: Router
+    private router: Router,
+    private pushNotificationService: PushNotificationService
   ) {
     this.initializeAuth();
   }
@@ -63,6 +65,9 @@ export class AuthService {
         this.setAuth(response.token, response.refreshToken);
       }),
       switchMap(() => this.getCurrentUser()),
+      tap(() => {
+        this.pushNotificationService.initialize();
+      }),
       catchError(error => throwError(() => error))
     );
   }

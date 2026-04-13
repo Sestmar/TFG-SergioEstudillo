@@ -3,6 +3,7 @@ package com.DAMUnitedFC.backend_tfg.controller;
 import com.DAMUnitedFC.backend_tfg.model.Usuario;
 import com.DAMUnitedFC.backend_tfg.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,5 +40,17 @@ public class UserController {
         return usuarioService.actualizar(id, updates)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/fcm-token")
+    public ResponseEntity<Void> updateFcmToken(
+            @AuthenticationPrincipal Usuario usuario,
+            @RequestBody Map<String, String> body) {
+        String token = body.get("fcmToken");
+        if (token == null || token.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        usuarioService.actualizarFcmToken(usuario.getEmail(), token);
+        return ResponseEntity.ok().build();
     }
 }

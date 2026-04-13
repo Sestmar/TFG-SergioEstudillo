@@ -25,7 +25,7 @@ public class NotificacionScheduler {
 
     private final PartidoRepository partidoRepository;
     private final JugadorRepository jugadorRepository;
-    private final WhatsAppService whatsAppService;
+    private final NotificationService notificationService;
 
     /**
      * Ejecuta cada hora en punto.
@@ -63,17 +63,15 @@ public class NotificacionScheduler {
             log.info("Enviando recordatorio del partido {} ({} vs {}) a {} jugadores",
                     partido.getIdPartido(), partido.getEquipo().getNombre(), rival, jugadores.size());
 
-            for (Jugador jugador : jugadores) {
-                String telefono = jugador.getUsuario() != null
-                        ? jugador.getUsuario().getTelefono()
-                        : null;
+            String title = "⏰ Recordatorio — ¡Mañana hay partido!";
+            String body = String.format("🆚 %s | 📅 %s\nNo olvides confirmar tu asistencia en la app.", rival, fechaFormateada);
 
-                if (telefono == null || telefono.isBlank()) {
-                    log.debug("Jugador {} sin teléfono — se omite", jugador.getIdJugador());
+            for (Jugador jugador : jugadores) {
+                if (jugador.getUsuario() == null) {
+                    log.debug("Jugador {} sin usuario — se omite", jugador.getIdJugador());
                     continue;
                 }
-
-                whatsAppService.enviarRecordatorio(telefono, rival, fechaFormateada);
+                notificationService.send(jugador.getUsuario(), title, body);
             }
         }
     }

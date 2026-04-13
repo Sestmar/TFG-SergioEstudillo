@@ -33,9 +33,26 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- FCM: icono monocromático blanco para evitar el "cuadrado negro" en notificaciones -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+
+        <!-- FCM: color de fondo del icono en la barra de estado -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/colorPrimary" />
+
     </application>
 
     <!-- Permissions -->
-
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- FCM: mantiene el procesador activo para recibir notificaciones en background -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- FCM: requerido en Android 13+ (API 33+) para mostrar notificaciones -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
 </manifest>

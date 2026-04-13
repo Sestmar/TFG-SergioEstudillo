@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono de notificación monocromático (blanco/transparente) para FCM.
+     Android requiere que los iconos de notificación sean completamente blancos
+     sobre fondo transparente. No usar colores. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Silueta de pelota de fútbol -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2z
+                          M12,4c1.29,0 2.51,0.28 3.62,0.77L12,8.54 8.38,4.77C9.49,4.28 10.71,4 12,4z
+                          M4,12c0,-0.64 0.07,-1.26 0.2,-1.86L7.5,13.5l-2.8,3.15C4.27,15.36 4,13.72 4,12z
+                          M12,20c-1.18,0 -2.3,-0.22 -3.33,-0.62L12,15.46l3.33,3.92C14.3,19.78 13.18,20 12,20z
+                          M14.5,13.5l3.3,-3.36C17.93,10.74 18,11.36 18,12c0,1.72 -0.27,3.36 -0.7,4.65L14.5,13.5z
+                          M12,10.46l3.62,-3.77C16.9,7.73 17.79,8.79 18.35,10L14.5,13.5H9.5L5.65,10C6.21,8.79 7.1,7.73 8.38,6.69L12,10.46z" />
+</vector>

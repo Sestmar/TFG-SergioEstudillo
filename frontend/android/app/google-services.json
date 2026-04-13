@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "630270612075",
+    "project_id": "dam-united-fc",
+    "storage_bucket": "dam-united-fc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:630270612075:android:4feecac552894e4b5dd72e",
+        "android_client_info": {
+          "package_name": "com.damunited.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1Xo_n33BpetQKMat8clKYi2AlYK0CDwU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

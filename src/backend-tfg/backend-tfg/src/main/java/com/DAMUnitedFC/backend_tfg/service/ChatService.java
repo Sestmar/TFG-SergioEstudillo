@@ -2,10 +2,13 @@ package com.DAMUnitedFC.backend_tfg.service;
 
 import com.DAMUnitedFC.backend_tfg.dto.EnviarMensajeDto;
 import com.DAMUnitedFC.backend_tfg.dto.MensajeDto;
+import com.DAMUnitedFC.backend_tfg.model.Entrenador;
 import com.DAMUnitedFC.backend_tfg.model.Equipo;
+import com.DAMUnitedFC.backend_tfg.model.Jugador;
 import com.DAMUnitedFC.backend_tfg.model.Mensaje;
 import com.DAMUnitedFC.backend_tfg.model.Usuario;
 import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
+import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.MensajeRepository;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,8 @@ public class ChatService {
     private final MensajeRepository mensajeRepository;
     private final UsuarioRepository usuarioRepository;
     private final EquipoRepository equipoRepository;
+    private final JugadorRepository jugadorRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public MensajeDto enviarMensaje(String emailRemitente, EnviarMensajeDto dto) {
@@ -44,7 +49,47 @@ public class ChatService {
             mensaje.setDestinatario(destinatario);
         }
 
-        return toDto(mensajeRepository.save(mensaje));
+        MensajeDto guardado = toDto(mensajeRepository.save(mensaje));
+
+        String preview = mensaje.getContenido().length() > 80
+                ? mensaje.getContenido().substring(0, 80) + "..."
+                : mensaje.getContenido();
+        String senderName = remitente.getNombre();
+
+        if (mensaje.getDestinatario() != null) {
+            // Mensaje privado — push solo al destinatario
+            notificationService.send(
+                    mensaje.getDestinatario(),
+                    "💬 Nuevo mensaje de " + senderName,
+                    preview
+            );
+        } else if (mensaje.getEquipo() != null) {
+            // Mensaje de equipo — broadcast a todos los miembros excepto el remitente
+            broadcastEquipo(mensaje.getEquipo(), remitente, senderName, preview);
+        }
+
+        return guardado;
+    }
+
+    private void broadcastEquipo(Equipo equipo, Usuario remitente, String senderName, String preview) {
+        String title = "💬 " + senderName + " en " + equipo.getNombre();
+
+        // Notificar a los jugadores del equipo (excepto el remitente)
+        List<Jugador> jugadores = jugadorRepository.findByEquipoPrincipal_IdEquipo(equipo.getIdEquipo());
+        for (Jugador jugador : jugadores) {
+            Usuario destinatario = jugador.getUsuario();
+            if (destinatario == null || destinatario.getIdUsuario().equals(remitente.getIdUsuario())) {
+                continue;
+            }
+            notificationService.send(destinatario, title, preview);
+        }
+
+        // Notificar al entrenador del equipo (excepto si es el remitente)
+        Entrenador entrenador = equipo.getEntrenador();
+        if (entrenador != null && entrenador.getUsuario() != null
+                && !entrenador.getUsuario().getIdUsuario().equals(remitente.getIdUsuario())) {
+            notificationService.send(entrenador.getUsuario(), title, preview);
+        }
     }
 
     public List<MensajeDto> listarPorEquipo(Integer idEquipo) {

@@ -44,6 +44,9 @@ public class Usuario implements UserDetails {
     private String telefono;
     private String direccion;
 
+    @Column(name = "fcm_token", length = 512)
+    private String fcmToken;
+
     // Helper útil para el Admin (lo mantenemos porque no rompe nada)
     public void setFechaRegistro(java.util.Date fecha) {
         this.fechaAlta = new java.sql.Date(fecha.getTime());

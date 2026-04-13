@@ -26,16 +26,16 @@ public class PartidoService {
     private final PartidoRepository partidoRepo;
     private final AlineacionRepository alineacionRepo;
     private final JugadorRepository jugadorRepo;
-    private final WhatsAppService whatsAppService;
+    private final NotificationService notificationService;
 
     public PartidoService(PartidoRepository partidoRepo,
                           AlineacionRepository alineacionRepo,
                           JugadorRepository jugadorRepo,
-                          WhatsAppService whatsAppService) {
+                          NotificationService notificationService) {
         this.partidoRepo = partidoRepo;
         this.alineacionRepo = alineacionRepo;
         this.jugadorRepo = jugadorRepo;
-        this.whatsAppService = whatsAppService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -57,35 +57,26 @@ public class PartidoService {
                         ? guardado.getFechaHora().format(FORMATTER)
                         : "por confirmar";
 
-                for (Jugador jugador : jugadores) {
-                    // Prioridad: telefonoContacto del jugador, fallback al teléfono del usuario
-                    String telefono = jugador.getTelefonoContacto();
-                    if (telefono == null || telefono.isBlank()) {
-                        telefono = jugador.getUsuario() != null ? jugador.getUsuario().getTelefono() : null;    
-                    }
+                String title = "⚽ Nuevo partido confirmado";
+                String body = String.format("🆚 %s | 📍 %s | 📅 %s\nConfirmá tu asistencia en la app.", rival, lugar, fechaHora);
 
-                    if (telefono != null && !telefono.isBlank()) {
-                        log.info("Enviando WhatsApp a jugador ID {}: {}", jugador.getIdJugador(), telefono);
-                        whatsAppService.enviarNotificacionPartido(telefono, rival, lugar, fechaHora);
+                for (Jugador jugador : jugadores) {
+                    if (jugador.getUsuario() != null) {
+                        log.info("Notificando a jugador ID {}", jugador.getIdJugador());
+                        notificationService.send(jugador.getUsuario(), title, body);
                     } else {
-                        log.warn("Jugador ID {} no tiene teléfono registrado (ni contacto ni usuario)", jugador.getIdJugador());
+                        log.warn("Jugador ID {} sin usuario asociado — se omite", jugador.getIdJugador());
                     }
                 }
 
                 // Notificar también al entrenador del equipo
                 Entrenador entrenador = guardado.getEquipo().getEntrenador();
-                if (entrenador != null) {
-                    String telEntrenador = entrenador.getTelefonoContacto();
-                    if (telEntrenador == null || telEntrenador.isBlank()) {
-                        telEntrenador = entrenador.getUsuario() != null ? entrenador.getUsuario().getTelefono() : null;
-                    }
-                    if (telEntrenador != null && !telEntrenador.isBlank()) {
-                        log.info("Enviando WhatsApp a Entrenador: {}", telEntrenador);
-                        whatsAppService.enviarNotificacionPartido(telEntrenador, rival, lugar, fechaHora);      
-                    }
+                if (entrenador != null && entrenador.getUsuario() != null) {
+                    log.info("Notificando a entrenador ID {}", entrenador.getIdEntrenador());
+                    notificationService.send(entrenador.getUsuario(), title, body);
                 }
 
-                log.info("Proceso de notificaciones WhatsApp finalizado para partido {}", guardado.getIdPartido());
+                log.info("Proceso de notificaciones finalizado para partido {}", guardado.getIdPartido());
             } else {
                 log.warn("El partido no tiene un equipo asociado; no se enviarán notificaciones");
             }

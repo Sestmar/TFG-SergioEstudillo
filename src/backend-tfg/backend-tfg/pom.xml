@@ -110,6 +110,13 @@
             <version>10.6.7</version>
         </dependency>
 
+        <!-- Firebase Admin SDK (FCM) -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.3.0</version>
+        </dependency>
+
         <!-- SockJS client support (para frontend) -->
         <dependency>
             <groupId>org.webjars</groupId>

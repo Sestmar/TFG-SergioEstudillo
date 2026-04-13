@@ -40,6 +40,13 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
+    public void actualizarFcmToken(String email, String fcmToken) {
+        usuarioRepository.findByEmail(email).ifPresent(usuario -> {
+            usuario.setFcmToken(fcmToken);
+            usuarioRepository.save(usuario);
+        });
+    }
+
     public Optional<Usuario> actualizar(Integer id, Map<String, Object> updates) {
         return usuarioRepository.findById(id).map(usuario -> {
             if (updates.containsKey("nombre")) usuario.setNombre((String) updates.get("nombre"));
