@@ -43,6 +43,7 @@ class AdminServiceTest {
     @Mock private AsistenciaRepository asistenciaRepo;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private PartidoService partidoService;
+    @Mock private NotificationService notificationService;
 
     private AdminService adminService;
 
@@ -53,7 +54,7 @@ class AdminServiceTest {
                 usuarioRepo, jugadorRepo, equipoRepo, entrenadorRepo,
                 equipoEntrenadorRepo, categoriaRepo, partidoRepo,
                 alineacionRepo, asistenciaRepo, passwordEncoder,
-                partidoService, "http://localhost:8080"
+                partidoService, notificationService, "http://localhost:8080"
         );
     }
 
