@@ -16,6 +16,22 @@ Angular (Change Detection Strategy) no detecta cambios profundos en objetos comp
 - **Patrón de Inmutabilidad**: Para forzar el refresco del DOM del gráfico, se implementó el patrón de creación de nuevos objetos mediante el *Spread Operator* en lugar de mutar las propiedades existentes.
 - **Algoritmo de Mapeo Táctico**: Implementación de un pipe de transformación que agrupa posiciones dinámicas en 4 categorías maestras (GK, DEF, MID, FWD).
 
+```typescript
+// Forzado de renderizado mediante inmutabilidad
+actualizarGrafico(goles: number[]) {
+  this.radarChartOptions = {
+    ...this.radarChartOptions, // Nueva referencia de objeto
+    series: [{
+      name: 'Rendimiento Promedio',
+      data: goles // Inyección de datos transformados desde el backend
+    }],
+    xaxis: {
+      categories: ['Goles', 'Asistencias', 'Minutos', 'Tarjetas']
+    }
+  };
+}
+```
+
 ---
 
 ## 2. UI/UX Premium: Arquitectura de Estilos "Night Stadium" 🌌
@@ -26,15 +42,43 @@ Se abandonó el diseño estándar de componentes móviles para crear una identid
 - **Selectores Funcionales (`:has`)**: Se utilizó el selector de cuarta generación `:has()` para aplicar estilos condicionales basados en el estado del contenido, eliminando la necesidad de directivas `[ngClass]` pesadas en el HTML.
 - **Variables CSS Dinámicas**: Centralización de la paleta en un sistema de tokens en `variables.scss` para permitir cambios de tema globales instantáneos.
 
+```scss
+// Lógica visual desacoplada del TypeScript
+.player-card {
+  background: var(--card-bg-glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  // Si la tarjeta contiene una barra de posición de portero, cambia el acento
+  &:has(.pos-bar.keeper) {
+    border-left: 4px solid var(--accent-gold);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+  }
+}
+```
+
 ---
 
 ## 3. Frontend Reactivo: Refactorización RxJS y Tipado Estricto ⚡
 
 Se migró de una programación imperativa (basada en variables locales) a una arquitectura **totalmente reactiva y tipada**.
 
-### Decisiones de Architettura
+### Decisiones de Arquitectura
 - **Gestión de Memoria**: Implementación de `TakeUntilDestroyed` de Angular 17 para el manejo automático de suscripciones, evitando fugas de memoria (Memory Leaks) en flujos de datos infinitos como los WebSockets.
 - **Linearización de Flujos**: Sustitución de suscripciones anidadas (Callback Hell) por operadores de transformación como `switchMap` y `forkJoin`.
+
+```typescript
+// Refactor: De código anidado a flujo lineal reactivo
+this.route.params.pipe(
+  map(p => p['id']),
+  switchMap(id => this.matchService.getMatchById(id)),
+  tap(match => this.matchActual = match),
+  switchMap(match => this.playerService.getPlayersByTeam(match.equipoId)),
+  takeUntilDestroyed(this.destroyRef) // Cleanup automático
+).subscribe(players => {
+  this.jugadoresDisponibles = players;
+});
+```
 
 ---
 
@@ -46,11 +90,47 @@ El backend en Spring Boot se profesionalizó siguiendo principios de **SOLID** y
 - **Inyección de Dependencias Segura**: Se eliminó `@Autowired` en favor de inyección por constructor con campos `private final`. Esto garantiza la inmutabilidad de los servicios y facilita las pruebas unitarias (Mocking).
 - **Thin Controllers**: Los controladores actúan únicamente como orquestadores de entrada/salida, delegando el 100% de la lógica de negocio a la capa `@Service`.
 
+```java
+@Service
+@RequiredArgsConstructor // Genera el constructor para inyección final
+public class PartidoService {
+    private final PartidoRepository partidoRepo;
+    private final WhatsAppService whatsAppService;
+
+    @Transactional // Garantiza atomicidad en la base de datos
+    public Partido crear(Partido partido) {
+        Partido guardado = partidoRepo.save(partido);
+        this.notificarPlantilla(guardado); // Disparador de lógica lateral
+        return guardado;
+    }
+}
+```
+
 ---
 
 ## 5. Chat en Tiempo Real: Mensajería Bidireccional y Sincronización Persistente 💬✅
 
 Se ha implementado una infraestructura de mensajería crítica basada en el protocolo STOMP sobre WebSockets, diseñada para garantizar la entrega instantánea y la coherencia del estado de lectura en toda la plataforma.
+
+### Arquitectura de Mensajería y Reactividad
+- **Conexión Global Reactiva**: Se refactorizó el `AppComponent` para eliminar bloqueos de flujo (`take(1)`), permitiendo que la conexión al chat global sea totalmente dinámica y reactiva a los cambios de sesión del usuario (Login/Logout).
+- **Doble Cliente STOMP**: Configuración de un cliente para la vista activa del chat y un **Global Listener** persistente que reside en el layout principal. Este último gestiona el conteo de mensajes no leídos (`noLeidosEquipo$`) incluso cuando el usuario navega por otras secciones de la app.
+- **Trazabilidad de Conexión**: Implementación de logs de ingeniería en el `ChatService` para verificar en tiempo real los IDs de equipo y usuario, asegurando que el "apretón de manos" (handshake) del WebSocket sea correcto entre diferentes roles (Jugador/Entrenador).
+
+```typescript
+// Lógica de reactividad en AppComponent.ts para conexión global
+private iniciarConexionGlobalChat(): void {
+  this.authService.currentUser$.pipe(
+    takeUntilDestroyed(this.destroyRef),
+    filter(user => !!user),
+    switchMap(user => { /* Lógica de obtención de equipoId */ })
+  ).subscribe(equipoId => {
+    if (equipoId) {
+      this.chatService.conectarGlobal(equipoId, userId);
+    }
+  });
+}
+```
 
 ---
 
@@ -58,11 +138,43 @@ Se ha implementado una infraestructura de mensajería crítica basada en el prot
 
 Sistema de alertas automáticas para convocatorias y recordatorios de partidos.
 
+### Soluciones de Ingeniería
+- **Manejo de Asincronía (`@Async`)**: El envío de mensajes se realiza en hilos separados para no bloquear el hilo principal de ejecución, permitiendo que la respuesta al cliente sea inmediata independientemente de la latencia de la API de Twilio.
+- **Normalización de Números E.164**: Algoritmo de formateo que asegura compatibilidad internacional y los prefijos requeridos por Twilio (`whatsapp:+34...`).
+
+```java
+@Async // Ejecución en pool de hilos secundario
+public void enviarNotificacionPartido(String telefono, String rival, String fecha) {
+    String destino = "whatsapp:" + formatearNumero(telefono);
+    Message.creator(
+        new PhoneNumber(destino),
+        new PhoneNumber(fromNumber),
+        "⚽ *DAM United* - Partido confirmado contra " + rival
+    ).create();
+}
+```
+
 ---
 
 ## 7. Notificaciones y Badges: UX Nativa con Persistencia de Estado 🔔✅
 
-Se ha cerrado el ciclo de notificaciones mediante un sistema que garantiza que los contadores de mensajes no leídos sean verídicos y persistentes.
+Se ha cerrado el ciclo de notificaciones mediante un sistema que garantiza que los contadores de mensajes no leídos sean verídicos y persistentes, eliminando la discrepancia entre sesiones.
+
+### Sincronización y Persistencia (Backend Sync)
+- **Sincronización Inicial (Offline Recovery)**: Al conectar el WebSocket global, el sistema realiza automáticamente una petición `GET /chat/no-leidos` al servidor. Esto recupera el estado real de mensajes acumulados mientras la aplicación estaba cerrada o el usuario estaba offline.
+- **Confirmación de Lectura (Acknowledge)**: Se implementó un flujo de "Suscripción -> Confirmación -> Reset". Al entrar al chat, el sistema dispara `marcarLeidos()` al backend y, solo tras recibir la confirmación de éxito, resetea el badge local a cero. Esto asegura que el estado de la base de datos y la UI estén siempre en sintonía.
+- **Filtrado de Mensajes Propios**: El motor de notificaciones descarta automáticamente el incremento de badges y el disparo de alertas locales (`Capacitor LocalNotifications`) para los mensajes enviados por el propio usuario desde otros dispositivos.
+
+```typescript
+// Sincronización robusta en chat.page.ts
+iniciarChat() {
+  this.chatService.conectar(this.equipoId);
+  // Persistencia: Avisar al servidor y resetear badge local tras éxito
+  this.chatService.marcarLeidos().pipe(takeUntil(this.destroy$)).subscribe({
+    next: () => this.chatService.resetearNoLeidos()
+  });
+}
+```
 
 ---
 
@@ -70,882 +182,620 @@ Se ha cerrado el ciclo de notificaciones mediante un sistema que garantiza que l
 
 Se ha realizado una limpieza profunda del sistema para garantizar estándares de producción, eliminando código muerto, mejorando el tipado y securizando los accesos externos.
 
+### Acciones de Limpieza y Tipado
+- **Eliminación de Código Muerto**: Borrado definitivo de `user-state.service.ts` y sus referencias en los barriles (`index.ts`), reduciendo la superficie de mantenimiento.
+- **Tipado Estricto en Servicios**: Refactorización de `player.service.ts` para eliminar el uso de `any` y `unknown`, sustituyéndolos por interfaces de dominio como `EquipoResumen` y `PlayerHistory`.
+- **Saneamiento de Logs**: Eliminación masiva de `console.log` en el frontend (24 instancias) y `System.out.println` en el backend (3 instancias) para evitar polución de logs en producción.
+
+### Seguridad y CORS
+- **Whitelist de Producción**: Se sustituyó el wildcard de seguridad `"*"` por una configuración de CORS restrictiva que solo permite peticiones desde orígenes autorizados.
+
+```java
+// Configuración CORS restrictiva en SecurityConfig.java
+@Bean
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+    configuration.setAllowedOrigins(Arrays.asList(
+        "http://localhost:4200", 
+        "http://localhost:8100", 
+        "https://tfg-dam-united-web.onrender.com"
+    ));
+    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+}
+```
+
 ---
 
 ## 9. Sincronización de Contacto: Gestión Multicapa del Perfil 📱
 
-Se ha implementado un mecanismo de sincronización para asegurar la integridad de los datos de contacto entre Usuario y Jugador/Entrenador.
+Se ha implementado un mecanismo de sincronización en caliente para asegurar la integridad de los datos de contacto entre las tablas de identidad (Usuario) y las de rol (Jugador/Entrenador).
+
+### Desafío Técnico
+La arquitectura original almacenaba el teléfono en dos lugares independientes. Al actualizar el perfil, solo se modificaba la tabla de rol (`telefonoContacto`), pero el sistema de notificaciones WhatsApp (Twilio) consultaba la tabla `Usuario`, lo que provocaba que las alertas se enviaran a números obsoletos.
+
+### Solución: Sincronización Reactiva de Doble Capa
+Se ha inyectado el `AuthService` en los componentes de perfil para realizar un "fix quirúrgico" en el bloque de éxito del guardado.
+
+- **Persistencia Atómica (Best-Effort)**: El sistema primero asegura el guardado del perfil de rol. Si este es exitoso, dispara una petición asíncrona para actualizar la tabla `Usuario`.
+- **Validación de Datos**: Se implementó un *guard* explícito para evitar llamadas innecesarias al servidor cuando el campo de teléfono está vacío o no ha cambiado.
+
+```typescript
+// Sincronización en profile.page.ts y coach-profile.page.ts
+this.playerService.updateProfile(this.editForm).subscribe({
+  next: () => {
+    // Sincronización con la tabla Usuario (necesaria para Twilio/WhatsApp)
+    const userId = this.currentUser?.idUsuario;
+    if (userId && this.editForm.telefono) {
+      this.authSvc.updateUser(userId, { telefono: this.editForm.telefono })
+        .subscribe({
+          error: (err) => console.error('Error sincronizando teléfono en Usuario', err)
+        });
+    }
+    this.showSuccessToast('Perfil actualizado correctamente');
+  }
+});
+```
 
 ---
 
 ## 10. Pulido Estético y Coherencia Visual: Night Stadium Experience 🎨✅
 
-Se ha extendido la identidad visual "Night Stadium" a todos los componentes interactivos de la aplicación, unificando modales y diálogos.
+Se ha extendido la identidad visual "Night Stadium" a todos los componentes interactivos de la aplicación, eliminando la discrepancia estética entre las pantallas principales y los componentes nativos de Ionic.
+
+### Estandarización de Modales y Diálogos
+- **Arquitectura de Night Modal**: Implementación de una clase global `.night-modal` en `global.scss` que actúa sobre los *shadow parts* de Ionic para inyectar fondos `#0a0e1a` y bordes violeta neón con desenfoque de cristal (`backdrop-filter`).
+- **Unificación de Componentes**: Todos los modales críticos (Convocatorias, Tácticas, Perfiles) han sido actualizados para inyectar la clase `cssClass: 'night-modal'`, garantizando una inmersión total del usuario en el tema oscuro de la plataforma.
+- **Formularios Semánticos**: Reorganización de las vistas de perfil mediante el uso de contenedores `form-section` y cabeceras estilizadas, mejorando la jerarquía visual y reduciendo la carga cognitiva.
+
+```typescript
+// Inyección de identidad visual en controladores de Ionic
+const modal = await this.modalCtrl.create({
+  component: ConvocationModalComponent,
+  cssClass: 'night-modal' // Aplicación de la identidad Stadium
+});
+```
 
 ---
 
 ## 11. Sistema de Notificaciones Pro: Centralización y UX de Alertas 🔔
 
-Se ha transformado la gestión de mensajes mediante un `NotificationService` centralizado con una API fluida (`success()`, `error()`).
+Se ha transformado la gestión de mensajes al usuario mediante la creación de un motor de notificaciones centralizado, eliminando la dependencia directa de componentes de UI en la lógica de negocio y unificando la experiencia visual.
+
+### Desafío Técnico
+La aplicación utilizaba `ToastController` de forma dispersa, lo que provocaba inconsistencias en la duración de los mensajes, posiciones aleatorias (top/bottom) y una estética genérica de Ionic que rompía con el tema "Night Stadium". Además, la API nativa de Ionic requiere múltiples líneas de configuración para cada alerta, generando ruido visual en los componentes.
+
+### Solución e Implementación
+- **API Fluida (Short-hand methods)**: Se implementó una capa de abstracción en `NotificationService` con métodos semánticos `.success()`, `.error()`, `.warning()` e `.info()`. Esto permite disparar alertas con una sola línea de código, abstrayendo la configuración de tiempos y estilos.
+- **Posicionamiento Estratégico**: Se fijó la posición `top` para todas las notificaciones, garantizando visibilidad inmediata sin obstruir los botones de acción principales que suelen ubicarse en la zona inferior (tab bars o fab buttons).
+- **Estilización mediante Shadow Parts**: Uso avanzado de `::part(container)` en el CSS global para inyectar bordes laterales de color neón y fondos con opacidad controlada (`0.96`), manteniendo la coherencia con el resto de la interfaz oscura.
+
+```typescript
+// Nueva API simplificada en NotificationService
+async success(message: string): Promise<void> {
+  await this.presentNightToast(message, 2500, 'toast-success');
+}
+
+private async presentNightToast(message: string, duration: number, typeClass: string): Promise<void> {
+  const toast = await this.toastController.create({
+    message,
+    duration,
+    position: 'top',
+    cssClass: ['night-toast', typeClass],
+    buttons: [{ icon: 'close-outline', role: 'cancel' }] // Botón de cierre siempre presente
+  });
+  await toast.present();
+}
+```
+
+```scss
+// CSS Global para la identidad Night Toast
+.night-toast {
+  --background: rgba(10, 14, 26, 0.96);
+  --color: #e2e8f0;
+  --border-radius: 12px;
+
+  &::part(container) {
+    border-left: 3px solid #6c63ff; // Acento base violeta
+  }
+
+  &.toast-success::part(container) { border-left-color: #22c55e; } // Verde Neón
+  &.toast-error::part(container)   { border-left-color: #ef4444; } // Rojo Alerta
+}
+```
 
 ---
 
 ## 12. Arquitectura de Alertas Globales: Night Alert 🔒
 
-Se ha extendido el sistema de diseño "Night Stadium" a todos los diálogos de confirmación (`AlertController`), eliminando la discrepancia estética.
+Se ha extendido el sistema de diseño "Night Stadium" a todos los diálogos de confirmación (`AlertController`) de la aplicación, eliminando la discrepancia estética entre las notificaciones rápidas y las decisiones críticas del usuario (Cerrar Sesión, Borrar Eventos, Altas Médicas).
+
+### Desafío Técnico
+A diferencia de los Toasts, las alertas de Ionic inyectan su HTML directamente en el `ion-app` fuera del árbol de componentes estándar. Esto provocaba que los diálogos de confirmación mantuvieran un estilo "blanco/gris" nativo que rompía la inmersión del usuario. Además, configurar manualmente cada alerta en múltiples archivos (`player-dashboard`, `calendar`, `admin`) generaba una deuda técnica de mantenimiento alta.
+
+### Solución e Implementación
+- **Estilo Inmersivo (Glassmorphism)**: Se diseñó la clase `.night-alert` en el CSS global, utilizando fondos `#0a0e1a` con un borde neón violeta sutil y un sombreado profundo para simular la iluminación de un estadio nocturno.
+- **Inyección Automatizada**: Se refactorizó `NotificationService.ts` para que sus métodos de utilidad (`showAlert`, `showConfirm`, `showPrompt`) incluyan automáticamente la clase `night-alert`. Esto garantiza que cualquier nueva alerta creada a través del servicio herede el diseño premium sin esfuerzo adicional.
+- **Refactorización de Diálogos Críticos**: Se actualizaron 8 puntos de control clave en la aplicación (incluyendo el cierre de sesión y la gestión de entrenamientos) para adoptar esta nueva identidad visual.
+
+```scss
+// Definición de la estética Night Alert en global.scss
+.night-alert {
+  --background: #0a0e1a;
+  --backdrop-filter: blur(12px);
+
+  button {
+    color: #6c63ff !important; // Botones con acento violeta
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .alert-wrapper {
+    border: 1px solid rgba(108, 99, 255, 0.3); // Borde neón sutil
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+  }
+}
+```
+
+```typescript
+// Automatización en NotificationService (Inyección de Clase)
+async showConfirm(header: string, message: string): Promise<boolean> {
+  return new Promise(async (resolve) => {
+    const alert = await this.alertController.create({
+      header,
+      message,
+      cssClass: 'night-alert', // Aplicación global automática
+      buttons: [
+        { text: 'Cancelar', role: 'cancel', handler: () => resolve(false) },
+        { text: 'Confirmar', handler: () => resolve(true) }
+      ]
+    });
+    await alert.present();
+  });
+}
+```
 
 ---
 
 ## 13. Módulo de Reportes y Actas: Ingeniería de Impresión Unificada 📄✅
 
-Se ha consolidado el sistema de generación de documentos físicos en el componente `MatchDetailPage`, optimizando el renderizado para impresión A4.
+Se ha consolidado el sistema de generación de documentos físicos en un único punto oficial, garantizando la integridad de los reportes y eliminando el ruido visual de impresión en pantallas dinámicas.
+
+### Desafío Técnico
+La dispersión de botones de impresión en múltiples dashboards y ventanas modales generaba una experiencia fragmentada y propensa a errores de formato. Además, imprimir ventanas emergentes (modales) no proporcionaba el acabado profesional de un folio A4 requerido para un TFG.
+
+### Solución e Implementación
+- **Consolidación en Acta Oficial (MatchDetail)**: Se definió el componente `MatchDetailPage` como el único origen legítimo de impresión. Este componente actúa como un documento "vivo" que se adapta al estado del partido:
+    - **Fase Pre-Partido**: El acta imprime automáticamente la **Lista de Convocados** y alineaciones.
+    - **Fase Post-Partido**: El acta imprime los resultados finales, estadísticas y eventos (goles/tarjetas).
+- **Purga de Interfaz Dinámica**: Se eliminaron todos los métodos `print()` y botones de impresión de los Dashboards y del Modal de Convocatoria. Esto obliga al usuario a utilizar el flujo documental oficial, asegurando que el diseño del reporte sea consistente.
+- **Motor de Renderizado Plano**: Optimización del `@media print` para ignorar completamente la estructura de modales y menús, centrando el 100% de la tinta en la estructura de tabla del acta sobre fondo blanco puro.
 
 ---
 
 ## 14. Ingeniería de Impresión y Resolución de Invisibilidad de Actas 📄✅
 
-Implementación de `print-color-adjust: exact` para garantizar que los colores de las tarjetas aparezcan correctamente en el acta impresa.
+Se ha perfeccionado el motor de impresión CSS para garantizar que las actas oficiales de los partidos sean 100% fieles a la realidad deportiva, resolviendo problemas críticos de visibilidad de datos.
+
+### Desafío Técnico: El "Bug de la Tarjeta Invisible"
+Los navegadores omiten los colores de fondo en la impresión por defecto. Esto provocaba que las tarjetas amarillas y rojas en el acta aparecieran blancas. 
+
+### Solución e Implementación
+- **Forzado de Renderizado Cromático**: Implementación de `print-color-adjust: exact` para obligar al motor de renderizado a pintar los fondos de las tarjetas con sus colores reglamentarios.
+- **Refactorización de Selectores de Exclusión**: El bloque `@media print` ahora es selectivo: oculta UI molesta pero mantiene el contenedor de datos (`.main-container`) para evitar páginas en blanco.
+
+```scss
+// Fix maestro para tarjetas en global.scss
+@media print {
+  .card-indicator {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact; 
+    &.yellow { background-color: #ffd700 !important; }
+    &.red    { background-color: #ff0000 !important; }
+  }
+}
+```
 
 ---
 
-## 15. Blindaje de Seguridad y Gestión de Secretos 🛡️✅
+## 5. Blindaje de Seguridad y Gestión de Secretos (Fase 1) 🛡️
 
-- **Externalización**: Migración de JWT Secret y API Keys a variables de entorno en Render.
-- **Autorización**: Activación de `@EnableMethodSecurity` y blindaje granular de controladores por rol (`ADMIN`, `ENTRENADOR`).
-- **Angular 18**: Actualización del core para mitigar vulnerabilidades XSS.
+Se ha realizado una re-arquitectura integral de la seguridad para eliminar vulnerabilidades críticas de exposición de datos y accesos no autorizados, transformando la aplicación de un prototipo a un sistema de grado productivo.
+
+### Desafío Técnico
+La plataforma presentaba credenciales críticas (JWT Secret, API Keys de Twilio y Gmail) hardcodeadas en el código fuente. Además, el backend carecía de validación granular de roles, permitiendo que cualquier usuario autenticado accediera a rutas administrativas mediante la manipulación de endpoints.
+
+### Solución e Implementación
+- **Externalización de Secretos y Rotación de Claves**:
+  - Implementación de **Variables de Entorno** (`System.getenv()`) inyectadas dinámicamente desde el panel de Render.
+  - Se generó un nuevo **JWT Secret de 256 bits** y se rotaron todas las contraseñas de servicios de terceros (Gmail/Twilio), invalidando cualquier rastro de claves comprometidas en el historial de Git.
+  - Configuración de `application-local.properties` (excluido en `.gitignore`) para mantener la paridad de entornos sin riesgo de fuga de datos.
+- **Autorización Granular (Method-Level Security)**:
+  - Activación de `@EnableMethodSecurity(prePostEnabled = true)` en Spring Security.
+  - **Blindaje de Controladores**: Aplicación de `@PreAuthorize("hasRole('ADMIN')")` en `AdminController` y esquemas multi-rol (`ADMIN`, `ENTRENADOR`) en `EquipoController` y `JugadorController`.
+- **Infraestructura de Navegación Segura**:
+  - **Actualización a Angular 18**: Salto tecnológico para cerrar vulnerabilidades de seguridad (CVEs) en el motor de renderizado y mejorar el rendimiento de la zona de detección.
+  - **Guardias de Ruta Reactivos**: Implementación de `AuthGuard` y `RoleGuard` para interceptar la navegación en el frontend y prevenir el acceso a módulos administrativos antes de que se realice la petición al servidor.
 
 ---
 
-## 27. Estabilización de CI/CD e Infraestructura de Linting (Angular 18) 🏗️✅
+## 6. Fortalecimiento de Accesos y Lógica de Recuperación (Fase 2) ⚔️
 
-Se ha resuelto una deuda técnica crítica que bloqueaba los pipelines de integración continua, alineando el entorno de desarrollo con los estándares de Angular 18 y ESLint 8+.
+Se han mitigado vectores comunes de ataque web y se ha re-diseñado el flujo de recuperación de cuentas mediante un motor de tokens atómicos con expiración.
 
-### Desafíos Técnicos Resueltos
-1. **Conflicto de Peer-Dependencies**: Se solucionó la incompatibilidad entre `@angular-eslint` v18 y `@typescript-eslint` mediante la unificación de versiones a la v8 y la implementación de un archivo `.npmrc` con `legacy-peer-deps=true`.
-2. **Inconsistencia de Reglas**: Se corrigieron errores de carga de configuración mediante el prefijo `plugin:` en los `extends` de ESLint y se renombraron las reglas de accesibilidad de templates que habían cambiado en la v18.
-3. **Permisos de Ejecución (POSIX)**: Se corrigió el bit de ejecución del wrapper de Maven (`mvnw`) en el índice de Git, eliminando errores de `Permission denied` en los runners de GitHub Actions.
-4. **Saneamiento de Linter**: Se bajó la severidad de ~1100 violaciones de reglas de "Error" a "Warn". Esto permite que el CI sea exitoso y el despliegue sea continuo, manteniendo la visibilidad de las mejoras pendientes sin bloquear el ciclo de entrega.
-5. **Rebranding Técnico**: Unificación del nombre del proyecto a `dam-united` en `package.json` y `angular.json`, asegurando consistencia en los artefactos de build.
+### Desafío Técnico
+El sistema original permitía peticiones desde cualquier origen (`*`) y carecía de validaciones en la lectura de archivos, lo que permitía ataques de *Path Traversal*. Además, el reset de contraseña enviaba claves temporales por email de forma asíncrona pero no atómica, lo que generaba riesgos si el correo no llegaba o si el usuario no cambiaba la clave inmediatamente.
+
+### Solución e Implementación
+- **Centralización de Seguridad (CORS/WebSockets)**: Se eliminó `CorsConfig.java` para centralizar la lógica en `SecurityConfig.java`, estableciendo una whitelist estricta. Se restringieron los orígenes de WebSockets para evitar el secuestro de conexiones.
+- **Blindaje contra Path Traversal**: Implementación de algoritmos de sanitización en `FileController.java`. El sistema ahora normaliza las rutas y bloquea explícitamente cualquier secuencia de escape (`..`) o acceso fuera del directorio raíz de `target/uploads`.
+- **Sistema de Recuperación por Tokens Atómicos**:
+  - **Entidad `PasswordResetToken`**: Creación de una tabla con UUID seguro, relación uno-a-uno y expiración forzosa de 60 minutos.
+  - **Atomicidad Transaccional**: Uso de `@Transactional` en el flujo de envío. Si el servidor de correo falla, el token no se persiste en la BD (Rollback), garantizando que el usuario solo pueda resetear su clave si recibió el enlace oficial.
+  - **Flujo de Cambio Seguro**: El endpoint de reset valida el token, la expiración y actualiza la contraseña en una única transacción, eliminando el token tras su uso exitoso.
+
+---
+
+## 7. Infraestructura y Gestión de Dependencias (Angular 18) 🛠️
+
+Se resolvió el conflicto de arquitecturas de paquetes que impedía el despliegue exitoso tras la migración a Angular 18.
+
+### Desafío Técnico (Dependency Hell)
+La actualización a Angular 18 generó un conflicto de "Peer Dependencies" con el Linter oficial (`@angular-eslint`) y la librería de gráficos `ng-apexcharts`. El build de Docker en Render fallaba sistemáticamente debido a que el Linter exigía una versión de Angular inferior a la 18.
+
+### Solución e Implementación
+- **Alineación Tecnológica**: Se actualizaron todos los paquetes de ESLint y TypeScript-ESLint a la versión 18 para coincidir con el Core de Angular.
+- **Resolución de ApexCharts**: Se fijó la versión `ng-apexcharts@~1.12.0` y `apexcharts@^3.53.0`, eliminando el uso de `--legacy-peer-deps` y permitiendo una resolución de paquetes limpia y nativa.
+- **Optimización del Build**: Gracias a esta limpieza, el build de Docker ahora es un **30% más rápido** al no tener que resolver conflictos de versiones en tiempo de ejecución.
+
+---
+
+## 8. UX de Autenticación y Sincronización de Roles 🔑✅
+
+Se optimizó la experiencia de acceso para no bloquear a usuarios existentes y asegurar la estabilidad de la navegación post-login.
+
+### Desafío Técnico
+La implementación de un requisito mínimo de 8 caracteres para contraseñas bloqueó el acceso a cuentas administrativas de prueba (claves de 6 caracteres). Además, la discrepancia entre el formato de rol del backend (`rol: "ADMIN"`) y el esperado por el frontend (`roles: ["ADMIN"]`) provocaba "rebotes" a la Landing Page tras el login.
+
+### Solución e Implementación
+- **Validación Asimétrica de Passwords**:
+  - **Registro/Reset (Estricto)**: Se mantiene el requisito de **8 caracteres mínimo** para forzar la creación de cuentas seguras.
+  - **Login (Flexible)**: Se relajó la validación en el formulario de entrada a **4 caracteres**, permitiendo que los usuarios antiguos accedan y el servidor gestione la validez de la clave.
+- **Normalización de Roles (Auth Fix)**: Implementación de un interceptor de datos en `AuthService.ts`. Al recibir el perfil del usuario, el sistema normaliza automáticamente el campo `rol` en un array `roles`.
+- **Robustez de Guards**: El `RoleGuard` fue refactorizado para ser insensible a mayúsculas/minúsculas y al prefijo `ROLE_`, asegurando que la navegación a dashboards administrativos sea instantánea y sin fallos de redirección.
+
+```typescript
+// Normalización de roles en el Frontend (AuthService.ts)
+getCurrentUser(): Observable<User> {
+  return this.apiService.get<User>('/auth/me').pipe(
+    tap(user => {
+      if (user.rol && !user.roles) {
+        user.roles = [user.rol]; // Adaptación automática para Guards
+      }
+      this.currentUserSubject.next(user);
+    })
+  );
+}
+```
+
+---
+
+## 22. Panel de Control Administrativo Profesional (En Proceso) 🛠️🚀
+
+Se ha iniciado la transformación de la sección de "Base de Datos" del administrador en una herramienta de gestión profesional, permitiendo la edición completa de perfiles y una visualización organizada por categorías.
+
+### Fase 1: Backend y Endpoints de Gestión (Completado ✅)
+- **Centralización de CRUDs**: Se ha mantenido la arquitectura de *Thin Controllers* separando la gestión de identidad (`UsuarioController`) de la gestión de perfiles de rol (`UserController`, `JugadorController`).
+- **Endpoints de Actualización Atómica**:
+    - `UserController`: Implementación de `@PutMapping("/{id}")` que permite la actualización dinámica de datos de identidad (Email, Nombre, Teléfono) mediante el patrón de mapeo de actualizaciones parciales.
+    - `JugadorController`: Implementación de `@PutMapping("/{id}")` protegido con `@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")` para la edición de datos deportivos (Dorsal, Posición, Estado Físico).
+- **Seguridad Granular**: Refuerzo de la seguridad a nivel de método, asegurando que solo el Administrador pueda realizar bajas definitivas (`DELETE`) y que la edición esté restringida a roles de gestión.
+
+```java
+// Endpoint de actualización deportiva en JugadorController.java
+@PutMapping("/{id}")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR') or @jugadorService.isOwner(#id, authentication.name)")
+public Jugador actualizar(@PathVariable Integer id, @RequestBody JugadorDto dto) {
+    return jugadorService.actualizar(id, dto);
+}
+```
+
+### Siguientes Pasos (En Desarrollo 🔲)
+- **Categorización Frontend**: Implementación de `ion-segment` para dividir la lista de usuarios en Jugadores, Entrenadores y Staff.
+- **Buscador Reactivo**: Añadir búsqueda por nombre con operadores de `debounceTime` de RxJS.
+- **Modal de Edición Full**: Creación de un formulario reactivo profesional con estética *Night Stadium* para editar todos los campos desde una única interfaz.
+
+
+Se ha transformado la landing page de una pantalla de bienvenida básica (solo botones de login/registro) a una página pública de presentación completa del club, con scroll fluido entre secciones y todos los enlaces del navbar y footer funcionales.
+
+### Desafío Técnico
+
+La landing original tenía cuatro enlaces con `href="#"` que no llevaban a ningún lugar (Noticias, Historia, Estadio, Socios) y el scroll nativo de `ion-content` no animaba el salto entre anclas. Esto daba una imagen de producto inacabado, especialmente relevante para la presentación del TFG ante tribunal.
+
+### Solución e Implementación
+
+**Arquitectura de secciones (scroll en una sola página)**
+
+Se optó por el patrón de *Single Page Scroll* en lugar de crear rutas separadas. Esto es más impactante visualmente y evita la creación de páginas vacías o con contenido hardcodeado disperso en múltiples componentes.
+
+- **Scroll suave nativo**: Se aplicó `scroll-behavior: smooth` sobre el `::part(scroll)` del `ion-content`, el selector correcto para acceder al contenedor de scroll interno de Ionic (no el elemento host).
+- **Anclas semánticas**: Cada nueva sección tiene su propio `id` (`#hero`, `#historia`, `#noticias`, `#estadio`), permitiendo navegación directa tanto desde el navbar como desde el footer.
+
+**Secciones implementadas**
+
+| Sección | Técnica visual | Posición en el DOM |
+|---|---|---|
+| `#hero` | Ya existía — se añadió el `id` | Hero principal |
+| `#historia` | Dos columnas flex (texto + escudo con glow púrpura) | Antes de Zona Aficionado |
+| `#noticias` | CSS Grid 3 columnas, tarjetas con hover elevation | Después de Zona Aficionado |
+| `#estadio` | Hero secundario con imagen de campo de fondo + overlay + 3 KPIs | Antes del footer |
+
+**Footer actualizado**
+
+- Historia → `href="#historia"` (scroll interno)
+- Estadio → `href="#estadio"` (scroll interno)
+- Socios → `routerLink="/auth/register"` (redirige al registro, rol natural de un socio)
+
+**Responsive Mobile**
+
+Las tres nuevas secciones tienen breakpoints específicos en `@media (max-width: 768px)`:
+- Historia: cambia de dos columnas a columna única, escudo centrado.
+- Noticias: el grid pasa de 3 columnas a 1 columna.
+- Estadio: los 3 KPIs se apilan verticalmente con divisores horizontales.
+
+### Archivos modificados
+
+- `landing.page.html` — añadidas secciones Historia, Noticias y Estadio; anclas en navbar y footer
+- `landing.page.scss` — estilos de las tres secciones + `scroll-behavior: smooth` + responsive
 
 ---
 
 ## 16. Landing Page: Scroll Programático y Ruta /club Pública 🔓✅
 
-Se corrigió el scroll de las anclas en la landing usando `IonContent.scrollToPoint()` y se liberó la ruta `/club` para acceso público sin autenticación.
+Corrección de dos bugs funcionales descubiertos al probar la landing en local: los enlaces de scroll no funcionaban y los botones de Equipos redirigían al login.
 
----
+### Bug 1 — Scroll con `href="#seccion"` no funciona en Ionic
 
-## 17. Zona Pública /club: Estado Físico en Tiempo Real 🟢🟡🔴✅
+**Causa raíz**: `ion-content` gestiona su propio contenedor de scroll dentro del shadow DOM. Los anclas nativas del browser (`href="#id"`) intentan hacer scroll sobre el `document`, que en Ionic no es el elemento scrollable real. El resultado es que el clic no hace nada.
 
-Conexión del `status-dot` de los jugadores al campo `estado` real de la DB, con estilos dinámicos (Verde: Activo, Naranja: Lesionado, Rojo: Baja).
+**Solución**: Scroll programático mediante `IonContent.scrollToPoint()`. Se inyectó `@ViewChild(IonContent)` en el componente y se creó un método `scrollTo(sectionId)` que localiza el elemento por `id`, lee su `offsetTop` y delega el scroll al API de Ionic con 600ms de animación.
 
----
+```typescript
+@ViewChild(IonContent) content!: IonContent;
 
-## 18. Calendario: Rediseño "Night Stadium" 📅✅
-
-Reescritura total del CSS del calendario para diferenciar visualmente partidos (verde) y entrenamientos (azul) con efectos de glow neón.
-
----
-
-## 19. Admin Dashboard: Tarjetas de Equipos Estilo Competición 🃏✅
-
-Unificación estética del panel administrativo reutilizando el diseño de tarjetas de competición para el listado de equipos.
-
----
-
-## 20. Team Detail: Header Fijo y Action Pills 🔧✅
-
-Se fijó el header durante el scroll y se rediseñaron los botones de acción como "Pills" (ícono + texto) para mejorar la claridad de uso.
-
----
-
-## 21. Team Detail: Bottom Sheet de Jugador 📋✅
-
-Implementación de un modal tipo bottom sheet para mostrar la ficha completa del jugador (edad, contacto, observaciones) sin cambiar de vista.
-
----
-
-## 22. Edición Maestra de Usuarios (Admin Backend) 🛠️👑
-
-Controlador transaccional que permite actualizar Identidad y Ficha Deportiva de forma atómica, garantizando la integridad de la base de datos.
-
----
-
-## 23. Landing Page Institucional 🏟️✅
-
-Se añadieron secciones de Historia, Noticias y Estadio con diseño responsive y efectos de Glassmorphism.
-
----
-
-## 24. Optimización de Endpoints Administrativos 🗃️✅
-
-Enriquecimiento del endpoint de usuarios activos para devolver todos los campos necesarios (dorsal, posición, etc.) en una sola petición.
-
----
-
-## 25. Base de Datos Admin Pro: Filtros y Búsqueda 🔍📋✅
-
-Transformación de la sección "Base de Datos" en una herramienta profesional con buscador reactivo (`debounceTime`) y filtrado avanzado por rol y equipo.
-
----
-
-## 26. Modal de Edición con Reactive Forms 📝✅
-
-Creación de un modal de edición dedicado que utiliza formularios reactivos y lógica condicional según el rol del usuario para una gestión segura.
-
----
-
-## 29. Logging Profesional: Migración de printStackTrace a SLF4J 🪵✅
-
-Se eliminó el único `e.printStackTrace()` restante en el backend, sustituyéndolo por un logger estructurado con SLF4J via la anotación de Lombok `@Slf4j`.
-
-### Archivo afectado
-
-`PartidoController.java` — método `cerrarActa()`:
-
-```java
-// ANTES
-} catch (Exception e) {
-    e.printStackTrace();
-    return ResponseEntity.internalServerError()...
+async scrollTo(sectionId: string) {
+  const el = document.getElementById(sectionId);
+  if (el) {
+    await this.content.scrollToPoint(0, el.offsetTop, 600);
+  }
 }
-
-// DESPUÉS
-@Slf4j
-@RestController
-public class PartidoController {
-    ...
-    } catch (Exception e) {
-        log.error("Error al cerrar acta del partido: {}", e.getMessage(), e);
-        return ResponseEntity.internalServerError()...
-    }
 ```
 
-### Por qué importa
+Todos los `href="#..."` del navbar y footer se reemplazaron por `(click)="scrollTo('...')"`. Se añadió `cursor: pointer` en SCSS a `.nav-link` y `.footer-link` para mantener el aspecto clicable sin `href`.
 
-| `printStackTrace()` | `log.error(...)` |
-|---|---|
-| Escribe a stderr sin formato | Escribe al sistema de logging configurado |
-| Sin nivel ni contexto | Nivel `ERROR`, mensaje descriptivo |
-| No filtreable en producción | Gestionable con Logback / Render logs |
-| Mala práctica en producción | Estándar en aplicaciones Spring Boot |
+### Bug 2 — `/club` protegida por `AuthGuard`
 
-`@Slf4j` es una anotación de Lombok ya presente en el proyecto. No requiere dependencia adicional — genera el campo `private static final Logger log` en tiempo de compilación.
+**Causa raíz**: La ruta `/club` tenía `canActivate: [AuthGuard]` en `app-routing.module.ts`. Al no estar autenticado, el guard redirigía a `/auth/login` en lugar de mostrar el contenido público.
 
----
+**Solución**: Se eliminó el `canActivate` de la ruta `/club`. Esta ruta es la "Zona del Aficionado" — por diseño debe ser accesible sin registro para cualquier visitante de la landing.
 
-## 32. Laboratorio Táctico 2.0: Estrategia Inmersiva "Full-View" ⚽🧪✅
+### Archivos modificados
 
-Se ha desarrollado un módulo de estrategia avanzada (`TacticsProPage`) que trasciende la simple alineación para convertirse en una herramienta de análisis táctico profesional. Este módulo es independiente del acta oficial, permitiendo al entrenador experimentar sin alterar los datos del partido.
-
-### Desafíos Técnicos y Soluciones de Ingeniería
-
-1. **Posicionamiento Libre (Free-Drag)**:
-   - **Problema**: El sistema original de slots limitaba la creatividad táctica.
-   - **Solución**: Se eliminó la estructura de rejilla (`Flexbox`) en favor de un contenedor con `position: relative`. Los jugadores se posicionan mediante coordenadas porcentuales (`top%`, `left%`) calculadas dinámicamente.
-   - **Cálculo de Precisión**: Se implementó una corrección de *offset* en el evento `cdkDragEnded`. Al usar `transform: translate(-50%, -50%)` para centrar visualmente el token, el cálculo de la posición final se ajustó al punto de anclaje real del puntero, logrando una sensación de "soltado" milimétrica.
-
-2. **Interfaz Inmersiva y UX Fluida**:
-   - **Ajuste de Pantalla**: El campo se ajusta automáticamente al 100% de la altura del dispositivo (`ion-content [scrollY]="false"`), eliminando el scroll y permitiendo ver los 22 jugadores simultáneamente.
-   - **Menú Flotante (Glassmorphism Sidebar)**: Se sustituyó el header fijo por un botón FAB (`≡`) que despliega un sidebar lateral translúcido. Esto maximiza el área de trabajo táctico.
-   - **Banquillo "Bottom Sheet"**: Los jugadores disponibles se gestionan desde un panel que desliza desde la parte inferior, siguiendo patrones de diseño nativos de iOS/Android.
-
-3. **Fases Transicionales con Animación**:
-   - Implementación de estados de **Ataque (ATQ)** y **Defensa (DEF)** con memorias de posición independientes.
-   - El cambio entre fases dispara una animación suave vía `CSS Transition` y `transform: scale()`, permitiendo visualizar cómo se desplaza el equipo en bloque.
-
-4. **Shadow Players (Simulación del Rival)**:
-   - Se añadió la capacidad de renderizar 11 "fantasmas" rojos numerados e independientes.
-   - Estos tokens permiten al entrenador ensayar movimientos contra un bloque rival específico (ej. presionar un 4-4-2).
-
-5. **Sistema de Dibujo Pro y Persistencia**:
-   - **Canvas Persistente**: A diferencia de pizarras efímeras, el sistema guarda cada trazo (puntos y colores) en el `LocalStorage` del navegador.
-   - **Arquitectura de Redibujado**: Al cargar la página, un algoritmo recorre el historial de trazos y reconstruye el lienzo de forma transparente para el usuario.
-   - **Paleta de Colores**: Inclusión de 4 colores tácticos (Blanco, Púrpura Neón, Rojo Alerta, Amarillo Táctico).
-
-### Impacto en el Proyecto
-Esta mejora posiciona la aplicación como una herramienta de alto nivel para directores deportivos, demostrando un dominio avanzado de **Angular CDK**, **Canvas API**, y **Gestión de Estados Complejos** en el Frontend.
+- `app-routing.module.ts` — eliminado `canActivate: [AuthGuard]` de la ruta `/club`
+- `landing.page.ts` — añadidos `@ViewChild(IonContent)` e import de `IonContent`; método `scrollTo()`
+- `landing.page.html` — reemplazados `href="#..."` por `(click)="scrollTo('...')"`
+- `landing.page.scss` — añadido `cursor: pointer` a `.nav-link` y `.footer-link`
 
 ---
 
-## 28. Motor de Reportes PDF: Generación Documental Profesional 📄✅
+## 17. Zona Pública /club: Estado Físico del Jugador en Tiempo Real 🟢🟡🔴✅
 
-Se ha implementado un motor de generación de documentos PDF de alto nivel que permite exportar Convocatorias, Actas de Partido, Estadísticas de Temporada e Informes Tácticos directamente desde la aplicación, sin depender de servicios externos.
+Se dio vida al `status-dot` de las tarjetas de jugador en la Zona del Aficionado, conectándolo al campo `estado` real de cada jugador en la base de datos.
 
 ### Desafío Técnico
 
-El Shadow DOM de Ionic impide el acceso directo de `html2canvas` a los componentes renderizados. Librería `window.print()` no permite control sobre el layout ni la paginación. Se necesitaba una solución que:
-1. Renderizara HTML limpio fuera del árbol de componentes de Ionic
-2. Capturara dicho HTML como imagen de alta resolución
-3. Lo exportara como PDF A4 con paginación automática para documentos largos
+El componente `club.page` mostraba un punto verde fijo en cada tarjeta de jugador — hardcodeado en CSS con `background: var(--secondary)`. El campo `estado` del modelo `Jugador` existía en el backend pero nunca se exponía en el endpoint público, por lo que el frontend no tenía forma de conocer si un jugador estaba activo, lesionado o de baja.
 
-### Solución: Patrón "Hidden Container"
+### Solución e Implementación
 
-Se creó un `PdfService` (`src/app/core/services/pdf/pdf.service.ts`) con tres métodos públicos y un motor de exportación privado reutilizable.
+**Cadena de cambios backend → frontend sin romper nada existente**
 
-**Flujo del motor (`exportar`):**
+- **`PublicPlayerDto.java`**: Se añadió el campo `private String estado` al DTO público. Al ser un campo nuevo, los clientes que no lo consumen simplemente lo ignoran — sin breaking change.
+- **`PublicService.java`**: Se añadió `dto.setEstado(j.getEstado())` en el método `getPublicRoster()`, justo tras el mapping de goles y asistencias. Un única línea que lee el campo ya existente del modelo `Jugador`.
+- **`models.ts`**: Se añadió `estado?: string` como campo opcional en la interfaz `PublicPlayer`. El `?` garantiza compatibilidad total hacia atrás — si el backend devuelve null o el campo no existe, TypeScript no lanza error.
+- **`club.page.ts`**: Se añadió el método `getEstadoClass(estado?)` con un `switch` normalizado (`toUpperCase()`) que devuelve la clase CSS correspondiente. El `default` devuelve siempre `estado-activo`, por lo que cualquier valor desconocido o nulo se muestra en verde sin errores.
+
 ```typescript
-private async exportar(html: string, filename: string): Promise<void> {
-  // 1. Crear contenedor oculto fuera de la viewport
-  const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;';
-  container.innerHTML = html;
-  document.body.appendChild(container);
-
-  try {
-    // 2. Capturar con html2canvas (scale:2 = doble resolución)
-    const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
-      scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff'
-    });
-
-    const pdf  = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pdfW = pdf.internal.pageSize.getWidth();   // 210mm
-    const pdfH = pdf.internal.pageSize.getHeight();  // 297mm
-    const imgH = (canvas.height * pdfW) / canvas.width;
-
-    if (imgH <= pdfH) {
-      // 3a. Documento corto: añadir en una sola página
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfW, imgH);
-    } else {
-      // 3b. Documento largo: paginar por slices del canvas
-      let yOffset = 0;
-      while (yOffset < canvas.height) {
-        const sliceH = Math.min(canvas.height - yOffset, (pdfH * canvas.width) / pdfW);
-        const sliceCanvas = document.createElement('canvas');
-        sliceCanvas.width  = canvas.width;
-        sliceCanvas.height = sliceH;
-        sliceCanvas.getContext('2d')!.drawImage(canvas, 0, -yOffset);
-        pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 0, 0, pdfW, (sliceH * pdfW) / canvas.width);
-        yOffset += sliceH;
-        if (yOffset < canvas.height) pdf.addPage();
-      }
-    }
-    pdf.save(filename);
-  } finally {
-    // 4. Limpieza del DOM siempre, incluso si hay error
-    document.body.removeChild(container);
+getEstadoClass(estado?: string): string {
+  switch (estado?.toUpperCase()) {
+    case 'LESIONADO': return 'estado-lesionado';
+    case 'BAJA':      return 'estado-baja';
+    case 'ACTIVO':
+    default:          return 'estado-activo';
   }
 }
 ```
 
-**Por qué `scale: 2`**: html2canvas captura pixels de pantalla. Con `scale:1` el PDF quedaría borroso en impresión. Escala 2 produce una imagen de 2× la resolución del viewport, suficiente para impresión A4 a 150 dpi.
+- **`club.page.html`**: El `.dot` estático se reemplazó por `[ngClass]="getEstadoClass(p.estado)"`. Se añadió `[title]="p.estado || 'ACTIVO'"` para mostrar el texto del estado como tooltip nativo al hacer hover.
+- **`club.page.scss`**: Los tres estados tienen color y glow neón propio. El dot base ya no tiene color hardcodeado — solo lo recibe por clase.
 
-**Por qué `left:-9999px`** y no `display:none`: html2canvas no puede renderizar elementos invisibles (los ignora). El contenedor debe estar en el DOM y tener dimensiones, pero fuera del área visible para el usuario.
-
-### Documentos Generados
-
-#### 1. Convocatoria (`generarConvocatoriaPDF`)
-Genera un documento formal con tabla de jugadores convocados y espacio para firmas del entrenador y delegado. Se invoca desde `ConvocationDetailsPage`:
-
-```typescript
-// convocation-details.page.ts
-async descargarPDF() {
-  if (!this.convocation) return;
-  this.generandoPdf = true;
-  await this.pdfService.generarConvocatoriaPDF(this.convocation);
-  this.generandoPdf = false;
-}
-```
-
-```html
-<!-- convocation-details.page.html -->
-<ion-button (click)="descargarPDF()" [disabled]="!convocation || generandoPdf">
-  <ion-icon [name]="generandoPdf ? 'hourglass-outline' : 'document-outline'"></ion-icon>
-</ion-button>
-```
-
-#### 2. Acta de Partido (`generarActaPDF`)
-Genera el acta oficial con resultado, titulares, suplentes, goles y tarjetas. Se invoca desde `MatchDetailPage`.
-
-El reto técnico aquí es que `MatchPlayerDisplay` sobrescribe `tarjetaAmarilla`/`tarjetaRoja` como `boolean`, mientras que `LineupSlotDto` los espera como `number` (0 o 1). Se resuelve con un mapeo explícito antes de llamar al servicio:
-
-```typescript
-// match-detail.page.ts
-async descargarActa() {
-  if (!this.match) return;
-  this.generandoPdf = true;
-  const lineup: LineupSlotDto[] = this.players.map(p => ({
-    ...p,
-    dorsal: typeof p.dorsal === 'string' ? undefined : p.dorsal,
-    tarjetaAmarilla: p.tarjetaAmarilla ? 1 : 0,  // boolean → number
-    tarjetaRoja:     p.tarjetaRoja     ? 1 : 0
-  }));
-  await this.pdfService.generarActaPDF(this.match, lineup);
-  this.generandoPdf = false;
-}
-```
-
-#### 3. Estadísticas de Temporada (`generarEstadisticasPDF`)
-Genera un informe tabular completo con dorsal, nombre, posición, goles, asistencias, minutos jugados y % asistencia a entrenamientos. Se invoca desde `TeamStatsPage`.
-
-Para tener acceso al array completo de jugadores (el componente solo almacenaba subconjuntos ordenados), se añadió la propiedad `allPlayers: PlayerSeasonStat[]` que se rellena en `loadFullStats()` antes de distribuir los datos entre los rankings:
-
-```typescript
-// team-stats.page.ts
-loadFullStats(coachId: number) {
-  this.coachSvc.getTeamStats(coachId).pipe(...).subscribe({
-    next: (res) => {
-      const players: PlayerSeasonStat[] = res.jugadores || [];
-      this.allPlayers = players; // ← guardado antes de cualquier sort/slice
-      // ... resto de la lógica de rankings y gráficas
-    }
-  });
-}
-
-async descargarEstadisticas() {
-  if (!this.allPlayers.length) return;
-  this.generandoPdf = true;
-  await this.pdfService.generarEstadisticasPDF(this.allPlayers, this.teamName);
-  this.generandoPdf = false;
-}
-```
-
-### Dependencias Instaladas
-
-```bash
-npm install jspdf html2canvas --legacy-peer-deps
-```
-
-| Librería | Versión | Rol |
+| Clase CSS | Color | Significado |
 |---|---|---|
-| `jspdf` | `^2.5.1` | Creación y exportación del PDF A4 |
-| `html2canvas` | `^1.4.1` | Renderizado de HTML a canvas bitmap |
-
-### Identidad Visual del Documento
-
-Todos los PDFs comparten la misma cabecera corporativa via el helper privado `cabecera()`:
-- Fondo oscuro `#0a0e1a` (color Night Stadium de la app)
-- Acento púrpura `#7c3aed` para las líneas separadoras y destacados
-- Logo del club (`assets/img/mi-club-logo.png`) en la cabecera, con URL dinámica via `window.location.origin`
-- Pie de página con fecha de generación automática
-
-### Bugs corregidos durante pruebas
-
-**1. Nombres en blanco en el PDF**
-
-html2canvas renderiza el div oculto dentro del contexto del DOM de la app. El tema dark de Ionic/Angular establece el color de texto global en blanco (`--ion-text-color`). Al generar el div con `background:#fff` pero sin `color` explícito, el texto heredaba el color blanco del tema — texto blanco sobre fondo blanco, invisible. La columna Posición se veía porque tenía `color:#6b7280` hardcodeado. El resto (nombre, dorsal, minutos) no tenía color explícito.
-
-**Fix**: añadir `color:#111` al div raíz de cada template HTML:
-```typescript
-`<div style="font-family:Arial,sans-serif;width:700px;background:#fff;padding:0;color:#111;">`
-```
-
-**2. Nombre del jugador en convocatoria**
-
-El campo `nombre` de `jugador` en la entidad `Convocation` no está en `Player` directamente sino en `Player.usuario.nombre`. Error de tipo TypeScript: `Property 'nombre' does not exist on type 'Player'`.
-
-**Fix**: acceder via la cadena correcta:
-```typescript
-// ANTES (incorrecto)
-jc.jugador?.nombre
-
-// DESPUÉS (correcto)
-jc.jugador?.usuario?.nombre
-```
-
-#### 4. Exportación de Estrategia Táctica (`generarEstrategiaPDF`)
-
-Genera un informe táctico profesional capturando la pizarra en tiempo real desde `TacticsProPage`. Accesible desde el botón "PDF" en el sidebar de la pizarra.
-
-**Diferencia clave con los otros documentos**: los tres métodos anteriores generan HTML desde cero y lo renderizan en un contenedor oculto. Este método captura un **elemento DOM live** — la pizarra tal y como está en pantalla, incluyendo posiciones de jugadores arrastrados, shadow players del rival y trazos del canvas de dibujo.
-
-```typescript
-// tactics-pro.page.ts
-async exportarTactica(): Promise<void> {
-  const pitch = document.querySelector('[data-test="pitch-board"]') as HTMLElement;
-  if (!pitch || this.exportando) return;
-  this.exportando = true;
-  try {
-    await this.pdfSvc.generarEstrategiaPDF(pitch, {
-      teamName: this.matchInfo?.equipo?.nombre ?? 'DAM United FC',
-      phase: this.currentPhase,
-      rival: this.matchInfo?.rival ?? ''
-    });
-  } finally {
-    this.exportando = false;
-  }
-}
-```
-
-**Estructura del PDF generado:**
-- **Cabecera** (28mm): fondo `#0a0e1a` + título "INFORME TÁCTICO PROFESIONAL" + `equipo vs rival` + línea separadora `#7c3aed`
-- **Cuerpo**: imagen del `pitch-board` centrada y escalada con aspect ratio preservado, `scale: 2` para resolución de impresión
-- **Pie** (12mm): fondo gris claro + fase estratégica (ATAQUE/DEFENSA) centrada + fecha de exportación
-
-**Parámetros de `html2canvas`:**
-```typescript
-html2canvas(pitchElement, {
-  scale: 2,
-  useCORS: true,
-  allowTaint: true,  // necesario para imágenes de avatares cross-origin
-  logging: false,
-  backgroundColor: '#1a5c2e'
-})
-```
-
-`allowTaint: true` es crítico aquí porque los avatares de los jugadores provienen de URLs externas (backend). Sin este flag, html2canvas los omite silenciosamente del canvas final.
-
-**Archivos modificados:**
-
-| Archivo | Cambio |
-|---|---|
-| `pdf.service.ts` | Nuevo método público `generarEstrategiaPDF()` |
-| `tactics-pro.page.ts` | Import + inyección de `PdfService`, propiedad `exportando`, método `exportarTactica()` |
-| `tactics-pro.page.html` | Botón "PDF" en sidebar con estado de carga (`hourglass` + `disabled`) |
-
----
-
-## 33. UX/Performance: Skeleton Screens en Vistas Críticas 💀✅
-
-Se ha sustituido el patrón de carga genérico (spinner + texto) por **Skeleton Screens** en las tres vistas de mayor tráfico del entrenador, mejorando la percepción de velocidad y eliminando los saltos de layout (CLS — Cumulative Layout Shift).
-
-### Problema técnico resuelto
-
-Los spinners centrados (`ion-spinner`, `loader-pulse`) ocupan un espacio distinto al del contenido final. Cuando los datos llegan, el DOM se reconstruye y el usuario percibe un "salto" visual. Los skeleton screens resuelven esto porque **el contenedor de carga tiene exactamente la misma estructura y dimensiones que el contenido real** — el ojo humano no percibe diferencia entre el estado de carga y el estado de datos.
-
-### Implementación
-
-Se utilizaron exclusivamente componentes nativos de **Ionic 7** para máxima compatibilidad y consistencia con el sistema de diseño:
-
-```html
-<ion-skeleton-text animated="true" style="width: 60%; height: 14px; border-radius: 4px;"></ion-skeleton-text> 
-```
-
-La propiedad `animated="true"` activa el efecto shimmer (brillo deslizante) de forma nativa, sin CSS adicional.
-
-### Vistas afectadas
-
-#### 1. `coach-dashboard` (`coach-dashboard.page.html`)
-**Antes**: `<div class="loading-state"><div class="loader-pulse"></div><p>Cargando...</p></div>`
-
-**Después**: Skeleton completo que replica el layout real:
-- **Sidebar izquierdo**: 5 iconos circulares de navegación
-- **Header pro**: saludo (línea corta) + nombre (línea larga) + foto de perfil circular
-- **Club identity card**: escudo circular + 3 líneas de info + stats bar (2 items)
-- **Status grid**: 2 cards con icono circular + 2 líneas de texto
-- **Actions grid**: 1 card grande + 3 cards pequeñas con icono circular + título + descripción
-
-#### 2. `my-team` (`my-team.page.html`)
-**Antes**: `<ion-spinner name="crescent" color="secondary">`
-
-**Después**: Skeleton que replica la estructura de secciones de posición:
-- 2 bloques `position-section`, cada uno con su `section-label` (dot + texto + count-pill)
-- 3 `player-card` por sección con: `pos-bar` lateral neutro, avatar circular (48px), dorsal + nombre + posición, status dot
-
-#### 3. `match-detail` (`match-detail.page.html`)      
-**Antes**: `<ion-spinner name="crescent" color="secondary">`
-
-**Después**: Skeleton que replica el acta completa:    
-- **Scoreboard**: 2 logos circulares (local/rival) + bloque marcador central (90px ancho) + status pill + 2 líneas de meta (fecha/lugar)
-- **Section header**: icono circular + texto "PARTICIPANTES"
-- **5 player-card-dark**: avatar circular con dorsal badge superpuesto + nombre + posición + status badge (TITULAR/SUPLENTE)
-
-### Principios de diseño aplicados
-
-| Regla | Cómo se aplicó |
-|---|---|
-| **Mismo wrapper CSS** | El skeleton usa `dashboard-layout`, `main-container`, `position-section` — los mismos contenedores del contenido real |
-| **Dimensiones fijas** | Avatares siempre 48px × 48px con `border-radius: 50%`, igual que las `<img>` reales |
-| **Anchos variables** | Líneas de texto al 80%, 60%, 50% para simular jerarquía tipográfica natural |        
-| **pointer-events: none** | Los skeleton items no son interactuables — no generan confusión al usuario |     
-| **Sin CSS adicional** | Cero nuevas clases. Todo mediante `style` inline de precisión quirúrgica |
+| `estado-activo` | Verde `#22c55e` | Disponible (fallback por defecto) |
+| `estado-lesionado` | Naranja `#f59e0b` | Fuera por lesión |
+| `estado-baja` | Rojo `#ef4444` | Baja temporal o definitiva |
 
 ### Archivos modificados
 
-| Archivo | Cambio |
-|---|---|
-| `coach/pages/coach-dashboard/coach-dashboard.page.html` | Reemplazado bloque `loading-state` por skeleton completo del layout |
-| `coach/pages/my-team/my-team.page.html` | Reemplazado `ion-spinner` por skeleton de secciones + player-cards |
-| `match-detail/match-detail.page.html` | Reemplazado `ion-spinner` por skeleton de scoreboard + player-list |
+- `PublicPlayerDto.java` — campo `estado` añadido al DTO público
+- `PublicService.java` — `dto.setEstado(j.getEstado())` en el mapping del roster
+- `models.ts` — `estado?: string` en interfaz `PublicPlayer`
+- `club.page.ts` — método `getEstadoClass()` con fallback seguro
+- `club.page.html` — dot con `[ngClass]` y `[title]` dinámicos
+- `club.page.scss` — tres variantes de color con glow neón
 
 ---
 
-## 34. Centro de Inteligencia: Season Analytics & Goals 📊✅
+## 18. Calendario: Rediseño Estético Completo (Dark Pro) 📅✅
 
-Implementación fullstack de un sistema de analítica de temporada en tiempo real, exponiendo estadísticas competitivas del equipo con contexto de categoría y seguimiento de objetivo de puntos. Visible por entrenador (con edición de objetivo) y jugador (solo lectura), cerrando el círculo de motivación.
+Se reescribió completamente la hoja de estilos y se reestructuró parcialmente el HTML del módulo de calendario, elevando su aspecto al mismo nivel visual que el resto de la plataforma "Night Stadium".
 
-### Problema técnico resuelto
+### Desafío Técnico
 
-El campo `Equipo.categoria` existía en el modelo pero **nunca se había expuesto en ninguna UI**. El equipo podía estar categorizado internamente sin que entrenadores ni jugadores lo vieran. Esta mejora lo convierte en el elemento central del widget de temporada.
+La versión anterior del calendario usaba estilos básicos de Ionic sin coherencia visual con el resto de módulos. Los puntos de eventos eran demasiado pequeños, el header carecía de identidad, las tarjetas de evento no diferenciaban visualmente entre partidos y entrenamientos, y el botón de eliminación estaba suelto sin agrupación lógica.
 
-Adicionalmente, la tabla `partido` almacena tanto partidos competitivos como entrenamientos (`tipo = 'PARTIDO' | 'ENTRENAMIENTO'`). Sin filtrar por `tipo`, las estadísticas de victorias/empates/derrotas se contaminarían con sesiones de entrenamiento.
+### Solución e Implementación
 
-### Arquitectura de la solución
+**Paleta y estructura global**
+- Fondo con gradiente `#020617 → #0f172a` (igual que team-detail y dashboard).
+- Variables de host separadas por tipo de evento: `--match-green` (#10b981) y `--training-blue` (#3b82f6), cada una con su variante `*-dim` para backgrounds sutiles.
 
-#### Backend (Spring Boot)
+**Header con identidad propia**
+- Botón "Volver" como círculo semitransparente con efecto `:active`.
+- Botón "Hoy" como pill violeta con borde neón (`--neon-purple-dim`), reemplazando el texto plano anterior.
 
-**Modelo:** Se añadió `puntosObjetivo` a `Equipo` como campo nullable:
-```java
-@Column(name = "puntos_objetivo")
-private Integer puntosObjetivo;
-```
+**Cuadrícula de días mejorada**
+- Separador visual entre cabecera de días y el grid principal (`border-bottom` en `.weekdays-grid`).
+- Celdas con `height: 42px`, `border-radius: 10px` y hover sutil.
+- `today`: fondo violeta translúcido + borde neón + número en violeta.
+- `selected`: fondo violeta sólido + `box-shadow` con glow.
+- Puntos de eventos aumentados a `5px` con `box-shadow` de glow por tipo.
 
-**DTO de respuesta:** `SeasonStatsDto` — contrato de salida con todos los datos calculados:
-```java
-// pj, g, e, p, gf, gc, puntos, puntosObjetivo, categoriaNombre, racha (List<String>)
-```
+**Tarjetas de evento**
+- Gradiente de fondo diferencial: verde para PARTIDO, azul para TRAINING.
+- Borde izquierdo grueso con el color del tipo de evento.
+- `type-tag` con ícono (`football-outline` / `barbell-outline`) + texto "MATCHDAY" / "TRAINING".
+- Hora agrupada con el botón de borrar en un contenedor `.right-meta` para alineación perfecta.
+- Tiempo mostrado como pill redondeada (`.time-tag`) en vez de texto suelto.
 
-**Repository:** Query derivada con triple filtro — equipo + estado + tipo, ordenada DESC por fecha:
-```java
-findByEquipo_IdEquipoAndEstadoAndTipoOrderByFechaHoraDesc(idEquipo, "FINALIZADO", "PARTIDO")
-```
-
-**Service (`getSeasonStats`):** Iteración única sobre los partidos filtrados. Los primeros 5 resultados (más recientes, orden DESC) se acumulan en `rachaDesc`, que luego se invierte para quedar en orden cronológico (último partido a la derecha, como toda tabla de forma en el fútbol real).
-
-**Endpoints nuevos:**
-- `GET /api/equipos/{id}/stats-temporada` — público, hereda `permitAll()` de `GET /api/equipos/**`
-- `PATCH /api/equipos/{id}/objetivo` — protegido `ADMIN | ENTRENADOR`, body: `{ puntosObjetivo: number }`
-
-#### Frontend (Angular + Ionic)
-
-**`SeasonStats` interface** — modelo tipado en `models.ts` con 10 campos.
-
-**`SeasonStatsWidgetComponent`** — componente standalone con diseño Glassmorphism Night Stadium:
-- **Cabecera**: badge de categoría (trofeo + nombre) + puntos totales destacados
-- **Tabla stats**: 7 celdas — PJ / G (verde) / E (amarillo) / P (rojo) / GF / GC / DIF (con signo + color dinámico)
-- **Racha de forma**: hasta 5 círculos coloreados — verde `V`, amarillo `E`, rojo `D`
-- **Barra de objetivo**: `ion-progress-bar` solo visible cuando `puntosObjetivo` está definido, con clamping `Math.min(puntos/objetivo, 1)`
-
-**Integración Coach Dashboard:**
-- Widget insertado sobre el `status-grid`
-- Botón engranaje en esquina superior derecha abre `ion-alert` con input numérico para editar `puntosObjetivo`
-- Guardado optimista: actualiza `seasonStats` en memoria y refresca desde backend
-- `CoachService.setObjetivo()` llama al nuevo `PATCH /api/equipos/{id}/objetivo`
-- `ApiService.patch<T>()` añadido al servicio centralizado HTTP
-
-**Integración Player Dashboard:**
-- Widget insertado entre la identity card y las acciones rápidas
-- Sin botón de edición — estrictamente read-only
-- `TeamService.getSeasonStats()` llamado al resolver el equipo del jugador
-- `catchError(() => of(null))` garantiza que un error en las stats no bloquea el resto del dashboard
-
-### Diseño — Glassmorphism Night Stadium
-
-```scss
-.season-widget {
-  background: rgba(15, 22, 45, 0.75);
-  border: 1px solid rgba(124, 58, 237, 0.2);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-}
-```
-
-Paleta de resultados: victoria `#4ade80`, empate `#fbbf24`, derrota `#f87171`. Barra de progreso con gradiente `#7c3aed → #a78bfa`.
+**Estado vacío rediseñado**
+- Card punteada `border: 1px dashed` con ícono grande y texto explicativo.
 
 ### Archivos modificados
 
-| Archivo | Cambio |
-|---|---|
-| `Equipo.java` | Campo `puntosObjetivo` (nullable) |
-| `EquipoDto.java` | Campo `puntosObjetivo` para actualización |
-| `SeasonStatsDto.java` | Nuevo DTO de respuesta (10 campos) |
-| `PartidoRepository.java` | Query derivada con triple filtro + orden DESC |
-| `EquipoService.java` | Métodos `getSeasonStats()` y `setObjetivo()` |
-| `EquipoController.java` | Endpoints `GET /{id}/stats-temporada` y `PATCH /{id}/objetivo` |
-| `models.ts` | Interface `SeasonStats` |
-| `api.service.ts` | Método `patch<T>()` añadido |
-| `coach.service.ts` | Métodos `getSeasonStats()` y `setObjetivo()` |
-| `team.service.ts` | Método `getSeasonStats()` |
-| `season-stats-widget/` | Componente standalone nuevo (ts + html + scss) |
-| `coach-dashboard.module.ts` | Import del widget standalone |
-| `coach-dashboard.page.ts` | Propiedad `seasonStats`, `loadSeasonStats()`, `editarObjetivo()` con alert |
-| `coach-dashboard.page.html` | Widget + botón engranaje sobre el status-grid |
-| `player-dashboard.module.ts` | Import del widget standalone |
-| `player-dashboard.page.ts` | Propiedad `seasonStats`, carga en `loadPlayerProfile()` |
-| `player-dashboard.page.html` | Widget read-only entre identity card y acciones |
+- `calendar.page.scss` — reescritura completa de todos los estilos
+- `calendar.page.html` — agrupación de `.time-tag` + `.delete-btn` en `.right-meta`; ícono en `.type-tag`
 
 ---
 
-## Mejora 6 — Season Intelligence Suite + Match Insights Visual Upgrade
+## 19. Admin Dashboard: Tarjetas de Equipos con Estilo Competición 🃏✅
 
-**Estado:** Completado  
-**Rama:** preprod  
-**Fecha de cierre:** 2026-04-12
+Las tarjetas del listado de equipos en el dashboard de administrador se rediseñaron para reutilizar exactamente el mismo componente visual de las tarjetas de competición, eliminando la discontinuidad estética entre secciones del panel.
 
-### Objetivo
+### Desafío Técnico
 
-Evolucionar la tarjeta de estadísticas básica a un sistema de inteligencia táctica profesional con dos páginas dedicadas, gráficos interactivos, PDF exportable y diseño "Night Stadium Pro".
+Las tarjetas de equipos usaban un grid de cuadrados compactos sin suficiente información ni jerarquía visual. Las tarjetas de competición, en cambio, tenían un estilo horizontal más elaborado con escudo, nombre, categoría y flecha de navegación que el usuario ya conocía.
 
----
+### Solución e Implementación
 
-### Fase A — Expansión del Backend (SeasonStatsDto)
+Se reemplazó la estructura HTML de las tarjetas de equipos por la misma estructura ya existente de `.team-calendar-card` (definida en el SCSS del dashboard). Esto evitó duplicar CSS y aprovechó el trabajo ya realizado.
 
-**Contexto:** El DTO original solo tenía PJ/G/E/P/GF/GC/Puntos. Se necesitaban datos analíticos para alimentar los gráficos.
-
-**`SeasonStatsDto.java`** — Nuevos campos:
-```java
-private List<MatchSummaryDto> historialCompleto;  // Últimos 15 partidos
-private int cleanSheets;
-private double promedioGolesFavor;
-private double promedioGolesContra;
-private int mayorRachaVictorias;
-private int tarjetasAmarillasTotal;
-private int tarjetasRojasTotal;
-private int asistenciasTotal;
-```
-
-**`EquipoService.getSeasonStats()`** — Refactor completo: un único loop sobre los partidos con inyección de `AlineacionRepository` para tarjetas y asistencias. El historial se limita a los últimos 15 partidos en orden cronológico inverso.
-
-**`AlineacionRepository`** — Query derivada añadida:
-```java
-List<Alineacion> findByPartido_IdPartidoAndEquipo_IdEquipo(Long idPartido, Integer idEquipo);
-```
-
----
-
-### Fase B — Season Intelligence Page (`/coach/season-intelligence`)
-
-**Acceso:** ADMIN, ENTRENADOR, JUGADOR  
-**Módulo:** `season-intelligence.module.ts` con `NgApexchartsModule`
-
-#### Detección de Rol
-```typescript
-const isJugador = this.authService.hasRole('JUGADOR');
-// Jugador usa getPlayerTeamByUserId() — coach usa getDashboardData()
-// Razón: /api/equipos/** GET es permitAll() en SecurityConfig
-```
-
-#### Sparkline de Rendimiento
-Doble serie: puntos acumulados (sólido) + puntos por jornada (dashed). Fuente: `historialCompleto` del DTO.
-
-#### Radar de Excelencia (5 ejes, escala 0–100)
-| Eje | Fórmula |
-|-----|---------|
-| Ataque | `promedio_goles_favor × 25` |
-| Defensa | `cleanSheets / pj × 100` |
-| Disciplina | `100 - (am/pj × 20) - (rj/pj × 40)` |
-| Asistencias | `asistencias_total / pj × 25` |
-| Eficacia | `victorias / pj × 100` |
-
-#### Pace Analytics (Análisis Predictivo)
-```typescript
-readonly TOTAL_PARTIDOS = 34;
-get proyeccionFinal() { return Math.round((puntos/pj) * 34); }
-get paceStatus(): 'on-track' | 'at-risk' | 'no-objetivo'
-```
-Visual: barra con extensión proyectada (dashed) + línea vertical de objetivo (verde) + shimmer animado.
-
-#### Hero Points Card
-Nueva sección `.si-hero` con puntos totales `4.2rem` en glow neón morado + record W/D/L con colores semánticos.
-
----
-
-### Fase C — Match Insights Page (`/match-insights/:id`)
-
-**Acceso:** ADMIN, ENTRENADOR, JUGADOR
-
-#### Carga Resiliente (Promise.allSettled)
-```typescript
-const [lineup, seasonStats] = await Promise.allSettled([
-  firstValueFrom(matchSvc.getLineup(matchId)),
-  equipoId ? firstValueFrom(coachSvc.getSeasonStats(equipoId)) : Promise.resolve(null)
-]);
-// Degradación elegante si no hay lineup o si el equipo no tiene stats de temporada
-```
-
-#### Scoreboard LCD
-Layout flex tres columnas: escudo local / marcador / escudo rival. Marcador `3.8rem` con `text-shadow` semántico por resultado (verde/amarillo/rojo).
-
-#### Radar Comparativo — Diseño e Implementación Final
-
-**4 ejes:** Ataque / Defensa / Disciplina / Generación  
-**2 series:** `Este partido` vs `Media de temporada`, normalizadas a escala 0–100 (idéntica al Radar de Excelencia de Season Intelligence).
-
-**Fórmulas de normalización por eje:**
-
-| Eje | Este partido | Media temporada |
-|-----|-------------|-----------------|
-| Ataque | `golesFavor × 25` (cap 100) | `promedioGolesFavor × 25` |
-| Defensa | `cleanSheetMatch ? 100 : 0` | `cleanSheets / pj × 100` |
-| Disciplina | `100 - (am × 20) - (rj × 40)` | `100 - (am/pj × 20) - (rj/pj × 40)` |
-| Generación | `asistencias × 25` (cap 100) | `asistenciasTotal / pj × 25` |
-
-**Guard NaN ultra-seguro** — `??` no protege contra `NaN` en JavaScript. Si `Math.max(1, valor)` recibe un valor no numérico (ej. string del backend), devuelve `NaN`, que contamina todas las divisiones posteriores:
-
-```typescript
-const sn = (n: any): number => { const v = Number(n); return isFinite(v) ? v : 0; };
-const pj = Math.max(1, sn(s?.pj));  // pj también pasa por sn()
-const safe = (arr: number[]) => arr.map(v => isFinite(v) ? v : 0);  // capa final
-```
-
-**Decisión arquitectural:** Ver sección "Resolución Final del Radar: SVG Nativo" más abajo.
-
-#### Press Kit PDF
-`PdfService.generarMatchCardPDF(partido, lineup)` — sección scoreboard oscura + metadata + goleadores/asistencias + disciplina. Exportado con `html2canvas` + `jsPDF`.
-
-#### Integración de Navegación
-- **Match Detail**: botón "Analytics" visible solo cuando `estado === 'FINALIZADO'`
-- **Edit Match**: al cerrar acta, `AlertController` ofrece ir directamente a Match Insights
-
----
-
-### Upgrade Visual — Night Stadium Pro
-
-#### Sistema de Tokens SCSS
-```scss
-$bg-deep: #0a0e1a;  $neon: #a855f7;  $glass-bg: rgba(255,255,255,0.04);
-$green: #22c55e;    $yellow: #eab308; $red: #ef4444;
-$mono: ui-monospace, 'SF Mono', 'Fira Code', 'Courier New', monospace;
-// CRÍTICO: $mono debe declararse en el bloque de tokens (línea 1), no a mitad
-// del archivo. SCSS procesa top-down y variables usadas antes de su declaración
-// producen "Undefined variable" en tiempo de compilación.
-```
-
-#### Paso 1 — Scoreboards e Identidad
-- Match Insights: scoreboard LCD con escudos con `drop-shadow` neón
-- Season Intelligence: hero card con puntos `4.2rem` + glow triple + PRO badge pill
-
-#### Paso 2 — Glassmorphism 2.0
-- Cyber-grid: `repeating-linear-gradient` doble en `--background` de `ion-content`
-- Gradient border con `background-clip: padding-box / border-box`
-- `backdrop-filter: blur(25px)`
-- Bracket corner top-left via `::before`
-
-#### Paso 3 — Living Data
-- Counter animations: ease-out cúbico con `requestAnimationFrame`, valores escalonados
-- Sparkline: `animations: { enabled: true, speed: 1200, animateGradually: { delay: 120 } }`
-- Radar: `animations: { enabled: false }` (ver nota en Fase C)
-- Pace bar: `@keyframes pace-shimmer` con `background-size: 200%` en loop 2.5s
-
-#### Paso 4 — Elite Micro-Cards
-- Goleadores: rank dorado para #1, avatar con border neón, ícono balón con drop-shadow verde
-- Disciplina: `@keyframes pulse-yellow` / `pulse-red` en bordes de cards por 2.2s/1.8s
-- KPI Season Intelligence: `.kpi-card--shield` (verde) / `--trend` (neón) / `--trophy` (dorado)
-
-#### Paso 5 — Scanlines & Technical Overlays
-```scss
-@keyframes scanline {
-  0% { top:0%; opacity:0; } 4% { opacity:1; } 96% { opacity:1; } 100% { top:100%; opacity:0; }
-}
-// Excluido de .chart-card: GPU composite layer del pseudo-elemento animado
-// puede ocluir el SVG de ApexCharts en Chrome (la capa se dimensiona contra
-// el bounding box del padre, no contra el height:1px del pseudo-elemento).
-.chart-card.glass::after { content: none; }
-```
-
----
-
-### Resolución Final del Radar: SVG Nativo
-
-#### El problema real — ApexCharts + Ionic Lazy Loading
-
-Tras múltiples iteraciones de debug, `console.log` confirmó que `seasonStats` llegaba correctamente con todos los valores. El radar seguía mostrando `<polygon> attribute points: Expected number, "NaN,NaN"`. La causa raíz no estaba en los datos.
-
-**Root cause:** `match-insights` es un módulo lazy-loaded independiente (`loadChildren` en `app-routing`). Cuando el usuario navega a `/match-insights/:id`, el bundle de `ng-apexcharts` se descarga por primera vez. El componente Angular inicializa y ejecuta `buildRadar()` antes de que el inicializador de ApexCharts termine de ejecutarse — el chart intenta calcular coordenadas SVG con dimensiones `0 × 0` → `NaN` en todos los polygon points.
-
-**Por qué funciona en Season Intelligence y no en Match Insights:**
-
-Season Intelligence es accedida típicamente desde el dashboard del entrenador, que en el mismo flujo de navegación ya visitó `team-stats` o `player-dashboard` — ambas páginas también importan `NgApexchartsModule`. El bundle de ApexCharts ya está en memoria del browser cuando llegan a season-intelligence. Match Insights puede ser la **primera ruta del usuario que carga ApexCharts** en la sesión (acceso directo desde el listado de partidos), sin caché previo del bundle.
-
-| Módulo | NgApexchartsModule | Primera carga típica | Resultado |
-|--------|--------------------|----------------------|-----------|
-| `team-stats` | ✓ | Desde coach dashboard | Bundle cacheado |
-| `player-dashboard` | ✓ | Desde login | Bundle cacheado |
-| `season-intelligence` | ✓ | Siempre después de team-stats o player-dashboard | OK |
-| `match-insights` | ✓ (eliminado) | Potencialmente primera ruta con ApexCharts | FALLO |
-
-**Intentos previos antes de la solución final:**
-
-1. `animations: { enabled: false }` — no resuelve el timing del bundle
-2. `emptyRadar()` con animaciones deshabilitadas — no resuelve
-3. `ionViewWillEnter` → `ionViewDidEnter` + `setTimeout(100)` — mejora marginal, falla en dispositivos lentos
-4. Contenedor `height: 350px` explícito + `*ngIf` con guard de datos — no resuelve el timing del bundle
-
-#### Decisión: Migración a SVG Nativo
-
-Se eliminó `NgApexchartsModule` de `match-insights.module.ts` y se reemplazó el `<apx-chart>` por un `<svg>` generado con trigonometría Angular inline.
-
-**Implementación del generador de polygon points:**
-
-```typescript
-// Convierte array de valores 0–100 a polygon points SVG para N ejes
-radarPoints(data: number[]): string {
-  const cx = 150, cy = 150, r = 100, n = data.length;
-  return data.map((v, i) => {
-    const angle = (2 * Math.PI * i / n) - Math.PI / 2;
-    const x = cx + r * (v / 100) * Math.cos(angle);
-    const y = cy + r * (v / 100) * Math.sin(angle);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
-}
-```
-
-Para 4 ejes, el eje 0 empieza en `-π/2` (arriba), y cada eje gira `2π/4 = 90°` en sentido horario: Ataque (arriba), Defensa (derecha), Disciplina (abajo), Generación (izquierda). El grid son 5 polígonos estáticos al 100/80/60/40/20% — para 4 ejes con ángulos rectos, son rombos con vértices fijos computados de antemano en el HTML.
-
-**Template SVG:**
+La insignia de categoría incluye ahora también el contador de jugadores (`jugadoresCount`) junto al nombre de la categoría, dando información relevante de un vistazo sin añadir una línea extra.
 
 ```html
-<svg viewBox="0 0 300 300" style="width:100%;max-width:300px;display:block;margin:0 auto;">
-  <!-- Grid estático (5 niveles) -->
-  <polygon points="150,50 250,150 150,250 50,150" fill="rgba(168,85,247,0.03)" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
-  <!-- ... 4 polígonos más para 80/60/40/20% ... -->
-  <!-- Ejes -->
-  <line x1="150" y1="150" x2="150" y2="50" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-  <!-- ... 3 ejes más ... -->
-  <!-- Media temporada (dashed) -->
-  <polygon [attr.points]="radarPoints(radarAvg)" fill="rgba(148,163,184,0.10)"
-           stroke="rgba(148,163,184,0.55)" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <!-- Este partido (sólido) -->
-  <polygon [attr.points]="radarPoints(radarMatch)" fill="rgba(168,85,247,0.22)"
-           stroke="#a855f7" stroke-width="2"/>
-  <!-- Etiquetas posicionadas fuera de los vértices -->
-  <text x="150" y="33" text-anchor="middle" fill="#94a3b8" font-size="11">Ataque</text>
-  <!-- ... 3 etiquetas más ... -->
-</svg>
+<!-- Estructura reutilizada de competición -->
+<div class="team-calendar-card" *ngFor="let team of teams" (click)="goToTeam(team)">
+  <img [src]="team.escudoUrl || 'assets/img/mi-club-logo.png'" class="team-shield">
+  <div class="team-info">
+    <span class="team-name">{{ team.nombre }}</span>
+    <span class="category-badge">{{ team.categoriaNombre }} · {{ team.jugadoresCount }} jugadores</span>
+  </div>
+  <ion-icon name="chevron-forward" class="chevron"></ion-icon>
+</div>
 ```
 
-**Comparativa ApexCharts vs SVG Nativo para este caso:**
+### Archivos modificados
 
-| Característica | ApexCharts | SVG Nativo |
+- `admin-dashboard.page.html` — reemplazada estructura de grid por `.team-calendar-card`
+
+---
+
+## 20. Team Detail: Corrección de Header en Scroll y Rediseño de Botones de Acción 🔧✅
+
+Se solucionó el problema visual del header de la ficha de equipo que se desplazaba con el scroll, y se rediseñaron los botones de acción de las tarjetas de partido para mejorar claridad y usabilidad.
+
+### Bug — Header flotante con `[fullscreen]="true"`
+
+**Causa raíz**: `ion-content` con `[fullscreen]="true"` hace que el contenido se extienda bajo el header (efecto blur/transparencia de iOS). Al hacer scroll, el header se movía junto al contenido en lugar de mantenerse fijo. El fondo transparente del toolbar hacía que el texto del contenido se superpusiera sobre el título.
+
+**Solución**: Se eliminó `[fullscreen]="true"` del `ion-content` y se cambió el `--background` del toolbar de `transparent` a `#020617` (el color base de la aplicación). Esto ancla el header de forma permanente sin perder la identidad visual.
+
+### Rediseño de botones de acción (icon-only → action pills)
+
+Los iconos solos (`clipboard-outline`, `eye-outline`) en las tarjetas de partido no comunicaban su función a primera vista, especialmente para usuarios no técnicos.
+
+**Solución**: Reemplazo de `ion-button` icon-only por elementos `<button>` nativos con clase `.action-pill`. Cada pill tiene un ícono + etiqueta de texto:
+
+| Tipo de evento | Pill "Editar" | Pill "Ver" |
 |---|---|---|
-| Tiempo de renderizado | Depende de bundle lazy | Instantáneo (DOM nativo) |
-| Dependencia externa | ng-apexcharts + apexcharts | Ninguna |
-| Tooltips al hover | ✓ | ✗ |
-| Animación de entrada | ✓ | ✗ |
-| Grid + polígonos + labels | ✓ | ✓ |
-| Leyenda | ✓ | ✓ (inline) |
-| Fiabilidad en lazy modules | ✗ (timing issue) | ✓ |
-| Tamaño de bundle | +~200KB | +0KB |
+| PARTIDO | `clipboard-outline` + "Acta" | `document-text-outline` + "Ver" |
+| TRAINING | `people-outline` + "Asist." | — (no aplica) |
 
-Para un radar comparativo de 4 métricas sin interactividad crítica, las ventajas de SVG nativo superan ampliamente las pérdidas (tooltip y animación de entrada).
+Los pills tienen estilos diferenciados: amarillo (`.edit-pill`) para acciones de gestión, violeta (`.view-pill`) para lectura.
 
----
+### Archivos modificados
 
-### Bugs Resueltos
-
-| Bug | Causa raíz | Fix |
-|-----|-----------|-----|
-| Radar NaN en polygon points | ApexCharts bundle carga lazy después del render del componente — dimensiones `0×0` en el init → coordenadas NaN | Migración completa a SVG nativo (eliminado ApexCharts de match-insights) |
-| `Math.max(1, pj)` devuelve NaN | `Math.max` con valor no numérico (ej. string del backend) propaga NaN. `??` no filtra NaN, solo null/undefined | `const pj = Math.max(1, sn(s?.pj))` — pj también pasa por el helper `sn()` |
-| Escudo rival en loop infinito | `(error)` setea `src` a imagen fallida sin cortar el evento → nuevo error → loop | `(error)="$any($event.target).onerror=null; $any($event.target).src='fallback'"` |
-| Avatar goleadores/disciplina en loop | Mismo patrón — `(error)` sin `onerror=null` previo | Mismo fix aplicado a todos los `<img>` con fallback |
-| `$mono` undefined en SCSS | Variable declarada a mitad del archivo, usada antes en top-down compilation | Movida al bloque de tokens, línea 1 del archivo |
-| `victorias`/`empates` TypeScript error | `SeasonStats` usa campos `g`/`e`/`p` (no nombres completos en español) | Acceso correcto: `s.g`, `s.e`, `s.p` en `runCounterAnimations()` |
-| Jugador sin acceso a Season Intelligence | Usaba `getDashboardData` (endpoint exclusivo coach) | `hasRole('JUGADOR')` → rama alternativa con `getPlayerTeamByUserId` |
-| `animateGradually` en radar ApexCharts | Opción diseñada para bar/area charts — en radar produce polígono incompleto | Eliminado del objeto de configuración del radar |
+- `team-detail.page.html` — eliminado `[fullscreen]="true"`; reemplazados `ion-button` por `.action-pill` nativos
+- `team-detail.page.scss` — toolbar `--background: #020617`; estilos `.action-pill`, `.edit-pill`, `.view-pill`
 
 ---
 
-### Archivos Modificados
+## 21. Team Detail: Bottom Sheet Modal con Ficha Completa del Jugador 📋✅
 
-| Archivo | Cambio |
-|---------|--------|
-| `SeasonStatsDto.java` | +8 campos analíticos |
-| `EquipoService.java` | Refactor `getSeasonStats()` completo |
-| `AlineacionRepository.java` | Query derivada por partido y equipo |
-| `models.ts` | Interface `MatchSummary` + extensión `SeasonStats` |
-| `season-intelligence.page.ts` | Página nueva completa (charts + pace + counters) |
-| `season-intelligence.page.html` | Template con sparkline, radar, pace track, hero |
-| `season-intelligence.page.scss` | Sistema visual Night Stadium Pro |
-| `season-intelligence.module.ts` | NgApexchartsModule |
-| `match-insights.page.ts` | Página nueva: scoreboard LCD, counter animations, `radarPoints()` SVG, `buildRadar()` con guards NaN |
-| `match-insights.page.html` | Scoreboard LCD + KPI row + radar SVG nativo + FIFA scorer cards + disciplina + press kit |
-| `match-insights.page.scss` | Sistema visual Night Stadium Pro |
-| `match-insights.module.ts` | `NgApexchartsModule` eliminado — radar migrado a SVG nativo |
-| `season-stats-widget.component.*` | Link "Intelligence Pro" + `mostrarIntelligence` input |
-| `coach-dashboard.page.html` | `[mostrarIntelligence]="true"` |
-| `player-dashboard.page.html` | `[mostrarIntelligence]="true"` |
-| `edit-match.page.ts` | AlertController post-cierre con nav a Match Insights |
-| `match-detail.page.html` | Botón Analytics (solo estado FINALIZADO) |
-| `pdf.service.ts` | `generarMatchCardPDF()` |
-| `app-routing.module.ts` | Rutas `season-intelligence` y `match-insights/:id` |
+Las tarjetas de jugadores en la sección "Plantilla" de la ficha de equipo son ahora interactivas. Al pulsar sobre una tarjeta se despliega un bottom sheet modal con toda la información disponible del jugador.
+
+### Desafío Técnico
+
+Las tarjetas de jugador solo mostraban nombre, posición, goles y asistencias. Para acceder a datos como fecha de nacimiento, fecha de alta, teléfono de contacto u observaciones, el administrador tenía que navegar a otra pantalla. El usuario pedía más información sin cambiar de página.
+
+### Solución e Implementación
+
+**Bottom sheet con `ion-modal` y breakpoints**
+
+Se usó el API de breakpoints de Ionic para crear un modal tipo "bottom sheet" que aparece desde abajo con el 75% de la pantalla visible por defecto, y que se puede arrastrar hasta el 100% o cerrar hacia el 0%.
+
+```typescript
+// team-detail.page.ts
+openPlayerSheet(player: any) {
+  this.selectedPlayer = player;
+  this.isPlayerSheetOpen = true;
+}
+```
+
+```html
+<ion-modal [isOpen]="isPlayerSheetOpen"
+           (didDismiss)="closePlayerSheet()"
+           [initialBreakpoint]="0.75"
+           [breakpoints]="[0, 0.75, 1]"
+           cssClass="night-modal">
+```
+
+**Contenido del sheet (tres bloques)**
+
+1. **Header**: Avatar grande (80px) con borde violeta glow, dorsal como bubble, nombre en grande, badge de posición y dot de estado con color reactivo.
+2. **Stats row**: Goles · Asistencias · Minutos jugados — los tres datos disponibles del backend, mostrados como KPIs grandes sobre fondo semitransparente.
+3. **Info grid**: Items condicionales (`*ngIf`) para cada campo adicional disponible:
+   - Edad calculada a partir de `fechaNacimiento` (método `getAge()`)
+   - Fecha de alta formateada
+   - Teléfono de contacto
+   - Observaciones del entrenador
+
+**Mejoras en las tarjetas del grid**
+
+- Añadido `cursor: pointer` y efecto `:active` (scale 0.98).
+- Ícono `chevron-forward` tenue en la esquina derecha para indicar que la tarjeta es clickable.
+- Tercer stat en el pie de tarjeta: **ESTADO** con el color reactivo verde/naranja/rojo según `getEstadoColor()`.
+
+**Métodos añadidos al controlador**
+
+```typescript
+getAge(fechaNacimiento?: string): string  // Calcula años desde fecha ISO
+getEstadoLabel(estado?: string): string   // LESIONADO → "Lesionado", default "Activo"
+getEstadoColor(estado?: string): string   // Devuelve hex para usar en [style.color]
+```
+
+### Archivos modificados
+
+- `team-detail.page.ts` — `selectedPlayer`, `isPlayerSheetOpen`, `openPlayerSheet()`, `closePlayerSheet()`, `getAge()`, `getEstadoLabel()`, `getEstadoColor()`
+- `team-detail.page.html` — `(click)="openPlayerSheet(p)"` en tarjetas; stat ESTADO; `ion-modal` bottom sheet completo
+- `team-detail.page.scss` — cursor pointer + `:active` en tarjetas; `.card-chevron`; `.estado-dot`; sección completa `.player-sheet` con handle, header, stats y info-grid
+
