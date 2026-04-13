@@ -184,8 +184,8 @@ El frontend (Angular 18 · Ionic 7 · TypeScript 5.5) implementa tests unitarios
 
 | Herramienta | Versión | Rol |
 |-------------|---------|-----|
-| Jasmine | ^5.1 | Framework de assertions y spies |
-| Karma | ^6.4 | Runner de tests sobre Chrome Headless |
+| Jasmine | 5.1 | Framework de assertions y spies |
+| Karma | 6.4 | Runner de tests sobre Chrome Headless |
 | `HttpClientTestingModule` | Angular 18 | Interceptación y verificación de peticiones HTTP |
 | `jasmine.createSpyObj` | — | Mocking de servicios con dependencias complejas |
 
