@@ -436,6 +436,10 @@ public class AdminService {
         }
     }
 
+    public List<Long> getEntrenamientosConfirmados(Integer idJugador) {
+        return asistenciaRepo.findEntrenamientosConfirmadosByJugadorId(idJugador);
+    }
+
     public List<Map<String, Object>> getAsistencia(Long id) {
         List<Map<String, Object>> response = new ArrayList<>();
         for (Asistencia a : asistenciaRepo.findByIdEntrenamiento(id)) {
@@ -458,7 +462,7 @@ public class AdminService {
                     a.setJugador(jugador);
                     return a;
                 });
-        asistencia.setEstado("ASISTE");
+        asistencia.setEstado("PRESENT");
         asistenciaRepo.save(asistencia);
 
         // Notificar al coach del equipo

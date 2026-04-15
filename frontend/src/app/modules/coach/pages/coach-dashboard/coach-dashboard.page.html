@@ -97,44 +97,14 @@
           <p>Espera a que el Director Deportivo te asigne plantilla.</p>
         </div>
 
-        <div class="status-grid animate-fade-in-up delay-1" *ngIf="managedTeamId">
-
-          <div class="status-card" [class.alert]="stats.injured > 0" (click)="navigateToAction('/coach/my-team')">
-            <div class="card-icon">
-              <ion-icon name="medkit"></ion-icon>
-            </div>
-            <div class="card-info">
-              <span class="label">Enfermería</span>
-              <span class="value" *ngIf="stats.injured === 0">Todo OK</span>
-              <span class="value danger" *ngIf="stats.injured > 0">{{ stats.injured }} Bajas</span>
-            </div>
-            <ion-icon name="chevron-forward" class="mini-arrow"></ion-icon>
-          </div>
-
-          <div class="status-card highlight" *ngIf="topScorer" (click)="goToStats()">
-            <div class="player-circle">
-              <img [src]="topScorer.usuario?.fotoUrl || topScorer.fotoUrl" onError="this.src='assets/img/default-avatar.png'">
-            </div>
-            <div class="card-info">
-              <span class="label">Goleador</span>
-              <span class="value name">{{ topScorer.usuario?.nombre || topScorer.nombre }}</span>
-            </div>
-            <div class="goal-badge">
-              ⚽ {{ topScorer.golesTemporada || topScorer.goles || 0 }}
-            </div>
-          </div>
-
-          <div class="status-card" *ngIf="!topScorer" (click)="goToStats()">
-            <div class="card-icon blue">
-              <ion-icon name="trending-up"></ion-icon>
-            </div>
-            <div class="card-info">
-              <span class="label">Rendimiento</span>
-              <span class="value">Sin datos</span>
-            </div>
-          </div>
-
-        </div>
+        <!-- SEASON ANALYTICS WIDGET -->
+        <app-season-stats-widget
+          *ngIf="managedTeamId && seasonStats"
+          [stats]="seasonStats"
+          [mostrarEdicion]="true"
+          [mostrarIntelligence]="true"
+          (editarClicked)="editarObjetivo()">
+        </app-season-stats-widget>
 
         <div class="section-title">
           <h3>Panel de Gestión</h3>
@@ -242,6 +212,9 @@
               </ion-button>
               <ion-button fill="clear" class="action-btn gold" [routerLink]="['/match-detail', event.idPartido || event.id]">
                 <ion-icon name="document-text-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" class="action-btn purple" [routerLink]="['/tactics-pro', event.idPartido || event.id]">
+                <ion-icon name="flask-outline" slot="icon-only"></ion-icon>
               </ion-button>
             </div>
           </div>

@@ -79,7 +79,11 @@ export class PlayerService {
   }
 
   confirmarAsistenciaEntrenamiento(idEntrenamiento: number, idJugador: number): Observable<void> {
-    return this.apiService.post<void>(`/admin/entrenamiento/${idEntrenamiento}/confirmar`, { idJugador });
+    return this.apiService.post<void>(`/jugadores/entrenamiento/${idEntrenamiento}/confirmar`, { idJugador });
+  }
+
+  getEntrenamientosConfirmados(idJugador: number): Observable<number[]> {
+    return this.apiService.get<number[]>(`/jugadores/${idJugador}/entrenamientos/confirmados`);
   }
 
   getPlayerPositions(): PlayerPosition[] {

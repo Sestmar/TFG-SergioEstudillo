@@ -46,3 +46,14 @@ target/
 # Perfiles locales con credenciales — NUNCA commitear
 src/main/resources/application-local.properties
 src/main/resources/application-local*.properties
+src/main/resources/serviceAccountKey.json
+*.json
+!pom.xml
+!package.json
+!tsconfig.json
+!angular.json
+!ionic.config.json
+!capacitor.config.ts
+!package-lock.json
+!manifest.webmanifest
+!google-services.json

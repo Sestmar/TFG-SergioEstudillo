@@ -1009,12 +1009,12 @@ PushNotifications.addListener('pushNotificationActionPerformed', (action: Action
 
 **Desafío**: Los jugadores no podían confirmar su asistencia a un entrenamiento desde la app. El único canal era que el entrenador la registrase manualmente desde la pantalla de asistencia del panel de gestión.
 
-**Solución**: Se creó un endpoint de confirmación accesible por el rol `JUGADOR` y se añadió el botón en la tarjeta de eventos del Player Dashboard.
+**Solución**: Se creó un endpoint de confirmación accesible por el rol `JUGADOR` en `JugadorController` (bajo `/api/jugadores/**`), lo que garantiza que el filtro HTTP de `SecurityConfig` lo permita sin restricciones de rol `ADMIN`. Se añadió el botón en la tarjeta de eventos del Player Dashboard.
 
-El endpoint vive en `AdminController` con un `@PreAuthorize` a nivel de método que sobreescribe la restricción de clase (`hasRole('ADMIN')`), permitiendo que jugadores, entrenadores y administradores lo llamen:
+> **Nota de arquitectura**: el endpoint se colocó intencionalmente en `JugadorController` y no en `AdminController`. `SecurityConfig` aplica `.requestMatchers("/api/admin/**").hasRole("ADMIN")` a nivel de filtro HTTP, antes de que Spring evalúe el `@PreAuthorize` del método. Poner el endpoint en `AdminController` con `@PreAuthorize("hasAnyRole(...JUGADOR)")` resultaba en un 403 silencioso porque el filtro rechazaba la request antes de llegar al método.
 
 ```java
-// AdminController.java
+// JugadorController.java
 @PostMapping("/entrenamiento/{id}/confirmar")
 @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR', 'JUGADOR')")
 public ResponseEntity<?> confirmarAsistencia(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
@@ -1024,37 +1024,60 @@ public ResponseEntity<?> confirmarAsistencia(@PathVariable Long id, @RequestBody
 }
 ```
 
-La lógica en `AdminService` hace un upsert: si ya existe un registro de asistencia para ese jugador y entrenamiento, lo actualiza; si no, lo crea:
+La lógica en `AdminService` hace un upsert y guarda el estado `"PRESENT"` — el mismo valor canónico que usa el módulo de asistencia del admin — para que el dashboard del entrenador los cuente correctamente:
 
 ```java
 // AdminService.java
+@Transactional
 public void confirmarAsistencia(Long idEntrenamiento, Integer idJugador) {
     Jugador jugador = jugadorRepo.findById(idJugador).orElseThrow(...);
     Asistencia asistencia = asistenciaRepo
         .findByIdEntrenamientoAndJugador(idEntrenamiento, jugador)
-        .orElseGet(() -> { /* nuevo registro */ });
-    asistencia.setEstado("ASISTE");
+        .orElseGet(() -> {
+            Asistencia a = new Asistencia();
+            a.setIdEntrenamiento(idEntrenamiento);
+            a.setJugador(jugador);
+            return a;
+        });
+    asistencia.setEstado("PRESENT"); // mismo valor que el módulo admin — EntrenadorService filtra por "PRESENT"
     asistenciaRepo.save(asistencia);
 }
 ```
 
-En el Player Dashboard, la tarjeta de "Próximos Eventos" muestra un botón `checkmark-circle-outline` únicamente para eventos `tipo !== 'PARTIDO'`. Tras confirmar, el ícono cambia a `checkmark-circle` verde y el botón se deshabilita. El estado se gestiona en sesión con un `Set<number>`:
+> **Consistencia de estado**: `EntrenadorService` calcula los porcentajes de asistencia con `.filter(a -> "PRESENT".equals(a.getEstado()))`. Usar `"ASISTE"` en la confirmación del jugador hacía que los porcentajes del dashboard del entrenador no se actualizasen. Estandarizar en `"PRESENT"` unifica ambos flujos sobre el mismo valor canónico.
 
-```typescript
-// player-dashboard.page.ts
-confirmedTrainings = new Set<number>();
+**Hidratación del estado desde el backend**: el `Set<number>` del Player Dashboard se carga desde la base de datos al inicializar el componente, no solo al hacer click. Esto corrige dos bugs: (1) estado perdido al refrescar la página y (2) estado del jugador anterior visible al navegar a otro dashboard.
 
-isTrainingConfirmed(conv: Partido): boolean {
-    const id = conv.idPartido ?? conv.id;
-    return id != null && this.confirmedTrainings.has(id);
+```java
+// AsistenciaRepository.java — nueva query
+@Query("SELECT a.idEntrenamiento FROM Asistencia a WHERE a.jugador.idJugador = :idJugador AND a.estado = 'PRESENT'")
+List<Long> findEntrenamientosConfirmadosByJugadorId(@Param("idJugador") Integer idJugador);
+```
+
+```java
+// JugadorController.java — endpoint de hidratación
+@GetMapping("/{idJugador}/entrenamientos/confirmados")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR', 'JUGADOR')")
+public ResponseEntity<List<Long>> getEntrenamientosConfirmados(@PathVariable Integer idJugador) {
+    return ResponseEntity.ok(adminService.getEntrenamientosConfirmados(idJugador));
 }
 ```
+
+```typescript
+// player-dashboard.page.ts — carga al resolver el ID real del jugador
+this.confirmedTrainings.clear();
+this.playerService.getEntrenamientosConfirmados(realPlayerId)
+  .pipe(takeUntilDestroyed(this.destroyRef), catchError(() => of([])))
+  .subscribe((ids: number[]) => ids.forEach(id => this.confirmedTrainings.add(id)));
+```
+
+En la tarjeta de "Próximos Eventos", el botón `checkmark-circle-outline` aparece únicamente para eventos `tipo !== 'PARTIDO'`. Tras confirmar, el ícono cambia a `checkmark-circle` verde y el botón se deshabilita.
 
 #### Notificación al Coach al Confirmar Asistencia
 
 **Desafío**: El entrenador no tenía visibilidad en tiempo real de qué jugadores habían confirmado su asistencia al entrenamiento.
 
-**Solución**: Dentro del mismo método `confirmarAsistencia()` de `AdminService`, tras persistir el estado `ASISTE`, se navega por la cadena de relaciones del jugador para localizar al entrenador de su equipo y dispararle una notificación push:
+**Solución**: Dentro del mismo método `confirmarAsistencia()` de `AdminService`, tras persistir el estado, se navega por la cadena de relaciones del jugador para localizar al entrenador de su equipo y dispararle una notificación push:
 
 ```java
 // AdminService.java — al final de confirmarAsistencia()
@@ -1081,12 +1104,14 @@ La cadena es null-safe en cada paso: si el jugador no tiene equipo, si el equipo
 - `service/NotificationService.java` — sobrecarga `send(..., Map data)`
 - `service/ChatService.java` — data payload `CHAT` en mensajes privados y broadcast
 - `service/PartidoService.java` — data payload `MATCH` con ID real del partido
-- `service/AdminService.java` — método `confirmarAsistencia()` con upsert + notificación al coach; inyectado `NotificationService`
-- `controller/AdminController.java` — endpoint `POST /api/admin/entrenamiento/{id}/confirmar`
+- `service/AdminService.java` — `confirmarAsistencia()` con upsert + estado `"PRESENT"` + notificación al coach; `getEntrenamientosConfirmados()` nuevo
+- `controller/AdminController.java` — endpoint `POST /api/admin/entrenamiento/{id}/confirmar` **eliminado** (movido a JugadorController)
+- `controller/JugadorController.java` — `POST /api/jugadores/entrenamiento/{id}/confirmar` + `GET /api/jugadores/{id}/entrenamientos/confirmados`
+- `repository/AsistenciaRepository.java` — query JPQL `findEntrenamientosConfirmadosByJugadorId`
 
 **Frontend:**
 - `core/services/push/push-notification.service.ts` — `Router` inyectado; `pushNotificationActionPerformed` con `navigateByUrl()`
-- `core/services/player/player.service.ts` — método `confirmarAsistenciaEntrenamiento()`
-- `modules/players/pages/player-dashboard/player-dashboard.page.ts` — `confirmedTrainings: Set<number>`, métodos `isTrainingConfirmed()` y `confirmarAsistencia()`
+- `core/services/player/player.service.ts` — `confirmarAsistenciaEntrenamiento()` apunta a `/jugadores/...`; nuevo `getEntrenamientosConfirmados()`
+- `modules/players/pages/player-dashboard/player-dashboard.page.ts` — `confirmedTrainings` se hidrata desde backend al cargar cada jugador (con `clear()` previo); métodos `isTrainingConfirmed()` y `confirmarAsistencia()`
 - `modules/players/pages/player-dashboard/player-dashboard.page.html` — botón de confirmación condicional en tarjetas de entrenamiento
 

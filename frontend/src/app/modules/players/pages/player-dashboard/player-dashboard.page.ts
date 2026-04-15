@@ -209,6 +209,10 @@ export class PlayerDashboardPage implements OnInit {
                       this.currentPlayer!.idJugador = realPlayerId;
                   }
                   this.loadPlayerStats(realPlayerId);
+                  this.confirmedTrainings.clear();
+                  this.playerService.getEntrenamientosConfirmados(realPlayerId)
+                    .pipe(takeUntilDestroyed(this.destroyRef), catchError(() => of([])))
+                    .subscribe((ids: number[]) => ids.forEach(id => this.confirmedTrainings.add(id)));
               }
 
               const teamId = this.currentTeam?.id || this.currentTeam?.idEquipo;

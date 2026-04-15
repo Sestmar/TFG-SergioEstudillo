@@ -172,18 +172,4 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAsistencia(id));
     }
 
-    @PostMapping("/entrenamiento/{id}/confirmar")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR', 'JUGADOR')")
-    public ResponseEntity<?> confirmarAsistencia(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
-        try {
-            Integer idJugador = ((Number) payload.get("idJugador")).intValue();
-            adminService.confirmarAsistencia(id, idJugador);
-            return ResponseEntity.ok(Collections.singletonMap("message", "Asistencia confirmada"));
-        } catch (RuntimeException e) {
-            if (e.getMessage() != null && e.getMessage().contains("no encontrado")) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
-        }
-    }
 }
