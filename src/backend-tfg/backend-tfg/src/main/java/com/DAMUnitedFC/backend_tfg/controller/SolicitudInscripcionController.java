@@ -3,6 +3,7 @@ package com.DAMUnitedFC.backend_tfg.controller;
 import com.DAMUnitedFC.backend_tfg.dto.SolicitudInscripcionDto;
 import com.DAMUnitedFC.backend_tfg.model.SolicitudInscripcion;
 import com.DAMUnitedFC.backend_tfg.service.SolicitudInscripcionService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class SolicitudInscripcionController {
         this.solicitudService = solicitudService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public List<SolicitudInscripcion> listar() {
         return solicitudService.listar();
@@ -27,6 +29,7 @@ public class SolicitudInscripcionController {
         return solicitudService.crear(dto);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public SolicitudInscripcion actualizar(@PathVariable Integer id, @RequestBody SolicitudInscripcionDto dto) {
         return solicitudService.actualizar(id, dto);

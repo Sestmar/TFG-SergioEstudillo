@@ -1,10 +1,11 @@
 package com.DAMUnitedFC.backend_tfg.dto;
 
-import lombok.Data;
-
-@Data
-public class EnviarMensajeDto {
-    private String contenido;
-    private Integer equipoId;       // null si es privado
-    private Integer destinatarioId; // null si es grupal
-}
+/**
+ * Payload para enviar un mensaje por STOMP (@MessageMapping /chat.enviar).
+ * Contrato JSON: {"contenido":"...", "equipoId":1, "destinatarioId":null}
+ */
+public record EnviarMensajeDto(
+        String contenido,
+        Integer equipoId,       // null si es privado
+        Integer destinatarioId  // null si es grupal
+) {}

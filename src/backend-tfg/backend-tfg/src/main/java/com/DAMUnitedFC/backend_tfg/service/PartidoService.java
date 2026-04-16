@@ -58,7 +58,7 @@ public class PartidoService {
                         : "por confirmar";
 
                 String title = "⚽ Nuevo partido confirmado";
-                String body = String.format("🆚 %s | 📍 %s | 📅 %s\nConfirmá tu asistencia en la app.", rival, lugar, fechaHora);
+                String body = String.format("🆚 %s | 📍 %s | 📅 %s\nConfirma tu asistencia en la app.", rival, lugar, fechaHora);
                 Map<String, String> matchData = Map.of(
                         "route", "/match-detail/" + guardado.getIdPartido(),
                         "type", "MATCH"

@@ -5,15 +5,21 @@ import com.DAMUnitedFC.backend_tfg.dto.JugadorDto;
 import com.DAMUnitedFC.backend_tfg.dto.PlayerHistoryDto;
 import com.DAMUnitedFC.backend_tfg.model.Alineacion;
 import com.DAMUnitedFC.backend_tfg.model.ConvocatoriaJugador;
+import com.DAMUnitedFC.backend_tfg.model.Entrenador;
 import com.DAMUnitedFC.backend_tfg.model.Equipo;
 import com.DAMUnitedFC.backend_tfg.model.Incidencia;
 import com.DAMUnitedFC.backend_tfg.model.Jugador;
+import com.DAMUnitedFC.backend_tfg.model.Usuario;
 import com.DAMUnitedFC.backend_tfg.repository.AlineacionRepository;
 import com.DAMUnitedFC.backend_tfg.repository.ConvocatoriaJugadorRepository;
+import com.DAMUnitedFC.backend_tfg.repository.EntrenadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
 import com.DAMUnitedFC.backend_tfg.repository.IncidenciaRepository;
 import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,19 +37,22 @@ public class JugadorService {
     private final AlineacionRepository alineacionRepo;
     private final ConvocatoriaJugadorRepository convocatoriaJugadorRepo;
     private final IncidenciaRepository incidenciaRepo;
+    private final EntrenadorRepository entrenadorRepo;
 
     public JugadorService(JugadorRepository jugadorRepo,
                           UsuarioRepository usuarioRepo,
                           EquipoRepository equipoRepo,
                           AlineacionRepository alineacionRepo,
                           ConvocatoriaJugadorRepository convocatoriaJugadorRepo,
-                          IncidenciaRepository incidenciaRepo) {
+                          IncidenciaRepository incidenciaRepo,
+                          EntrenadorRepository entrenadorRepo) {
         this.jugadorRepo = jugadorRepo;
         this.usuarioRepo = usuarioRepo;
         this.equipoRepo = equipoRepo;
         this.alineacionRepo = alineacionRepo;
         this.convocatoriaJugadorRepo = convocatoriaJugadorRepo;
         this.incidenciaRepo = incidenciaRepo;
+        this.entrenadorRepo = entrenadorRepo;
     }
 
     public List<Jugador> listar() {
@@ -97,6 +106,32 @@ public class JugadorService {
     @Transactional(readOnly = true)
     public PlayerHistoryDto getHistorial(Integer id) {
         Jugador jugador = obtener(id);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof Usuario usuarioActual) {
+            boolean esAdmin = usuarioActual.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!esAdmin) {
+                boolean esEntrenador = usuarioActual.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ENTRENADOR"));
+                if (esEntrenador) {
+                    Entrenador entrenador = entrenadorRepo.findByUsuario_IdUsuario(usuarioActual.getIdUsuario())
+                            .orElseThrow(() -> new AccessDeniedException("Perfil de entrenador no encontrado."));
+                    Equipo equipoEntrenador = entrenador.getEquipo();
+                    Equipo equipoJugador = jugador.getEquipoPrincipal();
+                    if (equipoEntrenador == null || equipoJugador == null
+                            || !equipoEntrenador.getIdEquipo().equals(equipoJugador.getIdEquipo())) {
+                        throw new AccessDeniedException("Este jugador no pertenece a tu equipo.");
+                    }
+                } else {
+                    // JUGADOR: solo puede ver su propio historial
+                    if (jugador.getUsuario() == null
+                            || !usuarioActual.getIdUsuario().equals(jugador.getUsuario().getIdUsuario())) {
+                        throw new AccessDeniedException("Solo podés ver tu propio historial.");
+                    }
+                }
+            }
+        }
 
         // Alineaciones (filtramos las huérfanas sin partido asociado)
         List<Alineacion> alineaciones = alineacionRepo.findByJugador(jugador)

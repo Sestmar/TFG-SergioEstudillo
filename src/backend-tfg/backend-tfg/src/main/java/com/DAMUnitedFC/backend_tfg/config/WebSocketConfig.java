@@ -1,5 +1,9 @@
 package com.DAMUnitedFC.backend_tfg.config;
 
+import com.DAMUnitedFC.backend_tfg.model.Usuario;
+import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
+import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
+import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import com.DAMUnitedFC.backend_tfg.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +17,8 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -25,6 +31,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final UsuarioRepository usuarioRepository;
+    private final JugadorRepository jugadorRepository;
+    private final EquipoRepository equipoRepository;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -47,6 +56,26 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setUserDestinationPrefix("/user");
     }
 
+    private boolean perteneceAlEquipo(Integer idEquipo, String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+        if (usuario == null) return false;
+
+        boolean esAdmin = usuario.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (esAdmin) return true;
+
+        boolean esJugadorDelEquipo = jugadorRepository.findByEquipoPrincipal_IdEquipo(idEquipo)
+                .stream()
+                .anyMatch(j -> j.getUsuario() != null && email.equals(j.getUsuario().getEmail()));
+        if (esJugadorDelEquipo) return true;
+
+        return equipoRepository.findById(idEquipo)
+                .map(e -> e.getEntrenador() != null
+                        && e.getEntrenador().getUsuario() != null
+                        && email.equals(e.getEntrenador().getUsuario().getEmail()))
+                .orElse(false);
+    }
+
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(new ChannelInterceptor() {
@@ -54,6 +83,22 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(
                         message, StompHeaderAccessor.class);
+
+                if (accessor != null && StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+                    String destination = accessor.getDestination();
+                    if (destination != null && destination.matches("/topic/equipo/\\d+")) {
+                        Integer idEquipo = Integer.parseInt(destination.substring("/topic/equipo/".length()));
+                        java.security.Principal userPrincipal = accessor.getUser();
+                        if (!(userPrincipal instanceof Authentication auth)
+                                || !(auth.getPrincipal() instanceof UserDetails userDetails)
+                                || !perteneceAlEquipo(idEquipo, userDetails.getUsername())) {
+                            StompHeaderAccessor errorAccessor = StompHeaderAccessor.create(StompCommand.ERROR);
+                            errorAccessor.setMessage("No tienes permiso para suscribirte al canal del equipo " + idEquipo + ".");
+                            errorAccessor.setLeaveMutable(true);
+                            return MessageBuilder.createMessage(new byte[0], errorAccessor.getMessageHeaders());
+                        }
+                    }
+                }
 
                 if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
                     String authHeader = accessor.getFirstNativeHeader("Authorization");

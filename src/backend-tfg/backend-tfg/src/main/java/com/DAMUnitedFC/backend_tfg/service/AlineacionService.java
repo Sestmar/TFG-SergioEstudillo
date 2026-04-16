@@ -2,13 +2,19 @@ package com.DAMUnitedFC.backend_tfg.service;
 
 import com.DAMUnitedFC.backend_tfg.dto.AlineacionDto;
 import com.DAMUnitedFC.backend_tfg.dto.AlineacionResponseDto;
+import com.DAMUnitedFC.backend_tfg.dto.CerrarActaDto;
 import com.DAMUnitedFC.backend_tfg.model.Alineacion;
+import com.DAMUnitedFC.backend_tfg.model.Equipo;
 import com.DAMUnitedFC.backend_tfg.model.Jugador;
 import com.DAMUnitedFC.backend_tfg.model.Partido;
+import com.DAMUnitedFC.backend_tfg.model.Usuario;
 import com.DAMUnitedFC.backend_tfg.repository.AlineacionRepository;
 import com.DAMUnitedFC.backend_tfg.repository.EquipoRepository;
 import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.PartidoRepository;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,6 +83,23 @@ public class AlineacionService {
 
     @Transactional
     public void guardarAlineacion(Long idPartido, List<AlineacionDto> fichas) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof Usuario usuarioActual) {
+            boolean esAdmin = usuarioActual.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!esAdmin) {
+                Partido pCheck = partidoRepo.findById(idPartido)
+                        .orElseThrow(() -> new RuntimeException("Partido no encontrado"));
+                Equipo equipoCheck = pCheck.getEquipo();
+                if (equipoCheck == null
+                        || equipoCheck.getEntrenador() == null
+                        || equipoCheck.getEntrenador().getUsuario() == null
+                        || !usuarioActual.getUsername().equals(equipoCheck.getEntrenador().getUsuario().getEmail())) {
+                    throw new AccessDeniedException("No sos el entrenador de este equipo.");
+                }
+            }
+        }
+
         alineacionRepo.deleteByPartidoIdPartido(idPartido);
         alineacionRepo.flush();
 
@@ -86,8 +109,8 @@ public class AlineacionService {
                 .orElseThrow(() -> new RuntimeException("Partido no encontrado"));
 
         for (AlineacionDto ficha : fichas) {
-            if (ficha.getIdJugador() == null) continue;
-            Jugador j = jugadorRepo.findById(ficha.getIdJugador()).orElseThrow();
+            if (ficha.idJugador() == null) continue;
+            Jugador j = jugadorRepo.findById(ficha.idJugador()).orElseThrow();
 
             Alineacion alineacion = new Alineacion();
             alineacion.setPartido(p);
@@ -99,27 +122,27 @@ public class AlineacionService {
                 alineacion.setEquipo(p.getEquipo());
             }
 
-            alineacion.setSlotId(ficha.getSlotId());
-            alineacion.setEsTitular(ficha.getSlotId() == null || !ficha.getSlotId().startsWith("BENCH"));
+            alineacion.setSlotId(ficha.slotId());
+            alineacion.setEsTitular(ficha.slotId() == null || !ficha.slotId().startsWith("BENCH"));
             alineacion.setGoles(0);
             alineacion.setAsistencias(0);
             alineacion.setMinutosJugados(0);
             alineacion.setTarjetaAmarilla(false);
             alineacion.setTarjetaRoja(false);
             alineacion.setMinutoEntrada(0);
-            alineacion.setEsCapitan(ficha.getEsCapitan() != null ? ficha.getEsCapitan() : false);
-            alineacion.setEsLanzadorPenaltis(ficha.getEsLanzadorPenaltis() != null ? ficha.getEsLanzadorPenaltis() : false);
-            alineacion.setEsLanzadorFaltas(ficha.getEsLanzadorFaltas() != null ? ficha.getEsLanzadorFaltas() : false);
+            alineacion.setEsCapitan(ficha.esCapitan() != null ? ficha.esCapitan() : false);
+            alineacion.setEsLanzadorPenaltis(ficha.esLanzadorPenaltis() != null ? ficha.esLanzadorPenaltis() : false);
+            alineacion.setEsLanzadorFaltas(ficha.esLanzadorFaltas() != null ? ficha.esLanzadorFaltas() : false);
 
             alineacionRepo.save(alineacion);
         }
     }
 
     @Transactional
-    public void cerrarActa(Map<String, Object> payload) {
-        Long idPartido = Long.valueOf(payload.get("idPartido").toString());
-        Integer golesFavor = safeInt(payload.get("golesFavor"));
-        Integer golesContra = safeInt(payload.get("golesContra"));
+    public void cerrarActa(CerrarActaDto dto) {
+        Long idPartido = dto.idPartido();
+        Integer golesFavor = dto.golesFavor() != null ? dto.golesFavor() : 0;
+        Integer golesContra = dto.golesContra() != null ? dto.golesContra() : 0;
 
         Partido p = partidoRepo.findById(idPartido).orElseThrow();
         p.setGolesFavor(golesFavor);
@@ -127,11 +150,11 @@ public class AlineacionService {
         p.setEstado("FINALIZADO");
         partidoRepo.save(p);
 
-        List<Map<String, Object>> stats = (List<Map<String, Object>>) payload.get("estadisticas");
+        List<CerrarActaDto.EstadisticaDto> stats = dto.estadisticas();
         if (stats == null) return;
 
-        for (Map<String, Object> stat : stats) {
-            Integer idJugador = safeInt(stat.get("idJugador"));
+        for (CerrarActaDto.EstadisticaDto stat : stats) {
+            Integer idJugador = stat.idJugador();
             Optional<Alineacion> fichaOpt = alineacionRepo.findFichaExacta(idPartido, idJugador);
 
             Alineacion alineacion;
@@ -147,11 +170,11 @@ public class AlineacionService {
                 alineacion.setSlotId("BENCH_" + idJugador);
             }
 
-            alineacion.setGoles(safeInt(stat.get("goles")));
-            alineacion.setAsistencias(safeInt(stat.get("asistencias")));
-            alineacion.setMinutosJugados(safeInt(stat.get("minutos")));
-            alineacion.setMinutoEntrada(safeInt(stat.get("minutoEntrada")));
-            alineacion.setMinutoSalida(safeInt(stat.get("minutoSalida")));
+            alineacion.setGoles(safeInt(stat.goles()));
+            alineacion.setAsistencias(safeInt(stat.asistencias()));
+            alineacion.setMinutosJugados(safeInt(stat.minutos()));
+            alineacion.setMinutoEntrada(safeInt(stat.minutoEntrada()));
+            alineacion.setMinutoSalida(safeInt(stat.minutoSalida()));
             alineacionRepo.save(alineacion);
         }
     }

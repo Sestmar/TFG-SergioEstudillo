@@ -2,6 +2,7 @@ package com.DAMUnitedFC.backend_tfg.service;
 
 import com.DAMUnitedFC.backend_tfg.dto.AlineacionDto;
 import com.DAMUnitedFC.backend_tfg.dto.AlineacionResponseDto;
+import com.DAMUnitedFC.backend_tfg.dto.CerrarActaDto;
 import com.DAMUnitedFC.backend_tfg.model.*;
 import com.DAMUnitedFC.backend_tfg.repository.*;
 import org.junit.jupiter.api.Test;
@@ -134,7 +135,7 @@ class AlineacionServiceTest {
         when(partidoRepo.findById(1L)).thenReturn(Optional.of(p));
         when(jugadorRepo.findById(5)).thenReturn(Optional.of(j));
 
-        AlineacionDto ficha = new AlineacionDto(1L, 5, "DEL_1", false);
+        AlineacionDto ficha = new AlineacionDto(1L, 5, "DEL_1", false, null, null);
 
         // Act
         alineacionService.guardarAlineacion(1L, List.of(ficha));
@@ -154,7 +155,7 @@ class AlineacionServiceTest {
         when(partidoRepo.findById(1L)).thenReturn(Optional.of(p));
         when(jugadorRepo.findById(6)).thenReturn(Optional.of(j));
 
-        AlineacionDto ficha = new AlineacionDto(1L, 6, "BENCH_6", false);
+        AlineacionDto ficha = new AlineacionDto(1L, 6, "BENCH_6", false, null, null);
 
         // Act
         alineacionService.guardarAlineacion(1L, List.of(ficha));
@@ -172,9 +173,7 @@ class AlineacionServiceTest {
         Partido p = crearPartido(1L);
         when(partidoRepo.findById(1L)).thenReturn(Optional.of(p));
 
-        AlineacionDto fichaInvalida = new AlineacionDto();
-        fichaInvalida.setIdJugador(null);
-        fichaInvalida.setSlotId("SLOT_1");
+        AlineacionDto fichaInvalida = new AlineacionDto(null, null, "SLOT_1", null, null, null);
 
         // Act
         alineacionService.guardarAlineacion(1L, List.of(fichaInvalida));
@@ -195,7 +194,7 @@ class AlineacionServiceTest {
         when(partidoRepo.findById(1L)).thenReturn(Optional.of(p));
         when(jugadorRepo.findById(7)).thenReturn(Optional.of(j));
 
-        AlineacionDto ficha = new AlineacionDto(1L, 7, "MED_1", false);
+        AlineacionDto ficha = new AlineacionDto(1L, 7, "MED_1", false, null, null);
 
         // Act
         alineacionService.guardarAlineacion(1L, List.of(ficha));
@@ -233,13 +232,10 @@ class AlineacionServiceTest {
         Partido p = crearPartido(1L);
         when(partidoRepo.findById(1L)).thenReturn(Optional.of(p));
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("idPartido", 1);
-        payload.put("golesFavor", 2);
-        payload.put("golesContra", 1);
+        CerrarActaDto dto = new CerrarActaDto(1L, 2, 1, null);
 
         // Act
-        alineacionService.cerrarActa(payload);
+        alineacionService.cerrarActa(dto);
 
         // Assert
         assertThat(p.getEstado()).isEqualTo("FINALIZADO");
@@ -261,20 +257,11 @@ class AlineacionServiceTest {
         when(partidoRepo.findById(1L)).thenReturn(Optional.of(p));
         when(alineacionRepo.findFichaExacta(1L, 10)).thenReturn(Optional.of(alineacion));
 
-        Map<String, Object> stat = new HashMap<>();
-        stat.put("idJugador", 10);
-        stat.put("goles", 2);
-        stat.put("asistencias", 1);
-        stat.put("minutos", 80);
-
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("idPartido", 1);
-        payload.put("golesFavor", 2);
-        payload.put("golesContra", 0);
-        payload.put("estadisticas", List.of(stat));
+        CerrarActaDto.EstadisticaDto stat = new CerrarActaDto.EstadisticaDto(10, 2, 1, 80, null, null);
+        CerrarActaDto dto = new CerrarActaDto(1L, 2, 0, List.of(stat));
 
         // Act
-        alineacionService.cerrarActa(payload);
+        alineacionService.cerrarActa(dto);
 
         // Assert
         assertThat(alineacion.getGoles()).isEqualTo(2);
@@ -296,20 +283,11 @@ class AlineacionServiceTest {
         when(alineacionRepo.findFichaExacta(1L, 20)).thenReturn(Optional.empty());
         when(jugadorRepo.findById(20)).thenReturn(Optional.of(j));
 
-        Map<String, Object> stat = new HashMap<>();
-        stat.put("idJugador", 20);
-        stat.put("goles", 1);
-        stat.put("asistencias", 0);
-        stat.put("minutos", 45);
-
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("idPartido", 1);
-        payload.put("golesFavor", 1);
-        payload.put("golesContra", 0);
-        payload.put("estadisticas", List.of(stat));
+        CerrarActaDto.EstadisticaDto stat = new CerrarActaDto.EstadisticaDto(20, 1, 0, 45, null, null);
+        CerrarActaDto dto = new CerrarActaDto(1L, 1, 0, List.of(stat));
 
         // Act
-        alineacionService.cerrarActa(payload);
+        alineacionService.cerrarActa(dto);
 
         // Assert: se crea con el slotId de suplente y los datos correctos
         verify(alineacionRepo).save(argThat(al ->
@@ -333,20 +311,11 @@ class AlineacionServiceTest {
         when(partidoRepo.findById(1L)).thenReturn(Optional.of(p));
         when(alineacionRepo.findFichaExacta(1L, 15)).thenReturn(Optional.of(alineacion));
 
-        Map<String, Object> stat = new HashMap<>();
-        stat.put("idJugador", 15);
-        stat.put("goles", null);
-        stat.put("asistencias", null);
-        stat.put("minutos", null);
-
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("idPartido", 1);
-        payload.put("golesFavor", 0);
-        payload.put("golesContra", 0);
-        payload.put("estadisticas", List.of(stat));
+        CerrarActaDto.EstadisticaDto stat = new CerrarActaDto.EstadisticaDto(15, null, null, null, null, null);
+        CerrarActaDto dto = new CerrarActaDto(1L, 0, 0, List.of(stat));
 
         // Act & Assert: no debe lanzar ninguna excepción
-        assertThatCode(() -> alineacionService.cerrarActa(payload))
+        assertThatCode(() -> alineacionService.cerrarActa(dto))
                 .doesNotThrowAnyException();
         assertThat(alineacion.getGoles()).isZero();
         assertThat(alineacion.getAsistencias()).isZero();

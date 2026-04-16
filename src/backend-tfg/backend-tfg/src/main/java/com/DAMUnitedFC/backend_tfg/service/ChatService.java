@@ -12,6 +12,7 @@ import com.DAMUnitedFC.backend_tfg.repository.JugadorRepository;
 import com.DAMUnitedFC.backend_tfg.repository.MensajeRepository;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,15 +38,15 @@ public class ChatService {
 
         Mensaje mensaje = new Mensaje();
         mensaje.setRemitente(remitente);
-        mensaje.setContenido(dto.getContenido());
+        mensaje.setContenido(dto.contenido());
         mensaje.setFechaHora(LocalDateTime.now());
 
-        if (dto.getEquipoId() != null) {
-            Equipo equipo = equipoRepository.findById(dto.getEquipoId())
+        if (dto.equipoId() != null) {
+            Equipo equipo = equipoRepository.findById(dto.equipoId())
                     .orElseThrow(() -> new RuntimeException("Equipo no encontrado"));
             mensaje.setEquipo(equipo);
-        } else if (dto.getDestinatarioId() != null) {
-            Usuario destinatario = usuarioRepository.findById(dto.getDestinatarioId())
+        } else if (dto.destinatarioId() != null) {
+            Usuario destinatario = usuarioRepository.findById(dto.destinatarioId())
                     .orElseThrow(() -> new RuntimeException("Destinatario no encontrado"));
             mensaje.setDestinatario(destinatario);
         }
@@ -95,6 +96,29 @@ public class ChatService {
         }
     }
 
+    public void validarMembresiaEquipo(Integer idEquipo, String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        boolean esAdmin = usuario.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (esAdmin) return;
+
+        boolean esJugadorDelEquipo = jugadorRepository.findByEquipoPrincipal_IdEquipo(idEquipo)
+                .stream()
+                .anyMatch(j -> j.getUsuario() != null && email.equals(j.getUsuario().getEmail()));
+        if (esJugadorDelEquipo) return;
+
+        Equipo equipo = equipoRepository.findById(idEquipo)
+                .orElseThrow(() -> new RuntimeException("Equipo no encontrado"));
+        boolean esEntrenadorDelEquipo = equipo.getEntrenador() != null
+                && equipo.getEntrenador().getUsuario() != null
+                && email.equals(equipo.getEntrenador().getUsuario().getEmail());
+        if (esEntrenadorDelEquipo) return;
+
+        throw new AccessDeniedException("No pertenecés a este equipo.");
+    }
+
     public List<MensajeDto> listarPorEquipo(Integer idEquipo) {
         return mensajeRepository.findByEquipo_IdEquipoOrderByFechaHoraAsc(idEquipo)
                 .stream().map(this::toDto).collect(Collectors.toList());
@@ -122,17 +146,17 @@ public class ChatService {
     }
 
     public MensajeDto toDto(Mensaje m) {
-        MensajeDto dto = new MensajeDto();
-        dto.setId(m.getId());
-        dto.setRemitenteId(m.getRemitente().getIdUsuario());
-        dto.setRemitenteNombre(m.getRemitente().getNombre());
-        dto.setRemitenteApellidos(m.getRemitente().getApellidos());
-        dto.setRemitenteFotoUrl(m.getRemitente().getFotoUrl());
-        if (m.getEquipo() != null) dto.setEquipoId(m.getEquipo().getIdEquipo());
-        if (m.getDestinatario() != null) dto.setDestinatarioId(m.getDestinatario().getIdUsuario());
-        dto.setContenido(m.getContenido());
-        dto.setFechaHora(m.getFechaHora());
-        dto.setLeido(m.isLeido());
-        return dto;
+        return new MensajeDto(
+                m.getId(),
+                m.getRemitente().getIdUsuario(),
+                m.getRemitente().getNombre(),
+                m.getRemitente().getApellidos(),
+                m.getRemitente().getFotoUrl(),
+                m.getEquipo() != null ? m.getEquipo().getIdEquipo() : null,
+                m.getDestinatario() != null ? m.getDestinatario().getIdUsuario() : null,
+                m.getContenido(),
+                m.getFechaHora(),
+                m.isLeido()
+        );
     }
 }

@@ -70,7 +70,7 @@ public class WhatsAppService {
                 "🆚 Rival: *%s*\n" +
                 "📍 Lugar: *%s*\n" +
                 "📅 Fecha y hora: *%s*\n\n" +
-                "Confirmá tu asistencia en la app.",
+                "Confirma tu asistencia en la app.",
                 rival, lugar, fechaHora
         );
         enviarMensaje(telefono, mensaje);

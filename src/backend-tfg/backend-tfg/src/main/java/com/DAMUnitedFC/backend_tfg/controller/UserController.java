@@ -3,6 +3,7 @@ package com.DAMUnitedFC.backend_tfg.controller;
 import com.DAMUnitedFC.backend_tfg.model.Usuario;
 import com.DAMUnitedFC.backend_tfg.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,7 @@ public class UserController {
         this.usuarioService = usuarioService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public List<Usuario> getAllUsuarios() {
         return usuarioService.listar();

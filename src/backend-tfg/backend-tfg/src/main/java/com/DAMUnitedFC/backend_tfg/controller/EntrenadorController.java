@@ -4,6 +4,7 @@ import com.DAMUnitedFC.backend_tfg.dto.EntrenadorDto;
 import com.DAMUnitedFC.backend_tfg.model.Entrenador;
 import com.DAMUnitedFC.backend_tfg.service.EntrenadorService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -35,16 +36,19 @@ public class EntrenadorController {
         return entrenadorService.obtener(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public Entrenador crear(@RequestBody EntrenadorDto dto) {
         return entrenadorService.crear(dto);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public Entrenador actualizar(@PathVariable Integer id, @RequestBody EntrenadorDto dto) {
         return entrenadorService.actualizar(id, dto);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public void borrar(@PathVariable Integer id) {
         entrenadorService.borrar(id);

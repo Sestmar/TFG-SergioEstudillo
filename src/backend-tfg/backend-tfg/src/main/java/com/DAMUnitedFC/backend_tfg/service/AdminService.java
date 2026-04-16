@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminService {
@@ -71,9 +72,36 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getUsuariosActivos() {
+        // Query 1: solo usuarios no-admin — el filtro viaja a la DB, no a Java
+        List<Usuario> usuarios = usuarioRepo.findAllExcluyendoAdmin();
+
+        // Query 2: todos los jugadores indexados por idUsuario
+        Map<Integer, Jugador> jugadorPorUsuarioId = jugadorRepo.findAll().stream()
+                .filter(j -> j.getUsuario() != null)
+                .collect(Collectors.toMap(
+                        j -> j.getUsuario().getIdUsuario(),
+                        j -> j,
+                        (j1, j2) -> j1));
+
+        // Query 3: todos los entrenadores indexados por idUsuario
+        Map<Integer, Entrenador> entrenadorPorUsuarioId = entrenadorRepo.findAll().stream()
+                .filter(e -> e.getUsuario() != null)
+                .collect(Collectors.toMap(
+                        e -> e.getUsuario().getIdUsuario(),
+                        e -> e,
+                        (e1, e2) -> e1));
+
+        // Query 4: vinculaciones equipo-entrenador indexadas por idEntrenador
+        Map<Integer, EquipoEntrenador> vinculacionPorEntrenadorId = equipoEntrenadorRepo.findAll().stream()
+                .filter(ee -> ee.getEntrenador() != null)
+                .collect(Collectors.toMap(
+                        ee -> ee.getEntrenador().getIdEntrenador(),
+                        ee -> ee,
+                        (ee1, ee2) -> ee1));
+
+        // Ensamblado en memoria — 0 queries adicionales por usuario
         List<Map<String, Object>> activos = new ArrayList<>();
-        for (Usuario u : usuarioRepo.findAll()) {
-            if ("ADMIN".equals(u.getRol()) || "ROLE_ADMIN".equals(u.getRol())) continue;
+        for (Usuario u : usuarios) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", u.getIdUsuario());
             map.put("nombre", u.getNombre());
@@ -85,9 +113,8 @@ public class AdminService {
             map.put("rol", u.getRol());
             map.put("fechaAlta", u.getFechaAlta());
 
-            Optional<Jugador> jugOpt = jugadorRepo.findByUsuario_IdUsuario(u.getIdUsuario());
-            if (jugOpt.isPresent()) {
-                Jugador jug = jugOpt.get();
+            Jugador jug = jugadorPorUsuarioId.get(u.getIdUsuario());
+            if (jug != null) {
                 Equipo eq = jug.getEquipoPrincipal();
                 map.put("equipoNombre", eq != null ? eq.getNombre() : "Sin Equipo");
                 map.put("equipoId", eq != null ? eq.getIdEquipo() : null);
@@ -96,13 +123,12 @@ public class AdminService {
                 map.put("estado", jug.getEstado());
                 map.put("jugadorId", jug.getIdJugador());
             } else {
-                Optional<Entrenador> entOpt = entrenadorRepo.findByUsuario_IdUsuario(u.getIdUsuario());
-                if (entOpt.isPresent()) {
-                    Entrenador ent = entOpt.get();
-                    List<EquipoEntrenador> vinculaciones = equipoEntrenadorRepo.findByEntrenador_IdEntrenador(ent.getIdEntrenador());
-                    if (!vinculaciones.isEmpty()) {
-                        map.put("equipoNombre", vinculaciones.get(0).getEquipo().getNombre());
-                        map.put("equipoId", vinculaciones.get(0).getEquipo().getIdEquipo());
+                Entrenador ent = entrenadorPorUsuarioId.get(u.getIdUsuario());
+                if (ent != null) {
+                    EquipoEntrenador vinculacion = vinculacionPorEntrenadorId.get(ent.getIdEntrenador());
+                    if (vinculacion != null) {
+                        map.put("equipoNombre", vinculacion.getEquipo().getNombre());
+                        map.put("equipoId", vinculacion.getEquipo().getIdEquipo());
                     } else {
                         map.put("equipoNombre", "Sin Equipo");
                         map.put("equipoId", null);

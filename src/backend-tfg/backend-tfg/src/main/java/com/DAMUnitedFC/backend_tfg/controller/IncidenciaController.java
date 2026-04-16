@@ -3,6 +3,7 @@ package com.DAMUnitedFC.backend_tfg.controller;
 import com.DAMUnitedFC.backend_tfg.dto.IncidenciaDto;
 import com.DAMUnitedFC.backend_tfg.model.Incidencia;
 import com.DAMUnitedFC.backend_tfg.service.IncidenciaService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class IncidenciaController {
         this.incidenciaService = incidenciaService;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','ENTRENADOR')")
     @GetMapping
     public List<Incidencia> listar() {
         return incidenciaService.listar();
@@ -27,6 +29,7 @@ public class IncidenciaController {
         return incidenciaService.obtener(id);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','ENTRENADOR')")
     @PostMapping
     public Incidencia crear(@RequestBody IncidenciaDto dto) {
         return incidenciaService.crear(dto);
@@ -37,6 +40,7 @@ public class IncidenciaController {
         return incidenciaService.actualizar(id, dto);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','ENTRENADOR')")
     @DeleteMapping("/{id}")
     public void borrar(@PathVariable Integer id) {
         incidenciaService.borrar(id);

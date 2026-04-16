@@ -511,3 +511,33 @@ export interface SeasonStats {
   tarjetasRojasTotal?: number;
   asistenciasTotal?: number;
 }
+
+// =================================================================
+// ===         DTOs DE CHAT                                       ===
+// =================================================================
+
+/** Payload para enviar un mensaje por STOMP (/app/chat.enviar) */
+export interface EnviarMensajeDto {
+  contenido: string;
+  equipoId?: number | null;
+  destinatarioId?: number | null;
+}
+
+/** Mensaje recibido del servidor (respuesta de historial y broadcast STOMP) */
+export interface MensajeDto {
+  id: number;
+  remitenteId: number;
+  remitenteNombre: string;
+  remitenteApellidos: string;
+  remitenteFotoUrl: string | null;
+  equipoId: number | null;
+  destinatarioId: number | null;
+  contenido: string;
+  fechaHora: string;
+  leido: boolean;
+}
+
+/** Respuesta de GET /api/chat/no-leidos */
+export interface NoLeidosDto {
+  count: number;
+}

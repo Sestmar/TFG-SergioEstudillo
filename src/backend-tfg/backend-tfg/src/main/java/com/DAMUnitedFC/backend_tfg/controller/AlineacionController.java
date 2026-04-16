@@ -2,8 +2,10 @@ package com.DAMUnitedFC.backend_tfg.controller;
 
 import com.DAMUnitedFC.backend_tfg.dto.AlineacionDto;
 import com.DAMUnitedFC.backend_tfg.dto.AlineacionResponseDto;
+import com.DAMUnitedFC.backend_tfg.dto.CerrarActaDto;
 import com.DAMUnitedFC.backend_tfg.service.AlineacionService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +26,7 @@ public class AlineacionController {
         return ResponseEntity.ok(alineacionService.getAlineacion(idPartido));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','ENTRENADOR')")
     @PostMapping("/guardar/{idPartido}")
     public ResponseEntity<?> guardarAlineacion(@PathVariable Long idPartido, @RequestBody List<AlineacionDto> fichas) {
         try {
@@ -34,10 +37,11 @@ public class AlineacionController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','ENTRENADOR')")
     @PostMapping("/cerrar")
-    public ResponseEntity<?> cerrarActa(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<?> cerrarActa(@RequestBody CerrarActaDto dto) {
         try {
-            alineacionService.cerrarActa(payload);
+            alineacionService.cerrarActa(dto);
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

@@ -3,6 +3,7 @@ package com.DAMUnitedFC.backend_tfg.controller;
 import com.DAMUnitedFC.backend_tfg.dto.LigaDto;
 import com.DAMUnitedFC.backend_tfg.model.Liga;
 import com.DAMUnitedFC.backend_tfg.service.LigaService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class LigaController {
         return ligaService.listar();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public Liga crearLiga(@RequestBody LigaDto ligaDto) {
         return ligaService.crear(ligaDto);
@@ -32,11 +34,13 @@ public class LigaController {
         return ligaService.obtener(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public Liga actualizarLiga(@PathVariable Integer id, @RequestBody Liga ligaActualizada) {
         return ligaService.actualizar(id, ligaActualizada);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public void borrarLiga(@PathVariable Integer id) {
         ligaService.borrar(id);

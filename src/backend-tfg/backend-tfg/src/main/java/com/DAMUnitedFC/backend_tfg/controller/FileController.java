@@ -18,11 +18,15 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/uploads")
 public class FileController {
+
+    private static final Set<String> EXTENSIONES_PERMITIDAS = Set.of(".jpg", ".jpeg", ".png", ".webp");
+    private static final Set<String> MIME_TYPES_PERMITIDOS   = Set.of("image/jpeg", "image/png", "image/webp");
 
     // Carpeta donde se guardarán las fotos (en la raíz del proyecto)
     private final Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
@@ -37,20 +41,52 @@ public class FileController {
 
     @PostMapping("/img")
     public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-            Path targetLocation = this.fileStorageLocation.resolve(fileName);
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+        // 1. Validar que el nombre no sea nulo ni vacío
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El nombre del archivo no es válido."));
+        }
 
-            // ✅ DINÁMICO: Esto detectará si estás en Render o en Local automáticamente
+        // 2. Whitelist de extensiones
+        int dotIndex = originalFilename.lastIndexOf('.');
+        if (dotIndex == -1) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El archivo no tiene una extensión reconocible."));
+        }
+        String extension = originalFilename.substring(dotIndex).toLowerCase();
+        if (!EXTENSIONES_PERMITIDAS.contains(extension)) {
+            return ResponseEntity.badRequest().body(Map.of("error",
+                    "Tipo de archivo no permitido. Solo se aceptan imágenes en formato JPG, JPEG, PNG o WEBP."));
+        }
+
+        // 3. Escribir en ubicación temporal para verificar el MIME-type real del contenido
+        String tempFileName = "tmp_" + UUID.randomUUID() + extension;
+        Path tempLocation = this.fileStorageLocation.resolve(tempFileName);
+        try {
+            Files.copy(file.getInputStream(), tempLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            String mimeType = Files.probeContentType(tempLocation);
+            if (mimeType == null || !MIME_TYPES_PERMITIDOS.contains(mimeType)) {
+                Files.deleteIfExists(tempLocation);
+                return ResponseEntity.badRequest().body(Map.of("error",
+                        "El contenido del archivo no corresponde a una imagen válida."));
+            }
+
+            // 4. Mover al nombre definitivo (UUID limpio, sin el nombre original del cliente)
+            String fileName = UUID.randomUUID() + extension;
+            Path targetLocation = this.fileStorageLocation.resolve(fileName);
+            Files.move(tempLocation, targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            // ✅ DINÁMICO: detecta si está en Render o en local automáticamente
             String baseUrl = request.getRequestURL().toString().replace(request.getRequestURI(), "");
             String fileDownloadUri = baseUrl + "/api/uploads/files/" + fileName;
 
+            Map<String, String> response = new HashMap<>();
             response.put("url", fileDownloadUri);
             return ResponseEntity.ok(response);
+
         } catch (IOException ex) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Fallo al subir: " + ex.getMessage()));
+            try { Files.deleteIfExists(tempLocation); } catch (IOException ignored) {}
+            return ResponseEntity.badRequest().body(Map.of("error", "Fallo al subir el archivo: " + ex.getMessage()));
         }
     }
 

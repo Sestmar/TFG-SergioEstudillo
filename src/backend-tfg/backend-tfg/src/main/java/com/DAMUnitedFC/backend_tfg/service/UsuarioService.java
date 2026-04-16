@@ -2,6 +2,9 @@ package com.DAMUnitedFC.backend_tfg.service;
 
 import com.DAMUnitedFC.backend_tfg.model.Usuario;
 import com.DAMUnitedFC.backend_tfg.repository.UsuarioRepository;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -48,6 +51,14 @@ public class UsuarioService {
     }
 
     public Optional<Usuario> actualizar(Integer id, Map<String, Object> updates) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof Usuario usuarioActual) {
+            boolean esAdmin = usuarioActual.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!esAdmin && !usuarioActual.getIdUsuario().equals(id)) {
+                throw new AccessDeniedException("No tenés permiso para modificar este usuario.");
+            }
+        }
         return usuarioRepository.findById(id).map(usuario -> {
             if (updates.containsKey("nombre")) usuario.setNombre((String) updates.get("nombre"));
             if (updates.containsKey("apellidos")) usuario.setApellidos((String) updates.get("apellidos"));

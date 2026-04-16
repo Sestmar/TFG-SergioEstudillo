@@ -1,18 +1,20 @@
 package com.DAMUnitedFC.backend_tfg.dto;
 
-import lombok.Data;
 import java.time.LocalDateTime;
 
-@Data
-public class MensajeDto {
-    private Long id;
-    private Integer remitenteId;
-    private String remitenteNombre;
-    private String remitenteApellidos;
-    private String remitenteFotoUrl;
-    private Integer equipoId;       // null si es privado
-    private Integer destinatarioId; // null si es grupal
-    private String contenido;
-    private LocalDateTime fechaHora;
-    private boolean leido;
-}
+/**
+ * DTO de respuesta para mensajes de chat (grupos y privados).
+ * Contrato JSON inmutable — los nombres de campo son idénticos a la versión anterior.
+ */
+public record MensajeDto(
+        Long id,
+        Integer remitenteId,
+        String remitenteNombre,
+        String remitenteApellidos,
+        String remitenteFotoUrl,
+        Integer equipoId,        // null si es privado
+        Integer destinatarioId,  // null si es grupal
+        String contenido,
+        LocalDateTime fechaHora,
+        boolean leido
+) {}
