@@ -8,6 +8,26 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import * as SockJS from 'sockjs-client';
 import { environment } from '../../../../environments/environment';
 
+export interface ParentPreviewDto {
+  id: number;
+  remitenteNombre: string;
+  contenido?: string;
+  tipoAdjunto?: string;
+}
+
+export interface MiembroPreview {
+  id: number;
+  nombre: string;
+  apellidos: string;
+  fotoUrl?: string;
+}
+
+export interface ReaccionDto {
+  emoji: string;
+  count: number;
+  usuarioIds: number[];
+}
+
 export interface MensajeDto {
   id: number;
   remitenteId: number;
@@ -16,15 +36,29 @@ export interface MensajeDto {
   remitenteFotoUrl?: string;
   equipoId?: number;
   destinatarioId?: number;
-  contenido: string;
+  contenido?: string;
+  urlAdjunto?: string;
+  tipoAdjunto?: string;  // 'IMAGEN' | 'AUDIO' | 'VIDEO'
   fechaHora: string;
   leido: boolean;
+  parentPreview?: ParentPreviewDto;
+  editado: boolean;
+  eliminado: boolean;
+  reacciones: ReaccionDto[];
+}
+
+export interface PaginaMensajesDto {
+  mensajes: MensajeDto[];
+  hasMore: boolean;
 }
 
 export interface EnviarMensajeDto {
-  contenido: string;
-  equipoId?: number;
-  destinatarioId?: number;
+  contenido?: string | null;
+  equipoId?: number | null;
+  destinatarioId?: number | null;
+  urlAdjunto?: string | null;
+  tipoAdjunto?: string | null;
+  parentId?: number | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -177,22 +211,39 @@ export class ChatService implements OnDestroy {
     if (!this.client?.active) {
       return;
     }
+    // Usamos el replacer para convertir `undefined` → `null` explícitamente.
+    // JSON.stringify descarta las propiedades undefined, lo que hace que el backend
+    // (MappingJackson2MessageConverter) no pueda deserializar el Record correctamente
+    // cuando faltan campos obligatorios como `contenido` en mensajes de solo imagen.
     this.client.publish({
       destination: '/app/chat.enviar',
-      body: JSON.stringify(dto)
+      body: JSON.stringify(dto, (_key, value) => value === undefined ? null : value)
     });
   }
 
-  cargarHistorialEquipo(idEquipo: number): Observable<MensajeDto[]> {
-    return this.http.get<MensajeDto[]>(`${this.apiUrl}/chat/equipo/${idEquipo}`).pipe(
-      tap(mensajes => this.mensajes$.next(mensajes)),
+  cargarHistorialEquipo(idEquipo: number, page = 0): Observable<PaginaMensajesDto> {
+    return this.http.get<PaginaMensajesDto>(`${this.apiUrl}/chat/equipo/${idEquipo}?page=${page}&size=50`).pipe(
+      tap(data => {
+        if (page === 0) {
+          this.mensajes$.next(data.mensajes);
+        } else {
+          // Prepend: los mensajes antiguos van al inicio de la lista
+          this.mensajes$.next([...data.mensajes, ...this.mensajes$.getValue()]);
+        }
+      }),
       catchError(err => throwError(() => err))
     );
   }
 
-  cargarHistorialPrivado(idOtroUsuario: number): Observable<MensajeDto[]> {
-    return this.http.get<MensajeDto[]>(`${this.apiUrl}/chat/privado/${idOtroUsuario}`).pipe(
-      tap(mensajes => this.mensajes$.next(mensajes)),
+  cargarHistorialPrivado(idOtroUsuario: number, page = 0): Observable<PaginaMensajesDto> {
+    return this.http.get<PaginaMensajesDto>(`${this.apiUrl}/chat/privado/${idOtroUsuario}?page=${page}&size=50`).pipe(
+      tap(data => {
+        if (page === 0) {
+          this.mensajes$.next(data.mensajes);
+        } else {
+          this.mensajes$.next([...data.mensajes, ...this.mensajes$.getValue()]);
+        }
+      }),
       catchError(err => throwError(() => err))
     );
   }
@@ -203,6 +254,40 @@ export class ChatService implements OnDestroy {
 
   marcarLeidos(): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/chat/marcar-leidos`, {});
+  }
+
+  uploadChatImage(file: File): Observable<{ url: string }> {
+    return this.uploadChatFile(file);
+  }
+
+  uploadChatFile(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.apiUrl}/chat/uploads`, formData);
+  }
+
+  getMiembrosEquipo(idEquipo: number): Observable<MiembroPreview[]> {
+    return this.http.get<MiembroPreview[]>(`${this.apiUrl}/chat/equipo/${idEquipo}/miembros`);
+  }
+
+  reaccionar(mensajeId: number, emoji: string): Observable<MensajeDto> {
+    return this.http.post<MensajeDto>(`${this.apiUrl}/chat/mensajes/${mensajeId}/reaccion`, { emoji });
+  }
+
+  quitarReaccion(mensajeId: number): Observable<MensajeDto> {
+    return this.http.delete<MensajeDto>(`${this.apiUrl}/chat/mensajes/${mensajeId}/reaccion`);
+  }
+
+  editarMensaje(id: number, contenido: string): Observable<MensajeDto> {
+    return this.http.put<MensajeDto>(`${this.apiUrl}/chat/mensajes/${id}`, { contenido });
+  }
+
+  eliminarMensaje(id: number): Observable<MensajeDto> {
+    return this.http.delete<MensajeDto>(`${this.apiUrl}/chat/mensajes/${id}`);
+  }
+
+  actualizarMensajeLocal(msg: MensajeDto): void {
+    this.agregarMensaje(msg);
   }
 
   limpiarMensajes(): void {
@@ -251,7 +336,11 @@ export class ChatService implements OnDestroy {
         notifications: [{
           id: Date.now(),
           title: msg.remitenteNombre,
-          body: msg.contenido,
+          body: msg.contenido
+            ?? (msg.tipoAdjunto === 'IMAGEN' ? '📷 Ha enviado una imagen'
+              : msg.tipoAdjunto === 'VIDEO'  ? '🎬 Ha enviado un vídeo'
+              : msg.tipoAdjunto === 'AUDIO'  ? '🎤 Ha enviado una nota de voz'
+              : '📎 Ha enviado un adjunto'),
           actionTypeId: 'OPEN_CHAT',
           extra: { route: '/chat' }
         }]
@@ -271,7 +360,14 @@ export class ChatService implements OnDestroy {
 
   private agregarMensaje(msg: MensajeDto): void {
     const actuales = this.mensajes$.getValue();
-    if (!actuales.find(m => m.id === msg.id)) {
+    const index = actuales.findIndex(m => m.id === msg.id);
+    if (index >= 0) {
+      // Actualización de un mensaje existente (edición o borrado lógico)
+      const nuevos = [...actuales];
+      nuevos[index] = msg;
+      this.mensajes$.next(nuevos);
+    } else {
+      // Mensaje nuevo
       this.mensajes$.next([...actuales, msg]);
     }
   }

@@ -13,10 +13,20 @@
   gap: 10px;
 }
 
+.loading-more {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+  ion-spinner {
+    --color: #7c3aed;
+  }
+}
+
 .message-bubble {
   display: flex;
   gap: 8px;
   max-width: 78%;
+  position: relative;  // ancla del menú contextual
 
   &.own {
     align-self: flex-end;
@@ -93,6 +103,56 @@
     word-break: break-word;
   }
 
+  .bubble-image {
+    display: block;
+    max-width: 240px;
+    max-height: 200px;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 4px;
+    cursor: pointer;
+  }
+
+  .bubble-audio {
+    display: block;
+    width: 220px;
+    height: 36px;
+    margin-bottom: 4px;
+    border-radius: 20px;
+    accent-color: #7c3aed;
+  }
+
+  .bubble-video {
+    display: block;
+    width: 100%;
+    max-width: 280px;
+    max-height: 200px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+    background: #000;
+    object-fit: contain;
+  }
+
+  .bubble-deleted {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: rgba(255,255,255,0.35);
+
+    ion-icon { font-size: 0.9rem; flex-shrink: 0; }
+  }
+
+  .edited-label {
+    display: block;
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.3);
+    margin-top: 2px;
+  }
+
   .bubble-time {
     display: block;
     font-size: 0.65rem;
@@ -117,20 +177,593 @@
   }
 }
 
+.file-input-hidden {
+  display: none;
+}
+
 .input-area {
+  position: relative;
   padding: 12px 16px;
   background: rgba(13, 17, 23, 0.95);
   border-top: 1px solid rgba(255,255,255,0.06);
 }
 
+.image-preview {
+  margin-bottom: 10px;
+
+  .preview-wrapper {
+    position: relative;
+    display: inline-block;
+
+    img, .video-preview {
+      max-height: 120px;
+      max-width: 200px;
+      border-radius: 10px;
+      object-fit: cover;
+      display: block;
+      background: #000;
+    }
+
+    .preview-cancel {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      color: rgba(255,255,255,0.8);
+      font-size: 1.25rem;
+      line-height: 1;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
+
+      &:hover {
+        color: #ef4444;
+      }
+    }
+  }
+}
+
+.input-error {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  color: #f87171;
+}
+
+// ── Menú contextual ────────────────────────────────────────────────────────────
+
+.msg-menu {
+  position: absolute;
+  top: -8px;
+  right: 0;
+  background: #1e2530;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  white-space: nowrap;
+
+  .menu-confirm-label {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.7);
+    padding: 0 4px;
+  }
+
+  .menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+
+    ion-icon { font-size: 0.9rem; }
+
+    &:hover { background: rgba(255,255,255,0.08); color: white; }
+
+    &--danger {
+      color: #f87171;
+      &:hover { background: rgba(239,68,68,0.15); }
+    }
+  }
+}
+
+// ── Edición inline ──────────────────────────────────────────────────────────────
+
+.edit-mode {
+  .edit-input {
+    width: 100%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(124,58,237,0.5);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+    padding: 6px 10px;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+    line-height: 1.4;
+
+    &:focus { border-color: #7c3aed; }
+  }
+
+  .edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 5px;
+  }
+
+  .edit-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    ion-icon { font-size: 0.9rem; }
+
+    &--cancel {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.6);
+      &:hover { background: rgba(255,255,255,0.15); }
+    }
+
+    &--save {
+      background: #7c3aed;
+      color: white;
+      &:hover { background: #6d28d9; }
+    }
+  }
+}
+
+// ── Estados de grabación / subida ──────────────────────────────────────────────
+
+.uploading-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.85rem;
+
+  ion-spinner {
+    width: 18px;
+    height: 18px;
+    color: #7c3aed;
+  }
+}
+
+.recording-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 24px;
+  padding: 6px 10px;
+
+  .rec-cancel-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.4);
+    flex-shrink: 0;
+
+    ion-icon { font-size: 1.1rem; }
+    &:hover { color: #f87171; }
+  }
+
+  .rec-status {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rec-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ef4444;
+    flex-shrink: 0;
+    animation: pulse-rec 1.2s ease-in-out infinite;
+  }
+
+  .rec-timer {
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+    color: white;
+    letter-spacing: 0.05em;
+  }
+
+  .rec-stop-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #7c3aed;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+
+    ion-icon { font-size: 1rem; }
+    &:active { background: #6d28d9; }
+  }
+}
+
+@keyframes pulse-rec {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.85); }
+}
+
+// ── Reaction bar ──────────────────────────────────────────────────────────────
+
+.reaction-bar {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e2530;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 50px;
+  padding: 5px 8px;
+  display: flex;
+  gap: 2px;
+  z-index: 30;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  animation: pop-in 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  .reaction-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.35rem;
+    padding: 4px 5px;
+    border-radius: 50%;
+    transition: transform 0.15s, background 0.15s;
+    line-height: 1;
+
+    &:hover {
+      background: rgba(255,255,255,0.08);
+      transform: scale(1.25);
+    }
+
+    &.selected {
+      background: rgba(124, 58, 237, 0.25);
+      transform: scale(1.15);
+    }
+  }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateX(-50%) scale(0.75); }
+  to   { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+// ── Reaction chips (bajo la burbuja) ───────────────────────────────────────────
+
+.reaction-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.reaction-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 2px 8px 2px 5px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.75);
+  transition: background 0.15s, border-color 0.15s;
+
+  .chip-count {
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  &.mine {
+    background: rgba(124, 58, 237, 0.18);
+    border-color: rgba(124, 58, 237, 0.45);
+    color: #a78bfa;
+  }
+
+  &:hover {
+    background: rgba(255,255,255,0.1);
+  }
+}
+
+// ── Lista de menciones ──────────────────────────────────────────────────────────
+
+.mention-list {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 16px;
+  right: 16px;
+  background: #1e2530;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+  z-index: 50;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.mention-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(255,255,255,0.06);
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+}
+
+.mention-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.mention-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #4c1d95, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+
+.mention-name {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.85);
+}
+
+// ── Highlight de @menciones en el texto ────────────────────────────────────────
+
+// Aplicado globalmente porque [innerHTML] no activa encapsulación de vistas
+:host ::ng-deep .bubble-text .mention {
+  color: #8b5cf6;
+  font-weight: 600;
+}
+
+// ── Swipe-to-reply ─────────────────────────────────────────────────────────────
+
+.bubble-row {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: visible;
+
+  // Deja que la burbuja se mueva suavemente al soltar el dedo
+  .message-bubble {
+    transition: transform 0.15s ease-out;
+    touch-action: pan-y;
+    user-select: none;
+  }
+}
+
+.reply-hint {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate(-100%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(124, 58, 237, 0.2);
+  color: #8b5cf6;
+  pointer-events: none;
+  transition: opacity 0.05s;
+
+  ion-icon { font-size: 1rem; }
+}
+
+// ── Quote block dentro de la burbuja ───────────────────────────────────────────
+
+.bubble-quote {
+  display: flex;
+  flex-direction: column;
+  border-left: 3px solid #7c3aed;
+  padding: 4px 8px;
+  margin-bottom: 6px;
+  border-radius: 0 6px 6px 0;
+  background: rgba(124, 58, 237, 0.12);
+  max-width: 100%;
+
+  .quote-author {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #8b5cf6;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .quote-text {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.55);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// ── Reply preview mini-card (sobre el input) ───────────────────────────────────
+
+.reply-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(124, 58, 237, 0.1);
+  border-left: 3px solid #7c3aed;
+  border-radius: 0 8px 8px 0;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+
+  &__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__author {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #8b5cf6;
+  }
+
+  &__text {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__cancel {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    padding: 0;
+    flex-shrink: 0;
+
+    ion-icon { font-size: 1.1rem; }
+    &:hover { color: rgba(255,255,255,0.8); }
+  }
+}
+
 .input-wrapper {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 24px;
-  padding: 6px 6px 6px 16px;
+  padding: 6px 6px 6px 6px;
+
+  .emoji-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.4);
+    transition: color 0.2s;
+    flex-shrink: 0;
+
+    ion-icon {
+      font-size: 1.25rem;
+    }
+
+    &:hover, &.active {
+      color: #8b5cf6;
+    }
+  }
+
+  .attach-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.4);
+    transition: color 0.2s;
+    flex-shrink: 0;
+
+    ion-icon {
+      font-size: 1.25rem;
+    }
+
+    &:hover, &.active {
+      color: #8b5cf6;
+    }
+  }
+
+  .mic-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.4);
+    transition: color 0.2s;
+    flex-shrink: 0;
+
+    ion-icon { font-size: 1.25rem; }
+    &:hover { color: #8b5cf6; }
+  }
 
   .message-input {
     flex: 1;
@@ -161,6 +794,12 @@
 
     ion-icon {
       font-size: 1rem;
+    }
+
+    .send-spinner {
+      width: 18px;
+      height: 18px;
+      color: white;
     }
 
     &:disabled {

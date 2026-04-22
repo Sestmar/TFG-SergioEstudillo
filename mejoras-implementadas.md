@@ -1115,3 +1115,319 @@ La cadena es null-safe en cada paso: si el jugador no tiene equipo, si el equipo
 - `modules/players/pages/player-dashboard/player-dashboard.page.ts` — `confirmedTrainings` se hidrata desde backend al cargar cada jugador (con `clear()` previo); métodos `isTrainingConfirmed()` y `confirmarAsistencia()`
 - `modules/players/pages/player-dashboard/player-dashboard.page.html` — botón de confirmación condicional en tarjetas de entrenamiento
 
+---
+
+## 24. Chat Pro: Ingeniería de Mensajería Avanzada y Seguridad 💬🔒✅
+
+Se ha llevado el módulo de chat de un sistema funcional básico a una implementación de nivel profesional, resolviendo cuatro vectores críticos: escalabilidad de datos, robustez en el manejo de medios, seguridad XSS y experiencia de gestión de mensajes en tiempo real.
+
+---
+
+### 24.1 Paginación de Alto Rendimiento (Infinite Scroll)
+
+#### Desafío Técnico
+
+El historial se cargaba con una única query `SELECT * FROM mensajes WHERE equipo_id = ?` sin límite. Con 5.000 mensajes, el frontend recibe un array de 5.000 objetos JSON, el BehaviorSubject los almacena todos en memoria y el DOM renderiza 5.000 nodos `<div>` simultáneamente. El resultado es un tiempo de carga inaceptable y un consumo de RAM que colapsa dispositivos móviles de gama media.
+
+El segundo desafío es técnico y de UX: al cargar mensajes antiguos, el scroll debe **mantenerse en la posición visual actual** del usuario. Si se inserta contenido por encima sin compensar, todos los mensajes visibles saltan hacia abajo, desorientando al usuario — el error más común en implementaciones amateur de infinite scroll.
+
+#### Solución e Implementación
+
+**Backend — `Slice<T>` en lugar de `Page<T>`**
+
+Se eligió `Slice` de Spring Data JPA de forma deliberada. `Page<T>` ejecuta dos queries: una para los datos y otra `SELECT COUNT(*)` para calcular el total de páginas. `Slice<T>` solo ejecuta la query de datos y determina si hay más resultados cargando `size + 1` registros. Para un chat, el número total de mensajes no es relevante — solo importa si hay más; `Slice` es un 50% más eficiente.
+
+```java
+// MensajeRepository.java — query paginada descendente
+Slice<Mensaje> findByEquipo_IdEquipoOrderByFechaHoraDesc(
+    Integer idEquipo, Pageable pageable);
+
+// ChatService.java — inversión DESC → ASC para el cliente
+public PaginaMensajesDto listarPorEquipoPaginado(Integer idEquipo, int page, int size) {
+    Slice<Mensaje> slice = mensajeRepository
+        .findByEquipo_IdEquipoOrderByFechaHoraDesc(idEquipo, PageRequest.of(page, size));
+    List<MensajeDto> dtos = slice.getContent().stream()
+        .map(this::toDto).collect(Collectors.toList());
+    Collections.reverse(dtos); // Los mensajes más recientes al fondo para el cliente
+    return new PaginaMensajesDto(dtos, slice.hasNext());
+}
+```
+
+El DTO de respuesta es un Java Record minimalista:
+
+```java
+// PaginaMensajesDto.java
+public record PaginaMensajesDto(List<MensajeDto> mensajes, boolean hasMore) {}
+```
+
+**Frontend — Preservación de posición de scroll**
+
+El núcleo del problema es el orden de los eventos del ciclo de vida de Angular. `ngOnChanges` se dispara **antes** de que el DOM se actualice; `ngAfterViewChecked` se dispara **después**. Esta secuencia permite el patrón de captura-y-restauración:
+
+```typescript
+// chat-room.component.ts
+ngOnChanges(changes: SimpleChanges): void {
+  if (changes['cargandoMas']?.currentValue === true) {
+    // 1. La carga comienza: activar modo restauración
+    this.pendingScrollRestore = true;
+  }
+  if (changes['mensajes']) {
+    if (this.pendingScrollRestore && !changes['mensajes'].isFirstChange()) {
+      // 2. Los mensajes cambian (prepend): el DOM todavía NO se actualizó
+      //    → capturar la posición ANTES de que se expanda el contenido
+      const el = this.messagesContainer.nativeElement;
+      this.savedScrollHeight = el.scrollHeight;
+      this.savedScrollTop    = el.scrollTop;
+    } else {
+      this.shouldScroll = true; // Mensaje nuevo → ir al fondo
+    }
+  }
+}
+
+ngAfterViewChecked(): void {
+  // 3. DOM ya actualizado: la altura creció → restaurar la posición relativa
+  if (this.pendingScrollRestore && this.savedScrollHeight > 0) {
+    const el = this.messagesContainer.nativeElement;
+    const diff = el.scrollHeight - this.savedScrollHeight;
+    if (diff > 0) {
+      el.scrollTop = this.savedScrollTop + diff; // Usuario sigue viendo los mismos mensajes
+      this.pendingScrollRestore = false;
+    }
+  }
+  if (this.shouldScroll) { this.scrollToBottom(); this.shouldScroll = false; }
+}
+```
+
+La detección del scroll al tope usa un arrow function property para que `removeEventListener` funcione correctamente sin crear referencias huérfanas:
+
+```typescript
+private onContainerScroll = (): void => {
+  const el = this.messagesContainer?.nativeElement;
+  if (!el || !this.hayMas || this.cargandoMas || this.pendingScrollRestore) return;
+  if (el.scrollTop <= 50) this.cargarMas.emit();
+};
+
+ngAfterViewInit(): void {
+  this.messagesContainer.nativeElement.addEventListener('scroll', this.onContainerScroll);
+}
+ngOnDestroy(): void {
+  this.messagesContainer?.nativeElement.removeEventListener('scroll', this.onContainerScroll);
+}
+```
+
+Los mensajes nuevos vía WebSocket (STOMP) no se ven afectados: `agregarMensaje()` en `ChatService` hace append al final de la lista, lo que dispara `shouldScroll = true` y el chat baja automáticamente, exactamente igual que antes.
+
+---
+
+### 24.2 Robustez en Medios y Emojis
+
+#### Desafío Técnico
+
+Se detectaron dos fallos independientes que bloqueaban funcionalidades básicas:
+
+1. **Emojis no persistidos**: Aunque PostgreSQL soporta el estándar Unicode completo, la conexión JDBC puede establecerse con un encoding de cliente diferente. Emojis multibyte (como 😂, que ocupa 4 bytes en UTF-8) fallaban silenciosamente en entornos donde el pool de conexiones no forzaba `UTF8`.
+
+2. **Imágenes sin texto rechazadas por la BD**: Al intentar enviar una imagen sin escribir texto, el backend lanzaba `ERROR: null value in column "contenido" of relation "mensajes" violates not-null constraint`. El campo `contenido` de la tabla `mensajes` tenía una restricción `NOT NULL` heredada de versiones anteriores donde todos los mensajes debían ser texto.
+
+#### Solución e Implementación
+
+**Garantía de encoding UTF-8 en el pool de conexiones (HikariCP)**
+
+```properties
+# application.properties
+spring.datasource.hikari.connection-init-sql=SET client_encoding TO 'UTF8'
+```
+
+Esta instrucción se ejecuta en cada nueva conexión que Hikari abre hacia PostgreSQL, garantizando que la sesión de base de datos esté en UTF-8 independientemente de la configuración del servidor o del sistema operativo del host de Render.
+
+**Corrección del modelo JPA y migración de esquema**
+
+```java
+// Mensaje.java — el campo debe ser explícitamente nullable
+@Column(columnDefinition = "TEXT", nullable = true)
+private String contenido;
+```
+
+```sql
+-- Migración aplicada en la BD de producción (Render)
+ALTER TABLE mensajes ALTER COLUMN contenido DROP NOT NULL;
+```
+
+**Serialización JSON correcta en el cliente STOMP**
+
+El objeto `EnviarMensajeDto` del frontend contenía campos `undefined` al enviar imágenes sin texto. `JSON.stringify` descarta las propiedades `undefined`, lo que hacía que Jackson (el deserializador de Java) recibiera un JSON sin el campo `contenido` y fallara al mapear el Java Record:
+
+```typescript
+// chat.service.ts — replacer que convierte undefined → null explícitamente
+this.client.publish({
+  destination: '/app/chat.enviar',
+  body: JSON.stringify(dto, (_key, value) => value === undefined ? null : value)
+});
+```
+
+---
+
+### 24.3 Seguridad y Sanitización (XSS Defense)
+
+#### Desafío Técnico
+
+Se identificó un vector de ataque XSS real en el componente de chat: los campos `urlAdjunto` de los mensajes se vinculaban directamente al atributo `[src]` de los elementos `<img>`, `<video>` y `<audio>` sin sanitizar. Un atacante podía publicar manualmente un mensaje STOMP desde la consola del navegador con una URL arbitraria:
+
+```json
+{ "urlAdjunto": "data:text/html,<script>alert(document.cookie)</script>", "tipoAdjunto": "IMAGEN" }
+```
+
+Angular bloquea `javascript:` en `[src]`, pero **no bloquea `data:` URLs**. En un elemento `<video>`, algunos motores de navegador pueden ejecutar contenido embebido en URLs `data:`. Adicionalmente, cualquier URL externa puede usarse como tracking pixel para exfiltrar la IP y el User-Agent del usuario que carga el chat.
+
+#### Solución e Implementación
+
+**Frontend — `DomSanitizer.bypassSecurityTrustUrl()`**
+
+Se aplicó `getSafeUrl()` a todos los bindings de medios:
+
+```html
+<!-- chat-room.component.html — los tres tipos de adjunto sanitizados -->
+<img   [src]="getSafeUrl(msg.urlAdjunto)" ...>
+<video [src]="getSafeUrl(msg.urlAdjunto)" ...>
+<audio [src]="getSafeUrl(msg.urlAdjunto)" ...>
+```
+
+```typescript
+// chat-room.component.ts
+getSafeUrl(url: string | null): SafeUrl | null {
+  if (!url) return null;
+  return this.sanitizer.bypassSecurityTrustUrl(url);
+}
+```
+
+**Backend — Validación de URL de adjunto (defensa en profundidad)**
+
+La sanitización en el cliente es necesaria pero insuficiente: un atacante puede publicar directamente vía WebSocket saltándose el frontend. Se añadió una segunda barrera de validación en el servidor:
+
+```java
+// ChatService.java — rechaza URLs que no pertenezcan al servidor
+if (dto.urlAdjunto() != null) {
+    String url = dto.urlAdjunto();
+    if (!url.contains("/api/uploads/files/")) {
+        throw new IllegalArgumentException(
+            "El adjunto referencia una URL no permitida.");
+    }
+}
+```
+
+Esta validación garantiza que solo se puedan persistir y difundir URLs generadas por el propio endpoint `POST /api/chat/uploads` del servidor. Un `data:` URL o un dominio externo es rechazado con una excepción antes de que el mensaje llegue a la base de datos.
+
+**Sanitización de menciones (ya existente, auditoría confirmada)**
+
+El método `getMentionHtml()` fue auditado y confirmado como seguro: escapa `&`, `<` y `>` antes de inyectar los `<span>` de mención, y la regex `@([A-Za-záéíóúüñ]+)` solo captura caracteres alfabéticos, haciendo imposible inyectar HTML por esa vía.
+
+```typescript
+getMentionHtml(contenido?: string): SafeHtml {
+  const escaped = contenido
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const html = escaped.replace(
+    /@([A-Za-záéíóúüñÁÉÍÓÚÜÑ]+ [A-Za-záéíóúüñÁÉÍÓÚÜÑ]+)/g,
+    '<span class="mention">@$1</span>'
+  );
+  return this.sanitizer.bypassSecurityTrustHtml(html);
+}
+```
+
+---
+
+### 24.4 UX de Gestión: CRUD de Mensajes Sincronizado por WebSocket
+
+#### Desafío Técnico
+
+Los botones de "Editar" y "Eliminar" mostraban el menú contextual correctamente pero no ejecutaban ninguna acción al pulsarlos. El diagnóstico inicial apuntaba a endpoints faltantes en el backend, pero los endpoints existían. La causa raíz fue `setPointerCapture()` en el handler de `pointerdown`.
+
+`setPointerCapture()` redirige **todos los eventos de puntero** al elemento que lo invoca (la burbuja del mensaje). Esto hace que el evento `click` sintetizado al soltar el dedo aterrice en `toggleMenu()` en lugar del botón real, impidiendo que "Editar" o "Borrar" reciban el evento.
+
+El segundo problema era de reactividad: al confirmar una edición o borrado, el componente no actualizaba la UI localmente porque no había lógica de `next()` en el BehaviorSubject. La UI esperaba recibir el mensaje actualizado por STOMP, pero el canal STOMP solo reenvía a los clientes conectados al topic del equipo — el remitente no recibe su propia actualización por esa vía cuando la acción es REST.
+
+#### Solución e Implementación
+
+**Fix del `setPointerCapture` — detección de elementos interactivos**
+
+```typescript
+// chat-room.component.ts
+onPointerDown(event: PointerEvent, msg: MensajeDto): void {
+  if (msg.eliminado) return;
+  const target = event.target as HTMLElement;
+  // Si el usuario tocó un botón, textarea o enlace, NO capturar el puntero.
+  // setPointerCapture redirige el click sintetizado al bubble y hace
+  // que Editar/Borrar/Reaccionar nunca reciban el evento.
+  if (target.closest('button, textarea, a, input')) return;
+  (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  this.swipeStartX = event.clientX;
+  this.swipeActive.set(msg.id, true);
+  this.hapticFired.set(msg.id, false);
+}
+```
+
+**Actualización local inmediata del estado**
+
+En lugar de esperar a que STOMP reenvíe el mensaje actualizado, la respuesta HTTP del endpoint se inyecta directamente en el `BehaviorSubject` de mensajes:
+
+```typescript
+// chat-room.component.ts — edición inline sincronizada
+guardarEdicion(msg: MensajeDto): void {
+  const texto = this.textoEdicion.trim();
+  if (!texto || texto === msg.contenido) { this.cancelarEdicion(); return; }
+  this.chatService.editarMensaje(msg.id, texto).subscribe({
+    next: (actualizado) => {
+      this.chatService.actualizarMensajeLocal(actualizado); // Actualización inmediata en UI
+      this.cancelarEdicion();
+    }
+  });
+}
+
+// ChatService.ts — wrapper público para actualizarMensaje
+actualizarMensajeLocal(msg: MensajeDto): void {
+  this.agregarMensaje(msg); // Busca por ID y reemplaza o añade al array
+}
+```
+
+El **borrado es lógico**, nunca físico. El campo `eliminado = true` se persiste en la BD y el backend difunde la versión "borrada" del mensaje por STOMP a todos los clientes conectados. La UI reemplaza el contenido del mensaje con el texto "Este mensaje fue eliminado" y oculta los adjuntos:
+
+```java
+// ChatService.java — borrado lógico: limpia contenido y adjunto
+mensaje.setEliminado(true);
+mensaje.setContenido("Este mensaje fue eliminado.");
+mensaje.setUrlAdjunto(null);
+mensaje.setTipoAdjunto(null);
+return toDto(mensajeRepository.save(mensaje));
+```
+
+**Doble barrera de autorización (IDOR prevention)**
+
+Tanto la edición como el borrado están protegidos con validación de autoría en el backend. El email del editor proviene del `@AuthenticationPrincipal` extraído del JWT firmado — el cliente no puede falsificarlo:
+
+```java
+// ChatService.java — validación de propiedad del mensaje
+if (!mensaje.getRemitente().getEmail().equals(emailEditor)) {
+    throw new AccessDeniedException("No podés editar mensajes de otros usuarios.");
+}
+```
+
+Cualquier intento de editar o borrar un mensaje ajeno retorna HTTP 403 inmediatamente, antes de modificar ningún dato.
+
+---
+
+### Archivos modificados en esta sección
+
+**Backend:**
+- `dto/PaginaMensajesDto.java` — nuevo Record `{ mensajes, hasMore }`
+- `repository/MensajeRepository.java` — dos métodos `Slice<Mensaje>` con `Pageable` ordenados DESC
+- `service/ChatService.java` — `listarPorEquipoPaginado()`, `listarPrivadosPaginado()`, validación de URL de adjunto
+- `controller/ChatController.java` — endpoints de historial paginados (`?page=0&size=50`)
+- `model/Mensaje.java` — campo `contenido` con `nullable = true`
+- `resources/application.properties` — `connection-init-sql` para encoding UTF-8
+
+**Frontend:**
+- `chat.service.ts` — interfaz `PaginaMensajesDto`, `cargarHistorialEquipo/Privado` con `page` y lógica de prepend, replacer JSON para `undefined → null`
+- `chat-room.component.ts` — `@Input() cargandoMas/hayMas`, `@Output() cargarMas`, preservación de scroll, `onContainerScroll`, fix de `setPointerCapture`, `guardarEdicion` y `confirmarEliminar` con actualización local
+- `chat-room.component.html` — `ion-spinner` de carga arriba del listado, `[src]` de medios con `getSafeUrl()`
+- `chat-room.component.scss` — estilo `.loading-more`
+- `chat.page.ts` — estado `paginaActual/hayMas/cargandoMas`, método `onCargarMas()`, reset al cambiar conversación
+- `chat.page.html` — `[cargandoMas]`, `[hayMas]` y `(cargarMas)` en `app-chat-room`

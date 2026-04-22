@@ -62,7 +62,31 @@
     *ngIf="modoChat === 'equipo' || (modoChat === 'privado' && destinatarioSeleccionado)"
     [mensajes]="mensajes$ | async"
     [currentUserId]="currentUser?.idUsuario"
-    (onEnviar)="enviarMensaje($event)">
+    [miembros]="miembrosEquipo"
+    [appendEmoji]="pendingEmoji"
+    [cargandoMas]="cargandoMas"
+    [hayMas]="hayMas"
+    (emojiToggle)="onEmojiToggle()"
+    (onEnviar)="enviarMensaje($event)"
+    (cargarMas)="onCargarMas()">
   </app-chat-room>
 
 </ion-content>
+
+<!--
+  Emoji picker fuera de ion-content.
+  ion-content usa contain:size en su shadow DOM, lo que hace que position:fixed
+  dentro de él se comporte como position:absolute (CSS Containment spec).
+  Al estar aquí, el picker flota sobre toda la UI sin restricciones de stacking.
+-->
+<div class="emoji-overlay-backdrop" *ngIf="showEmojiPicker" (click)="showEmojiPicker = false"></div>
+<div class="emoji-picker-panel" *ngIf="showEmojiPicker" (click)="$event.stopPropagation()">
+  <emoji-mart
+    [data]="emojiData"
+    [darkMode]="true"
+    [showPreview]="false"
+    [emojiSize]="20"
+    [perLine]="8"
+    (emojiClick)="addEmoji($event)">
+  </emoji-mart>
+</div>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
+import { PickerModule } from '@ctrl/ngx-emoji-mart';
 import { ChatPage } from './pages/chat/chat.page';
 import { ChatRoomComponent } from './components/chat-room/chat-room.component';
 @NgModule({
@@ -10,6 +11,7 @@ import { ChatRoomComponent } from './components/chat-room/chat-room.component';
     CommonModule,
     FormsModule,
     IonicModule,
+    PickerModule,
     RouterModule.forChild([
       { path: '', component: ChatPage }
     ])

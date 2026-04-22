@@ -61,8 +61,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/entrenadores/**").permitAll()
 
-                        // 3. Permitir recursos estáticos y errores
-                        .requestMatchers("/api/uploads/**", "/uploads/**").permitAll()
+                        // 3. Servir archivos estáticos públicamente (solo GET — para <img> tags)
+                        // POST /api/uploads/img y POST /api/chat/uploads quedan protegidos por anyRequest().authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/uploads/files/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/error").permitAll()
 

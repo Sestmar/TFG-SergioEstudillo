@@ -3,8 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
+import * as emojiData from '@emoji-mart/data';
 import { AuthService } from 'src/app/core/services/auth/auth.service';
-import { ChatService, MensajeDto, EnviarMensajeDto } from '@core/services/chat/chat.service';
+import { ChatService, MensajeDto, EnviarMensajeDto, MiembroPreview } from '@core/services/chat/chat.service';
 import { AdminService } from 'src/app/core/services/admin/admin.service';
 import { User, AdminUserDto } from 'src/app/shared/models/models';
 import { environment } from 'src/environments/environment';
@@ -23,6 +24,17 @@ export class ChatPage implements OnInit, OnDestroy {
   modoChat: 'equipo' | 'privado' = 'equipo';
   usuariosDisponibles: AdminUserDto[] = [];
   destinatarioSeleccionado: AdminUserDto | null = null;
+  miembrosEquipo: MiembroPreview[] = [];
+
+  // Paginación
+  cargandoMas = false;
+  hayMas = false;
+  private paginaActual = 0;
+
+  // Emoji picker (vive en el page, fuera de ion-content, para evitar contain:size)
+  showEmojiPicker = false;
+  emojiData = emojiData;
+  pendingEmoji: string | null = null;
 
   private destroy$ = new Subject<void>();
   private equipoId: number | undefined;
@@ -99,21 +111,39 @@ export class ChatPage implements OnInit, OnDestroy {
   }
 
   private iniciarChat(): void {
+    this.paginaActual = 0;
+    this.hayMas = false;
+    this.cargandoMas = false;
     this.chatService.limpiarMensajes();
     this.chatService.desconectar();
 
     if (this.modoChat === 'equipo' && this.equipoId) {
-      this.chatService.cargarHistorialEquipo(this.equipoId)
+      this.chatService.cargarHistorialEquipo(this.equipoId, 0)
         .pipe(takeUntil(this.destroy$))
-        .subscribe({ error: () => {} });
+        .subscribe({
+          next: (data) => { this.hayMas = data.hasMore; },
+          error: () => {}
+        });
+      this.chatService.getMiembrosEquipo(this.equipoId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (miembros) => {
+            // Excluir al usuario actual de la lista de menciones
+            this.miembrosEquipo = miembros.filter(m => m.id !== this.currentUser?.idUsuario);
+          },
+          error: () => {}
+        });
       this.chatService.conectar(this.equipoId);
       this.chatService.marcarLeidos().pipe(takeUntil(this.destroy$)).subscribe({
         next: () => this.chatService.resetearNoLeidos()
       });
     } else if (this.modoChat === 'privado' && this.destinatarioSeleccionado) {
-      this.chatService.cargarHistorialPrivado(this.destinatarioSeleccionado.id)
+      this.chatService.cargarHistorialPrivado(this.destinatarioSeleccionado.id, 0)
         .pipe(takeUntil(this.destroy$))
-        .subscribe({ error: () => {} });
+        .subscribe({
+          next: (data) => { this.hayMas = data.hasMore; },
+          error: () => {}
+        });
       this.chatService.conectar(undefined, this.destinatarioSeleccionado.id);
     }
   }
@@ -128,12 +158,40 @@ export class ChatPage implements OnInit, OnDestroy {
 
   seleccionarDestinatario(usuario: AdminUserDto): void {
     this.destinatarioSeleccionado = usuario;
+    this.paginaActual = 0;
+    this.hayMas = false;
+    this.cargandoMas = false;
     this.chatService.desconectar();
     this.chatService.limpiarMensajes();
-    this.chatService.cargarHistorialPrivado(usuario.id)
+    this.chatService.cargarHistorialPrivado(usuario.id, 0)
       .pipe(takeUntil(this.destroy$))
-      .subscribe({ error: () => {} });
+      .subscribe({
+        next: (data) => { this.hayMas = data.hasMore; },
+        error: () => {}
+      });
     this.chatService.conectar(undefined, usuario.id);
+  }
+
+  onCargarMas(): void {
+    if (this.cargandoMas || !this.hayMas) return;
+    this.cargandoMas = true;
+    this.paginaActual++;
+
+    const obs$ = this.modoChat === 'equipo' && this.equipoId
+      ? this.chatService.cargarHistorialEquipo(this.equipoId, this.paginaActual)
+      : this.modoChat === 'privado' && this.destinatarioSeleccionado
+        ? this.chatService.cargarHistorialPrivado(this.destinatarioSeleccionado.id, this.paginaActual)
+        : null;
+
+    if (!obs$) { this.cargandoMas = false; return; }
+
+    obs$.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (data) => {
+        this.hayMas = data.hasMore;
+        this.cargandoMas = false;
+      },
+      error: () => { this.cargandoMas = false; }
+    });
   }
 
   enviarMensaje(dto: EnviarMensajeDto): void {
@@ -146,6 +204,17 @@ export class ChatPage implements OnInit, OnDestroy {
     }
 
     this.chatService.enviarMensaje(payload);
+  }
+
+  onEmojiToggle(): void {
+    this.showEmojiPicker = !this.showEmojiPicker;
+  }
+
+  addEmoji(event: any): void {
+    this.pendingEmoji = event.emoji.native;
+    this.showEmojiPicker = false;
+    // Reset tras un tick para que ngOnChanges se dispare incluso con el mismo emoji
+    setTimeout(() => { this.pendingEmoji = null; }, 50);
   }
 
   ngOnDestroy(): void {

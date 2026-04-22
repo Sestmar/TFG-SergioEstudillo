@@ -90,28 +90,36 @@ public class FileController {
         }
     }
 
-    // Endpoint para SERVIR la imagen (verla en el navegador)
+    // Endpoint para SERVIR archivos de uploads generales
     @GetMapping("/files/{fileName:.+}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) {
+        return serveFile(this.fileStorageLocation, fileName);
+    }
+
+    // Endpoint para SERVIR archivos del chat (subdirectorio chat/)
+    @GetMapping("/files/chat/{fileName:.+}")
+    public ResponseEntity<Resource> downloadChatFile(@PathVariable String fileName) {
+        Path chatStorageLocation = this.fileStorageLocation.resolve("chat").normalize();
+        return serveFile(chatStorageLocation, fileName);
+    }
+
+    private ResponseEntity<Resource> serveFile(Path baseDir, String fileName) {
         try {
-            // Sanitización: rechazar secuencias de escape de directorio
-            if (fileName.contains("..")) {
+            if (fileName.contains("..") || fileName.contains("/")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
-            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            Path filePath = baseDir.resolve(fileName).normalize();
 
-            // Validación: el archivo debe estar DENTRO del directorio de uploads
-            if (!filePath.startsWith(this.fileStorageLocation)) {
+            if (!filePath.startsWith(baseDir)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
             Resource resource = new UrlResource(filePath.toUri());
 
             if (resource.exists()) {
-                // Detectar tipo de contenido (jpg, png...)
                 String contentType = Files.probeContentType(filePath);
-                if(contentType == null) contentType = "application/octet-stream";
+                if (contentType == null) contentType = "application/octet-stream";
 
                 return ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType(contentType))

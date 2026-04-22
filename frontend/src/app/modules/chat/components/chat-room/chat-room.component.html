@@ -1,8 +1,65 @@
 <div class="messages-container" #messagesContainer>
-  <div *ngFor="let msg of mensajes"
-       class="message-bubble"
+  <!-- Spinner de carga de mensajes anteriores -->
+  <div class="loading-more" *ngIf="cargandoMas">
+    <ion-spinner name="dots"></ion-spinner>
+  </div>
+
+  <div *ngFor="let msg of mensajes" class="bubble-row">
+
+  <div class="message-bubble"
        [class.own]="msg.remitenteId === currentUserId"
-       [class.other]="msg.remitenteId !== currentUserId">
+       [class.other]="msg.remitenteId !== currentUserId"
+       [class.menu-open]="menuMensajeId === msg.id"
+       [style.transform]="getBubbleTransform(msg)"
+       (click)="toggleMenu($event, msg)"
+       (pointerdown)="onPointerDown($event, msg)"
+       (pointermove)="onPointerMove($event, msg)"
+       (pointerup)="onPointerUp($event, msg)"
+       (pointercancel)="onPointerCancel($event, msg)">
+
+    <!-- Reaction bar -->
+    <div class="reaction-bar"
+         *ngIf="reactionBarMsgId === msg.id"
+         (click)="$event.stopPropagation()">
+      <button class="reaction-btn"
+              *ngFor="let emoji of QUICK_EMOJIS"
+              [class.selected]="getMiReaccion(msg) === emoji"
+              (click)="reaccionar(msg, emoji, $event)"
+              type="button">{{ emoji }}</button>
+    </div>
+
+    <!-- Hint de respuesta (aparece al swipear) -->
+    <div class="reply-hint"
+         [style.transform]="getHintTransform(msg)"
+         [style.opacity]="getSwipeOpacity(msg)">
+      <ion-icon name="return-down-forward-outline"></ion-icon>
+    </div>
+
+    <!-- Menú contextual (solo mensajes propios, no eliminados) -->
+    <div class="msg-menu"
+         *ngIf="menuMensajeId === msg.id"
+         (click)="$event.stopPropagation()">
+
+      <!-- Confirmación de eliminación -->
+      <ng-container *ngIf="confirmandoEliminacion === msg.id; else accionesMenu">
+        <span class="menu-confirm-label">¿Eliminar?</span>
+        <button class="menu-btn menu-btn--danger" (click)="confirmarEliminar(msg.id, $event)">Sí</button>
+        <button class="menu-btn" (click)="cerrarMenu()">No</button>
+      </ng-container>
+
+      <!-- Acciones normales -->
+      <ng-template #accionesMenu>
+        <button class="menu-btn"
+                *ngIf="msg.contenido && !msg.eliminado"
+                (click)="iniciarEdicion(msg, $event)">
+          <ion-icon name="pencil-outline"></ion-icon> Editar
+        </button>
+        <button class="menu-btn menu-btn--danger"
+                (click)="pedirConfirmacionEliminar(msg.id, $event)">
+          <ion-icon name="trash-outline"></ion-icon> Eliminar
+        </button>
+      </ng-template>
+    </div>
 
     <div class="avatar" *ngIf="msg.remitenteId !== currentUserId">
       <img *ngIf="msg.remitenteFotoUrl && !avatarErrorIds.has(msg.remitenteId)"
@@ -18,10 +75,87 @@
       <span class="sender-name" *ngIf="msg.remitenteId !== currentUserId">
         {{ msg.remitenteNombre }} {{ msg.remitenteApellidos }}
       </span>
-      <p class="bubble-text">{{ msg.contenido }}</p>
+
+      <!-- ── Cita (quote) del mensaje padre ── -->
+      <div class="bubble-quote" *ngIf="msg.parentPreview && !msg.eliminado">
+        <span class="quote-author">{{ msg.parentPreview.remitenteNombre }}</span>
+        <span class="quote-text">
+          <ng-container *ngIf="msg.parentPreview.contenido; else quoteAdjunto">
+            {{ msg.parentPreview.contenido.length > 60
+               ? (msg.parentPreview.contenido | slice:0:60) + '…'
+               : msg.parentPreview.contenido }}
+          </ng-container>
+          <ng-template #quoteAdjunto>
+            {{ msg.parentPreview.tipoAdjunto === 'IMAGEN' ? '📷 Imagen'
+             : msg.parentPreview.tipoAdjunto === 'VIDEO'  ? '🎬 Vídeo'
+             : msg.parentPreview.tipoAdjunto === 'AUDIO'  ? '🎤 Nota de voz'
+             : '📎 Adjunto' }}
+          </ng-template>
+        </span>
+      </div>
+
+      <!-- ── Mensaje eliminado ── -->
+      <p class="bubble-deleted" *ngIf="msg.eliminado">
+        <ion-icon name="ban-outline"></ion-icon>
+        Este mensaje fue eliminado
+      </p>
+
+      <!-- ── Contenido normal (no eliminado) ── -->
+      <ng-container *ngIf="!msg.eliminado">
+
+        <!-- Modo edición inline -->
+        <div class="edit-mode" *ngIf="editandoId === msg.id" (click)="$event.stopPropagation()">
+          <textarea
+            [(ngModel)]="textoEdicion"
+            class="edit-input"
+            rows="2"
+            (keydown.enter)="$event.preventDefault(); guardarEdicion(msg)"
+            (keydown.escape)="cancelarEdicion()">
+          </textarea>
+          <div class="edit-actions">
+            <button class="edit-btn edit-btn--cancel" (click)="cancelarEdicion()">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
+            <button class="edit-btn edit-btn--save" (click)="guardarEdicion(msg)">
+              <ion-icon name="checkmark-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Vista normal (no editando) -->
+        <ng-container *ngIf="editandoId !== msg.id">
+          <img *ngIf="msg.urlAdjunto && msg.tipoAdjunto === 'IMAGEN'"
+               [src]="getSafeUrl(msg.urlAdjunto)" class="bubble-image" alt="Imagen" loading="lazy">
+
+          <video *ngIf="msg.urlAdjunto && msg.tipoAdjunto === 'VIDEO'"
+                 [src]="getSafeUrl(msg.urlAdjunto)" controls playsinline preload="metadata" class="bubble-video">
+          </video>
+
+          <audio *ngIf="msg.urlAdjunto && msg.tipoAdjunto === 'AUDIO'"
+                 [src]="getSafeUrl(msg.urlAdjunto)" controls class="bubble-audio" preload="metadata">
+          </audio>
+
+          <p class="bubble-text" *ngIf="msg.contenido" [innerHTML]="getMentionHtml(msg.contenido)"></p>
+        </ng-container>
+
+        <span class="edited-label" *ngIf="msg.editado">editado</span>
+      </ng-container>
+
+      <!-- Chips de reacciones -->
+      <div class="reaction-chips" *ngIf="msg.reacciones?.length">
+        <button class="reaction-chip"
+                *ngFor="let r of msg.reacciones"
+                [class.mine]="currentUserId !== undefined && r.usuarioIds.includes(currentUserId)"
+                (click)="reaccionar(msg, r.emoji, $event)"
+                type="button">
+          {{ r.emoji }}<span class="chip-count">{{ r.count }}</span>
+        </button>
+      </div>
+
       <span class="bubble-time">{{ msg.fechaHora | date:'HH:mm' }}</span>
     </div>
   </div>
+  </div>  <!-- /bubble-row -->
 
   <div class="empty-state" *ngIf="!mensajes || mensajes.length === 0">
     <ion-icon name="chatbubbles-outline"></ion-icon>
@@ -30,15 +164,110 @@
 </div>
 
 <div class="input-area">
-  <div class="input-wrapper">
+
+  <!-- Mini-card de respuesta -->
+  <div class="reply-preview" *ngIf="mensajeRespondiendo" (click)="$event.stopPropagation()">
+    <div class="reply-preview__body">
+      <span class="reply-preview__author">{{ mensajeRespondiendo.remitenteNombre }}</span>
+      <span class="reply-preview__text">{{ getPreviewTexto(mensajeRespondiendo) }}</span>
+    </div>
+    <button class="reply-preview__cancel" (click)="cancelarRespuesta()" type="button">
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+  </div>
+
+  <!-- Preview de imagen o vídeo -->
+  <div class="image-preview" *ngIf="imagenPreviewUrl">
+    <div class="preview-wrapper">
+      <img *ngIf="!esVideo" [src]="getSafeUrl(imagenPreviewUrl)" alt="Vista previa">
+      <video *ngIf="esVideo"
+             [src]="getSafeUrl(imagenPreviewUrl)"
+             muted
+             playsinline
+             preload="metadata"
+             class="video-preview">
+      </video>
+      <button class="preview-cancel" (click)="cancelarImagen()" type="button">
+        <ion-icon name="close-circle"></ion-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Errores -->
+  <p class="input-error" *ngIf="imagenError">{{ imagenError }}</p>
+  <p class="input-error" *ngIf="audioError">{{ audioError }}</p>
+
+  <!-- Input de archivo oculto -->
+  <input #fileInput
+         type="file"
+         accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+         class="file-input-hidden"
+         (change)="seleccionarImagen($event)">
+
+  <!-- ── Estado: subiendo audio ── -->
+  <div class="uploading-wrapper" *ngIf="subiendoAudio">
+    <ion-spinner name="crescent"></ion-spinner>
+    <span>Enviando audio...</span>
+  </div>
+
+  <!-- ── Estado: grabando ── -->
+  <div class="recording-wrapper" *ngIf="grabando && !subiendoAudio">
+    <button class="rec-cancel-btn" (click)="cancelarGrabacion()" type="button" title="Cancelar">
+      <ion-icon name="trash-outline"></ion-icon>
+    </button>
+
+    <div class="rec-status">
+      <span class="rec-dot"></span>
+      <span class="rec-timer">{{ timerDisplay }}</span>
+    </div>
+
+    <button class="rec-stop-btn" (click)="detenerGrabacion()" type="button" title="Enviar audio">
+      <ion-icon name="send"></ion-icon>
+    </button>
+  </div>
+
+  <!-- ── Lista de menciones ── -->
+  <div class="mention-list" *ngIf="mentionResults.length > 0" (click)="$event.stopPropagation()">
+    <button class="mention-item"
+            *ngFor="let m of mentionResults"
+            type="button"
+            (click)="selectMention(m)">
+      <div class="mention-avatar">
+        <img *ngIf="m.fotoUrl" [src]="m.fotoUrl" alt="" (error)="$any($event.target).style.display='none'">
+        <div class="mention-placeholder" *ngIf="!m.fotoUrl">
+          {{ m.nombre[0] }}{{ m.apellidos[0] }}
+        </div>
+      </div>
+      <span class="mention-name">{{ m.nombre }} {{ m.apellidos }}</span>
+    </button>
+  </div>
+
+  <!-- ── Estado: normal ── -->
+  <div class="input-wrapper" *ngIf="!grabando && !subiendoAudio">
+    <button class="emoji-btn" (click)="emojiToggle.emit(); $event.stopPropagation()" type="button">
+      <ion-icon name="happy-outline"></ion-icon>
+    </button>
+
+    <button class="attach-btn" (click)="fileInput.click()" [class.active]="!!imagenSeleccionada" type="button">
+      <ion-icon name="image-outline"></ion-icon>
+    </button>
+
+    <button class="mic-btn" (click)="iniciarGrabacion()" type="button">
+      <ion-icon name="mic-outline"></ion-icon>
+    </button>
+
     <input
       [(ngModel)]="contenido"
+      (ngModelChange)="onInputChange($event)"
       placeholder="Escribe un mensaje..."
       class="message-input"
       (keyup.enter)="enviar()"
+      (keydown.escape)="closeMentionList()"
       maxlength="1000">
-    <button class="send-btn" (click)="enviar()" [disabled]="!contenido?.trim()">
-      <ion-icon name="send"></ion-icon>
+
+    <button class="send-btn" (click)="enviar()" [disabled]="!puedeEnviar">
+      <ion-spinner *ngIf="subiendoImagen" name="crescent" class="send-spinner"></ion-spinner>
+      <ion-icon *ngIf="!subiendoImagen" name="send"></ion-icon>
     </button>
   </div>
 </div>

@@ -29,12 +29,30 @@ public class Mensaje {
     @JoinColumn(name = "destinatario_id")
     private Usuario destinatario;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    // Null cuando el mensaje es solo un adjunto (imagen, audio, vídeo sin texto)
+    @Column(columnDefinition = "TEXT", nullable = true)
     private String contenido;
+
+    @Column(name = "url_adjunto", length = 500)
+    private String urlAdjunto;
+
+    @Column(name = "tipo_adjunto", length = 20)
+    private String tipoAdjunto;
 
     @Column(nullable = false)
     private LocalDateTime fechaHora;
 
     @Column(nullable = false)
     private boolean leido = false;
+
+    // Respuesta a otro mensaje (parent_id) — FK auto-referencial
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Mensaje parent;
+
+    @Column(nullable = false)
+    private boolean editado = false;
+
+    @Column(nullable = false)
+    private boolean eliminado = false;
 }
