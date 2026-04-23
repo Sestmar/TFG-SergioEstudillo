@@ -65,7 +65,7 @@ public class SecurityConfig {
                         // POST /api/uploads/img y POST /api/chat/uploads quedan protegidos por anyRequest().authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/uploads/files/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").hasRole("ADMIN")
                         .requestMatchers("/error").permitAll()
 
                         // 5. WebSocket endpoint
