@@ -43,7 +43,7 @@ public class ChatUploadController {
 
     // Extensiones por tipo
     private static final Set<String> EXT_IMAGEN = Set.of(".jpg", ".jpeg", ".png", ".webp", ".gif");
-    private static final Set<String> EXT_AUDIO  = Set.of(".ogg", ".mp3");
+    private static final Set<String> EXT_AUDIO  = Set.of(".ogg", ".mp3", ".aac", ".m4a");
     private static final Set<String> EXT_VIDEO  = Set.of(".mp4", ".webm");
 
     // MIME types por tipo
@@ -51,14 +51,10 @@ public class ChatUploadController {
             "image/jpeg", "image/png", "image/webp", "image/gif");
 
     private static final Set<String> MIME_AUDIO = Set.of(
-            "audio/ogg", "audio/mpeg");
+            "audio/ogg", "audio/mpeg", "audio/aac", "audio/x-aac", "audio/mp4");
 
     private static final Set<String> MIME_VIDEO = Set.of(
-            "video/mp4", "video/webm",
-            // MediaRecorder en Safari/WebKit genera audio/mp4; en Chrome audio/webm.
-            // Files.probeContentType() suele devolver video/* para .mp4 y .webm,
-            // pero incluimos los audio/* para navegadores que reportan correctamente.
-            "audio/mp4", "audio/webm");
+            "video/mp4", "video/webm", "audio/webm");
 
     private final Path storageLocation = Paths.get("uploads/chat").toAbsolutePath().normalize();
 

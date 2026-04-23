@@ -15,6 +15,7 @@ import {
 import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import { MensajeDto, EnviarMensajeDto, ChatService, MiembroPreview, ReaccionDto } from '@core/services/chat/chat.service';
 import type { ParentPreviewDto } from '@core/services/chat/chat.service';
+import { VoiceRecorder } from 'capacitor-voice-recorder';
 
 const MAX_IMAGE_SIZE = 5  * 1024 * 1024; //  5 MB
 const MAX_VIDEO_SIZE = 25 * 1024 * 1024; // 25 MB
@@ -85,9 +86,6 @@ export class ChatRoomComponent implements AfterViewInit, AfterViewChecked, OnCha
 
   avatarErrorIds = new Set<number>();
 
-  private mediaRecorder: MediaRecorder | null = null;
-  private audioChunks: BlobPart[] = [];
-  private currentStream: MediaStream | null = null;
   private recordingTimer: ReturnType<typeof setInterval> | null = null;
   private audioCancelado = false;
 
@@ -165,7 +163,11 @@ export class ChatRoomComponent implements AfterViewInit, AfterViewChecked, OnCha
     const el = this.messagesContainer?.nativeElement;
     if (el) el.removeEventListener('scroll', this.onContainerScroll);
     this.cancelarImagen();
-    this.limpiarGrabacion(true);
+    if (this.grabando) {
+      this.audioCancelado = true;
+      this.limpiarGrabacion(true);
+      VoiceRecorder.stopRecording().catch(() => {});
+    }
   }
 
   private onContainerScroll = (): void => {
@@ -216,78 +218,51 @@ export class ChatRoomComponent implements AfterViewInit, AfterViewChecked, OnCha
     this.esVideo = false;
   }
 
-  // ── Audio ────────────────────────────────────────────────────────────────────
+  // ── Audio (capacitor-voice-recorder) ─────────────────────────────────────────
 
   async iniciarGrabacion(): Promise<void> {
     this.audioError = null;
 
-    if (!navigator.mediaDevices?.getUserMedia) {
-      this.audioError = 'Tu navegador no soporta grabación de audio.';
-      return;
-    }
-
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.currentStream = stream;
-      this.audioChunks = [];
+      const perm = await VoiceRecorder.requestAudioRecordingPermission();
+      if (perm.value !== 'granted') {
+        this.audioError = 'Permiso de micrófono denegado.';
+        return;
+      }
+      await VoiceRecorder.startRecording();
       this.audioCancelado = false;
-
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : MediaRecorder.isTypeSupported('audio/ogg')
-          ? 'audio/ogg'
-          : 'audio/mp4';
-
-      this.mediaRecorder = new MediaRecorder(stream, { mimeType });
-
-      this.mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) this.audioChunks.push(e.data);
-      };
-
-      this.mediaRecorder.onstop = () => {
-        this.currentStream?.getTracks().forEach(t => t.stop());
-        this.currentStream = null;
-        if (!this.audioCancelado) {
-          const blob = new Blob(this.audioChunks, { type: mimeType });
-          this.enviarAudio(blob, mimeType);
-        }
-        this.audioChunks = [];
-      };
-
-      this.mediaRecorder.start();
       this.grabando = true;
       this.timerSegundos = 0;
       this.recordingTimer = setInterval(() => this.timerSegundos++, 1000);
+    } catch {
+      this.audioError = 'No se pudo acceder al micrófono.';
+    }
+  }
 
-    } catch (err: any) {
-      if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
-        this.audioError = 'Permiso de micrófono denegado.';
-      } else {
-        this.audioError = 'No se pudo acceder al micrófono.';
+  async detenerGrabacion(): Promise<void> {
+    this.limpiarGrabacion();
+    try {
+      const result = await VoiceRecorder.stopRecording();
+      if (!this.audioCancelado) {
+        const { recordDataBase64, mimeType } = result.value;
+        const bytes = atob(recordDataBase64);
+        const byteArray = new Uint8Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++) byteArray[i] = bytes.charCodeAt(i);
+        const blob = new Blob([byteArray], { type: mimeType });
+        this.enviarAudio(blob, mimeType);
       }
+    } catch {
+      if (!this.audioCancelado) this.audioError = 'No se pudo detener la grabación.';
     }
   }
 
-  detenerGrabacion(): void {
-    if (this.mediaRecorder?.state !== 'inactive') {
-      this.mediaRecorder?.stop();
-    }
-    this.limpiarGrabacion(false);
-  }
-
-  cancelarGrabacion(): void {
+  async cancelarGrabacion(): Promise<void> {
     this.audioCancelado = true;
-    if (this.mediaRecorder?.state !== 'inactive') {
-      this.mediaRecorder?.stop();
-    }
-    this.limpiarGrabacion(true);
+    this.limpiarGrabacion();
+    try { await VoiceRecorder.stopRecording(); } catch { /* ya estaba parado */ }
   }
 
-  private limpiarGrabacion(cancelar: boolean): void {
-    if (cancelar) {
-      this.currentStream?.getTracks().forEach(t => t.stop());
-      this.currentStream = null;
-    }
+  private limpiarGrabacion(): void {
     if (this.recordingTimer) clearInterval(this.recordingTimer);
     this.recordingTimer = null;
     this.grabando = false;
@@ -295,7 +270,7 @@ export class ChatRoomComponent implements AfterViewInit, AfterViewChecked, OnCha
   }
 
   private enviarAudio(blob: Blob, mimeType: string): void {
-    const ext = mimeType.includes('ogg') ? '.ogg' : mimeType.includes('mp4') ? '.mp4' : '.webm';
+    const ext = mimeType.includes('aac') ? '.aac' : mimeType.includes('ogg') ? '.ogg' : '.mp4';
     const file = new File([blob], `audio-${Date.now()}${ext}`, { type: mimeType });
 
     const parentId = this.mensajeRespondiendo?.id;
