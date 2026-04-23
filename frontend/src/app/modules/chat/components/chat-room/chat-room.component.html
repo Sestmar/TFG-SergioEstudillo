@@ -131,9 +131,19 @@
                  [src]="getSafeUrl(msg.urlAdjunto)" controls playsinline preload="metadata" class="bubble-video">
           </video>
 
-          <audio *ngIf="msg.urlAdjunto && msg.tipoAdjunto === 'AUDIO'"
-                 [src]="getSafeUrl(msg.urlAdjunto)" controls class="bubble-audio" preload="metadata">
-          </audio>
+          <div *ngIf="msg.urlAdjunto && msg.tipoAdjunto === 'AUDIO'" class="bubble-audio-player">
+            <audio #audioEl
+                   [src]="getSafeUrl(msg.urlAdjunto)"
+                   preload="metadata"
+                   (loadedmetadata)="onAudioMetadata(msg, audioEl)"
+                   (ended)="onAudioEnded(msg)">
+            </audio>
+            <button class="audio-play-btn" type="button"
+                    (click)="toggleAudio(msg, audioEl, $event)">
+              <ion-icon [name]="playingAudioId === msg.id ? 'pause' : 'play'"></ion-icon>
+            </button>
+            <span class="audio-label">🎤 {{ formatAudioDuration(msg) }}</span>
+          </div>
 
           <p class="bubble-text" *ngIf="msg.contenido" [innerHTML]="getMentionHtml(msg.contenido)"></p>
         </ng-container>

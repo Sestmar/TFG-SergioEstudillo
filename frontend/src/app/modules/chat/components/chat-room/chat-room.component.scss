@@ -114,13 +114,37 @@
     cursor: pointer;
   }
 
-  .bubble-audio {
-    display: block;
-    width: 220px;
-    height: 36px;
+  .bubble-audio-player {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin-bottom: 4px;
-    border-radius: 20px;
-    accent-color: #7c3aed;
+
+    audio { display: none; }
+
+    .audio-play-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(124, 58, 237, 0.7);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+      transition: background 0.15s;
+
+      ion-icon { font-size: 1rem; }
+      &:active { background: #6d28d9; }
+    }
+
+    .audio-label {
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.75);
+      white-space: nowrap;
+    }
   }
 
   .bubble-video {

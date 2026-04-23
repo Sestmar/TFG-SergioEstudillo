@@ -89,6 +89,12 @@ export class ChatRoomComponent implements AfterViewInit, AfterViewChecked, OnCha
   private recordingTimer: ReturnType<typeof setInterval> | null = null;
   private audioCancelado = false;
 
+  // Reproductor de audio inline
+  playingAudioId: number | null = null;
+  audioDurations = new Map<number, number>();
+  private currentAudioEl: HTMLAudioElement | null = null;
+  private safeUrlCache = new Map<string, SafeUrl>();
+
   constructor(private chatService: ChatService, private sanitizer: DomSanitizer) {}
 
   get puedeEnviar(): boolean {
@@ -553,7 +559,45 @@ export class ChatRoomComponent implements AfterViewInit, AfterViewChecked, OnCha
 
   getSafeUrl(url: string | null): SafeUrl | null {
     if (!url) return null;
-    return this.sanitizer.bypassSecurityTrustUrl(url);
+    if (!this.safeUrlCache.has(url)) {
+      this.safeUrlCache.set(url, this.sanitizer.bypassSecurityTrustUrl(url));
+    }
+    return this.safeUrlCache.get(url)!;
+  }
+
+  toggleAudio(msg: MensajeDto, audioEl: HTMLAudioElement, event: Event): void {
+    event.stopPropagation();
+    if (this.playingAudioId === msg.id) {
+      audioEl.pause();
+      this.playingAudioId = null;
+      this.currentAudioEl = null;
+    } else {
+      if (this.currentAudioEl) this.currentAudioEl.pause();
+      audioEl.play().catch(() => {});
+      this.playingAudioId = msg.id;
+      this.currentAudioEl = audioEl;
+    }
+  }
+
+  onAudioMetadata(msg: MensajeDto, audioEl: HTMLAudioElement): void {
+    if (isFinite(audioEl.duration)) {
+      this.audioDurations.set(msg.id, audioEl.duration);
+    }
+  }
+
+  onAudioEnded(msg: MensajeDto): void {
+    if (this.playingAudioId === msg.id) {
+      this.playingAudioId = null;
+      this.currentAudioEl = null;
+    }
+  }
+
+  formatAudioDuration(msg: MensajeDto): string {
+    const d = this.audioDurations.get(msg.id);
+    if (!d) return '0:00';
+    const m = Math.floor(d / 60);
+    const s = Math.floor(d % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   }
 
   onImgError(event: Event, msg: MensajeDto): void {
