@@ -267,7 +267,7 @@ export class ChatService implements OnDestroy {
   }
 
   getMiembrosEquipo(idEquipo: number): Observable<MiembroPreview[]> {
-    return this.http.get<MiembroPreview[]>(`${this.apiUrl}/chat/equipo/${idEquipo}/miembros`);
+    return this.http.get<MiembroPreview[]>(`${this.apiUrl}/chat/miembros/${idEquipo}`);
   }
 
   reaccionar(mensajeId: number, emoji: string): Observable<MensajeDto> {

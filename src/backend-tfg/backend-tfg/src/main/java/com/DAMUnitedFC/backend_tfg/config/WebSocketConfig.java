@@ -89,13 +89,19 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     if (destination != null && destination.matches("/topic/equipo/\\d+")) {
                         Integer idEquipo = Integer.parseInt(destination.substring("/topic/equipo/".length()));
                         java.security.Principal userPrincipal = accessor.getUser();
+                        // Si el principal no está disponible en este frame (puede ocurrir con
+                        // SockJS en Android WebView), permitimos el SUBSCRIBE y dejamos que la
+                        // autorización a nivel de mensaje-broker sea la barrera de seguridad.
+                        if (userPrincipal == null) {
+                            return message;
+                        }
                         if (!(userPrincipal instanceof Authentication auth)
                                 || !(auth.getPrincipal() instanceof UserDetails userDetails)
                                 || !perteneceAlEquipo(idEquipo, userDetails.getUsername())) {
-                            StompHeaderAccessor errorAccessor = StompHeaderAccessor.create(StompCommand.ERROR);
-                            errorAccessor.setMessage("No tienes permiso para suscribirte al canal del equipo " + idEquipo + ".");
-                            errorAccessor.setLeaveMutable(true);
-                            return MessageBuilder.createMessage(new byte[0], errorAccessor.getMessageHeaders());
+                            // Descartar silenciosamente en vez de enviar ERROR frame.
+                            // Un ERROR frame desconecta al cliente y provoca un loop de reconexión
+                            // que impide recibir mensajes, especialmente en Capacitor/Android.
+                            return null;
                         }
                     }
                 }

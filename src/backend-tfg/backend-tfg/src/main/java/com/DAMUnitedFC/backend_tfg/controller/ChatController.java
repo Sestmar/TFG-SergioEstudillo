@@ -91,7 +91,7 @@ public class ChatController {
         return ResponseEntity.ok(chatService.listarPrivadosPaginado(usuarioActual.getIdUsuario(), idOtroUsuario, page, size));
     }
 
-    @GetMapping("/api/chat/equipo/{idEquipo}/miembros")
+    @GetMapping("/api/chat/miembros/{idEquipo}")
     public ResponseEntity<List<MiembroPreviewDto>> miembrosEquipo(
             @PathVariable Integer idEquipo,
             @AuthenticationPrincipal UserDetails userDetails) {
