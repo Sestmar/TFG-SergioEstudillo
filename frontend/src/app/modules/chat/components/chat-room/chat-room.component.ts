@@ -165,7 +165,7 @@ export class ChatRoomComponent implements AfterViewInit, AfterViewChecked, OnCha
     this.cancelarImagen();
     if (this.grabando) {
       this.audioCancelado = true;
-      this.limpiarGrabacion(true);
+      this.limpiarGrabacion();
       VoiceRecorder.stopRecording().catch(() => {});
     }
   }
@@ -225,7 +225,7 @@ export class ChatRoomComponent implements AfterViewInit, AfterViewChecked, OnCha
 
     try {
       const perm = await VoiceRecorder.requestAudioRecordingPermission();
-      if (perm.value !== 'granted') {
+      if (!perm.value) {
         this.audioError = 'Permiso de micrófono denegado.';
         return;
       }
