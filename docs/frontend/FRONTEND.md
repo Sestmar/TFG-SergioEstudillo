@@ -12,14 +12,15 @@
 
 1. [Arquitectura Modular](#-arquitectura-modular)
 2. [Lazy Loading y Routing](#-lazy-loading-y-routing)
-3. [Core Module (Singleton)](#-core-module)
-4. [Feature Modules](#-feature-modules)
-5. [Patrón Smart-Dumb Components](#-patrón-smart-dumb-components)
-6. [Servicios HTTP (Capa de Datos)](#-servicios-http)
-7. [Guards e Interceptors](#-guards-e-interceptors)
-8. [Gestión de Estado con RxJS](#-gestión-de-estado-con-rxjs)
-9. [UI Adaptativa (Ionic Components)](#-ui-adaptativa)
-10. [Configuración de Entorno](#-configuración-de-entorno)
+3. [Grafo de Navegación](#️-grafo-de-navegación)
+4. [Core Module (Singleton)](#-core-module)
+5. [Feature Modules](#-feature-modules)
+6. [Patrón Smart-Dumb Components](#-patrón-smart-dumb-components)
+7. [Servicios HTTP (Capa de Datos)](#-servicios-http)
+8. [Guards e Interceptors](#-guards-e-interceptors)
+9. [Gestión de Estado con RxJS](#-gestión-de-estado-con-rxjs)
+10. [UI Adaptativa (Ionic Components)](#-ui-adaptativa)
+11. [Configuración de Entorno](#-configuración-de-entorno)
 
 ---
 
@@ -184,6 +185,98 @@ const routes: Routes = [
 ```
 
 > **15+ rutas lazy-loaded** que garantizan que solo se descargue el código necesario para cada vista.
+
+---
+
+## 🗺️ Grafo de Navegación
+
+El siguiente diagrama representa el flujo de navegación completo de la aplicación, incluyendo las rutas públicas, el módulo de autenticación, la redirección basada en roles y los módulos protegidos de cada tipo de usuario.
+
+```mermaid
+flowchart TD
+    ENTRY(("Entrada")) --> LANDING["/landing"]
+    ENTRY --> CLUB["/club — Zona Aficionado"]
+
+    LANDING --> LOGIN
+    CLUB --> LOGIN
+
+    subgraph AUTH_MOD["Módulo de Autenticación"]
+        LOGIN["/auth/login"]
+        REGISTRO["/auth/registro"]
+        RESET["/auth/reset-password"]
+    end
+
+    LOGIN -->|"Login exitoso"| AG{"AuthGuard — Verifica JWT"}
+    AG -->|"Token inválido"| LOGIN
+    AG -->|"Token válido"| RG{"RoleGuard — Verifica Rol"}
+    RG -->|"Sin permisos"| LOGIN
+
+    RG -->|"ROLE_ADMIN"| ADM_MOD
+    RG -->|"ROLE_COACH"| COA_MOD
+    RG -->|"ROLE_PLAYER"| PLA_MOD
+
+    subgraph ADM_MOD["AdminModule — Lazy Loaded"]
+        ADM["/admin — Panel Director Deportivo"]
+        ADM_EQ["Gestión de Equipos"]
+        ADM_JG["Gestión de Jugadores"]
+        ADM_EN["Gestión de Entrenadores"]
+        ADM_US["Gestión de Usuarios"]
+    end
+
+    subgraph COA_MOD["CoachModule — Lazy Loaded"]
+        COA["/coach — Dashboard"]
+        COA_CAL["/calendar — Calendario"]
+        COA_CHT["/chat — Chat de Equipo"]
+        COA_MTH["/match-detail — Detalle Partido + Acta (:matchId)"]
+        COA_INS["/match-insights — Estadísticas"]
+    end
+
+    subgraph PLA_MOD["PlayerModule — Lazy Loaded"]
+        PLA["/players — Dashboard Jugador"]
+        PLA_CAL["/calendar — Calendario"]
+        PLA_CHT["/chat — Chat de Equipo"]
+        PLA_MTH["/match-detail — Detalle Partido (:matchId)"]
+        PLA_USR["/user — Perfil"]
+    end
+
+    ADM_MOD --> SHR_MOD
+    COA_MOD --> SHR_MOD
+    PLA_MOD --> SHR_MOD
+
+    subgraph SHR_MOD["Rutas Compartidas — Autenticados"]
+        SHR_DSH["/dashboard"]
+        SHR_USR["/user — Perfil de Usuario"]
+    end
+
+    SHR_MOD -.->|"AuthInterceptor — Inyecta Bearer Token"| API[("API REST Backend")]
+    API -.->|"ErrorInterceptor — HTTP 401 Redirect"| LOGIN
+
+    style ENTRY fill:#3880ff,stroke:#3880ff,color:#fff
+    style AG fill:#e63946,stroke:#e63946,color:#fff
+    style RG fill:#e63946,stroke:#e63946,color:#fff
+    style API fill:#2a9d8f,stroke:#2a9d8f,color:#fff
+    style AUTH_MOD fill:#1a1a2e,stroke:#3880ff,color:#e0e0e0
+    style ADM_MOD fill:#1a1a2e,stroke:#e63946,color:#e0e0e0
+    style COA_MOD fill:#1a1a2e,stroke:#2a9d8f,color:#e0e0e0
+    style PLA_MOD fill:#1a1a2e,stroke:#f4a261,color:#e0e0e0
+    style SHR_MOD fill:#1a1a2e,stroke:#9b59b6,color:#e0e0e0
+```
+
+### Estrategia de Lazy Loading
+
+La aplicación implementa una estrategia de **lazy loading** a nivel de módulo a través de `AppRoutingModule`. Cada feature module (`AdminModule`, `CoachModule`, `PlayerModule`, `AuthModule`, `LandingModule`) se carga bajo demanda mediante `loadChildren`, lo que significa que el bundle inicial solo contiene el core de la aplicación y los módulos compartidos. Cuando un usuario navega por primera vez a una ruta protegida, Angular descarga el chunk correspondiente al módulo de ese rol, reduciendo significativamente el tiempo de carga inicial y optimizando el consumo de datos en dispositivos móviles.
+
+### Funcionamiento de AuthGuard y RoleGuard
+
+El sistema de protección de rutas se basa en dos guards que actúan en cascada. **`AuthGuard`** se ejecuta primero y verifica la existencia y validez del token JWT almacenado localmente; si el token no existe o ha expirado, redirige al usuario a `/auth/login`. Si el token es válido, **`RoleGuard`** toma el control y extrae el rol del usuario del token decodificado, comparándolo con los roles permitidos definidos en el `data` de cada ruta. La comparación es **insensible a mayúsculas** y soporta el prefijo `ROLE_` (por ejemplo, `ROLE_ADMIN` y `admin` se consideran equivalentes), lo que proporciona flexibilidad frente a variaciones en el formato del backend.
+
+### Paso de Parámetros entre Rutas
+
+La comunicación entre módulos se realiza mediante **route params** y **query params**. Los identificadores de equipo (`teamId`), partido (`matchId`) y jugador (`playerId`) se pasan como segmentos dinámicos de la URL (por ejemplo, `/match-detail/:matchId`), lo que permite deep linking y compartir URLs específicas. Para datos más complejos o filtros temporales, se utilizan query params que no afectan a la estructura de la ruta. Los componentes destino inyectan `ActivatedRoute` y se suscriben a `params` o `queryParams` de forma reactiva, garantizando que los cambios de parámetros sin destrucción del componente se gestionen correctamente.
+
+### Gestión del Botón Atrás con NavController
+
+En un entorno híbrido Ionic + Angular, la gestión del botón atrás físico (Android) y el swipe-back (iOS) requiere un tratamiento especial. La aplicación delega esta responsabilidad al **`NavController`** de Ionic, que mantiene una pila de navegación propia sincronizada con el router de Angular. Al utilizar `NavController.back()` en lugar de `Location.back()` o `Router.navigate()`, se garantiza que las animaciones de transición sean coherentes con la plataforma nativa (slide en iOS, fade en Android). Además, `NavController` evita comportamientos inesperados en flujos modales o de autenticación, donde un `back()` convencional podría llevar al usuario a pantallas previas al login.
 
 ---
 
@@ -494,11 +587,6 @@ Se utiliza una paleta profesional basada en el azul marino y verde esmeralda par
   --ion-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 ```
-
-### Componentes Ionic Utilizados
-... (tabla ya existente) ...
-
----
 
 ## 🔒 Seguridad y Autenticación
 
