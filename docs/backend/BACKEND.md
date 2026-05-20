@@ -16,7 +16,8 @@
 4. [Controladores REST](#-controladores-rest)
 5. [Seguridad (Spring Security 6 + JWT)](#-seguridad)
 6. [Lógica de Negocio Clave](#-lógica-de-negocio-clave)
-7. [Configuración](#-configuración)
+7. [📁 Gestión de Ficheros](#-gestión-de-ficheros)
+8. [⚙️ Configuración](#-configuración)
 
 ---
 
@@ -155,12 +156,6 @@ El API está organizado en controladores especializados que delegan la lógica d
 - `POST /`: Registro de nueva incidencia (Lesión, Sanción, Observación).
 - `PUT /{id}/follow-up`: Añadir seguimiento médico o técnico a una incidencia abierta.
 - `PUT /{id}/close`: Cierre definitivo con resolución.
-
----
-
-### Endpoints Detallados del `AdminController`
-... (ya existente) ...
-
 
 ---
 
@@ -377,6 +372,38 @@ public ResponseEntity<?> crearPartido(
 ```
 
 > Acepta tanto URL externa como archivo subido. Ver [TROUBLESHOOTING.md](./TROUBLESHOOTING.md#2-error-415-unsupported-media-type-en-formularios-flexibles) para el contexto del diseño.
+
+---
+
+## 📁 Gestión de Ficheros
+
+El sistema gestiona ficheros en tres vertientes diferenciadas: subida y servido de imágenes multimedia a través de la API REST, generación de documentos PDF en el lado del cliente, y lectura de ficheros de configuración y caché por parte de los frameworks de backend y frontend. La estrategia general prioriza la **resiliencia frente a entornos efímeros** (PaaS), evitando dependencias de almacenamiento local persistente en producción.
+
+| Tipo | Componente | Tecnología | Propósito |
+|------|-----------|-----------|----------|
+| Escritura | `FileController` | Spring `MultipartFile` | Subida de imágenes (escudos de equipo, fotos de perfil) con blindaje contra Path Traversal |
+| Escritura | Frontend (PDF) | jsPDF + html2canvas | Generación de PDFs: Convocatorias, Actas de Partido y Estadísticas de Temporada (patrón Hidden Container para Shadow DOM de Ionic) |
+| Escritura | Logging | SLF4J (Logback) | Escritura de logs de aplicación, sustituyendo `e.printStackTrace()` por logging estructurado |
+| Lectura | Spring Boot | `application.properties` | Configuración de datasource, JWT secret, credenciales de Twilio y Firebase vía variables de entorno |
+| Lectura | `FileController` | Spring `Resource` | Servido de ficheros multimedia subidos (endpoint `/api/uploads/**`) |
+| Lectura | Angular PWA | `ngsw-config.json` | Estrategia de caché del Service Worker para funcionamiento offline |
+
+> **🛡️ Seguridad en subida de ficheros:** El `FileController` normaliza las rutas recibidas y bloquea cualquier secuencia `..` para prevenir ataques de Path Traversal. Los ficheros se almacenan en un directorio controlado fuera del classpath.
+
+### Decisión Arquitectónica: Gestión de Imágenes en Producción
+
+Durante el despliegue en Render (PaaS), se identificó que el sistema de archivos local es **efímero**: cada redeploy elimina los ficheros almacenados en disco. Se evaluaron cuatro alternativas para la persistencia de imágenes:
+
+| Opción | Evaluación | Resultado |
+|--------|-----------|----------|
+| Disco local | Sistema de ficheros efímero en Render; los ficheros se pierden en cada redeploy | ❌ Descartada |
+| Base de datos (BLOB) | Impacto severo en rendimiento y tamaño de la BD PostgreSQL | ❌ Descartada |
+| Almacenamiento externo (S3/Cloudinary) | Coste económico inasumible en tier educativo/gratuito | ❌ Descartada |
+| **Sistema híbrido: URLs externas + fallback dinámico** | Gratuito, resiliente y sin dependencias adicionales de infraestructura | ✅ **Elegida** |
+
+La solución adoptada combina **URLs externas** para imágenes de referencia (escudos de rivales, fotos importadas) con un sistema de **fallback de avatares dinámicos** generados mediante `ui-avatars.com` cuando la imagen original no está disponible. Esta aproximación elimina la dependencia del sistema de ficheros local en producción, garantiza que la interfaz nunca muestre imágenes rotas y no añade costes de infraestructura al proyecto.
+
+> Para el detalle completo de implementación y los problemas resueltos durante el diseño de esta solución, consultar [TROUBLESHOOTING.md](../troubleshooting/TROUBLESHOOTING.md#1) (Caso 1).
 
 ---
 
