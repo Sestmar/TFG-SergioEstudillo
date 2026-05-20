@@ -18,6 +18,11 @@ public class PublicController {
         this.publicService = publicService;
     }
 
+    @GetMapping("/ping")
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("pong");
+    }
+
     @GetMapping("/equipos")
     public ResponseEntity<List<PublicTeamDto>> getAllPublicTeams() {
         return ResponseEntity.ok(publicService.getAllPublicTeams());
