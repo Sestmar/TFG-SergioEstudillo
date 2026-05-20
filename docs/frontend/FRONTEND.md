@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**DAM United FC · Angular 16 · Ionic 7 · RxJS · TypeScript**
+**DAM United FC · Angular 18 · Ionic 7 · RxJS · TypeScript**
 
 </div>
 
@@ -617,8 +617,8 @@ Para garantizar una experiencia fluida en dispositivos móviles, nos regimos por
 - ✅ Sistema de login temático.
 
 ### Fase 2 - Mejoras (En progreso)
-- 🔄 **Chat en tiempo real** (vía WebSockets).
-- 🔄 **Notificaciones Push** (Firebase Cloud Messaging).
+- ✅ **Chat en tiempo real** (vía WebSockets).
+- ✅ **Notificaciones Push** (Firebase Cloud Messaging).
 - 🔄 Análisis avanzado de datos con gráficos dinámicos.
 
 ### Fase 3 - Escalabilidad (Planeado)
