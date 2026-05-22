@@ -41,9 +41,10 @@ class AdminServiceTest {
     @Mock private PartidoRepository partidoRepo;
     @Mock private AlineacionRepository alineacionRepo;
     @Mock private AsistenciaRepository asistenciaRepo;
+    @Mock private LigaRepository ligaRepo;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private PartidoService partidoService;
-    @Mock private NotificationService notificationService;
+    @Mock private NotificationService notificationService;      
 
     private AdminService adminService;
 
@@ -53,11 +54,10 @@ class AdminServiceTest {
         adminService = new AdminService(
                 usuarioRepo, jugadorRepo, equipoRepo, entrenadorRepo,
                 equipoEntrenadorRepo, categoriaRepo, partidoRepo,
-                alineacionRepo, asistenciaRepo, passwordEncoder,
+                alineacionRepo, asistenciaRepo, ligaRepo, passwordEncoder,
                 partidoService, notificationService, "http://localhost:8080"
         );
     }
-
     // ─── helpers ─────────────────────────────────────────────────────────────
 
     private Usuario crearUsuario(int id, String nombre, String rol) {

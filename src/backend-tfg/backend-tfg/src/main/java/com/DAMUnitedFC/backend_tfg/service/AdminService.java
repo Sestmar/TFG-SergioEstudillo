@@ -27,21 +27,23 @@ public class AdminService {
     private final PartidoRepository partidoRepo;
     private final AlineacionRepository alineacionRepo;
     private final AsistenciaRepository asistenciaRepo;
+    private final LigaRepository ligaRepo;
     private final PasswordEncoder passwordEncoder;
     private final PartidoService partidoService;
-    private final NotificationService notificationService;
+    private final NotificationService notificationService;      
     private final String backendUrl;
 
     public AdminService(UsuarioRepository usuarioRepo,
                         JugadorRepository jugadorRepo,
                         EquipoRepository equipoRepo,
-                        EntrenadorRepository entrenadorRepo,
+                        EntrenadorRepository entrenadorRepo,    
                         EquipoEntrenadorRepository equipoEntrenadorRepo,
-                        CategoriaRepository categoriaRepo,
+                        CategoriaRepository categoriaRepo,      
                         PartidoRepository partidoRepo,
-                        AlineacionRepository alineacionRepo,
-                        AsistenciaRepository asistenciaRepo,
-                        PasswordEncoder passwordEncoder,
+                        AlineacionRepository alineacionRepo,    
+                        AsistenciaRepository asistenciaRepo,    
+                        LigaRepository ligaRepo,
+                        PasswordEncoder passwordEncoder,        
                         PartidoService partidoService,
                         NotificationService notificationService,
                         @Value("${app.backend.url}") String backendUrl) {
@@ -49,17 +51,17 @@ public class AdminService {
         this.jugadorRepo = jugadorRepo;
         this.equipoRepo = equipoRepo;
         this.entrenadorRepo = entrenadorRepo;
-        this.equipoEntrenadorRepo = equipoEntrenadorRepo;
+        this.equipoEntrenadorRepo = equipoEntrenadorRepo;       
         this.categoriaRepo = categoriaRepo;
         this.partidoRepo = partidoRepo;
         this.alineacionRepo = alineacionRepo;
         this.asistenciaRepo = asistenciaRepo;
+        this.ligaRepo = ligaRepo;
         this.passwordEncoder = passwordEncoder;
         this.partidoService = partidoService;
         this.notificationService = notificationService;
         this.backendUrl = backendUrl;
     }
-
     @Transactional(readOnly = true)
     public List<Usuario> getCandidatos() {
         return usuarioRepo.findCandidatosSinEquipo();
@@ -252,11 +254,32 @@ public class AdminService {
         eq.setNombre(nombre);
         eq.setFechaCreacion(new java.sql.Date(System.currentTimeMillis()));
         eq.setEscudoUrl("assets/img/mi-club-logo.png");
+
+        Categoria cat = null;
         if (catNombre != null && !catNombre.isEmpty()) {
-            Categoria cat = categoriaRepo.findByNombre(catNombre)
-                    .orElseGet(() -> { Categoria n = new Categoria(); n.setNombre(catNombre); return categoriaRepo.save(n); });
+            cat = categoriaRepo.findByNombre(catNombre)
+                    .orElseGet(() -> {
+                        Categoria n = new Categoria();
+                        n.setNombre(catNombre);
+                        n.setEdadMin(0);
+                        n.setEdadMax(99);
+                        return categoriaRepo.save(n);
+                    });
             eq.setCategoria(cat);
         }
+
+        // Asignar liga por defecto (obligatoria en DB)
+        Categoria finalCat = cat;
+        Liga liga = ligaRepo.findAll().stream().findFirst()
+                .orElseGet(() -> {
+                    Liga n = new Liga();
+                    n.setNombre("Liga General");
+                    n.setTemporada("2025/26");
+                    n.setCategoria(finalCat != null ? finalCat : categoriaRepo.findAll().get(0));
+                    return ligaRepo.save(n);
+                });
+        eq.setLiga(liga);
+
         equipoRepo.save(eq);
     }
 
