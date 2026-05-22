@@ -559,7 +559,7 @@ graph TB
         FCM["Firebase Cloud Messaging"]
         TWIL["Twilio WhatsApp API"]
         NEON["NeonDB (PostgreSQL)"]
-        SMTP["SMTP Server (Email)"]
+        BREVO["Brevo Email API"]
     end
 
     PWA --> Frontend
@@ -572,7 +572,7 @@ graph TB
     REPO --> NEON
     SVC --> FCM
     SVC --> TWIL
-    SVC --> SMTP
+    SVC --> BREVO
 ```
 
 #### Arquitectura Backend en Capas
@@ -1375,7 +1375,7 @@ Durante el desarrollo se han aplicado de forma consistente los principios SOLID,
 | Plataformas soportadas | Web + Android | Web (PWA) + Android (Capacitor) |
 | Chat en tiempo real | Mensajería básica | Mensajería con adjuntos, reacciones, menciones, paginación y CRUD |
 | Sistema de roles | 3 roles | 3 roles + zona pública sin autenticación |
-| Notificaciones | Push básico | Push (FCM) + WhatsApp (Twilio) + Email (SMTP) |
+| Notificaciones | Push básico | Push (FCM) + WhatsApp (Twilio) + Email (Brevo API HTTP) |
 | Reportes | PDF básico | Motor de PDF unificado con 3 tipos de reporte e identidad visual |
 | Documentación | Memoria TFG | Memoria + README técnico + BACKEND.md + FRONTEND.md + TROUBLESHOOTING.md |
 

@@ -361,13 +361,14 @@ class AdminServiceTest {
      * Los usuarios con rol ADMIN deben ser excluidos del listado de activos.
      */
     @Test
-    void deberiaFiltrarAdminsDeListaDeUsuariosActivos() {
+    void deberiaFiltrarAdminsDeListaDeUsuariosActivos() {       
         // Arrange
-        Usuario admin = crearUsuario(1, "Admin", "ADMIN");
         Usuario jugador = crearUsuario(2, "Jugador", "JUGADOR");
-        when(usuarioRepo.findAll()).thenReturn(List.of(admin, jugador));
-        when(jugadorRepo.findByUsuario_IdUsuario(2)).thenReturn(Optional.empty());
-        when(entrenadorRepo.findByUsuario_IdUsuario(2)).thenReturn(Optional.empty());
+        // El repositorio ya filtra los admins en DB via findAllExcluyendoAdmin
+        when(usuarioRepo.findAllExcluyendoAdmin()).thenReturn(List.of(jugador));
+        when(jugadorRepo.findAll()).thenReturn(List.of());
+        when(entrenadorRepo.findAll()).thenReturn(List.of());
+        when(equipoEntrenadorRepo.findAll()).thenReturn(List.of());
 
         // Act
         List<Map<String, Object>> activos = adminService.getUsuariosActivos();
@@ -376,15 +377,17 @@ class AdminServiceTest {
         assertThat(activos).hasSize(1);
         assertThat(activos.get(0).get("email")).isEqualTo("jugador@test.com");
     }
-
     /**
      * Si no hay usuarios (o todos son admins), debe devolver lista vacía — nunca null.
      */
     @Test
     void deberiaRetornarListaVaciaCuandoTodosLosUsuariosSonAdmin() {
         // Arrange
-        Usuario admin = crearUsuario(1, "Root", "ADMIN");
-        when(usuarioRepo.findAll()).thenReturn(List.of(admin));
+        // Si todos son ADMIN, findAllExcluyendoAdmin devuelve lista vacía
+        when(usuarioRepo.findAllExcluyendoAdmin()).thenReturn(List.of());
+        when(jugadorRepo.findAll()).thenReturn(List.of());
+        when(entrenadorRepo.findAll()).thenReturn(List.of());
+        when(equipoEntrenadorRepo.findAll()).thenReturn(List.of());
 
         // Act
         List<Map<String, Object>> activos = adminService.getUsuariosActivos();

@@ -8,7 +8,7 @@
 
 ---
 
-> Esta sección documenta **5 bugs críticos** encontrados y resueltos durante el desarrollo de la plataforma. Cada caso incluye el **contexto del error**, el **análisis de causa raíz** y la **solución aplicada** en el código.
+> Esta sección documenta **6 bugs críticos** encontrados y resueltos durante el desarrollo de la plataforma. Cada caso incluye el **contexto del error**, el **análisis de causa raíz** y la **solución aplicada** en el código.
 
 ---
 
@@ -19,6 +19,7 @@
 3. [Bucles Infinitos de Serialización JSON (Error 500)](#3-bucles-infinitos-de-serialización-json-error-500)
 4. [Corrupción de Firma JWT en LocalStorage](#4-corrupción-de-firma-jwt-en-localstorage)
 5. [La Slash Rule (Errores 404 silenciosos)](#5-la-slash-rule-errores-404-silenciosos)
+6. [Bloqueo SMTP en Render Free — forgot-password devuelve 500](#6-bloqueo-de-puertos-smtp-en-render-free-recuperación-de-contraseña)
 
 ---
 
@@ -403,6 +404,53 @@ this.http.post(`${this.apiUrl}/auth/login`, body); // OK: .../api/auth/login
 | 3 | Serialización infinita JSON | `@JsonIgnore` en `UserDetails` | Backend |
 | 4 | Firma JWT corrompida | `localStorage.setItem(key, token)` sin stringify | Frontend |
 | 5 | 404 por concatenación errónea | Slash Rule: apiUrl sin `/`, servicios con `/` | Frontend |
+| 6 | Bloqueo SMTP en Render Free — `forgot-password` devuelve 500 | Migración de JavaMailSender a Brevo HTTP API | Backend |
+
+---
+
+## 6. Bloqueo de Puertos SMTP en Render Free (Recuperación de Contraseña)
+
+### El Problema
+
+El endpoint `POST /api/auth/forgot-password` devolvía un **error 500** en producción al intentar enviar el correo de recuperación. En local funcionaba correctamente. El log de Render mostraba:
+
+```
+Caused by: org.eclipse.angus.mail.util.MailConnectException:
+  Couldn't connect to host, port: smtp.gmail.com, 465; timeout 10000
+Caused by: java.net.SocketTimeoutException: Connect timed out
+```
+
+### Causa Raíz
+
+**Render Free bloquea todas las conexiones salientes en puertos SMTP** (25, 465 y 587) para prevenir el abuso del tier gratuito como plataforma de spam. La implementación original usaba `JavaMailSender` de Spring Boot con Gmail SMTP en el puerto 465 — una conexión TCP directa que Render intercepta y rechaza.
+
+Este bloqueo solo se manifiesta en producción, por eso pasaba desapercibido durante el desarrollo local.
+
+### Solución Aplicada
+
+Se reemplazó la integración SMTP por la **API HTTP de Brevo** (servicio transaccional de email). Las llamadas HTTP salientes en el puerto 443 no están bloqueadas en ningún tier de Render.
+
+**Cambios realizados:**
+
+1. **`EmailService.java`** — eliminado `JavaMailSender`, sustituido por `RestTemplate` que llama a `https://api.brevo.com/v3/smtp/email` con la API key como cabecera.
+
+2. **`pom.xml`** — eliminada la dependencia `spring-boot-starter-mail`.
+
+3. **`application.properties`** — eliminada la configuración `spring.mail.*`.
+
+4. **Render Environment** — eliminadas `MAIL_USERNAME` y `MAIL_PASSWORD`, añadida `BREVO_API_KEY`.
+
+```java
+// Antes (SMTP — bloqueado por Render Free)
+mailSender.send(message); // Timeout en puerto 465
+
+// Después (HTTP API — funciona en cualquier entorno)
+restTemplate.postForEntity("https://api.brevo.com/v3/smtp/email", request, String.class);
+```
+
+### Lección Aprendida
+
+Los PaaS en tier gratuito aplican restricciones de red no documentadas que no afectan al desarrollo local. Ante cualquier integración con servicios externos, priorizar **APIs HTTP** sobre protocolos de transporte directo (SMTP, FTP, etc.) para garantizar la compatibilidad con entornos de despliegue restringidos.
 
 ---
 

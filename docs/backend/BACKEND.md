@@ -111,7 +111,7 @@ Se han implementado **19 servicios** para orquestar la funcionalidad del club:
 | `PartidoService` | Calendario de eventos, partidos y entrenamientos. |
 | `UsuarioService` | Gestión de identidad y perfiles. Incluye lógica de recuperación de cuenta (`findByEmail`, `resetPassword`). |
 | `PublicService` | Suministro de datos optimizados para vistas públicas. |
-| `EmailService` | Notificaciones y comunicaciones vía correo electrónico. |
+| `EmailService` | Envío de correos transaccionales mediante la API HTTP de Brevo. Sustituye la integración SMTP original (JavaMailSender + Gmail) dado que Render Free bloquea los puertos 465 y 587. |
 | `JwtService` | Generación y validación de tokens de seguridad JWT. |
 
 ---
