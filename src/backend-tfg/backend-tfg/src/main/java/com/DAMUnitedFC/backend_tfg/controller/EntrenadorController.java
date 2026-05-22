@@ -42,7 +42,7 @@ public class EntrenadorController {
         return entrenadorService.crear(dto);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")
     @PutMapping("/{id}")
     public Entrenador actualizar(@PathVariable Integer id, @RequestBody EntrenadorDto dto) {
         return entrenadorService.actualizar(id, dto);

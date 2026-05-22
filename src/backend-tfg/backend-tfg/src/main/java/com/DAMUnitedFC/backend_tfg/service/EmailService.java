@@ -11,7 +11,7 @@ import java.util.Map;
 @Service
 public class EmailService {
 
-    @Value("${BREVO_API_KEY}")
+    @Value("${BREVO_API_KEY:dummy_key}")
     private String apiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();
