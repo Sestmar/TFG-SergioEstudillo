@@ -228,10 +228,10 @@ Diseñar, desarrollar y desplegar una plataforma integral de gestión deportiva 
 | RF-13 | Los jugadores deben poder consultar su perfil y estadísticas personales | Media | Implementado |
 | RF-14 | El sistema debe permitir el control de asistencia a entrenamientos | Media | Implementado |
 | RF-15 | El sistema debe soportar la recuperación de contraseña vía email | Media | Implementado |
-| RF-16 | El Coach debe disponer de un Laboratorio Táctico interactivo | Baja | MVP funcional (pendiente optimización de animaciones) |
+| RF-16 | El Coach debe disponer de un Laboratorio Táctico interactivo | Baja | Implementado |
 | RF-17 | El sistema debe enviar notificaciones WhatsApp para convocatorias | Baja | Implementado (limitado a sandbox de Twilio Trial) |
 | RF-18 | La zona pública debe mostrar el estado físico de los jugadores en tiempo real | Baja | Implementado |
-| RF-19 | El chat debe soportar reacciones emoji y menciones a usuarios | Baja | Parcialmente implementado (menciones funcionales, selector de reacciones en mejora) |
+| RF-19 | El chat debe soportar reacciones emoji y menciones a usuarios | Baja | Implementado |
 | RF-20 | El sistema debe permitir la edición y borrado lógico de mensajes del chat | Baja | Implementado |
 
 ### 7.2 Requisitos Técnicos
@@ -466,6 +466,10 @@ Las pantallas principales del sistema son:
 - **Laboratorio Táctico Pro:** Pizarra full-view con simulación de formaciones y herramientas de dibujo.
 - **Detalle de Partido:** Acta completa con estadísticas y opción de descarga en PDF.
 
+#### Guías de diseño y accesibilidad
+
+La interfaz sigue las guías de diseño de los sistemas objetivo mediante el uso de componentes Ionic (alineados con Material Design en Android y patrones web en PWA), un grid responsive y una jerarquía visual consistente en todas las vistas. Se definieron reglas de espaciado, tipografía y estados de interacción (hover, focus, disabled) para mantener la coherencia entre módulos y facilitar la navegación. Se priorizó la legibilidad en móvil con tamaños táctiles adecuados y contraste suficiente en la paleta Night Stadium.
+
 A continuación se presentan las capturas de pantalla de las principales vistas de la aplicación:
 
 #### Landing Page Pública
@@ -529,6 +533,22 @@ A continuación se presentan las capturas de pantalla de las principales vistas 
 *Figura 10.* Vista de conclusiones de un partido contra Real Sociedad Alevín C, con resultado 2-1 (Victoria). Se muestran estadísticas individuales del jugador (goles, portería a cero, asistencias, tarjetas) y un gráfico radar comparativo (ApexCharts) que contrasta el rendimiento del partido actual frente a la media de la temporada en las dimensiones de Ataque, Defensa, Colaboración y Disciplina.
 
 ### 10.2 Especificaciones Técnicas
+
+#### Gestión de datos (BD + ORM)
+
+El backend utiliza PostgreSQL como base de datos relacional y Hibernate/JPA como capa ORM. El mapeo objeto-relacional está definido con relaciones explícitas (`@ManyToOne`, `@OneToOne` y entidades puente para N:M), control de `fetch` (EAGER/LAZY) y `@JoinColumn` para asegurar integridad referencial. Se emplean consultas JPQL/SQL en repositorios para casos específicos (por ejemplo, historial de incidencias por jugador), además de operaciones CRUD completas y exportaciones en PDF (convocatorias, actas y estadísticas).
+
+#### Gestión de ficheros y adjuntos
+
+El sistema gestiona archivos en el backend mediante endpoints de subida y descarga seguros (`/api/uploads/**` y `/api/chat/uploads`). Se almacenan en sistema de ficheros (`uploads/` y `uploads/chat`) con validación de extensión y MIME real, límites por tipo y nombres aleatorios UUID. En el cliente, los reportes PDF generados se guardan localmente en Android mediante el plugin `@capacitor/filesystem`.
+
+**Valoración de formas de acceso a ficheros (ventajas e inconvenientes):**
+
+| Opción | Ventajas | Inconvenientes | Decisión |
+|---|---|---|---|
+| Sistema de ficheros local (uploads/) | Simple, rápido, coste cero, control total | Escalado y backups manuales | Usado en el TFG por simplicidad y control |
+| Almacenamiento externo (S3/Cloud) | Escalable, CDN, alta disponibilidad | Coste, credenciales, complejidad | Alternativa valorada para producción real |
+| BLOB en base de datos | Consistencia transaccional | Aumenta tamaño de BD y latencia | Descartado para adjuntos multimedia |
 
 #### Arquitectura General del Sistema
 
@@ -1053,6 +1073,14 @@ sequenceDiagram
 | PostgreSQL | 14+ (o NeonDB cloud) | `psql --version` |
 | Git | 2.x | `git --version` |
 
+#### Verificación de configuración de SO y BD
+
+Antes de la ejecución se verifica que el entorno cumple los requisitos y que la base de datos responde correctamente:
+
+- Comprobación de instalación de Java/Node/Angular/Ionic/Maven y variables de entorno.
+- Verificación de PostgreSQL con `psql` y `pg_isready`, creación de usuario/DB y permisos.
+- Validación de la conexión desde `application.properties` y arranque del backend sin errores de conexión.
+
 #### Instalación del Backend
 
 ```bash
@@ -1137,7 +1165,7 @@ El sistema incluye un módulo de gestión de incidencias integrado con las sigui
 - `PUT /api/incidencias/{id}` — Actualizar estado o descripción.
 - `DELETE /api/incidencias/{id}` — Eliminar incidencia (solo Admin).
 
-Adicionalmente, durante el desarrollo se utilizaron los **Issues de GitHub** para el seguimiento de bugs y tareas técnicas, con etiquetas (`bug`, `enhancement`, `documentation`) y asignación al autor del proyecto.
+Todas las acciones quedan asociadas a un usuario autenticado (JWT), lo que permite identificar autoría en operaciones críticas (mensajes, incidencias, altas/bajas). Adicionalmente, durante el desarrollo se utilizaron los **Issues de GitHub** para el seguimiento de bugs y tareas técnicas, con etiquetas (`bug`, `enhancement`, `documentation`) y asignación al autor del proyecto.
 
 ---
 
@@ -1150,7 +1178,7 @@ Adicionalmente, durante el desarrollo se utilizaron los **Issues de GitHub** par
 1. **Planificación:** Revisión de requisitos y priorización con metodología MoSCoW.
 2. **Implementación:** Desarrollo iterativo por módulos funcionales con ciclos de 1-2 semanas.
 3. **Revisión:** Auto-revisión del código aplicando principios SOLID y patrones Clean Code.
-4. **Testing:** Ejecución de pruebas unitarias (JUnit/Jasmine) y E2E (Cypress).
+4. **Testing:** Ejecución de pruebas unitarias (JUnit/Jasmine) y E2E (Cypress) en pipeline de GitHub Actions por cada push.
 5. **Documentación:** Actualización de documentación técnica tras cada iteración.
 6. **Integración:** Merge a `develop` tras verificar que no hay regresiones.
 
@@ -1168,15 +1196,18 @@ Adicionalmente, durante el desarrollo se utilizaron los **Issues de GitHub** par
 | Unitarias Frontend | Jasmine + Karma | Services y Guards del core | ✅ Superadas |
 | E2E | Cypress 15 | Flujos críticos (login, navegación, CRUD) | ✅ Superadas |
 | Integración API | Postman + Spring Security Test | Todos los endpoints REST con autenticación | ✅ Superadas |
+| Seguridad | Postman + pruebas manuales | Roles, tokens expirados y accesos no autorizados | ✅ Superadas |
 | WebSocket | Test manual + logs STOMP | Conexión, envío, broadcast, reconexión | ✅ Superadas |
+| Usabilidad | Pruebas manuales con perfiles Admin/Coach/Jugador | Flujos completos y navegación diaria | ✅ Superadas |
 | Responsive | Chrome DevTools | Breakpoints móvil, tablet, desktop | ✅ Superadas |
 | Rendimiento Chat | Prueba con 500+ mensajes | Paginación y scroll virtual | ✅ Superadas |
+| CI/CD | GitHub Actions | Build y tests automáticos por push | ✅ Superadas |
 
 ### 12.3 Indicadores de Calidad
 
 | Indicador | Objetivo | Resultado |
 |---|---|---|
-| Cobertura de requisitos funcionales | 100% de RF implementados | 18/20 completos, 2 en fase MVP (véase sección 7.1) |
+| Cobertura de requisitos funcionales | 100% de RF implementados | 20/20 completos (véase sección 7.1) |
 | Tiempo de respuesta API | < 200ms para operaciones CRUD | Objetivo alcanzado durante pruebas en entorno local |
 | Tiempo de carga inicial (PWA) | < 3 segundos en 4G | Aproximadamente 2-3 segundos según pruebas con Chrome DevTools |
 | Errores críticos en producción | 0 | Sin errores bloqueantes detectados durante las pruebas |
@@ -1189,7 +1220,15 @@ Adicionalmente, durante el desarrollo se utilizaron los **Issues de GitHub** par
 - **Verificación técnica:** Se utilizó Swagger UI (`/swagger-ui.html`) para verificar la documentación y el comportamiento de todos los endpoints REST.
 - **Verificación de seguridad:** Se realizaron pruebas de acceso no autorizado (requests sin token, con token expirado, con token de rol incorrecto) para cada endpoint protegido.
 - **Verificación de rendimiento:** Se probó el chat con carga de 500+ mensajes para validar la paginación y el rendimiento del scroll.
+- **Verificación de usabilidad:** Se realizaron pruebas manuales con perfiles representativos (Admin, Coach, Jugador) durante el uso continuo del sistema, revisando claridad de navegación, tiempos de tarea y comprensión de los flujos clave.
 - **Verificación multiplataforma:** La aplicación se probó en Chrome (desktop), Firefox, Safari (móvil), y en un dispositivo Android físico con la APK generada por Capacitor.
+
+### 12.5 Estándares de construcción de software
+
+- **Nomenclatura y legibilidad:** Uso consistente de nombres semánticos y patrones de nomenclatura (`*Controller`, `*Service`, `*Repository`, `*Dto`, `*Module`). Se aplican métodos acotados y estructuras de control claras para facilitar mantenimiento. Se aplica linting en frontend (ESLint/Angular ESLint) y reglas de estilo para mantener el código legible.
+- **POO y patrones:** Arquitectura en capas con DTOs, servicios y repositorios; uso de interfaces y estrategia en notificaciones (`NotificationProvider`), inyección de dependencias y separación de responsabilidades.
+- **Operaciones de E/S:** Subidas de archivos con `MultipartFile` y `java.nio.file.Files`, generación de PDFs con `jsPDF` + `html2canvas`, y almacenamiento local de reportes en Android con `@capacitor/filesystem`.
+- **Integración UI–modelo:** Uso de formularios reactivos y data binding en Angular para conectar interfaces con objetos de dominio y servicios de API.
 
 
 ---
@@ -1262,6 +1301,12 @@ flowchart LR
 3. **Distribución web:** Los assets estáticos se despliegan en un servicio de hosting estático.
 4. **Distribución Android:** Se ejecuta `npx cap sync android` para sincronizar los assets con el proyecto Android, y desde Android Studio se genera el APK firmado.
 5. **Distribución backend:** Se genera el JAR con `mvn package`, se construye la imagen Docker y se despliega en el servicio cloud seleccionado.
+
+### 13.3 Medio de difusión
+
+El proyecto se difunde mediante un repositorio público en GitHub con documentación técnica y manuales:
+
+- **Repositorio:** [https://github.com/sestmar/TFG-SergioEstudillo](https://github.com/sestmar/TFG-SergioEstudillo)
 
 ---
 
@@ -1371,7 +1416,7 @@ Durante el desarrollo se han aplicado de forma consistente los principios SOLID,
 
 | Objetivo | Esperado | Obtenido |
 |---|---|---|
-| Requisitos funcionales implementados | 20/20 | 18/20 completos + 2 en fase MVP |
+| Requisitos funcionales implementados | 20/20 | 20/20 completos |
 | Plataformas soportadas | Web + Android | Web (PWA) + Android (Capacitor) |
 | Chat en tiempo real | Mensajería básica | Mensajería con adjuntos, reacciones, menciones, paginación y CRUD |
 | Sistema de roles | 3 roles | 3 roles + zona pública sin autenticación |
@@ -1527,12 +1572,13 @@ La base de datos PostgreSQL contiene las siguientes tablas principales:
 | Tabla 9 | Identificación y evaluación de riesgos | 9.1 |
 | Tabla 10 | Recursos preventivos | 9.2 |
 | Tabla 11 | Plan de mitigación | 9.3 |
-| Tabla 12 | Registro de pruebas | 12.2 |
-| Tabla 13 | Indicadores de calidad | 12.3 |
-| Tabla 14 | Canales de distribución | 13.1 |
-| Tabla 15 | Resultados esperados vs. obtenidos | 15.2 |
-| Tabla 16 | Endpoints REST completos | Anexo B |
-| Tabla 17 | Estructura de la base de datos | Anexo C |
+| Tabla 12 | Valoración de formas de acceso a ficheros | 10.2 |
+| Tabla 13 | Registro de pruebas | 12.2 |
+| Tabla 14 | Indicadores de calidad | 12.3 |
+| Tabla 15 | Canales de distribución | 13.1 |
+| Tabla 16 | Resultados esperados vs. obtenidos | 15.2 |
+| Tabla 17 | Endpoints REST completos | Anexo B |
+| Tabla 18 | Estructura de la base de datos | Anexo C |
 
 ### Figuras (Capturas de Pantalla)
 
